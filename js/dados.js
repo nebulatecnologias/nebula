@@ -172,15 +172,22 @@ const CURSOS_PADRAO = [
     ]}
 ];
 
+const PLANOS_PADRAO = [
+  { id:"all-access", nome:"Kingdom All Access", preco:2500, periodo:"mês",   acessoTotal:true,  cursos:[], ativo:true },
+  { id:"essencial",  nome:"Essencial",          preco:1200, periodo:"mês",   acessoTotal:false, cursos:["mi","he"], ativo:true },
+  { id:"vitalicio",  nome:"Vitalício",          preco:38000, periodo:"único", acessoTotal:true,  cursos:[], ativo:true }
+];
+
 const MEMBROS_PADRAO = [
-  { nome:"Marta Macomo", email:"marta@studiomacomo.co", curso:"Kingdom Tracktion", categoria:"negocios", origem:"Instagram", ultimoAcesso:"há 2 dias", engajamento:"quente", progresso:82, estagio:"ativo", responsavel:"Maria M." },
-  { nome:"Airson Zunguze", email:"airson@worldofpunch.co", curso:"IA Aplicada aos Negócios", categoria:"ia", origem:"Instagram", ultimoAcesso:"há 5 dias", engajamento:"morno", progresso:45, estagio:"ativo", responsavel:"Shelton D." },
-  { nome:"Leatricia Vilanculos", email:"leatricia@tongasbbq.co", curso:"Mentalidade Inquebrável", categoria:"mentalidade", origem:"Indicação", ultimoAcesso:"hoje", engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
-  { nome:"Renato Alfredo", email:"renato@mtanation.co", curso:"Vendas de Alto Impacto", categoria:"marketing", origem:"Instagram", ultimoAcesso:"há 12 dias", engajamento:"frio", progresso:8, estagio:"risco", responsavel:"Shelton D." },
-  { nome:"Hostina Daia", email:"hostina@daiaenergias.co", curso:"Propósito em Movimento", categoria:"espiritualidade", origem:"Facebook", ultimoAcesso:"há 1 dia", engajamento:"morno", progresso:60, estagio:"ativo", responsavel:"Maria M." },
-  { nome:"Clarisse Jamnadas", email:"clarisse@visador.co", curso:"Hábitos de Elite", categoria:"pessoal", origem:"Perfil pessoal", ultimoAcesso:"há 3 dias", engajamento:"morno", progresso:30, estagio:"ativo", responsavel:"Shelton D." },
-  { nome:"Mendes Alfazema", email:"mendes@cafridjah.co", curso:"Kingdom Tracktion", categoria:"negocios", origem:"Indicação", ultimoAcesso:"há 20 dias", engajamento:"frio", progresso:15, estagio:"inativo", responsavel:"Maria M." },
-  { nome:"Ana Chissano", email:"ana@chissanoco.co", curso:"Mentalidade Inquebrável", categoria:"mentalidade", origem:"Instagram", ultimoAcesso:"hoje", engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." }
+  { id:"m1", nome:"Marta Macomo",        email:"marta@studiomacomo.co",  telefone:"+258 84 221 4408", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-01-12", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Instagram",      ultimoAcesso:"há 2 dias",  engajamento:"quente", progresso:82,  estagio:"ativo",     responsavel:"Maria M." },
+  { id:"m2", nome:"Airson Zunguze",      email:"airson@worldofpunch.co", telefone:"+258 87 445 2210", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-03", curso:"IA Aplicada aos Negócios", categoria:"ia",            origem:"Instagram",      ultimoAcesso:"há 5 dias",  engajamento:"morno",  progresso:45,  estagio:"ativo",     responsavel:"Shelton D." },
+  { id:"m3", nome:"Leatricia Vilanculos", email:"leatricia@tongasbbq.co", telefone:"+258 85 118 6640", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-01-20", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Indicação",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
+  { id:"m4", nome:"Renato Alfredo",      email:"renato@mtanation.co",    telefone:"+258 84 002 9931", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-03-14", curso:"Vendas de Alto Impacto",  categoria:"marketing",      origem:"Instagram",      ultimoAcesso:"há 12 dias", engajamento:"frio",   progresso:8,   estagio:"risco",     responsavel:"Shelton D." },
+  { id:"m5", nome:"Hostina Daia",        email:"hostina@daiaenergias.co", telefone:"+258 86 330 7781", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-28", curso:"Propósito em Movimento",  categoria:"espiritualidade", origem:"Facebook",      ultimoAcesso:"há 1 dia",   engajamento:"morno",  progresso:60,  estagio:"ativo",     responsavel:"Maria M." },
+  { id:"m6", nome:"Clarisse Jamnadas",   email:"clarisse@visador.co",    telefone:"+258 82 900 1177", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-04-02", curso:"Hábitos de Elite",        categoria:"pessoal",        origem:"Perfil pessoal", ultimoAcesso:"há 3 dias",  engajamento:"morno",  progresso:30,  estagio:"ativo",     responsavel:"Shelton D." },
+  { id:"m7", nome:"Mendes Alfazema",     email:"mendes@cafridjah.co",    telefone:"+258 84 776 3092", papel:"aluno", planoId:"essencial",  acesso:"bloqueado", membroDesde:"2026-01-08", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Indicação",      ultimoAcesso:"há 20 dias", engajamento:"frio",   progresso:15,  estagio:"inativo",   responsavel:"Maria M." },
+  { id:"m8", nome:"Ana Chissano",        email:"ana@chissanoco.co",      telefone:"+258 84 550 1120", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-02-10", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Instagram",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." },
+  { id:"m9", nome:"Shelton Douglas",     email:"admin@kingdomacademy.com", telefone:"+258 84 000 0000", papel:"administrador", planoId:"vitalicio", acesso:"ativo", membroDesde:"2026-01-01", curso:"—", categoria:"negocios", origem:"Equipa", ultimoAcesso:"hoje", engajamento:"quente", progresso:0, estagio:"ativo", responsavel:"—" }
 ];
 
 const CURSO_STATS_PADRAO = {
@@ -276,12 +283,12 @@ function dbPadrao(){
     eventos: EVENTOS_PADRAO,
     banners: BANNERS_PADRAO,
     membros: MEMBROS_PADRAO,
+    planos: PLANOS_PADRAO,
     cursoStats: CURSO_STATS_PADRAO,
     posts: POSTS_PADRAO,
     notificacoes: NOTIFICACOES_PADRAO,
     conquistas: CONQUISTAS_PADRAO,
     convites: [],
-    planos: []
   }));
 }
 
@@ -359,6 +366,7 @@ function guardarEstado(){
   escreverArmazenado(ESTADO_CHAVE, {
     nome: estado.nome,
     email: estado.email,
+    membroId: estado.membroId,
     fotoUrl: estado.fotoUrl,
     streakDias: estado.streakDias,
     notificacoes: estado.notificacoes,

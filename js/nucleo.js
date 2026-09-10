@@ -3,7 +3,23 @@
    ============================================================ */
 function cursoPorId(id){ return DB.cursos.find(c=>c.id===id); }
 /* O aluno só vê cursos publicados; o administrador vê também os rascunhos. */
-function cursosVisiveis(){ return DB.cursos.filter(c => c.publicado !== false); }
+/* Quem está na sessão, segundo o registo de Membros. */
+function membroAtual(){ return estado.membroId ? DB.membros.find(m=>m.id===estado.membroId) : null; }
+
+function sincronizarSessaoComMembro(membro){
+  estado.membroId = membro.id;
+  estado.nome = membro.nome;
+  estado.email = membro.email;
+  estado.papel = membro.papel || "aluno";
+}
+
+/* O aluno vê os cursos publicados que o seu plano inclui.
+   Sem membro ou sem plano, vê tudo o que está publicado. */
+function cursosVisiveis(){
+  const publicados = DB.cursos.filter(c => c.publicado !== false);
+  const permitidos = cursosPermitidos(membroAtual());
+  return permitidos ? publicados.filter(c => permitidos.includes(c.id)) : publicados;
+}
 function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
 function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
 function fundoBanner(b){

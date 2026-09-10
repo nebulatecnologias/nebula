@@ -137,7 +137,10 @@ function renderCatalogo(){
   document.getElementById("content-catalogo").innerHTML = html;
 
   const chipRow = document.getElementById("chip-row");
-  const chips = [{ id:"todos", nome:"Todos", cor:null }, ...Object.entries(DB.categorias).map(([id,c])=>({ id, nome:c.nome, cor:c.cor }))];
+  /* Só mostra categorias que tenham cursos ao alcance deste aluno. */
+  const comCursos = new Set(cursosVisiveis().map(c=>c.categoria));
+  const chips = [{ id:"todos", nome:"Todos", cor:null },
+    ...Object.entries(DB.categorias).filter(([id])=>comCursos.has(id)).map(([id,c])=>({ id, nome:c.nome, cor:c.cor }))];
   chipRow.innerHTML = chips.map(ch => `<div class="chip ${estado.filtroCategoria===ch.id?"active":""}" data-cat="${ch.id}">${ch.cor?`<span class="dot" style="--c:${ch.cor}"></span>`:""}${ch.nome}</div>`).join("");
   chipRow.querySelectorAll(".chip").forEach(el => el.addEventListener("click", () => {
     estado.filtroCategoria = el.getAttribute("data-cat");
@@ -637,8 +640,8 @@ function renderDefinicoes(){
       </div>
       <div class="card settings-card">
         <h3>Resumo da conta</h3>
-        <div class="account-row"><span>Plano</span><span>Kingdom All Access</span></div>
-        <div class="account-row"><span>Membro desde</span><span>Jan 2026</span></div>
+        <div class="account-row"><span>Plano</span><span>${(planoPorId((membroAtual()||{}).planoId)||{}).nome || "Sem plano"}</span></div>
+        <div class="account-row"><span>Membro desde</span><span>${(membroAtual()||{}).membroDesde || "—"}</span></div>
         <div class="account-row"><span>Cursos ativos</span><span>${cursosVisiveis().length}</span></div>
         <div class="account-row"><span>Nível atual</span><span>Nível ${calcularNivel()}</span></div>
       </div>
@@ -673,7 +676,11 @@ function renderDefinicoes(){
 
   document.getElementById("btn-guardar-definicoes").addEventListener("click", () => {
     const novoNome = document.getElementById("input-nome").value.trim();
-    if(novoNome) estado.nome = novoNome;
+    if(novoNome){
+      estado.nome = novoNome;
+      const membro = membroAtual();
+      if(membro){ membro.nome = novoNome; guardarDB(); }
+    }
     guardarEstado();
 
     const passAtual = document.getElementById("input-pass-atual").value;

@@ -33,6 +33,8 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
   overlay.addEventListener("click", e => { if(e.target===overlay) fecharDrawer(); });
 
   overlay.querySelectorAll(".campo-toggle").forEach(t => t.addEventListener("click", () => t.classList.toggle("on")));
+  overlay.querySelectorAll(".checklist-item input").forEach(i =>
+    i.addEventListener("change", () => i.closest(".checklist-item").classList.toggle("escolhido", i.checked)));
   overlay.querySelectorAll("[data-imagem]").forEach(botao => {
     const nome = botao.getAttribute("data-imagem");
     const input = overlay.querySelector(`#ficheiro-${nome}`);
@@ -57,15 +59,18 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
     campos.forEach(c => {
       const el = overlay.querySelector(`#valor-${c.nome}`);
       let valor;
-      if(c.tipo==="toggle") valor = overlay.querySelector(`#valor-${c.nome}`).classList.contains("on");
+      if(c.tipo==="toggle") valor = el.classList.contains("on");
+      else if(c.tipo==="checklist") valor = [...el.querySelectorAll("input:checked")].map(i=>i.value);
       else if(c.tipo==="numero") valor = el.value==="" ? null : Number(el.value);
       else valor = el.value.trim();
-      if(c.obrigatorio && (valor===null || valor==="")) erro = erro || `Preenche o campo "${c.rotulo}".`;
+      if(c.obrigatorio && (valor===null || valor==="" || (Array.isArray(valor) && !valor.length))) erro = erro || `Preenche o campo "${c.rotulo}".`;
       recolhidos[c.nome] = valor;
     });
     if(erro){ mostrarToast(erro); return; }
+    /* Se o ecrã recusar os valores (devolvendo false), o drawer fica
+       aberto para a pessoa corrigir sem perder o que escreveu. */
+    if(aoGuardar(recolhidos) === false) return;
     fecharDrawer();
-    aoGuardar(recolhidos);
   });
 
   requestAnimationFrame(() => overlay.classList.add("aberto"));
@@ -90,6 +95,17 @@ function campoHTML(c, valor){
       <div class="select-wrap" style="display:block;"><select id="valor-${c.nome}" style="width:100%;">
         ${c.opcoes.map(o=>`<option value="${o.valor}" ${String(o.valor)===String(v)?"selected":""}>${o.rotulo}</option>`).join("")}
       </select></div>${dica}</div>`;
+  }
+  if(c.tipo==="checklist"){
+    const escolhidos = Array.isArray(v) ? v : [];
+    return `<div class="field"><label>${c.rotulo}</label>
+      <div class="checklist" id="valor-${c.nome}">
+        ${c.opcoes.map(o => `
+          <label class="checklist-item ${escolhidos.includes(o.valor)?"escolhido":""}">
+            <input type="checkbox" value="${o.valor}" ${escolhidos.includes(o.valor)?"checked":""}>
+            <span>${o.rotulo}</span>
+          </label>`).join("")}
+      </div>${dica}</div>`;
   }
   if(c.tipo==="cor"){
     return `<div class="field"><label>${c.rotulo}</label>

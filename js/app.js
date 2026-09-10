@@ -4,12 +4,23 @@
 document.getElementById("form-login").addEventListener("submit", e => {
   e.preventDefault();
   const email = document.getElementById("input-email").value.trim();
-  if(email){
+  /* A conta vem do registo criado pelo administrador em Membros.
+     Se não existir, um convite pendente cria-a; caso contrário entra-se
+     como visitante, para a pré-visualização continuar a funcionar. */
+  let membro = membroPorEmail(email) || aceitarConvitePendente(email);
+  if(membro && membro.acesso==="bloqueado"){
+    mostrarToast("Este acesso está bloqueado. Fala com a tua mentoria.");
+    return;
+  }
+  if(membro){
+    sincronizarSessaoComMembro(membro);
+  } else if(email){
     const prefixo = email.split("@")[0].replace(/[._]/g," ");
     estado.nome = prefixo.split(" ").filter(Boolean).map(p=>p[0].toUpperCase()+p.slice(1)).join(" ");
     estado.email = email;
+    estado.membroId = null;
+    estado.papel = email.toLowerCase().includes("admin") ? "administrador" : "aluno";
   }
-  estado.papel = email.toLowerCase().includes("admin") ? "administrador" : "aluno";
   estado.prevendoComoAluno = false;
   guardarEstado();
   document.getElementById("view-login").classList.add("hidden");
