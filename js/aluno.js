@@ -1,8 +1,8 @@
 /* ---------------- Dashboard ---------------- */
 function renderDashboard(){
   const geral = progressoGeral();
-  const cursosCompletos = DB.cursos.filter(c=>progressoCurso(c).pct===100).length;
-  const emAndamento = DB.cursos.filter(c=>{ const p=progressoCurso(c); return p.pct>0 && p.pct<100; });
+  const cursosCompletos = cursosVisiveis().filter(c=>progressoCurso(c).pct===100).length;
+  const emAndamento = cursosVisiveis().filter(c=>{ const p=progressoCurso(c); return p.pct>0 && p.pct<100; });
   const hoje = new Date().toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long" }).toUpperCase();
 
   const cursoPrincipal = cursoPorId(estado.ultimoCurso);
@@ -19,7 +19,7 @@ function renderDashboard(){
   const conquistaDestaque = unlockedIds.length ? DB.conquistas.find(b=>b.id===unlockedIds[unlockedIds.length-1]) : null;
   const idxDestaque = conquistaDestaque ? DB.conquistas.indexOf(conquistaDestaque) : -1;
 
-  const destaques = (emAndamento.length ? emAndamento : DB.cursos).slice(0,3);
+  const destaques = (emAndamento.length ? emAndamento : cursosVisiveis()).slice(0,3);
 
   document.getElementById("content-dashboard").innerHTML = `
     <div class="page-head">
@@ -30,7 +30,7 @@ function renderDashboard(){
     <div class="stat-row">
       <div class="card stat-card"><div class="stat-label">Progresso geral</div><div class="stat-value">${geral.pct}<span>%</span></div></div>
       <div class="card stat-card"><div class="stat-label">Aulas concluídas</div><div class="stat-value">${geral.concluidas}<span>/ ${geral.total}</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Cursos concluídos</div><div class="stat-value">${cursosCompletos}<span>/ ${DB.cursos.length}</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Cursos concluídos</div><div class="stat-value">${cursosCompletos}<span>/ ${cursosVisiveis().length}</span></div></div>
       <div class="card stat-card"><div class="stat-label">Sequência atual</div><div class="stat-value">${estado.streakDias}<span>dias 🔥</span></div></div>
     </div>
 
@@ -144,7 +144,7 @@ function renderCatalogo(){
     renderCatalogo();
   }));
 
-  const lista = estado.filtroCategoria==="todos" ? DB.cursos : DB.cursos.filter(c=>c.categoria===estado.filtroCategoria);
+  const lista = estado.filtroCategoria==="todos" ? cursosVisiveis() : cursosVisiveis().filter(c=>c.categoria===estado.filtroCategoria);
   const grid = document.getElementById("catalogo-grid");
   grid.innerHTML = lista.length ? lista.map(c=>renderCourseCardHTML(c)).join("") : `<div class="empty-note">Nenhum curso nesta categoria ainda.</div>`;
   grid.querySelectorAll(".course-card").forEach(el => el.addEventListener("click", () => irPara("curso", el.getAttribute("data-curso"))));
@@ -559,7 +559,7 @@ function renderCertificados(){
     <div class="cert-grid" id="cert-grid"></div>
   `;
   const grid = document.getElementById("cert-grid");
-  grid.innerHTML = DB.cursos.map(c => {
+  grid.innerHTML = cursosVisiveis().map(c => {
     const p = progressoCurso(c);
     const concluido = p.pct===100;
     return `<div class="card cert-card ${concluido?"":"locked"}" data-curso="${c.id}">
@@ -636,7 +636,7 @@ function renderDefinicoes(){
         <h3>Resumo da conta</h3>
         <div class="account-row"><span>Plano</span><span>Kingdom All Access</span></div>
         <div class="account-row"><span>Membro desde</span><span>Jan 2026</span></div>
-        <div class="account-row"><span>Cursos ativos</span><span>${DB.cursos.length}</span></div>
+        <div class="account-row"><span>Cursos ativos</span><span>${cursosVisiveis().length}</span></div>
         <div class="account-row"><span>Nível atual</span><span>Nível ${calcularNivel()}</span></div>
       </div>
     </div>
@@ -687,3 +687,15 @@ function renderDefinicoes(){
   });
 }
 
+
+registarViews({
+  dashboard: renderDashboard,
+  catalogo: renderCatalogo,
+  curso: renderCurso,
+  aula: renderAula,
+  comunidade: renderComunidade,
+  conquistas: renderConquistas,
+  calendario: renderCalendario,
+  certificados: renderCertificados,
+  definicoes: renderDefinicoes
+});

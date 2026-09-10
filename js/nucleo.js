@@ -2,6 +2,8 @@
    Helpers de dados
    ============================================================ */
 function cursoPorId(id){ return DB.cursos.find(c=>c.id===id); }
+/* O aluno só vê cursos publicados; o administrador vê também os rascunhos. */
+function cursosVisiveis(){ return DB.cursos.filter(c => c.publicado !== false); }
 function todasAsAulasDoCurso(curso){ return curso.modulos.flatMap(m=>m.aulas.map(a=>({...a, moduloId:m.id, moduloTitulo:m.titulo}))); }
 function localizarAula(cursoId, aulaId){
   const curso = cursoPorId(cursoId); if(!curso) return null;
@@ -11,7 +13,7 @@ function localizarAula(cursoId, aulaId){
 function estadoDaAula(cursoId, aulaId){ if(estado.progresso[aulaId]) return "concluida"; if(aulaId===estado.ultimaAulaPorCurso[cursoId]) return "progresso"; return "porver"; }
 function progressoModulo(m){ const concluidas = m.aulas.filter(a=>estado.progresso[a.id]).length; return { concluidas, total:m.aulas.length }; }
 function progressoCurso(curso){ const aulas = todasAsAulasDoCurso(curso); const concluidas = aulas.filter(a=>estado.progresso[a.id]).length; const total = aulas.length; return { concluidas, total, pct: total?Math.round(concluidas/total*100):0 }; }
-function progressoGeral(){ let concluidas=0, total=0; DB.cursos.forEach(c=>{ const p=progressoCurso(c); concluidas+=p.concluidas; total+=p.total; }); return { concluidas, total, pct: total?Math.round(concluidas/total*100):0 }; }
+function progressoGeral(){ let concluidas=0, total=0; cursosVisiveis().forEach(c=>{ const p=progressoCurso(c); concluidas+=p.concluidas; total+=p.total; }); return { concluidas, total, pct: total?Math.round(concluidas/total*100):0 }; }
 function aulaAnteriorProxima(curso, aulaId){ const l = todasAsAulasDoCurso(curso); const i = l.findIndex(a=>a.id===aulaId); return { anterior: i>0?l[i-1]:null, proxima:(i!==-1 && i<l.length-1)?l[i+1]:null }; }
 function iniciais(nome){ return nome.trim().split(/\s+/).slice(0,2).map(p=>p[0].toUpperCase()).join(""); }
 function avatarConteudo(){ return estado.fotoUrl ? `<img src="${estado.fotoUrl}" alt="">` : iniciais(estado.nome); }
@@ -23,10 +25,10 @@ function conquistaDesbloqueada(b){
   const geral = progressoGeral();
   switch(regra.tipo){
     case "aulas":       return geral.concluidas >= regra.valor;
-    case "modulos":     return DB.cursos.filter(c=>c.modulos.some(m=>{ const p=progressoModulo(m); return p.total>0 && p.concluidas===p.total; })).length >= regra.valor;
-    case "cursos":      return DB.cursos.filter(c=>progressoCurso(c).pct===100).length >= regra.valor;
+    case "modulos":     return cursosVisiveis().filter(c=>c.modulos.some(m=>{ const p=progressoModulo(m); return p.total>0 && p.concluidas===p.total; })).length >= regra.valor;
+    case "cursos":      return cursosVisiveis().filter(c=>progressoCurso(c).pct===100).length >= regra.valor;
     case "sequencia":   return estado.streakDias >= regra.valor;
-    case "categorias":  return new Set(DB.cursos.filter(c=>progressoCurso(c).concluidas>0).map(c=>c.categoria)).size >= regra.valor;
+    case "categorias":  return new Set(cursosVisiveis().filter(c=>progressoCurso(c).concluidas>0).map(c=>c.categoria)).size >= regra.valor;
     case "percentagem": return geral.pct >= regra.valor;
     default:            return false;
   }
@@ -72,25 +74,22 @@ function renderNotificacoes(){
 /* ============================================================
    Router
    ============================================================ */
+/* Registo de ecrãs: cada módulo inscreve os seus, para acrescentar
+   abas novas sem mexer no router nem no HTML. */
+const VIEWS = {};
+function registarViews(mapa){ Object.assign(VIEWS, mapa); }
+
 function irPara(view, a, b){
   estado.viewAtual = view;
   if(view!=="calendario" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
-  const isAdminExtra = view.indexOf("admin-")===0 && view!=="admin-visao";
-  const containerId = isAdminExtra ? "content-admin-placeholder" : "content-"+view;
+  const ehAdmin = view.indexOf("admin-")===0;
+  const containerId = ehAdmin ? "content-admin" : "content-"+view;
   document.querySelectorAll("#app-shell .content > div").forEach(v=>v.classList.add("hidden"));
   document.getElementById(containerId).classList.remove("hidden");
   renderSidebarNav(view);
-  if(view==="dashboard") renderDashboard();
-  if(view==="catalogo") renderCatalogo();
-  if(view==="curso") renderCurso(a);
-  if(view==="aula") renderAula(a, b);
-  if(view==="comunidade") renderComunidade();
-  if(view==="conquistas") renderConquistas();
-  if(view==="calendario") renderCalendario();
-  if(view==="certificados") renderCertificados();
-  if(view==="definicoes") renderDefinicoes();
-  if(view==="admin-visao") renderAdminVisaoGeral();
-  if(isAdminExtra) renderAdminPlaceholder(view);
+  const render = VIEWS[view];
+  if(render) render(a, b);
+  else if(ehAdmin) renderAdminPlaceholder(view);
   renderSidebarFoot();
   atualizarSidebarGlobal();
   atualizarTopbarCTA(view);

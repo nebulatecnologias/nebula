@@ -481,3 +481,21 @@ body.light .modal-cert h2{ color:var(--text); }
 .aviso-previa{ position:sticky; top:var(--topbar-h); z-index:29; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:11px 18px; background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:var(--radius-sm); margin-bottom:22px; font-size:13.5px; font-weight:600; color:var(--accent); flex-wrap:wrap; }
 
 @media (max-width:560px){ .drawer{ width:100%; max-width:100%; } }
+
+/* ---------------- Administração › Conteúdos ---------------- */
+.ligacao-tabela{ font:inherit; font-weight:600; color:var(--text); padding:0; text-align:left; }
+.ligacao-tabela:hover{ color:var(--accent); }
+.sub-celula{ font-size:12px; color:var(--text-faint); }
+.amostra-cor{ display:inline-block; width:16px; height:16px; border-radius:5px; border:1px solid var(--border-strong); vertical-align:middle; }
+
+.modulo-admin{ margin-bottom:14px; overflow:hidden; }
+.modulo-admin-head{ display:flex; align-items:center; gap:16px; padding:18px 20px; flex-wrap:wrap; }
+.aulas-admin{ border-top:1px solid var(--border); }
+.aula-admin{ display:flex; align-items:center; gap:14px; padding:12px 20px 12px 24px; border-top:1px solid var(--border); }
+.aula-admin:first-child{ border-top:none; }
+.aula-admin-num{ font-size:12px; font-weight:700; color:var(--text-faint); font-variant-numeric:tabular-nums; min-width:28px; }
+.aula-admin-info{ flex:1; min-width:0; }
+.aula-admin-info .titulo{ display:block; font-size:14px; font-weight:500; }
+.btn-nova-aula{ display:block; width:100%; padding:12px 20px; border-top:1px dashed var(--border-strong); font-size:13px; font-weight:600; color:var(--text-dim); text-align:left; }
+.btn-nova-aula:hover{ color:var(--accent); background:var(--surface-hover); }
+.btn-icone[disabled]{ opacity:.3; pointer-events:none; }
