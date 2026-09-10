@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kingdom Academy — Área de Membros</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root{
   --bg:            #0a0a0b;
@@ -24,17 +24,23 @@
   --accent-line:  rgba(255, 90, 31, 0.35);
   --success:      #3ddc84;
   --success-soft: rgba(61, 220, 132, 0.14);
+  --danger:       #e0483f;
+  --danger-soft:  rgba(224, 72, 63, 0.14);
+  --warning:      #f0a63e;
+  --warning-soft: rgba(240, 166, 62, 0.16);
   --radius-sm: 7px; --radius-md: 12px; --radius-lg: 18px; --radius-pill: 999px;
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-display: 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
   --sidebar-w: 264px; --topbar-h: 68px;
   --shadow-card: 0 1px 0 rgba(255,255,255,.02) inset, 0 10px 30px rgba(0,0,0,.35);
   --shadow-pop:  0 20px 50px rgba(0,0,0,.5);
 }
 body.light{
-  --bg:#f6f5f2; --bg-panel:#ffffff; --surface:#ffffff; --surface-hover:#f0eee9; --surface-raised:#ffffff;
-  --border:#e4e1da; --border-strong:#d3cfc5;
-  --text:#17171a; --text-dim:#5c5a63; --text-faint:#918f98;
+  --bg:#f7f6f3; --bg-panel:#ffffff; --surface:#ffffff; --surface-hover:#f3f1ec; --surface-raised:#ffffff;
+  --border:#ececea; --border-strong:#dddad2;
+  --text:#17171a; --text-dim:#66636d; --text-faint:#9c99a2;
+  --shadow-card: 0 1px 2px rgba(23,23,26,.04), 0 8px 24px rgba(23,23,26,.05);
+  --shadow-pop:  0 20px 50px rgba(23,23,26,.14);
 }
 *,*::before,*::after{ box-sizing:border-box; }
 html,body{ height:100%; }
@@ -95,6 +101,11 @@ img{ max-width:100%; display:block; }
 .app-shell{ display:flex; min-height:100vh; }
 .sidebar{ width:var(--sidebar-w); flex-shrink:0; background:var(--bg-panel); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:40; transition:transform .2s ease; }
 .sidebar-head{ padding:22px 22px 18px; border-bottom:1px solid var(--border); }
+.segmented{ display:inline-flex; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-pill); padding:3px; gap:2px; }
+.segmented button{ padding:8px 16px; border-radius:var(--radius-pill); font-size:13px; font-weight:700; color:var(--text-dim); white-space:nowrap; }
+.segmented button.active{ background:var(--text); color:var(--bg); }
+.segmented-block{ display:flex; width:100%; }
+.segmented-block button{ flex:1; text-align:center; padding:7px 10px; font-size:12.5px; }
 .sidebar-nav{ padding:14px 12px; flex:1; overflow-y:auto; }
 .nav-label{ font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--text-faint); padding:14px 12px 8px; }
 .nav-item{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--radius-sm); color:var(--text-dim); font-size:14px; font-weight:500; margin-bottom:2px; transition:background .12s ease,color .12s ease; cursor:pointer; }
@@ -107,6 +118,12 @@ img{ max-width:100%; display:block; }
 .nav-item .nav-dot{ margin-left:auto; width:8px; height:8px; border-radius:99px; background:var(--accent); flex-shrink:0; }
 .sidebar-foot{ padding:16px 22px 22px; border-top:1px solid var(--border); }
 .sidebar-foot .progress-mini-label{ display:flex; justify-content:space-between; font-size:12px; color:var(--text-faint); margin-bottom:8px; }
+.user-chip{ display:flex; align-items:center; gap:10px; cursor:default; }
+.user-chip .avatar{ width:34px; height:34px; font-size:12px; }
+.user-chip-info{ flex:1; min-width:0; }
+.user-chip-info .name{ font-size:13.5px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.user-chip-info .role{ font-size:11.5px; color:var(--text-faint); }
+.user-chip .chevron{ color:var(--text-faint); flex-shrink:0; }
 
 .main-col{ margin-left:var(--sidebar-w); flex:1; min-width:0; display:flex; flex-direction:column; }
 .topbar{ height:var(--topbar-h); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px; gap:20px; position:sticky; top:0; background:var(--bg); z-index:30; }
@@ -123,14 +140,61 @@ img{ max-width:100%; display:block; }
 
 .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); }
 .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-.stat-card{ padding:20px 22px; }
-.stat-card .stat-label{ font-size:12.5px; color:var(--text-faint); font-weight:600; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.stat-card{ padding:20px 22px; position:relative; }
+.stat-card .stat-label{ font-size:12.5px; color:var(--text-faint); font-weight:600; margin-bottom:10px; display:flex; align-items:center; gap:6px; padding-right:36px; }
 .stat-card .stat-value{ font-family:var(--font-display); font-size:28px; font-weight:700; }
 .stat-card .stat-value span{ font-size:15px; color:var(--text-faint); font-family:var(--font-body); font-weight:500; }
+.stat-icon{ position:absolute; top:18px; right:18px; width:36px; height:36px; border-radius:99px; background:var(--surface-raised); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-dim); }
+.stat-icon .icon{ width:16px; height:16px; }
+.stat-icon.accent{ background:var(--accent-soft); color:var(--accent); border-color:transparent; }
 .page-head{ margin-bottom:26px; }
 .page-head .eyebrow{ color:var(--accent); font-weight:700; font-size:12.5px; letter-spacing:.02em; margin-bottom:8px; display:block; }
 .page-head h1{ font-size:26px; }
 .page-head .desc{ color:var(--text-dim); font-size:14.5px; max-width:560px; }
+.page-head-flex{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.page-head-flex .page-head{ margin-bottom:0; }
+
+.filter-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+.search-pill{ position:relative; flex:1; min-width:200px; max-width:320px; }
+.search-pill .icon{ position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-faint); }
+.search-pill input{ width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-pill); padding:9px 16px 9px 38px; color:var(--text); font-size:13.5px; font-family:inherit; }
+.search-pill input:focus{ outline:none; border-color:var(--accent); }
+.select-wrap{ position:relative; }
+.select-wrap select{ appearance:none; -webkit-appearance:none; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-pill); padding:9px 32px 9px 16px; color:var(--text); font-size:13px; font-weight:600; font-family:inherit; }
+.select-wrap::after{ content:""; position:absolute; right:13px; top:50%; width:8px; height:8px; border:1.5px solid var(--text-faint); border-top:none; border-left:none; transform:translateY(-65%) rotate(45deg); pointer-events:none; }
+
+.pill{ display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:99px; font-size:12px; font-weight:700; white-space:nowrap; }
+.pill-quente{ background:var(--danger-soft); color:var(--danger); }
+.pill-morno{ background:var(--warning-soft); color:var(--warning); }
+.pill-frio{ background:var(--surface-raised); color:var(--text-faint); border:1px solid var(--border-strong); }
+.pill-ativo, .pill-concluido, .pill-publicado{ background:var(--success-soft); color:var(--success); }
+.pill-risco{ background:var(--warning-soft); color:var(--warning); }
+.pill-inativo{ background:var(--surface-raised); color:var(--text-faint); border:1px solid var(--border-strong); }
+
+.table-card{ padding:0; overflow:hidden; }
+.table-card-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:20px 22px; flex-wrap:wrap; }
+.table-card-head h3{ font-size:15.5px; margin:0; }
+.table-card-head .count{ font-size:12.5px; color:var(--text-faint); }
+.table-wrap{ overflow-x:auto; }
+.admin-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+.admin-table th{ text-align:left; font-size:10.5px; letter-spacing:.05em; color:var(--text-faint); font-weight:700; text-transform:uppercase; padding:0 22px 12px; white-space:nowrap; }
+.admin-table td{ padding:14px 22px; border-top:1px solid var(--border); white-space:nowrap; }
+.admin-table td.num{ text-align:right; font-variant-numeric:tabular-nums; font-weight:700; }
+.admin-table tr.tint-risco td{ background:var(--warning-soft); }
+.admin-table tr.tint-concluido td{ background:var(--success-soft); }
+.cell-user{ display:flex; align-items:center; gap:10px; }
+.cell-user .avatar{ width:32px; height:32px; font-size:11.5px; }
+.cell-user .meta{ min-width:0; }
+.cell-user .meta .nome{ font-weight:600; color:var(--text); }
+.cell-user .meta .sub{ font-size:12px; color:var(--text-faint); }
+.mini-progress{ display:flex; align-items:center; gap:8px; min-width:90px; }
+.mini-progress .progress-track{ width:60px; }
+
+.admin-placeholder{ padding:60px 30px; text-align:center; }
+.admin-placeholder .ph-icon{ width:56px; height:56px; border-radius:99px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+.admin-placeholder .ph-icon .icon{ width:24px; height:24px; }
+.admin-placeholder h2{ font-size:18px; margin-bottom:8px; }
+.admin-placeholder p{ max-width:380px; margin:0 auto; }
 .back-link{ display:inline-flex; align-items:center; gap:6px; color:var(--text-faint); font-size:13.5px; font-weight:600; margin-bottom:16px; cursor:pointer; }
 .back-link:hover{ color:var(--accent); }
 .progress-track{ width:100%; height:8px; border-radius:99px; background:var(--border); overflow:hidden; }
@@ -383,55 +447,23 @@ body.light .modal-cert h2{ color:var(--text); }
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-head">
-      <div class="brand-mark">
+      <div class="brand-mark" style="margin-bottom:16px;">
         <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="30" height="30"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="#ff5a1f" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span class="wordmark">Kingdom Academy<small>Formação & Mentoria</small></span>
       </div>
+      <div class="segmented segmented-block" id="role-switch">
+        <button data-papel="aluno" class="active">Aluno</button>
+        <button data-papel="administrador">Administrador</button>
+      </div>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-label">Geral</div>
-      <div class="nav-item" data-view="dashboard">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-        Início
-      </div>
-      <div class="nav-item" data-view="catalogo">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>
-        Meus cursos
-      </div>
-      <div class="nav-item" data-view="calendario">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>
-        Calendário
-        <span class="nav-dot hidden" id="dot-calendario"></span>
-      </div>
-      <div class="nav-item" data-view="comunidade">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="6" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Comunidade
-        <span class="nav-dot hidden" id="dot-comunidade"></span>
-      </div>
-      <div class="nav-label">Progresso</div>
-      <div class="nav-item" data-view="conquistas">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a1 1 0 0 0-1 1 5 5 0 0 0 4 4.9"/><path d="M17 5h3a1 1 0 0 1 1 1 5 5 0 0 1-4 4.9"/></svg>
-        Conquistas
-      </div>
-      <div class="nav-item" data-view="certificados">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>
-        Certificados
-        <span class="nav-dot hidden" id="dot-certificados"></span>
-      </div>
-      <div class="nav-label">Conta</div>
-      <div class="nav-item" data-view="definicoes">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
-        Definições
-      </div>
+      <div id="sidebar-nav-items"></div>
       <div class="nav-item" id="btn-logout">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
         Sair
       </div>
     </nav>
-    <div class="sidebar-foot">
-      <div class="progress-mini-label"><span>Progresso geral</span><span id="sidebar-pct">0%</span></div>
-      <div class="progress-track thin"><div class="progress-fill mini" id="sidebar-progress-fill" style="width:0%"></div></div>
-    </div>
+    <div class="sidebar-foot" id="sidebar-foot"></div>
   </aside>
 
   <div class="main-col">
@@ -439,6 +471,7 @@ body.light .modal-cert h2{ color:var(--text); }
       <button class="menu-toggle icon-btn" id="btn-menu" aria-label="Abrir menu"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <div class="topbar-search"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="text" placeholder="Pesquisar aulas, módulos..."></div>
       <div class="topbar-actions">
+        <span id="topbar-cta"></span>
         <button class="icon-btn" id="btn-tema" aria-label="Alternar tema"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         <button class="icon-btn" aria-label="Notificações"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="badge-dot">2</span></button>
         <div class="avatar" id="avatar-iniciais">SD</div>
@@ -455,6 +488,8 @@ body.light .modal-cert h2{ color:var(--text); }
       <div id="content-calendario" class="hidden"></div>
       <div id="content-certificados" class="hidden"></div>
       <div id="content-definicoes" class="hidden"></div>
+      <div id="content-admin-visao" class="hidden"></div>
+      <div id="content-admin-placeholder" class="hidden"></div>
     </main>
   </div>
 </div>
@@ -479,6 +514,75 @@ body.light .modal-cert h2{ color:var(--text); }
    Dados mock — Kingdom Academy
    ============================================================ */
 const ALUNO = { nome: "Sofia Domingos" };
+
+const ICONS = {
+  home:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>',
+  book:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>',
+  cal:    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>',
+  people: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="6" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  trophy: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a1 1 0 0 0-1 1 5 5 0 0 0 4 4.9"/><path d="M17 5h3a1 1 0 0 1 1 1 5 5 0 0 1-4 4.9"/></svg>',
+  cert:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>',
+  gear:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>',
+  layers: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+  image:  '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 16-5-5-9 9"/></svg>',
+  card:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>',
+  mail:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 7 9-7"/></svg>',
+  chat:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-.95L3 20l1.05-3.5A8.4 8.4 0 0 1 3.5 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5Z"/></svg>',
+  globe:  '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>',
+  flag:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 21V4"/><path d="M5 4h13l-3 4 3 4H5"/></svg>',
+  tag:    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m20.5 12.4-8-8A2 2 0 0 0 11 3.7H4.7A1.7 1.7 0 0 0 3 5.4V11.7a2 2 0 0 0 .6 1.4l8 8a2 2 0 0 0 2.8 0l6.1-6.1a2 2 0 0 0 0-2.6Z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>',
+  chart:  '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>',
+  spark:  '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c.6 3.6 2.4 5.4 6 6-3.6.6-5.4 2.4-6 6-.6-3.6-2.4-5.4-6-6 3.6-.6 5.4-2.4 6-6Z"/></svg>',
+  plug:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2v6M15 2v6M6 8h12l-1 5a5 5 0 0 1-5 4 5 5 0 0 1-5-4L6 8Z"/><path d="M12 17v5"/></svg>',
+  palette:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 1.6-1.9-.2-.5-.1-1.1.3-1.5.4-.4 1-.5 1.5-.3 1.7.7 3.6-.5 3.6-2.3 0-4.4-3.1-8-7-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="8.5" r="1.2"/></svg>',
+  chevronDown: '<svg class="icon icon-sm chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+};
+
+const NAV_ALUNO = [
+  { grupo:"Geral", itens:[
+    { view:"dashboard", label:"Início", icon:ICONS.home },
+    { view:"catalogo", label:"Meus cursos", icon:ICONS.book },
+    { view:"calendario", label:"Calendário", icon:ICONS.cal, dot:"calendario" },
+    { view:"comunidade", label:"Comunidade", icon:ICONS.people, dot:"comunidade" }
+  ]},
+  { grupo:"Progresso", itens:[
+    { view:"conquistas", label:"Conquistas", icon:ICONS.trophy },
+    { view:"certificados", label:"Certificados", icon:ICONS.cert, dot:"certificados" }
+  ]},
+  { grupo:"Conta", itens:[
+    { view:"definicoes", label:"Definições", icon:ICONS.gear }
+  ]}
+];
+
+const NAV_ADMIN = [
+  { grupo:"Geral", itens:[
+    { view:"admin-visao", label:"Visão geral", icon:ICONS.home }
+  ]},
+  { grupo:"Conteúdo", itens:[
+    { view:"admin-conteudos", label:"Conteúdos", icon:ICONS.book },
+    { view:"admin-turmas", label:"Turmas", icon:ICONS.layers },
+    { view:"admin-certificados", label:"Certificados", icon:ICONS.cert },
+    { view:"admin-banners", label:"Banners", icon:ICONS.image }
+  ]},
+  { grupo:"Alunos e Comunidade", itens:[
+    { view:"admin-assinaturas", label:"Assinaturas", icon:ICONS.card },
+    { view:"admin-convites", label:"Convites", icon:ICONS.mail },
+    { view:"admin-membros", label:"Membros", icon:ICONS.people },
+    { view:"admin-comentarios", label:"Comentários", icon:ICONS.chat },
+    { view:"admin-comunidades", label:"Comunidades", icon:ICONS.globe },
+    { view:"admin-ranking", label:"Ranking", icon:ICONS.flag }
+  ]},
+  { grupo:"Negócio", itens:[
+    { view:"admin-ofertas", label:"Ofertas", icon:ICONS.tag },
+    { view:"admin-relatorios", label:"Relatórios", icon:ICONS.chart },
+    { view:"admin-ia", label:"Assistente IA", icon:ICONS.spark },
+    { view:"admin-integracoes", label:"Integrações", icon:ICONS.plug }
+  ]},
+  { grupo:"Conta", itens:[
+    { view:"admin-aparencia", label:"Aparência", icon:ICONS.palette },
+    { view:"admin-config", label:"Configurações", icon:ICONS.gear }
+  ]}
+];
 
 const CATEGORIAS = {
   negocios:      { nome:"Negócios",                  cor:"#ff5a1f" },
@@ -578,6 +682,26 @@ const CURSOS = [
     ]}
 ];
 
+const ADMIN_ALUNOS = [
+  { nome:"Marta Macomo", email:"marta@studiomacomo.co", curso:"Kingdom Tracktion", categoria:"negocios", origem:"Instagram", ultimoAcesso:"há 2 dias", engajamento:"quente", progresso:82, estagio:"ativo", responsavel:"Maria M." },
+  { nome:"Airson Zunguze", email:"airson@worldofpunch.co", curso:"IA Aplicada aos Negócios", categoria:"ia", origem:"Instagram", ultimoAcesso:"há 5 dias", engajamento:"morno", progresso:45, estagio:"ativo", responsavel:"Shelton D." },
+  { nome:"Leatricia Vilanculos", email:"leatricia@tongasbbq.co", curso:"Mentalidade Inquebrável", categoria:"mentalidade", origem:"Indicação", ultimoAcesso:"hoje", engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
+  { nome:"Renato Alfredo", email:"renato@mtanation.co", curso:"Vendas de Alto Impacto", categoria:"marketing", origem:"Instagram", ultimoAcesso:"há 12 dias", engajamento:"frio", progresso:8, estagio:"risco", responsavel:"Shelton D." },
+  { nome:"Hostina Daia", email:"hostina@daiaenergias.co", curso:"Propósito em Movimento", categoria:"espiritualidade", origem:"Facebook", ultimoAcesso:"há 1 dia", engajamento:"morno", progresso:60, estagio:"ativo", responsavel:"Maria M." },
+  { nome:"Clarisse Jamnadas", email:"clarisse@visador.co", curso:"Hábitos de Elite", categoria:"pessoal", origem:"Perfil pessoal", ultimoAcesso:"há 3 dias", engajamento:"morno", progresso:30, estagio:"ativo", responsavel:"Shelton D." },
+  { nome:"Mendes Alfazema", email:"mendes@cafridjah.co", curso:"Kingdom Tracktion", categoria:"negocios", origem:"Indicação", ultimoAcesso:"há 20 dias", engajamento:"frio", progresso:15, estagio:"inativo", responsavel:"Maria M." },
+  { nome:"Ana Chissano", email:"ana@chissanoco.co", curso:"Mentalidade Inquebrável", categoria:"mentalidade", origem:"Instagram", ultimoAcesso:"hoje", engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." }
+];
+
+const ADMIN_CURSO_STATS = {
+  kt:{ inscritos:186, avaliacao:4.8, conclusao:34 },
+  mi:{ inscritos:142, avaliacao:4.9, conclusao:88 },
+  ia:{ inscritos:97,  avaliacao:4.7, conclusao:52 },
+  vv:{ inscritos:64,  avaliacao:4.6, conclusao:21 },
+  pf:{ inscritos:53,  avaliacao:4.9, conclusao:47 },
+  he:{ inscritos:41,  avaliacao:4.5, conclusao:19 }
+};
+
 const EVENTOS = [
   { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:"2026-09-16", hora:"19:00", tipo:"Mentoria ao vivo" },
   { id:"e2", titulo:"Q&A: Vender com Ajuda da IA", categoria:"ia", data:"2026-09-19", hora:"20:00", tipo:"Perguntas e respostas" },
@@ -616,10 +740,14 @@ const CONQUISTAS = [
    ============================================================ */
 const estado = {
   nome: ALUNO.nome,
+  papel: "aluno",
   ultimoCurso: "kt",
   ultimaAulaPorCurso: { kt:"kt-m1a3", ia:"ia-m1a3", pf:"pf-m1a2" },
   streakDias: 6,
   filtroCategoria: "todos",
+  abaAdmin: "alunos",
+  filtroCategoriaAdmin: "todos",
+  buscaAdmin: "",
   notificacoes: { email:true, lembretes:true, comunidade:false },
   progresso: {
     "kt-m1a1":true, "kt-m1a2":true, "kt-m1a3":false, "kt-m1a4":false,
@@ -679,10 +807,12 @@ function mostrarToast(msg){
    Router
    ============================================================ */
 function irPara(view, a, b){
+  estado.viewAtual = view;
+  const isAdminExtra = view.indexOf("admin-")===0 && view!=="admin-visao";
+  const containerId = isAdminExtra ? "content-admin-placeholder" : "content-"+view;
   document.querySelectorAll("#app-shell .content > div").forEach(v=>v.classList.add("hidden"));
-  document.getElementById("content-"+view).classList.remove("hidden");
-  const navView = (view==="curso" || view==="aula") ? "catalogo" : view;
-  document.querySelectorAll(".sidebar .nav-item[data-view]").forEach(n=>n.classList.toggle("active", n.getAttribute("data-view")===navView));
+  document.getElementById(containerId).classList.remove("hidden");
+  renderSidebarNav(view);
   if(view==="dashboard") renderDashboard();
   if(view==="catalogo") renderCatalogo();
   if(view==="curso") renderCurso(a);
@@ -692,21 +822,79 @@ function irPara(view, a, b){
   if(view==="calendario") renderCalendario();
   if(view==="certificados") renderCertificados();
   if(view==="definicoes") renderDefinicoes();
+  if(view==="admin-visao") renderAdminVisaoGeral();
+  if(isAdminExtra) renderAdminPlaceholder(view);
+  renderSidebarFoot();
   atualizarSidebarGlobal();
+  atualizarTopbarCTA(view);
   fecharMenuMobile();
   window.scrollTo(0,0);
 }
 
+function trocarPapel(papel){
+  estado.papel = papel;
+  document.querySelectorAll("#role-switch button").forEach(b => b.classList.toggle("active", b.getAttribute("data-papel")===papel));
+  irPara(papel==="administrador" ? "admin-visao" : "dashboard");
+}
+
+function renderSidebarNav(activeView){
+  const lista = estado.papel==="administrador" ? NAV_ADMIN : NAV_ALUNO;
+  const navView = (activeView==="curso" || activeView==="aula") ? "catalogo" : activeView;
+  const el = document.getElementById("sidebar-nav-items");
+  el.innerHTML = lista.map(grupo => `
+    <div class="nav-label">${grupo.grupo}</div>
+    ${grupo.itens.map(it => `
+      <div class="nav-item ${it.view===navView?"active":""}" data-view="${it.view}">
+        ${it.icon}
+        <span>${it.label}</span>
+        ${it.dot ? `<span class="nav-dot hidden" id="dot-${it.dot}"></span>` : ""}
+      </div>
+    `).join("")}
+  `).join("");
+  el.querySelectorAll(".nav-item[data-view]").forEach(n => n.addEventListener("click", () => irPara(n.getAttribute("data-view"))));
+}
+
+function renderSidebarFoot(){
+  const el = document.getElementById("sidebar-foot");
+  if(estado.papel==="administrador"){
+    el.innerHTML = `
+      <div class="user-chip">
+        <div class="avatar">${iniciais(estado.nome)}</div>
+        <div class="user-chip-info"><div class="name">${estado.nome}</div><div class="role">Administrador</div></div>
+        ${ICONS.chevronDown}
+      </div>
+    `;
+  } else {
+    el.innerHTML = `
+      <div class="progress-mini-label"><span>Progresso geral</span><span id="sidebar-pct">0%</span></div>
+      <div class="progress-track thin"><div class="progress-fill mini" id="sidebar-progress-fill" style="width:0%"></div></div>
+    `;
+  }
+}
+
+function atualizarTopbarCTA(view){
+  const el = document.getElementById("topbar-cta");
+  if(view==="admin-visao"){
+    el.innerHTML = `<button class="btn btn-primary btn-sm" id="btn-convidar-aluno">+ Convidar aluno</button>`;
+    document.getElementById("btn-convidar-aluno").addEventListener("click", () => mostrarToast("Convite enviado (mock)"));
+  } else {
+    el.innerHTML = "";
+  }
+}
+
 function atualizarSidebarGlobal(){
   const p = progressoGeral();
-  document.getElementById("sidebar-pct").textContent = p.pct + "%";
-  document.getElementById("sidebar-progress-fill").style.width = p.pct + "%";
+  const pct = document.getElementById("sidebar-pct");
+  const fill = document.getElementById("sidebar-progress-fill");
+  if(pct) pct.textContent = p.pct + "%";
+  if(fill) fill.style.width = p.pct + "%";
   document.getElementById("avatar-iniciais").textContent = iniciais(estado.nome);
-  const temCertificado = CURSOS.some(c=>progressoCurso(c).pct===100);
-  document.getElementById("dot-certificados").classList.toggle("hidden", !temCertificado);
-  const proximoEm7Dias = EVENTOS.some(e=>{ const d=diasAte(new Date(e.data+"T"+e.hora+":00")); return d>=0 && d<=7; });
-  document.getElementById("dot-calendario").classList.toggle("hidden", !proximoEm7Dias);
-  document.getElementById("dot-comunidade").classList.remove("hidden");
+  const dotCert = document.getElementById("dot-certificados");
+  if(dotCert){ const temCertificado = CURSOS.some(c=>progressoCurso(c).pct===100); dotCert.classList.toggle("hidden", !temCertificado); }
+  const dotCal = document.getElementById("dot-calendario");
+  if(dotCal){ const proximoEm7Dias = EVENTOS.some(e=>{ const d=diasAte(new Date(e.data+"T"+e.hora+":00")); return d>=0 && d<=7; }); dotCal.classList.toggle("hidden", !proximoEm7Dias); }
+  const dotCom = document.getElementById("dot-comunidade");
+  if(dotCom) dotCom.classList.remove("hidden");
 }
 
 function fecharMenuMobile(){
@@ -1247,6 +1435,150 @@ function renderDefinicoes(){
   });
 }
 
+/* ---------------- Administrador: Visão geral ---------------- */
+function renderAdminVisaoGeral(){
+  const totalInscritos = Object.values(ADMIN_CURSO_STATS).reduce((s,c)=>s+c.inscritos,0);
+  const conclusaoMedia = Math.round(Object.values(ADMIN_CURSO_STATS).reduce((s,c)=>s+c.conclusao,0)/CURSOS.length);
+  document.getElementById("content-admin-visao").innerHTML = `
+    <div class="page-head-flex">
+      <div class="page-head">
+        <span class="eyebrow">PAINEL DE ADMINISTRAÇÃO</span>
+        <h1>Visão geral</h1>
+        <p class="desc">Todos os teus alunos, cursos e resultados num só lugar.</p>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-icon accent">${ICONS.people}</div><div class="stat-label">Alunos ativos</div><div class="stat-value">${totalInscritos}</div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.book}</div><div class="stat-label">Cursos publicados</div><div class="stat-value">${CURSOS.length}<span>${Object.keys(CATEGORIAS).length} categorias</span></div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.cert}</div><div class="stat-label">Certificados emitidos</div><div class="stat-value">156</div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.chart}</div><div class="stat-label">Conclusão média</div><div class="stat-value">${conclusaoMedia}<span>%</span></div></div>
+    </div>
+    <div class="filter-bar">
+      <div class="segmented" id="admin-segmented">
+        <button data-aba="alunos" class="${estado.abaAdmin==="alunos"?"active":""}">Alunos</button>
+        <button data-aba="cursos" class="${estado.abaAdmin==="cursos"?"active":""}">Cursos</button>
+      </div>
+      <div class="search-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="admin-busca" placeholder="Procurar por nome ou curso..." value="${estado.buscaAdmin}"></div>
+      <div class="select-wrap"><select id="admin-filtro-categoria">
+        <option value="todos">Todas as categorias</option>
+        ${Object.entries(CATEGORIAS).map(([id,c])=>`<option value="${id}" ${estado.filtroCategoriaAdmin===id?"selected":""}>${c.nome}</option>`).join("")}
+      </select></div>
+    </div>
+    <div id="admin-tabela-wrap"></div>
+  `;
+  document.querySelectorAll("#admin-segmented button").forEach(b => b.addEventListener("click", () => {
+    estado.abaAdmin = b.getAttribute("data-aba");
+    document.querySelectorAll("#admin-segmented button").forEach(x=>x.classList.toggle("active", x===b));
+    renderAdminTabela();
+  }));
+  document.getElementById("admin-busca").addEventListener("input", e => { estado.buscaAdmin = e.target.value; renderAdminTabela(); });
+  document.getElementById("admin-filtro-categoria").addEventListener("change", e => { estado.filtroCategoriaAdmin = e.target.value; renderAdminTabela(); });
+  renderAdminTabela();
+}
+
+function renderAdminTabela(){
+  const wrap = document.getElementById("admin-tabela-wrap");
+  if(!wrap) return;
+  wrap.innerHTML = estado.abaAdmin==="cursos" ? tabelaAdminCursosHTML() : tabelaAdminAlunosHTML();
+}
+
+function tabelaAdminAlunosHTML(){
+  const busca = estado.buscaAdmin.trim().toLowerCase();
+  const lista = ADMIN_ALUNOS.filter(a => {
+    const passaCategoria = estado.filtroCategoriaAdmin==="todos" || a.categoria===estado.filtroCategoriaAdmin;
+    const passaBusca = !busca || a.nome.toLowerCase().includes(busca) || a.curso.toLowerCase().includes(busca);
+    return passaCategoria && passaBusca;
+  });
+  const PILL_ENG = { quente:"pill-quente", morno:"pill-morno", frio:"pill-frio" };
+  const LABEL_ENG = { quente:"Quente", morno:"Morno", frio:"Frio" };
+  const PILL_EST = { ativo:"pill-ativo", risco:"pill-risco", concluido:"pill-concluido", inativo:"pill-inativo" };
+  const LABEL_EST = { ativo:"Ativo", risco:"Em risco", concluido:"Concluído", inativo:"Inativo" };
+  const TINT_EST = { risco:"tint-risco", concluido:"tint-concluido" };
+  return `
+    <div class="card table-card">
+      <div class="table-card-head">
+        <h3>Atividade dos alunos</h3>
+        <span class="count">${lista.length} de ${ADMIN_ALUNOS.length} registos</span>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr>
+            <th>Aluno</th><th>Curso</th><th>Categoria</th><th>Último acesso</th><th>Engajamento</th><th>Progresso</th><th>Estágio</th><th>Responsável</th>
+          </tr></thead>
+          <tbody>
+            ${lista.length ? lista.map(a => {
+              const cat = CATEGORIAS[a.categoria];
+              return `<tr class="${TINT_EST[a.estagio]||""}">
+                <td><div class="cell-user"><div class="avatar">${iniciais(a.nome)}</div><div class="meta"><div class="nome">${a.nome}</div><div class="sub">${a.email}</div></div></div></td>
+                <td>${a.curso}</td>
+                <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
+                <td>${a.ultimoAcesso}</td>
+                <td><span class="pill ${PILL_ENG[a.engajamento]}">${LABEL_ENG[a.engajamento]}</span></td>
+                <td><div class="mini-progress"><div class="progress-track thin"><div class="progress-fill mini" style="width:${a.progresso}%"></div></div><span>${a.progresso}%</span></div></td>
+                <td><span class="pill ${PILL_EST[a.estagio]}">${LABEL_EST[a.estagio]}</span></td>
+                <td>${a.responsavel}</td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="8"><div class="empty-note">Nenhum aluno encontrado com estes filtros.</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function tabelaAdminCursosHTML(){
+  const busca = estado.buscaAdmin.trim().toLowerCase();
+  const lista = CURSOS.filter(c => {
+    const passaCategoria = estado.filtroCategoriaAdmin==="todos" || c.categoria===estado.filtroCategoriaAdmin;
+    const passaBusca = !busca || c.titulo.toLowerCase().includes(busca);
+    return passaCategoria && passaBusca;
+  });
+  return `
+    <div class="card table-card">
+      <div class="table-card-head">
+        <h3>Cursos publicados</h3>
+        <span class="count">${lista.length} de ${CURSOS.length} registos</span>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr>
+            <th>Curso</th><th>Categoria</th><th>Módulos</th><th>Alunos inscritos</th><th>Conclusão média</th><th>Avaliação</th><th>Estado</th>
+          </tr></thead>
+          <tbody>
+            ${lista.length ? lista.map(c => {
+              const cat = CATEGORIAS[c.categoria];
+              const st = ADMIN_CURSO_STATS[c.id];
+              return `<tr>
+                <td>${c.titulo}</td>
+                <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
+                <td class="num">${c.modulos.length}</td>
+                <td class="num">${st.inscritos}</td>
+                <td><div class="mini-progress"><div class="progress-track thin"><div class="progress-fill mini" style="width:${st.conclusao}%"></div></div><span>${st.conclusao}%</span></div></td>
+                <td class="num">★ ${st.avaliacao}</td>
+                <td><span class="pill pill-publicado">Publicado</span></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="7"><div class="empty-note">Nenhum curso encontrado com estes filtros.</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- Administrador: abas por construir ---------------- */
+function renderAdminPlaceholder(view){
+  let label = view, icon = ICONS.gear;
+  for(const grupo of NAV_ADMIN){ const item = grupo.itens.find(i=>i.view===view); if(item){ label = item.label; icon = item.icon; break; } }
+  document.getElementById("content-admin-placeholder").innerHTML = `
+    <div class="page-head"><span class="eyebrow">PAINEL DE ADMINISTRAÇÃO</span><h1>${label}</h1></div>
+    <div class="card admin-placeholder">
+      <div class="ph-icon">${icon}</div>
+      <h2>Esta aba vai ser construída na próxima etapa</h2>
+      <p>Vamos aplicar aqui o mesmo sistema de design da Visão Geral — cores, tabelas e componentes — quando avançarmos para "${label}".</p>
+    </div>
+  `;
+}
+
 /* ============================================================
    Login / logout / shell
    ============================================================ */
@@ -1267,8 +1599,8 @@ document.getElementById("btn-logout").addEventListener("click", () => {
   document.getElementById("view-login").classList.remove("hidden");
 });
 
-document.querySelectorAll(".sidebar .nav-item[data-view]").forEach(n => {
-  n.addEventListener("click", () => irPara(n.getAttribute("data-view")));
+document.querySelectorAll("#role-switch button").forEach(b => {
+  b.addEventListener("click", () => trocarPapel(b.getAttribute("data-papel")));
 });
 
 document.getElementById("btn-tema").addEventListener("click", () => {
