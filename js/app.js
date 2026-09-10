@@ -96,8 +96,16 @@ document.addEventListener("click", e => {
 });
 
 document.getElementById("btn-tema").addEventListener("click", () => {
-  document.body.classList.toggle("light");
+  /* A escolha de quem está a usar guarda-se e passa a mandar sobre o
+     tema por omissão definido em Aparência. */
+  const claro = !document.body.classList.contains("light");
+  document.body.classList.toggle("light", claro);
+  estado.tema = claro ? "light" : "dark";
+  guardarEstado();
 });
+
+/* A identidade definida no painel é aplicada logo no ecrã de entrada. */
+aplicarAparencia();
 
 document.getElementById("btn-menu").addEventListener("click", () => {
   document.getElementById("sidebar").classList.add("open");

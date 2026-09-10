@@ -279,18 +279,22 @@ function renderAula(cursoId, aulaId){
 
   const { anterior, proxima } = aulaAnteriorProxima(curso, aula.id);
   const concluida = !!estado.progresso[aula.id];
+  const videoUrl = urlDoVideo(aula);
 
   document.getElementById("content-aula").innerHTML = `
     <div class="back-link" id="btn-voltar-curso"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar ao curso</div>
     <div class="aula-layout">
       <div>
         <div class="player-wrap">
-          <!-- PANDA_VIDEO_EMBED_AQUI -->
-          <div class="placeholder-inner">
-            <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
-            <div class="placeholder-label">PLACEHOLDER DE VÍDEO — PANDA VIDEO</div>
-            <div class="placeholder-sub">O embed real entra aqui após a integração</div>
-          </div>
+          ${videoUrl ? `
+            <iframe class="player-embed" src="${videoUrl}" title="${aula.titulo}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+          ` : `
+            <div class="placeholder-inner">
+              <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
+              <div class="placeholder-label">PLACEHOLDER DE VÍDEO — ${(DB.config.integracoes.player||"VÍDEO").toUpperCase()}</div>
+              <div class="placeholder-sub">${DB.config.integracoes.playerAtivo ? "Esta aula ainda não tem ID de vídeo" : "O embed real entra aqui após a integração"}</div>
+            </div>
+          `}
         </div>
         <div class="aula-header-row">
           <div>
@@ -409,7 +413,10 @@ function guardarAvaliacao(curso, aula, campos){
 function renderComunidade(){
   const espacos = espacosAtivos();
   const atual = espacos.find(e => e.id === estado.espacoComunidade) || espacos[0];
-  const podePublicar = atual && (!atual.soAdminPublica || papelEfetivo()==="administrador");
+  const equipa = papelEfetivo()==="administrador";
+  const podePublicar = atual
+    && (!atual.soAdminPublica || equipa)
+    && (DB.config.alunosPublicam !== false || equipa);
 
   document.getElementById("content-comunidade").innerHTML = `
     <div class="page-head">
@@ -429,7 +436,9 @@ function renderComunidade(){
       </div>
     </div>` : `
     <div class="card" style="padding:16px 20px;margin-bottom:20px;">
-      <p style="margin:0;font-size:13.5px;">Só a equipa da academia publica em ${atual ? atual.nome : "este espaço"}.</p>
+      <p style="margin:0;font-size:13.5px;">${DB.config.alunosPublicam === false
+        ? "O mural está em modo de leitura. Por agora, só a equipa da academia publica."
+        : `Só a equipa da academia publica em ${atual ? atual.nome : "este espaço"}.`}</p>
     </div>`}
     <div id="feed-posts"></div>
   `;
@@ -740,6 +749,14 @@ function renderDefinicoes(){
           </div>
         </div>
         <button class="btn btn-primary" id="btn-guardar-definicoes">Guardar alterações</button>
+        ${DB.config.integracoes.suporteUrl ? `
+        <div class="card bloco-apoio">
+          <div>
+            <div class="t-title">Precisas de ajuda?</div>
+            <div class="t-sub">Fala diretamente com quem acompanha o teu percurso.</div>
+          </div>
+          <a class="btn btn-secondary" href="${DB.config.integracoes.suporteUrl}" target="_blank" rel="noopener">${DB.config.integracoes.suporteRotulo || "Falar com a mentoria"}</a>
+        </div>` : ""}
       </div>
       <div class="card settings-card">
         <h3>Resumo da conta</h3>

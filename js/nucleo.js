@@ -24,6 +24,79 @@ function cursosVisiveis(){
   return publicados.filter(c => permitidos.has(c.id));
 }
 function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
+
+/* ============================================================
+   Aparência
+   O que o administrador define em Aparência é aplicado aqui:
+   cor, nome, logótipo e tema. Uma só função, chamada ao arrancar
+   e sempre que a configuração muda.
+   ============================================================ */
+function hexParaRgba(hex, alfa){
+  const h = (hex||"#ff5a1f").replace("#","");
+  const n = h.length===3 ? h.split("").map(c=>c+c).join("") : h;
+  const num = parseInt(n,16);
+  return `rgba(${(num>>16)&255}, ${(num>>8)&255}, ${num&255}, ${alfa})`;
+}
+function clarearHex(hex, quanto){
+  const h = (hex||"#ff5a1f").replace("#","");
+  const n = h.length===3 ? h.split("").map(c=>c+c).join("") : h;
+  const num = parseInt(n,16);
+  const mistura = c => Math.round(c + (255-c)*quanto);
+  const r = mistura((num>>16)&255), g = mistura((num>>8)&255), b = mistura(num&255);
+  return "#" + [r,g,b].map(c=>c.toString(16).padStart(2,"0")).join("");
+}
+
+function crestSVG(cor, pequeno){
+  const tam = pequeno ? ' width="30" height="30"' : "";
+  return `<svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"${tam}><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="${cor}" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="${cor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function marcaHTML(pequeno){
+  const a = DB.aparencia;
+  const marca = a.logoUrl
+    ? `<img class="crest logo-imagem" src="${a.logoUrl}" alt="${a.nomeEscola}"${pequeno?' style="width:30px;height:30px;"':""}>`
+    : crestSVG(a.corAccent, pequeno);
+  return `${marca}<span class="wordmark">${a.nomeEscola}<small>${a.sublinha||""}</small></span>`;
+}
+
+function aplicarAparencia(){
+  const a = DB.aparencia;
+  const raiz = document.documentElement.style;
+  raiz.setProperty("--accent", a.corAccent);
+  raiz.setProperty("--accent-hover", clarearHex(a.corAccent, 0.18));
+  raiz.setProperty("--accent-soft", hexParaRgba(a.corAccent, 0.14));
+  raiz.setProperty("--accent-line", hexParaRgba(a.corAccent, 0.35));
+
+  document.title = a.nomeEscola + " — Área de Membros";
+  document.querySelectorAll(".brand-mark").forEach(el => {
+    el.innerHTML = marcaHTML(!!el.closest(".sidebar-head"));
+  });
+
+  const kicker = document.querySelector("#login-quote .kicker");
+  const titulo = document.querySelector("#login-quote h2");
+  const texto  = document.querySelector("#login-quote p");
+  if(kicker) kicker.textContent = a.nomeEscola.toUpperCase();
+  if(titulo) titulo.textContent = a.loginTitulo;
+  if(texto)  texto.textContent = a.loginTexto;
+  const rodape = document.getElementById("login-rodape");
+  if(rodape) rodape.textContent = a.rodape || "";
+
+  /* O tema que a pessoa escolheu no botão manda sobre o tema por omissão. */
+  const tema = estado.tema || a.temaPadrao;
+  document.body.classList.toggle("light", tema === "light");
+}
+
+/* Só as abas ligadas em Configurações chegam ao aluno. */
+function navDoAluno(){
+  const ligadas = new Set(DB.config.abasAluno || []);
+  return NAV_ALUNO
+    .map(g => ({ ...g, itens:g.itens.filter(i => ligadas.has(i.view)) }))
+    .filter(g => g.itens.length);
+}
+function abaDoAlunoLigada(view){
+  if(view==="curso" || view==="aula") return (DB.config.abasAluno||[]).includes("catalogo");
+  return !NAV_ALUNO.some(g=>g.itens.some(i=>i.view===view)) || (DB.config.abasAluno||[]).includes(view);
+}
 /* Cursos criados pelo administrador ainda não têm estatísticas registadas. */
 function statsCurso(id){ return DB.cursoStats[id] || { inscritos:0, conclusao:0, avaliacao:0 }; }
 function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
@@ -77,7 +150,7 @@ function certificadoHTML({ nome, curso, data, comFechar }){
   const c = DB.config.certificado;
   return `
     ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
-    <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="#ff5a1f" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="${DB.aparencia.corAccent}" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="${DB.aparencia.corAccent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span class="kicker">${c.titulo}</span>
     <h2>${nome}</h2>
     <p style="color:var(--text-dim);">${c.frase}</p>
@@ -162,6 +235,8 @@ function irPara(view, a, b){
   /* Um atalho antigo ou um ecrã que deixou de existir não pode deixar a
      app sem nada visível: voltamos ao início. */
   if(!container){ if(view!=="dashboard") irPara("dashboard"); return; }
+  /* Uma aba desligada em Configurações não abre para o aluno. */
+  if(!ehAdmin && papelEfetivo()!=="administrador" && !abaDoAlunoLigada(view) && view!=="dashboard"){ irPara("dashboard"); return; }
   document.querySelectorAll("#app-shell .content > div").forEach(v=>v.classList.add("hidden"));
   container.classList.remove("hidden");
   renderSidebarNav(view);
@@ -177,7 +252,7 @@ function irPara(view, a, b){
 }
 
 function renderSidebarNav(activeView){
-  const lista = papelEfetivo()==="administrador" ? NAV_ADMIN : NAV_ALUNO;
+  const lista = papelEfetivo()==="administrador" ? NAV_ADMIN : navDoAluno();
   const navView = (activeView==="curso" || activeView==="aula") ? "catalogo" : activeView;
   const el = document.getElementById("sidebar-nav-items");
   el.innerHTML = lista.map(grupo => `
