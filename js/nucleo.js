@@ -85,6 +85,21 @@ function certificadoDesbloqueado(curso){
   return cursoEmiteCertificado(curso) && progressoCurso(curso).pct >= regraCertificado();
 }
 
+/* Avaliação da aula feita por quem está na sessão. */
+function minhaAvaliacao(aulaId){
+  const membro = membroAtual();
+  return (DB.avaliacoes||[]).find(a => a.aulaId===aulaId && (membro ? a.membroId===membro.id : a.membroId===null));
+}
+function espacoPorId(id){ return (DB.espacos||[]).find(e=>e.id===id) || { nome:"Geral", cor:"#ff5a1f" }; }
+function espacosAtivos(){ return (DB.espacos||[]).filter(e=>e.ativo!==false); }
+/* O feed do aluno esconde o que foi moderado e põe os fixados à frente. */
+function postsVisiveis(){
+  const ativos = new Set(espacosAtivos().map(e=>e.id));
+  return (DB.posts||[])
+    .filter(p => !p.oculto && ativos.has(p.espacoId||"geral"))
+    .sort((a,b) => (b.fixado?1:0) - (a.fixado?1:0));
+}
+
 function iconeCheck(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>'; }
 function iconePlay(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>'; }
 

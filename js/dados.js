@@ -211,11 +211,28 @@ const EVENTOS_PADRAO = [
   { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:"2026-08-28", hora:"19:00", tipo:"Masterclass", link:"" }
 ];
 
+const ESPACOS_PADRAO = [
+  { id:"geral",    nome:"Geral",              descricao:"Conversa aberta a toda a academia.",            cor:"#ff5a1f", ativo:true, soAdminPublica:false },
+  { id:"vitorias", nome:"Vitórias",           descricao:"Partilha resultados e conquistas.",             cor:"#3ddc84", ativo:true, soAdminPublica:false },
+  { id:"duvidas",  nome:"Dúvidas",            descricao:"Perguntas sobre as aulas e os exercícios.",     cor:"#7c9eff", ativo:true, soAdminPublica:false },
+  { id:"avisos",   nome:"Avisos da Academia", descricao:"Comunicados oficiais. Só a equipa publica.",    cor:"#ffcf5c", ativo:true, soAdminPublica:true }
+];
+
 const POSTS_PADRAO = [
-  { id:4, autor:"Kingdom Academy", iniciais:"KA", tempo:"há 2h", categoria:"negocios", texto:"Lembrete: a Mentoria em Grupo do Plano de 90 Dias é já esta semana. Traz a tua pergunta mais difícil.", likes:24, curtido:false },
-  { id:3, autor:"Marcos Vilanculos", iniciais:"MV", tempo:"há 5h", categoria:"ia", texto:"Apliquei o prompt da aula 3 no meu atendimento e poupei 2h por dia. Quem mais já testou?", likes:18, curtido:false },
-  { id:2, autor:"Ana Chissano", iniciais:"AC", tempo:"há 1 dia", categoria:"mentalidade", texto:"A técnica dos 90 segundos mudou a forma como lido com clientes difíceis. Recomendo sem dúvida.", likes:31, curtido:true },
-  { id:1, autor:"Rui Macuácua", iniciais:"RM", tempo:"há 2 dias", categoria:"espiritualidade", texto:"\"Negócio como instrumento, não como ídolo\" — aula que precisava de ouvir hoje.", likes:12, curtido:false }
+  { id:"p4", autor:"Kingdom Academy", iniciais:"KA", tempo:"há 2h", categoria:"negocios", espacoId:"avisos", fixado:true, oculto:false, texto:"Lembrete: a Mentoria em Grupo do Plano de 90 Dias é já esta semana. Traz a tua pergunta mais difícil.", likes:24, curtido:false },
+  { id:"p3", autor:"Marcos Vilanculos", iniciais:"MV", tempo:"há 5h", categoria:"ia", espacoId:"vitorias", fixado:false, oculto:false, texto:"Apliquei o prompt da aula 3 no meu atendimento e poupei 2h por dia. Quem mais já testou?", likes:18, curtido:false },
+  { id:"p2", autor:"Ana Chissano", iniciais:"AC", tempo:"há 1 dia", categoria:"mentalidade", espacoId:"vitorias", fixado:false, oculto:false, texto:"A técnica dos 90 segundos mudou a forma como lido com clientes difíceis. Recomendo sem dúvida.", likes:31, curtido:true },
+  { id:"p1", autor:"Rui Macuácua", iniciais:"RM", tempo:"há 2 dias", categoria:"espiritualidade", espacoId:"geral", fixado:false, oculto:false, texto:"\"Negócio como instrumento, não como ídolo\" — aula que precisava de ouvir hoje.", likes:12, curtido:false }
+];
+
+/* Avaliações das aulas: são conteúdo que o administrador modera, por isso
+   vivem no DB e não na sessão de cada aluno. */
+const AVALIACOES_PADRAO = [
+  { id:"av1", cursoId:"kt", aulaId:"kt-m1a1", membroId:"m1", nome:"Marta Macomo",        estrelas:5, comentario:"A parte da identidade do fundador arrumou-me a cabeça.", data:"2026-09-02", oculto:false },
+  { id:"av2", cursoId:"mi", aulaId:"mi-m2a1", membroId:"m8", nome:"Ana Chissano",        estrelas:5, comentario:"A técnica dos 90 segundos vale o curso inteiro.",        data:"2026-09-05", oculto:false },
+  { id:"av3", cursoId:"ia", aulaId:"ia-m1a3", membroId:"m2", nome:"Airson Zunguze",      estrelas:4, comentario:"Bom, mas gostava de mais exemplos práticos de prompts.", data:"2026-09-06", oculto:false },
+  { id:"av4", cursoId:"vv", aulaId:"vv-m1a1", membroId:"m4", nome:"Renato Alfredo",      estrelas:2, comentario:"Achei o áudio baixo nesta aula.",                        data:"2026-09-08", oculto:false },
+  { id:"av5", cursoId:"he", aulaId:"he-m1a2", membroId:"m6", nome:"Clarisse Jamnadas",   estrelas:5, comentario:"", data:"2026-09-09", oculto:false }
 ];
 
 const ICONS_BADGE = [
@@ -298,6 +315,8 @@ function dbPadrao(){
     planos: PLANOS_PADRAO,
     cursoStats: CURSO_STATS_PADRAO,
     posts: POSTS_PADRAO,
+    espacos: ESPACOS_PADRAO,
+    avaliacoes: AVALIACOES_PADRAO,
     notificacoes: NOTIFICACOES_PADRAO,
     conquistas: CONQUISTAS_PADRAO,
     convites: [],
@@ -332,6 +351,13 @@ function normalizarDB(){
     if(b.ativo === undefined) b.ativo = true;
   });
   (DB.eventos||[]).forEach(e => { if(!e.id) e.id = novoId("evento"); });
+  if(!Array.isArray(DB.espacos)) DB.espacos = JSON.parse(JSON.stringify(ESPACOS_PADRAO));
+  if(!Array.isArray(DB.avaliacoes)) DB.avaliacoes = [];
+  (DB.posts||[]).forEach(p => {
+    if(!p.espacoId) p.espacoId = "geral";
+    if(p.oculto === undefined) p.oculto = false;
+    if(p.fixado === undefined) p.fixado = false;
+  });
 }
 normalizarDB();
 

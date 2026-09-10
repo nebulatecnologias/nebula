@@ -524,3 +524,10 @@ body.light .modal-cert h2{ color:var(--text); }
 .cert-assinatura .linha{ width:160px; height:1px; background:var(--border-strong); margin-bottom:8px; }
 .cert-assinatura strong{ font-size:13.5px; }
 .cert-assinatura .cargo{ font-size:11.5px; color:var(--text-faint); }
+
+/* ---------------- Administração › Moderação ---------------- */
+.celula-texto{ white-space:normal; max-width:340px; font-size:13px; color:var(--text-dim); }
+.estrelas-mini{ display:inline-flex; gap:2px; }
+.estrelas-mini span{ width:14px; height:14px; color:var(--border-strong); display:inline-flex; }
+.estrelas-mini span.cheia{ color:var(--accent); }
+.estrelas-mini svg{ width:100%; height:100%; }

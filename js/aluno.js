@@ -262,7 +262,7 @@ function renderAula(cursoId, aulaId){
           <div class="estrelas" id="estrelas-aula">
             ${[1,2,3,4,5].map(n => `<button class="estrela" type="button" data-estrela="${n}">${ICONS.star}</button>`).join("")}
           </div>
-          <textarea id="comentario-aula" placeholder="Deixa um comentário sobre esta aula (opcional)...">${(estado.avaliacoes[aula.id] && estado.avaliacoes[aula.id].comentario) || ""}</textarea>
+          <textarea id="comentario-aula" placeholder="Deixa um comentário sobre esta aula (opcional)...">${(minhaAvaliacao(aula.id)||{}).comentario || ""}</textarea>
           <button class="btn btn-primary btn-sm" id="btn-enviar-avaliacao">Enviar avaliação</button>
         </div>
         <div class="nav-pager">
@@ -313,7 +313,7 @@ function renderAula(cursoId, aulaId){
   lista.querySelectorAll(".mini-aula").forEach(el => el.addEventListener("click", () => irPara("aula", curso.id, el.getAttribute("data-aula"))));
 
   const estrelasEl = document.getElementById("estrelas-aula");
-  const estrelaAtual = () => (estado.avaliacoes[aula.id] && estado.avaliacoes[aula.id].estrelas) || 0;
+  const estrelaAtual = () => (minhaAvaliacao(aula.id)||{}).estrelas || 0;
   function pintarEstrelas(valor){ estrelasEl.querySelectorAll(".estrela").forEach(btn => btn.classList.toggle("ativa", Number(btn.getAttribute("data-estrela"))<=valor)); }
   pintarEstrelas(estrelaAtual());
   estrelasEl.querySelectorAll(".estrela").forEach(btn => {
@@ -321,59 +321,107 @@ function renderAula(cursoId, aulaId){
     btn.addEventListener("mouseenter", () => pintarEstrelas(n));
     btn.addEventListener("mouseleave", () => pintarEstrelas(estrelaAtual()));
     btn.addEventListener("click", () => {
-      estado.avaliacoes[aula.id] = estado.avaliacoes[aula.id] || {};
-      estado.avaliacoes[aula.id].estrelas = n;
-      guardarEstado();
+      guardarAvaliacao(curso, aula, { estrelas:n });
       pintarEstrelas(n);
     });
   });
   document.getElementById("btn-enviar-avaliacao").addEventListener("click", () => {
     const comentario = document.getElementById("comentario-aula").value.trim();
-    estado.avaliacoes[aula.id] = estado.avaliacoes[aula.id] || {};
-    estado.avaliacoes[aula.id].comentario = comentario;
-    guardarEstado();
+    guardarAvaliacao(curso, aula, { comentario });
     mostrarToast("Avaliação enviada. Obrigado pelo feedback!");
   });
 
   atualizarSidebarGlobal();
 }
 
+/* Cria ou atualiza a avaliação desta aula feita por quem está na sessão. */
+function guardarAvaliacao(curso, aula, campos){
+  const membro = membroAtual();
+  let registo = minhaAvaliacao(aula.id);
+  if(!registo){
+    registo = {
+      id: novoId("av"),
+      cursoId: curso.id,
+      aulaId: aula.id,
+      membroId: membro ? membro.id : null,
+      nome: estado.nome,
+      estrelas: 0,
+      comentario: "",
+      data: new Date().toISOString().slice(0,10),
+      oculto: false
+    };
+    DB.avaliacoes.push(registo);
+  }
+  Object.assign(registo, campos);
+  guardarDB();
+}
+
 /* ---------------- Comunidade ---------------- */
 function renderComunidade(){
+  const espacos = espacosAtivos();
+  const atual = espacos.find(e => e.id === estado.espacoComunidade) || espacos[0];
+  const podePublicar = atual && (!atual.soAdminPublica || papelEfetivo()==="administrador");
+
   document.getElementById("content-comunidade").innerHTML = `
     <div class="page-head">
       <span class="eyebrow">ESPAÇO DOS ALUNOS</span>
       <h1>Comunidade</h1>
-      <p class="desc">Partilha vitórias, faz perguntas e aprende com quem está a percorrer o mesmo caminho.</p>
+      <p class="desc">${atual ? atual.descricao : "Partilha vitórias, faz perguntas e aprende com quem está a percorrer o mesmo caminho."}</p>
     </div>
+    <div class="chip-row" id="espacos-row">
+      ${espacos.map(e => `<div class="chip ${atual && e.id===atual.id?"active":""}" data-espaco="${e.id}"><span class="dot" style="--c:${e.cor}"></span>${e.nome}</div>`).join("")}
+    </div>
+    ${podePublicar ? `
     <div class="card post-composer">
       <div class="avatar">${avatarConteudo()}</div>
       <div style="flex:1;">
-        <textarea id="novo-post" placeholder="Partilha uma vitória, uma dúvida ou um insight com a comunidade..."></textarea>
+        <textarea id="novo-post" placeholder="Partilha em ${atual.nome}..."></textarea>
         <div class="post-composer-actions"><button class="btn btn-primary btn-sm" id="btn-publicar">Publicar</button></div>
       </div>
-    </div>
+    </div>` : `
+    <div class="card" style="padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0;font-size:13.5px;">Só a equipa da academia publica em ${atual ? atual.nome : "este espaço"}.</p>
+    </div>`}
     <div id="feed-posts"></div>
   `;
-  document.getElementById("btn-publicar").addEventListener("click", () => {
+
+  document.querySelectorAll("#espacos-row .chip").forEach(c => c.addEventListener("click", () => {
+    estado.espacoComunidade = c.getAttribute("data-espaco");
+    renderComunidade();
+  }));
+
+  const btnPublicar = document.getElementById("btn-publicar");
+  if(btnPublicar) btnPublicar.addEventListener("click", () => {
     const textarea = document.getElementById("novo-post");
     const texto = textarea.value.trim();
     if(!texto) return;
-    DB.posts.unshift({ id: Date.now(), autor: estado.nome, iniciais: iniciais(estado.nome), tempo: "agora", categoria: null, texto, likes: 0, curtido: false });
+    DB.posts.unshift({
+      id: novoId("post"), autor: estado.nome, iniciais: iniciais(estado.nome),
+      tempo: "agora", categoria: null, espacoId: atual.id, fixado: false, oculto: false,
+      texto, likes: 0, curtido: false
+    });
+    guardarDB();
     mostrarToast("Publicação criada na comunidade");
     renderComunidade();
   });
+
   renderFeedPosts();
 }
 
 function renderFeedPosts(){
   const feed = document.getElementById("feed-posts");
-  feed.innerHTML = DB.posts.map(post => {
+  const espacoAtual = estado.espacoComunidade || (espacosAtivos()[0]||{}).id;
+  const lista = postsVisiveis().filter(p => (p.espacoId||"geral") === espacoAtual);
+  if(!lista.length){
+    feed.innerHTML = `<div class="card"><div class="empty-note">Ainda não há publicações neste espaço.</div></div>`;
+    return;
+  }
+  feed.innerHTML = lista.map(post => {
     const cat = post.categoria ? DB.categorias[post.categoria] : null;
     return `<div class="card post-card">
       <div class="post-head">
         <div class="avatar">${post.iniciais}</div>
-        <div><div class="post-author">${post.autor}</div><div class="post-meta">${post.tempo}</div></div>
+        <div><div class="post-author">${post.autor}${post.fixado?' <span class="pill pill-morno" style="font-size:10px;padding:2px 8px;">Fixado</span>':""}</div><div class="post-meta">${post.tempo}</div></div>
         ${cat ? `<span class="post-tag cat-tag" style="--c:${cat.cor}">${cat.nome}</span>` : ""}
       </div>
       <p class="post-text">${post.texto}</p>
@@ -386,10 +434,10 @@ function renderFeedPosts(){
     </div>`;
   }).join("");
   feed.querySelectorAll("[data-like]").forEach(el => el.addEventListener("click", () => {
-    const id = Number(el.getAttribute("data-like"));
-    const post = DB.posts.find(p=>p.id===id);
+    const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-like"));
     post.curtido = !post.curtido;
     post.likes += post.curtido ? 1 : -1;
+    guardarDB();
     renderFeedPosts();
   }));
 }
