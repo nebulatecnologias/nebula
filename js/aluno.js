@@ -439,7 +439,8 @@ function baixarLembrete(evento){
     "DTSTART:"+paraICSData(evento.data, evento.hora, 0),
     "DTEND:"+paraICSData(evento.data, evento.hora, 60),
     "SUMMARY:"+evento.titulo,
-    "DESCRIPTION:"+evento.tipo+" - Kingdom Academy",
+    "DESCRIPTION:"+(evento.tipo||"")+" - Kingdom Academy"+(evento.link?" - "+evento.link:""),
+    ...(evento.link ? ["URL:"+evento.link] : []),
     "END:VEVENT","END:VCALENDAR"
   ].join("\r\n");
   const blob = new Blob([ics], { type:"text/calendar" });
@@ -452,19 +453,21 @@ function baixarLembrete(evento){
 }
 
 let bannerTimer = null;
-function iniciarCarrosselBanners(){
-  const track = document.getElementById("banner-track");
+function iniciarCarrosselBanners(seletorRaiz){
+  const raiz = document.querySelector(seletorRaiz);
+  if(!raiz) return;
+  const track = raiz.querySelector(".banner-track");
   if(!track) return;
   let idx = 0;
   const total = track.children.length;
   function mostrarBanner(i){
     idx = (i+total)%total;
     track.scrollTo({ left: track.clientWidth*idx, behavior:"smooth" });
-    document.querySelectorAll("#banner-dots .banner-dot").forEach((d,n)=>d.classList.toggle("active", n===idx));
+    raiz.querySelectorAll(".banner-dot").forEach((d,n)=>d.classList.toggle("active", n===idx));
   }
-  document.querySelectorAll("#banner-dots .banner-dot").forEach(d => d.addEventListener("click", () => mostrarBanner(Number(d.getAttribute("data-slide")))));
+  raiz.querySelectorAll(".banner-dot").forEach(d => d.addEventListener("click", () => mostrarBanner(Number(d.getAttribute("data-slide")))));
   clearInterval(bannerTimer);
-  bannerTimer = setInterval(() => mostrarBanner(idx+1), 60000);
+  bannerTimer = setInterval(() => mostrarBanner(idx+1), (DB.config.bannerIntervalo||60)*1000);
 }
 
 function renderCalendario(){
@@ -504,16 +507,16 @@ function renderCalendario(){
       <h1>Calendário</h1>
       <p class="desc">Mentorias em grupo, masterclasses e encontros ao vivo com a Kingdom Academy.</p>
     </div>
-    <div class="banner-carousel">
-      <div class="banner-track" id="banner-track">
-        ${DB.banners.map(b => `<a class="banner-slide" href="${b.link}" target="_blank" rel="noopener" style="background:${b.gradiente}">
+    <div class="banner-carousel" id="carrossel-aluno">
+      <div class="banner-track">
+        ${bannersAtivos().map(b => `<a class="banner-slide" href="${b.link||"#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
           <span class="banner-eyebrow">${b.eyebrow}</span>
           <span class="banner-title">${b.titulo}</span>
           <span class="banner-cta">${b.cta} →</span>
         </a>`).join("")}
       </div>
-      <div class="banner-dots" id="banner-dots">
-        ${DB.banners.map((_,i)=>`<span class="banner-dot ${i===0?"active":""}" data-slide="${i}"></span>`).join("")}
+      <div class="banner-dots">
+        ${bannersAtivos().map((_,i)=>`<span class="banner-dot ${i===0?"active":""}" data-slide="${i}"></span>`).join("")}
       </div>
     </div>
     <div class="section-title"><h2>Próximos encontros</h2></div>
@@ -537,7 +540,7 @@ function renderCalendario(){
     renderCalendario();
     if(estado.presencasConfirmadas[id]) mostrarToast("Presença confirmada!");
   }));
-  iniciarCarrosselBanners();
+  iniciarCarrosselBanners("#carrossel-aluno");
 }
 
 /* ---------------- Certificados ---------------- */

@@ -6,11 +6,6 @@
 
 function contarAulas(curso){ return curso.modulos.reduce((s,m)=>s+m.aulas.length, 0); }
 function cursoPublicado(c){ return c.publicado !== false; }
-function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
-
-function opcoesCategorias(){
-  return Object.entries(DB.categorias).map(([id,c]) => ({ valor:id, rotulo:c.nome }));
-}
 
 /* ---------------- Ecrã principal ---------------- */
 function renderAdminConteudos(){
@@ -227,7 +222,7 @@ function renderAdminCursoEditor(cursoId){
         <button class="btn btn-primary" id="btn-novo-modulo">+ Novo módulo</button>
       </div>
     </div>
-    <div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-row tres">
       <div class="card stat-card"><div class="stat-icon">${ICONS.layers}</div><div class="stat-label">Módulos</div><div class="stat-value">${curso.modulos.length}</div></div>
       <div class="card stat-card"><div class="stat-icon">${ICONS.book}</div><div class="stat-label">Aulas</div><div class="stat-value">${contarAulas(curso)}</div></div>
       <div class="card stat-card"><div class="stat-icon">${ICONS.chart}</div><div class="stat-label">Estado</div><div class="stat-value" style="font-size:20px;">${cursoPublicado(curso)?"Publicado":"Rascunho"}</div></div>
@@ -308,12 +303,6 @@ function renderModulosAdmin(curso){
     mover(m.aulas, m.aulas.findIndex(a=>a.id===b.getAttribute("data-mover-aula")), Number(b.getAttribute("data-dir")));
     guardarDB(); renderModulosAdmin(curso);
   }));
-}
-
-function mover(lista, indice, direcao){
-  const destino = indice + direcao;
-  if(indice<0 || destino<0 || destino>=lista.length) return;
-  [lista[indice], lista[destino]] = [lista[destino], lista[indice]];
 }
 
 /* ---------------- Módulo ---------------- */

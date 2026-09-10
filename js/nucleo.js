@@ -4,6 +4,13 @@
 function cursoPorId(id){ return DB.cursos.find(c=>c.id===id); }
 /* O aluno só vê cursos publicados; o administrador vê também os rascunhos. */
 function cursosVisiveis(){ return DB.cursos.filter(c => c.publicado !== false); }
+function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
+function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
+function fundoBanner(b){
+  return b.imagem
+    ? `background-image:url(${b.imagem});background-size:cover;background-position:center;`
+    : `background:${b.gradiente || "linear-gradient(120deg,#ff5a1f,#c23f13)"};`;
+}
 function todasAsAulasDoCurso(curso){ return curso.modulos.flatMap(m=>m.aulas.map(a=>({...a, moduloId:m.id, moduloTitulo:m.titulo}))); }
 function localizarAula(cursoId, aulaId){
   const curso = cursoPorId(cursoId); if(!curso) return null;
@@ -81,7 +88,7 @@ function registarViews(mapa){ Object.assign(VIEWS, mapa); }
 
 function irPara(view, a, b){
   estado.viewAtual = view;
-  if(view!=="calendario" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
+  if(view!=="calendario" && view!=="admin-banners" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
   const ehAdmin = view.indexOf("admin-")===0;
   const containerId = ehAdmin ? "content-admin" : "content-"+view;
   document.querySelectorAll("#app-shell .content > div").forEach(v=>v.classList.add("hidden"));

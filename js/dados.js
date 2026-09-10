@@ -193,10 +193,10 @@ const CURSO_STATS_PADRAO = {
 };
 
 const EVENTOS_PADRAO = [
-  { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:"2026-09-16", hora:"19:00", tipo:"Mentoria ao vivo" },
-  { id:"e2", titulo:"Q&A: Vender com Ajuda da IA", categoria:"ia", data:"2026-09-19", hora:"20:00", tipo:"Perguntas e respostas" },
-  { id:"e3", titulo:"Roda de Espiritualidade e Propósito", categoria:"espiritualidade", data:"2026-09-24", hora:"19:30", tipo:"Encontro em grupo" },
-  { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:"2026-08-28", hora:"19:00", tipo:"Masterclass" }
+  { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:"2026-09-16", hora:"19:00", tipo:"Mentoria ao vivo", link:"" },
+  { id:"e2", titulo:"Q&A: Vender com Ajuda da IA", categoria:"ia", data:"2026-09-19", hora:"20:00", tipo:"Perguntas e respostas", link:"" },
+  { id:"e3", titulo:"Roda de Espiritualidade e Propósito", categoria:"espiritualidade", data:"2026-09-24", hora:"19:30", tipo:"Encontro em grupo", link:"" },
+  { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:"2026-08-28", hora:"19:00", tipo:"Masterclass", link:"" }
 ];
 
 const POSTS_PADRAO = [
@@ -223,9 +223,9 @@ const NOTIFICACOES_PADRAO = [
 ];
 
 const BANNERS_PADRAO = [
-  { eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", gradiente:"linear-gradient(120deg,#ff5a1f,#c23f13)" },
-  { eyebrow:"OFERTA POR TEMPO LIMITADO", titulo:"IA Aplicada aos Negócios com 20% de desconto", cta:"Ver oferta", link:"#", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)" },
-  { eyebrow:"NOVO EVENTO", titulo:"Roda de Espiritualidade e Propósito — 24 de Setembro", cta:"Confirmar presença", link:"#", gradiente:"linear-gradient(120deg,#7c5cff,#3d2b8f)" }
+  { id:"b1", ativo:true, eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#ff5a1f,#c23f13)" },
+  { id:"b2", ativo:true, eyebrow:"OFERTA POR TEMPO LIMITADO", titulo:"IA Aplicada aos Negócios com 20% de desconto", cta:"Ver oferta", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)" },
+  { id:"b3", ativo:true, eyebrow:"NOVO EVENTO", titulo:"Roda de Espiritualidade e Propósito — 24 de Setembro", cta:"Confirmar presença", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#7c5cff,#3d2b8f)" }
 ];
 
 /* Regras declarativas (guardáveis): avaliadas por conquistaDesbloqueada() em nucleo.js */
@@ -260,6 +260,8 @@ const CONFIG_PADRAO = {
    DB — fonte única de conteúdo/configuração.
    O administrador escreve; a área do aluno lê.
    ============================================================ */
+function novoId(prefixo){ return prefixo + "-" + Math.random().toString(36).slice(2,8); }
+
 const DB_CHAVE = "kingdom-academy:db:v1";
 const ESTADO_CHAVE = "kingdom-academy:estado:v1";
 
@@ -294,6 +296,22 @@ function escreverArmazenado(chave, valor){
 }
 
 let DB = Object.assign(dbPadrao(), lerArmazenado(DB_CHAVE) || {});
+
+/* Um DB guardado por uma versão anterior pode não ter campos novos.
+   Preenche-os aqui para as abas de administração nunca receberem
+   registos incompletos. */
+function normalizarDB(){
+  if(!DB.config) DB.config = JSON.parse(JSON.stringify(CONFIG_PADRAO));
+  if(!DB.aparencia) DB.aparencia = JSON.parse(JSON.stringify(APARENCIA_PADRAO));
+  if(DB.config.bannerIntervalo === undefined) DB.config.bannerIntervalo = 60;
+  (DB.cursos||[]).forEach(c => { if(c.publicado === undefined) c.publicado = true; });
+  (DB.banners||[]).forEach(b => {
+    if(!b.id) b.id = novoId("banner");
+    if(b.ativo === undefined) b.ativo = true;
+  });
+  (DB.eventos||[]).forEach(e => { if(!e.id) e.id = novoId("evento"); });
+}
+normalizarDB();
 
 function guardarDB(){
   if(!escreverArmazenado(DB_CHAVE, DB)) mostrarToast("Não foi possível guardar neste browser");

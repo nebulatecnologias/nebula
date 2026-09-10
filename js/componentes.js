@@ -165,4 +165,15 @@ function acoesLinha(id){
   </div>`;
 }
 
-function novoId(prefixo){ return prefixo + "-" + Math.random().toString(36).slice(2,8); }
+
+/* Opções de categoria para os campos "select" das várias abas */
+function opcoesCategorias(){
+  return Object.entries(DB.categorias).map(([id,c]) => ({ valor:id, rotulo:c.nome }));
+}
+
+/* Troca um item de posição numa lista (usado para reordenar módulos, aulas, banners) */
+function mover(lista, indice, direcao){
+  const destino = indice + direcao;
+  if(indice<0 || destino<0 || destino>=lista.length) return;
+  [lista[indice], lista[destino]] = [lista[destino], lista[indice]];
+}
