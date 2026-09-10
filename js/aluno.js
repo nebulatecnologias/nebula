@@ -133,6 +133,7 @@ function renderCatalogo(){
     </div>
     <div class="chip-row" id="chip-row"></div>
     <div class="course-grid" id="catalogo-grid"></div>
+    <div id="catalogo-bloqueados"></div>
   `;
   document.getElementById("content-catalogo").innerHTML = html;
 
@@ -151,6 +152,40 @@ function renderCatalogo(){
   const grid = document.getElementById("catalogo-grid");
   grid.innerHTML = lista.length ? lista.map(c=>renderCourseCardHTML(c)).join("") : `<div class="empty-note">Nenhum curso nesta categoria ainda.</div>`;
   grid.querySelectorAll(".course-card").forEach(el => el.addEventListener("click", () => irPara("curso", el.getAttribute("data-curso"))));
+  renderCursosBloqueados();
+}
+
+/* Cursos fora do plano do aluno, com a oferta que os desbloqueia. */
+function renderCursosBloqueados(){
+  const wrap = document.getElementById("catalogo-bloqueados");
+  if(!wrap) return;
+  const bloqueados = DB.config.mostrarCursosBloqueados === false ? [] : cursosBloqueados();
+  if(!bloqueados.length){ wrap.innerHTML = ""; return; }
+
+  wrap.innerHTML = `
+    <div class="section-title" style="margin-top:32px;"><h2>Disponível noutros planos</h2></div>
+    <div class="course-grid">
+      ${bloqueados.map(c => {
+        const cat = categoriaDe(c.categoria);
+        const oferta = ofertaParaCurso(c.id);
+        return `<div class="card course-card bloqueado">
+          <div class="course-cover">
+            <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
+            <span class="cadeado">${ICONS.cadeado}</span>
+          </div>
+          <div class="course-body">
+            <h3>${c.titulo}</h3>
+            <p class="course-desc">${c.subtitulo||""}</p>
+            ${oferta ? `
+              <div class="oferta-linha">
+                <div><div class="oferta-preco">${formatarPreco(oferta.preco)}<span>/ ${oferta.periodo}</span></div><div class="sub-celula">${oferta.nome}</div></div>
+                <a class="btn btn-primary btn-sm" href="${oferta.link||"#"}" target="_blank" rel="noopener">Desbloquear</a>
+              </div>` : `<p class="sub-celula">Fala com a tua mentoria para teres acesso.</p>`}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
 }
 
 /* ---------------- Curso ---------------- */

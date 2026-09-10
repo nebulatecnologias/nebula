@@ -24,6 +24,7 @@ const ICONS = {
   plug:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2v6M15 2v6M6 8h12l-1 5a5 5 0 0 1-5 4 5 5 0 0 1-5-4L6 8Z"/><path d="M12 17v5"/></svg>',
   palette:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 1.6-1.9-.2-.5-.1-1.1.3-1.5.4-.4 1-.5 1.5-.3 1.7.7 3.6-.5 3.6-2.3 0-4.4-3.1-8-7-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="8.5" r="1.2"/></svg>',
   chevronDown: '<svg class="icon icon-sm chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>',
+  cadeado: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
   star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 7.1-1.01L12 2z"/></svg>'
 };
 
@@ -172,6 +173,11 @@ const CURSOS_PADRAO = [
     ]}
 ];
 
+const OFERTAS_PADRAO = [
+  { id:"of1", nome:"Kingdom All Access", descricao:"Todos os cursos, mentorias ao vivo e comunidade.", preco:2500,  precoAntes:3500, periodo:"mês",   planoId:"all-access", link:"#", destaque:true,  ativa:true },
+  { id:"of2", nome:"Acesso Vitalício",   descricao:"Paga uma vez e fica com tudo, para sempre.",       preco:38000, precoAntes:0,    periodo:"único", planoId:"vitalicio",  link:"#", destaque:false, ativa:true }
+];
+
 const TURMAS_PADRAO = [
   { id:"t1", nome:"Kingdom Tracktion · Turma 2", cursoId:"kt", inicio:"2026-09-01", fim:"2026-12-15", membros:["m1","m7"], ativa:true },
   { id:"t2", nome:"IA Aplicada · Janeiro",       cursoId:"ia", inicio:"2026-01-15", fim:"2026-03-30", membros:["m2"],      ativa:true }
@@ -289,7 +295,8 @@ const CONFIG_PADRAO = {
     assinaturaCargo: "Fundador · Kingdom Academy"
   },
   integracoes: { player:"Panda Video", playerId:"" },
-  planoPadrao: "Kingdom All Access"
+  planoPadrao: "Kingdom All Access",
+  mostrarCursosBloqueados: true
 };
 
 /* ============================================================
@@ -313,6 +320,7 @@ function dbPadrao(){
     banners: BANNERS_PADRAO,
     membros: MEMBROS_PADRAO,
     planos: PLANOS_PADRAO,
+    ofertas: OFERTAS_PADRAO,
     cursoStats: CURSO_STATS_PADRAO,
     posts: POSTS_PADRAO,
     espacos: ESPACOS_PADRAO,
@@ -353,6 +361,10 @@ function normalizarDB(){
   (DB.eventos||[]).forEach(e => { if(!e.id) e.id = novoId("evento"); });
   if(!Array.isArray(DB.espacos)) DB.espacos = JSON.parse(JSON.stringify(ESPACOS_PADRAO));
   if(!Array.isArray(DB.avaliacoes)) DB.avaliacoes = [];
+  if(!Array.isArray(DB.ofertas)) DB.ofertas = JSON.parse(JSON.stringify(OFERTAS_PADRAO));
+  if(DB.config.mostrarCursosBloqueados === undefined) DB.config.mostrarCursosBloqueados = true;
+  DB.config.gamificacao = Object.assign({}, CONFIG_PADRAO.gamificacao, DB.config.gamificacao || {});
+  (DB.conquistas||[]).forEach(c => { if(!c.regra) c.regra = { tipo:"manual", valor:0 }; });
   (DB.posts||[]).forEach(p => {
     if(!p.espacoId) p.espacoId = "geral";
     if(p.oculto === undefined) p.oculto = false;
