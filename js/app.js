@@ -63,5 +63,4 @@ document.getElementById("btn-menu").addEventListener("click", () => {
   document.getElementById("backdrop").classList.add("show");
 });
 document.getElementById("backdrop").addEventListener("click", fecharMenuMobile);
-document.getElementById("btn-fechar-certificado").addEventListener("click", fecharCertificado);
 document.getElementById("modal-certificado").addEventListener("click", e => { if(e.target.id==="modal-certificado") fecharCertificado(); });

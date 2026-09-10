@@ -17,8 +17,11 @@ function sincronizarSessaoComMembro(membro){
    Sem membro ou sem plano, vê tudo o que está publicado. */
 function cursosVisiveis(){
   const publicados = DB.cursos.filter(c => c.publicado !== false);
-  const permitidos = cursosPermitidos(membroAtual());
-  return permitidos ? publicados.filter(c => permitidos.includes(c.id)) : publicados;
+  const membro = membroAtual();
+  const doPlano = cursosPermitidos(membro);
+  if(!doPlano) return publicados;                    // acesso total
+  const permitidos = new Set([...doPlano, ...cursosPorTurma(membro)]);
+  return publicados.filter(c => permitidos.has(c.id));
 }
 function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
 function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
@@ -59,6 +62,29 @@ function conquistaDesbloqueada(b){
 function badgesDesbloqueados(){ return new Set(DB.conquistas.filter(conquistaDesbloqueada).map(b=>b.id)); }
 function formatarDataEvento(dataStr){ const [y,m,d] = dataStr.split("-").map(Number); const meses=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"]; return { dia:String(d).padStart(2,"0"), mes:meses[m-1] }; }
 function diasAte(dataHora){ const diff = Math.round((dataHora - new Date())/86400000); return diff; }
+/* Certificado: um só desenho, usado pelo aluno e pela pré-visualização do painel. */
+function certificadoHTML({ nome, curso, data, comFechar }){
+  const c = DB.config.certificado;
+  return `
+    ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
+    <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="#ff5a1f" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="kicker">${c.titulo}</span>
+    <h2>${nome}</h2>
+    <p style="color:var(--text-dim);">${c.frase}</p>
+    <div class="cert-course">${curso}</div>
+    <p style="color:var(--text-dim);font-size:13px;">${c.rodape}</p>
+    ${c.assinaturaNome ? `<div class="cert-assinatura"><span class="linha"></span><strong>${c.assinaturaNome}</strong><span class="cargo">${c.assinaturaCargo||""}</span></div>` : ""}
+    <div class="cert-date">Emitido em ${data}</div>
+  `;
+}
+
+/* Um curso emite certificado quando o aluno chega à percentagem definida no painel. */
+function regraCertificado(){ return DB.config.certificado.regraPct || 100; }
+function cursoEmiteCertificado(curso){ return curso.certificado !== false; }
+function certificadoDesbloqueado(curso){
+  return cursoEmiteCertificado(curso) && progressoCurso(curso).pct >= regraCertificado();
+}
+
 function iconeCheck(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>'; }
 function iconePlay(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>'; }
 

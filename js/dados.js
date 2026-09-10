@@ -172,6 +172,11 @@ const CURSOS_PADRAO = [
     ]}
 ];
 
+const TURMAS_PADRAO = [
+  { id:"t1", nome:"Kingdom Tracktion · Turma 2", cursoId:"kt", inicio:"2026-09-01", fim:"2026-12-15", membros:["m1","m7"], ativa:true },
+  { id:"t2", nome:"IA Aplicada · Janeiro",       cursoId:"ia", inicio:"2026-01-15", fim:"2026-03-30", membros:["m2"],      ativa:true }
+];
+
 const PLANOS_PADRAO = [
   { id:"all-access", nome:"Kingdom All Access", preco:2500, periodo:"mês",   acessoTotal:true,  cursos:[], ativo:true },
   { id:"essencial",  nome:"Essencial",          preco:1200, periodo:"mês",   acessoTotal:false, cursos:["mi","he"], ativo:true },
@@ -258,7 +263,14 @@ const APARENCIA_PADRAO = {
 const CONFIG_PADRAO = {
   bannerIntervalo: 60,
   gamificacao: { xpPorAula:50, xpPorNivel:500 },
-  certificado: { rodape:"na Kingdom Academy", regraPct:100 },
+  certificado: {
+    regraPct: 100,
+    titulo: "CERTIFICADO DE CONCLUSÃO",
+    frase: "concluiu com sucesso o curso",
+    rodape: "na Kingdom Academy",
+    assinaturaNome: "Shelton Douglas",
+    assinaturaCargo: "Fundador · Kingdom Academy"
+  },
   integracoes: { player:"Panda Video", playerId:"" },
   planoPadrao: "Kingdom All Access"
 };
@@ -279,7 +291,7 @@ function dbPadrao(){
     config: CONFIG_PADRAO,
     categorias: CATEGORIAS_PADRAO,
     cursos: CURSOS_PADRAO,
-    turmas: [],
+    turmas: TURMAS_PADRAO,
     eventos: EVENTOS_PADRAO,
     banners: BANNERS_PADRAO,
     membros: MEMBROS_PADRAO,
@@ -311,6 +323,9 @@ function normalizarDB(){
   if(!DB.config) DB.config = JSON.parse(JSON.stringify(CONFIG_PADRAO));
   if(!DB.aparencia) DB.aparencia = JSON.parse(JSON.stringify(APARENCIA_PADRAO));
   if(DB.config.bannerIntervalo === undefined) DB.config.bannerIntervalo = 60;
+  DB.config.certificado = Object.assign({}, CONFIG_PADRAO.certificado, DB.config.certificado || {});
+  if(!Array.isArray(DB.turmas)) DB.turmas = [];
+  DB.turmas.forEach(t => { if(!t.id) t.id = novoId("turma"); if(!Array.isArray(t.membros)) t.membros = []; });
   (DB.cursos||[]).forEach(c => { if(c.publicado === undefined) c.publicado = true; });
   (DB.banners||[]).forEach(b => {
     if(!b.id) b.id = novoId("banner");

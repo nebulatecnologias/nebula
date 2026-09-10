@@ -159,12 +159,14 @@ function renderCurso(cursoId){
   if(!curso){ document.getElementById("content-curso").innerHTML = '<div class="empty-note">Este curso não foi encontrado.</div>'; return; }
   const p = progressoCurso(curso);
   const cat = DB.categorias[curso.categoria];
+  const turmaDoCurso = turmasDoMembro(membroAtual()).find(t => t.cursoId === curso.id);
   const html = `
     <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
     <div class="page-head">
-      <span class="eyebrow" style="--c:${cat.cor}">${cat.nome.toUpperCase()}</span>
+      <span class="eyebrow" style="--c:${cat.cor}">${cat.nome.toUpperCase()}${turmaDoCurso ? " · " + turmaDoCurso.nome.toUpperCase() : ""}</span>
       <h1>${curso.titulo}</h1>
       <p class="desc">${curso.subtitulo}</p>
+      ${turmaDoCurso ? `<p class="desc" style="font-size:13px;">Turma de ${turmaDoCurso.inicio||"—"} a ${turmaDoCurso.fim||"—"}.</p>` : ""}
     </div>
     <div class="card" style="padding:20px 22px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
       <div style="flex:1;min-width:200px;">
@@ -172,7 +174,7 @@ function renderCurso(cursoId){
         <div class="progress-track"><div class="progress-fill" style="width:${p.pct}%"></div></div>
       </div>
       <span style="font-size:12.5px;color:var(--text-faint);white-space:nowrap;">${p.concluidas} de ${p.total} aulas</span>
-      ${p.pct===100 ? `<button class="btn btn-secondary btn-sm" id="btn-ver-certificado-curso">Ver certificado</button>` : ""}
+      ${certificadoDesbloqueado(curso) ? `<button class="btn btn-secondary btn-sm" id="btn-ver-certificado-curso">Ver certificado</button>` : ""}
     </div>
     <div id="lista-modulos"></div>
   `;
@@ -548,9 +550,13 @@ function renderCalendario(){
 
 /* ---------------- Certificados ---------------- */
 function abrirCertificado(curso){
-  document.getElementById("cert-nome").textContent = estado.nome;
-  document.getElementById("cert-curso").textContent = curso.titulo;
-  document.getElementById("cert-data").textContent = "Emitido em " + new Date().toLocaleDateString("pt-PT", { day:"numeric", month:"long", year:"numeric" });
+  document.getElementById("modal-cert-conteudo").innerHTML = certificadoHTML({
+    nome: estado.nome,
+    curso: curso.titulo,
+    data: new Date().toLocaleDateString("pt-PT", { day:"numeric", month:"long", year:"numeric" }),
+    comFechar: true
+  });
+  document.getElementById("btn-fechar-certificado").addEventListener("click", fecharCertificado);
   document.getElementById("modal-certificado").classList.remove("hidden");
 }
 function fecharCertificado(){ document.getElementById("modal-certificado").classList.add("hidden"); }
@@ -560,14 +566,14 @@ function renderCertificados(){
     <div class="page-head">
       <span class="eyebrow">RECONHECIMENTO</span>
       <h1>Certificados</h1>
-      <p class="desc">Um certificado é desbloqueado automaticamente quando concluis 100% de um curso.</p>
+      <p class="desc">Um certificado é desbloqueado automaticamente quando concluis ${regraCertificado()}% de um curso.</p>
     </div>
     <div class="cert-grid" id="cert-grid"></div>
   `;
   const grid = document.getElementById("cert-grid");
   grid.innerHTML = cursosVisiveis().map(c => {
     const p = progressoCurso(c);
-    const concluido = p.pct===100;
+    const concluido = certificadoDesbloqueado(c);
     return `<div class="card cert-card ${concluido?"":"locked"}" data-curso="${c.id}">
       <div class="cert-preview">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>
@@ -577,7 +583,7 @@ function renderCertificados(){
         <h4>${c.titulo}</h4>
         ${concluido
           ? `<button class="btn btn-secondary btn-sm btn-block">Ver certificado</button>`
-          : `<div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div><div class="cert-locked-note">${p.pct}% concluído — continua para desbloquear</div>`
+          : `<div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div><div class="cert-locked-note">${p.pct}% de ${regraCertificado()}% — continua para desbloquear</div>`
         }
       </div>
     </div>`;
