@@ -1,4 +1,45 @@
 /* ============================================================
+   Rede de segurança
+   Os dados vivem no browser de quem usa a app. Se um registo antigo
+   ou incompleto fizer a interface falhar, mostramos uma saída em vez
+   de deixar o ecrã em branco.
+   ============================================================ */
+window.addEventListener("error", e => {
+  /* Ignora falhas de recursos (fonte, favicon, imagem): não partem a app. */
+  if(!e.error && !e.message) return;
+  if(e.target && e.target !== window) return;
+  mostrarEcraDeRecuperacao(e.message);
+});
+window.addEventListener("unhandledrejection", e => mostrarEcraDeRecuperacao(String(e.reason)));
+
+function mostrarEcraDeRecuperacao(detalhe){
+  if(document.getElementById("ecra-recuperacao")) return;
+  const el = document.createElement("div");
+  el.id = "ecra-recuperacao";
+  el.className = "modal-overlay";
+  el.innerHTML = `
+    <div class="card confirm-card">
+      <h3>Algo correu mal ao abrir a área de membros</h3>
+      <p>Isto costuma acontecer quando ficam dados antigos guardados neste browser. Podes repor os dados de demonstração — o conteúdo volta ao estado original.</p>
+      <p class="hint" style="word-break:break-word;">${detalhe || ""}</p>
+      <div class="confirm-acoes">
+        <button class="btn btn-secondary" type="button" id="btn-recarregar">Tentar de novo</button>
+        <button class="btn btn-primary" type="button" id="btn-repor-dados">Repor dados</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  document.getElementById("btn-recarregar").addEventListener("click", () => location.reload());
+  document.getElementById("btn-repor-dados").addEventListener("click", () => {
+    try {
+      localStorage.removeItem(DB_CHAVE);
+      localStorage.removeItem(ESTADO_CHAVE);
+    } catch(err){ /* browser sem armazenamento: recarregar já resolve */ }
+    location.reload();
+  });
+}
+
+/* ============================================================
    Login / logout / shell
    ============================================================ */
 document.getElementById("form-login").addEventListener("submit", e => {

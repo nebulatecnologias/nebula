@@ -1,7 +1,7 @@
 /* ---------------- Administrador: Visão geral ---------------- */
 function renderAdminVisaoGeral(){
-  const totalInscritos = Object.values(DB.cursoStats).reduce((s,c)=>s+c.inscritos,0);
-  const conclusaoMedia = Math.round(Object.values(DB.cursoStats).reduce((s,c)=>s+c.conclusao,0)/DB.cursos.length);
+  const totalInscritos = DB.cursos.reduce((s,c)=>s+statsCurso(c.id).inscritos,0);
+  const conclusaoMedia = DB.cursos.length ? Math.round(DB.cursos.reduce((s,c)=>s+statsCurso(c.id).conclusao,0)/DB.cursos.length) : 0;
   document.getElementById("content-admin").innerHTML = `
     <div class="page-head-flex">
       <div class="page-head">
@@ -70,7 +70,7 @@ function tabelaAdminAlunosHTML(){
           </tr></thead>
           <tbody>
             ${lista.length ? lista.map(a => {
-              const cat = DB.categorias[a.categoria];
+              const cat = categoriaDe(a.categoria);
               return `<tr class="${TINT_EST[a.estagio]||""}">
                 <td><div class="cell-user"><div class="avatar">${iniciais(a.nome)}</div><div class="meta"><div class="nome">${a.nome}</div><div class="sub">${a.email}</div></div></div></td>
                 <td>${a.curso}</td>
@@ -109,8 +109,8 @@ function tabelaAdminCursosHTML(){
           </tr></thead>
           <tbody>
             ${lista.length ? lista.map(c => {
-              const cat = DB.categorias[c.categoria];
-              const st = DB.cursoStats[c.id];
+              const cat = categoriaDe(c.categoria);
+              const st = statsCurso(c.id);
               return `<tr>
                 <td>${c.titulo}</td>
                 <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>

@@ -24,11 +24,21 @@ function cursosVisiveis(){
   return publicados.filter(c => permitidos.has(c.id));
 }
 function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
+/* Cursos criados pelo administrador ainda não têm estatísticas registadas. */
+function statsCurso(id){ return DB.cursoStats[id] || { inscritos:0, conclusao:0, avaliacao:0 }; }
 function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
 function fundoBanner(b){
   return b.imagem
     ? `background-image:url(${b.imagem});background-size:cover;background-position:center;`
     : `background:${b.gradiente || "linear-gradient(120deg,#ff5a1f,#c23f13)"};`;
+}
+/* Primeira aula de um curso, no formato de localizarAula(). Serve de recurso
+   quando a última aula vista já não existe. */
+function primeiraAulaDoCurso(curso){
+  for(const m of curso.modulos){
+    if(m.aulas.length) return { curso, modulo:m, aula:m.aulas[0] };
+  }
+  return null;
 }
 function todasAsAulasDoCurso(curso){ return curso.modulos.flatMap(m=>m.aulas.map(a=>({...a, moduloId:m.id, moduloTitulo:m.titulo}))); }
 function localizarAula(cursoId, aulaId){
@@ -148,8 +158,12 @@ function irPara(view, a, b){
   if(view!=="calendario" && view!=="admin-banners" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
   const ehAdmin = view.indexOf("admin-")===0;
   const containerId = ehAdmin ? "content-admin" : "content-"+view;
+  const container = document.getElementById(containerId);
+  /* Um atalho antigo ou um ecrã que deixou de existir não pode deixar a
+     app sem nada visível: voltamos ao início. */
+  if(!container){ if(view!=="dashboard") irPara("dashboard"); return; }
   document.querySelectorAll("#app-shell .content > div").forEach(v=>v.classList.add("hidden"));
-  document.getElementById(containerId).classList.remove("hidden");
+  container.classList.remove("hidden");
   renderSidebarNav(view);
   const render = VIEWS[view];
   if(render) render(a, b);

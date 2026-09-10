@@ -347,6 +347,16 @@ let DB = Object.assign(dbPadrao(), lerArmazenado(DB_CHAVE) || {});
    Preenche-os aqui para as abas de administração nunca receberem
    registos incompletos. */
 function normalizarDB(){
+  /* Um registo guardado por uma versão anterior pode ter perdido a forma
+     (uma lista virou objeto, um mapa desapareceu). Antes de qualquer outra
+     coisa, garantimos que cada chave tem o tipo que o resto do código espera,
+     recuperando o valor de origem quando não tem. */
+  const molde = dbPadrao();
+  Object.keys(molde).forEach(chave => {
+    const esperado = Array.isArray(molde[chave]) ? "lista" : typeof molde[chave];
+    const atual = Array.isArray(DB[chave]) ? "lista" : typeof DB[chave];
+    if(DB[chave] === null || DB[chave] === undefined || atual !== esperado) DB[chave] = molde[chave];
+  });
   if(!DB.config) DB.config = JSON.parse(JSON.stringify(CONFIG_PADRAO));
   if(!DB.aparencia) DB.aparencia = JSON.parse(JSON.stringify(APARENCIA_PADRAO));
   if(DB.config.bannerIntervalo === undefined) DB.config.bannerIntervalo = 60;
@@ -413,6 +423,11 @@ const estado = {
 };
 
 Object.assign(estado, lerArmazenado(ESTADO_CHAVE) || {});
+
+/* O mesmo cuidado do DB, para a sessão guardada no browser. */
+["ultimaAulaPorCurso","notificacoes","progresso","avaliacoes","presencasConfirmadas"].forEach(chave => {
+  if(!estado[chave] || typeof estado[chave] !== "object" || Array.isArray(estado[chave])) estado[chave] = {};
+});
 
 /* Guarda apenas o que interessa manter entre sessões (não os filtros de ecrã). */
 function guardarEstado(){

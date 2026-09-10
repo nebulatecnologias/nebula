@@ -5,15 +5,21 @@ function renderDashboard(){
   const emAndamento = cursosVisiveis().filter(c=>{ const p=progressoCurso(c); return p.pct>0 && p.pct<100; });
   const hoje = new Date().toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long" }).toUpperCase();
 
-  const cursoPrincipal = cursoPorId(estado.ultimoCurso);
-  const aulaPrincipalId = estado.ultimaAulaPorCurso[estado.ultimoCurso];
-  const locPrincipal = localizarAula(cursoPrincipal.id, aulaPrincipalId);
-  const pPrincipal = progressoCurso(cursoPrincipal);
-  const outrosEmAndamento = emAndamento.filter(c=>c.id!==estado.ultimoCurso);
+  /* O último curso visto pode já não existir, ter passado a rascunho ou
+     saído do plano do aluno. Nesse caso continuamos com o primeiro curso
+     à mão, em vez de rebentar o ecrã. */
+  const visiveis = cursosVisiveis();
+  const cursoPrincipal = visiveis.find(c => c.id === estado.ultimoCurso) || emAndamento[0] || visiveis[0] || null;
+  const locPrincipal = cursoPrincipal
+    ? (localizarAula(cursoPrincipal.id, estado.ultimaAulaPorCurso[cursoPrincipal.id]) || primeiraAulaDoCurso(cursoPrincipal))
+    : null;
+  const aulaPrincipalId = locPrincipal ? locPrincipal.aula.id : null;
+  const pPrincipal = cursoPrincipal ? progressoCurso(cursoPrincipal) : { pct:0 };
+  const outrosEmAndamento = emAndamento.filter(c => !cursoPrincipal || c.id !== cursoPrincipal.id);
 
   const eventosOrdenados = DB.eventos.map(e=>({...e, dt:new Date(e.data+"T"+e.hora+":00")})).sort((a,b)=>a.dt-b.dt);
   const proximoEvento = eventosOrdenados.find(e=>e.dt>new Date());
-  const catProximo = proximoEvento ? DB.categorias[proximoEvento.categoria] : null;
+  const catProximo = proximoEvento ? categoriaDe(proximoEvento.categoria) : null;
 
   const unlockedIds = [...badgesDesbloqueados()];
   const conquistaDestaque = unlockedIds.length ? DB.conquistas.find(b=>b.id===unlockedIds[unlockedIds.length-1]) : null;
@@ -35,6 +41,7 @@ function renderDashboard(){
     </div>
 
     <div class="section-title"><h2>Continuar de onde parei</h2></div>
+    ${locPrincipal ? `
     <div class="card continue-card" id="btn-continuar">
       <div class="continue-thumb"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
       <div class="continue-body">
@@ -46,11 +53,14 @@ function renderDashboard(){
         </div>
       </div>
       <div class="btn btn-secondary">Continuar</div>
-    </div>
+    </div>` : `
+    <div class="card" style="padding:26px;margin-bottom:16px;">
+      <p style="margin:0;">Ainda não tens nenhum curso disponível. Assim que a tua mentoria libertar o acesso, ele aparece aqui.</p>
+    </div>`}
     ${outrosEmAndamento.length ? `
     <div class="continue-row">
       ${outrosEmAndamento.map(c=>{
-        const p = progressoCurso(c); const cat = DB.categorias[c.categoria];
+        const p = progressoCurso(c); const cat = categoriaDe(c.categoria);
         return `<div class="card continue-mini" data-curso="${c.id}">
           <span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>
           <h4>${c.titulo}</h4>
@@ -94,7 +104,8 @@ function renderDashboard(){
     </div>
   `;
 
-  document.getElementById("btn-continuar").addEventListener("click", () => irPara("aula", cursoPrincipal.id, aulaPrincipalId));
+  const btnContinuar = document.getElementById("btn-continuar");
+  if(btnContinuar) btnContinuar.addEventListener("click", () => irPara("aula", cursoPrincipal.id, aulaPrincipalId));
   document.querySelectorAll(".continue-mini").forEach(el => el.addEventListener("click", () => {
     const cid = el.getAttribute("data-curso");
     irPara("aula", cid, estado.ultimaAulaPorCurso[cid]);
@@ -107,7 +118,7 @@ function renderDashboard(){
 
 function renderCourseCardHTML(c){
   const p = progressoCurso(c);
-  const cat = DB.categorias[c.categoria];
+  const cat = categoriaDe(c.categoria);
   return `<div class="card course-card" data-curso="${c.id}">
     <div class="course-cover">
       <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
@@ -193,7 +204,7 @@ function renderCurso(cursoId){
   const curso = cursoPorId(cursoId);
   if(!curso){ document.getElementById("content-curso").innerHTML = '<div class="empty-note">Este curso não foi encontrado.</div>'; return; }
   const p = progressoCurso(curso);
-  const cat = DB.categorias[curso.categoria];
+  const cat = categoriaDe(curso.categoria);
   const turmaDoCurso = turmasDoMembro(membroAtual()).find(t => t.cursoId === curso.id);
   const html = `
     <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
@@ -257,8 +268,11 @@ function renderCurso(cursoId){
 
 /* ---------------- Aula ---------------- */
 function renderAula(cursoId, aulaId){
-  const loc = localizarAula(cursoId, aulaId);
-  if(!loc){ document.getElementById("content-aula").innerHTML = '<div class="empty-note">Esta aula não foi encontrada.</div>'; return; }
+  /* Se a aula pedida já não existir (foi apagada ou renomeada no painel),
+     abre a primeira do curso em vez de deixar o ecrã vazio. */
+  const curso0 = cursoPorId(cursoId);
+  const loc = localizarAula(cursoId, aulaId) || (curso0 ? primeiraAulaDoCurso(curso0) : null);
+  if(!loc){ document.getElementById("content-aula").innerHTML = '<div class="empty-note">Esta aula já não está disponível.</div>'; return; }
   const { curso, modulo, aula } = loc;
   estado.ultimaAulaPorCurso[curso.id] = aula.id;
   estado.ultimoCurso = curso.id;
@@ -452,7 +466,7 @@ function renderFeedPosts(){
     return;
   }
   feed.innerHTML = lista.map(post => {
-    const cat = post.categoria ? DB.categorias[post.categoria] : null;
+    const cat = post.categoria ? categoriaDe(post.categoria) : null;
     return `<div class="card post-card">
       <div class="post-head">
         <div class="avatar">${post.iniciais}</div>
@@ -565,7 +579,7 @@ function renderCalendario(){
   const passados = comData.filter(e=>e.dt<=agora).sort((a,b)=>b.dt-a.dt);
 
   function linhaEvento(e, passado){
-    const cat = DB.categorias[e.categoria];
+    const cat = categoriaDe(e.categoria);
     const { dia, mes } = formatarDataEvento(e.data);
     const dias = diasAte(e.dt);
     const confirmado = !!estado.presencasConfirmadas[e.id];
