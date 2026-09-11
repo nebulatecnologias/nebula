@@ -156,6 +156,7 @@ function renderAdminConvites(){
       <div class="table-card-head">
         <h3>Convites</h3>
         <span class="count">${convites.length} registos</span>
+        <button class="btn btn-secondary btn-sm" type="button" id="btn-atualizar-convites">Atualizar</button>
       </div>
       <div class="table-wrap">
         <table class="admin-table">
@@ -182,6 +183,13 @@ function renderAdminConvites(){
   `;
 
   document.getElementById("btn-novo-convite").addEventListener("click", () => criarConvite());
+  document.getElementById("btn-atualizar-convites").addEventListener("click", async e => {
+    if(modoDemonstracao()){ renderAdminConvites(); return; }
+    const botao = e.currentTarget;
+    botao.disabled = true; botao.textContent = "A ler...";
+    try { await API.recarregarConvites(); renderAdminConvites(); }
+    catch(erro){ mostrarToast(erro.message || "Não foi possível ler os convites."); botao.disabled = false; botao.textContent = "Atualizar"; }
+  });
   document.querySelectorAll("#content-admin [data-reenviar]").forEach(b =>
     b.addEventListener("click", () => reenviarConvite(b.getAttribute("data-reenviar"))));
   document.querySelectorAll("#content-admin [data-revogar]").forEach(b =>
@@ -224,8 +232,20 @@ function criarConvite(valores){
     textoGuardar: "Enviar convite",
     aoGuardar: v => {
       if(!/^\S+@\S+\.\S+$/.test(v.email)){ mostrarToast("Esse email não parece válido"); return false; }
-      if(membroPorEmail(v.email) && !(DB.convites||[]).some(c=>c.email===v.email)){
-        mostrarToast("Essa pessoa já é membro da academia"); return false;
+      const membro = membroPorEmail(v.email);
+      if(membro && membro.papel !== "aluno"){
+        mostrarToast("Esse email é de alguém da equipa, que já entra na academia"); return false;
+      }
+      /* Já ter conta não é motivo para não convidar: pode nunca ter
+         entrado, ou precisar de um link novo. Avisa-se e segue-se. */
+      if(membro){
+        confirmarAcao({
+          titulo: "Essa pessoa já tem conta",
+          mensagem: `Já existe uma conta para "${v.email}". Podemos enviar-lhe um link de entrada novo e abrir os cursos que escolheste — o link anterior deixa de servir.`,
+          textoConfirmar: "Enviar mesmo assim",
+          aoConfirmar: () => enviarConvite(v)
+        });
+        return;
       }
       enviarConvite(v);
     }

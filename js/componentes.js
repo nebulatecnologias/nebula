@@ -6,7 +6,10 @@
 
 /* Campos suportados: texto, textarea, numero, select, toggle, cor, url, data, hora, imagem, gradiente */
 function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "Guardar", aoGuardar }){
-  fecharDrawer();
+  /* Sem esperar pela animação, e apanhando também a que estava a meio
+     de se despedir: duas gavetas ao mesmo tempo confundem-se. */
+  document.removeEventListener("keydown", fecharDrawerComEsc);
+  document.querySelectorAll(".drawer-overlay").forEach(v => v.remove());
 
   const overlay = document.createElement("div");
   overlay.className = "drawer-overlay";
@@ -29,7 +32,7 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
   `;
   document.body.appendChild(overlay);
 
-  overlay.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", fecharDrawer));
+  overlay.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", () => fecharDrawer()));
   overlay.addEventListener("click", e => { if(e.target===overlay) fecharDrawer(); });
 
   overlay.querySelectorAll(".campo-toggle").forEach(t => t.addEventListener("click", () => t.classList.toggle("on")));
@@ -135,12 +138,14 @@ function campoHTML(c, valor){
 
 function fecharDrawerComEsc(e){ if(e.key==="Escape") fecharDrawer(); }
 
-function fecharDrawer(){
+function fecharDrawer(imediato){
   const overlay = document.getElementById("drawer-overlay");
   if(!overlay) return;
   document.removeEventListener("keydown", fecharDrawerComEsc);
+  overlay.removeAttribute("id");     // deixa de responder a getElementById enquanto se despede
   overlay.classList.remove("aberto");
-  setTimeout(() => overlay.remove(), 180);
+  if(imediato) overlay.remove();
+  else setTimeout(() => overlay.remove(), 180);
 }
 
 /* Confirmação para ações destrutivas (apagar curso, aula, evento...) */

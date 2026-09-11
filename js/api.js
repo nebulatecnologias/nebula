@@ -146,6 +146,13 @@ const API = {
     }
   },
 
+  /* Relê só os convites: o estado deles muda quando a pessoa entra,
+     e isso acontece longe deste ecrã. */
+  async recarregarConvites(){
+    const linhas = await lista(this.cliente.from("convites").select("*").order("criado_em", { ascending:false }));
+    DB.convites = linhas.map(deConvite);
+  },
+
   /* Convidar cria a conta, gera o link de entrada e manda o email.
      Corre no servidor: o browser não tem (nem pode ter) essa chave. */
   async convidar(pedido){
