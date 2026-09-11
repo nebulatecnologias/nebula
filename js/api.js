@@ -72,6 +72,11 @@ const API = {
     const c = this.cliente;
     const eu = this.utilizador.id;
 
+    /* Se esta pessoa foi convidada, é aqui que o convite vira acesso.
+       Corre no servidor e não tem efeito nenhum para quem não tem
+       convite à espera, por isso pode correr sempre. */
+    await c.rpc("aceitar_convite").catch(() => {});
+
     const [
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
@@ -123,15 +128,34 @@ const API = {
     aplicarConfig(config);
     aplicarEstadoDoAluno({ progresso, presencas, onboarding, perfil });
 
-    /* Quem é da equipa vê também os rascunhos e os membros. */
+    /* Quem é da equipa vê também os rascunhos, os membros e os convites. */
     if(ehEquipa()){
-      DB.membros = (await lista(this.pub()
-        .from("utilizadores")
-        .select("id, nome, email, perfil, estado, criado_em, lead_id")
-        .is("removido_em", null))).map(deMembro);
+      const [membros, convites] = await Promise.all([
+        lista(this.pub()
+          .from("utilizadores")
+          .select("id, nome, email, perfil, estado, criado_em, lead_id")
+          .is("removido_em", null)),
+        lista(c.from("convites").select("*").order("criado_em", { ascending:false }))
+      ]);
+      DB.membros  = membros.map(deMembro);
+      DB.convites = convites.map(deConvite);
     } else {
-      DB.membros = [deMembro(this.utilizador)];
+      DB.membros  = [deMembro(this.utilizador)];
+      DB.convites = [];
     }
+  },
+
+  /* Convidar cria a conta, gera o link de entrada e manda o email.
+     Corre no servidor: o browser não tem (nem pode ter) essa chave. */
+  async convidar(pedido){
+    const { data, error } = await this.cliente.functions.invoke("convidar-aluno", { body:pedido });
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || traduzirErroAuth(error));
+    }
+    if(data && data.error) throw new Error(data.error);
+    return data;
   },
 
   /* ---------------- Escrita ---------------- */
@@ -332,6 +356,22 @@ function deMembro(u){
            membroDesde:(u.criado_em||"").slice(0,10), leadId:u.lead_id,
            curso:"—", categoria:"negocios", origem:"—", ultimoAcesso:"—",
            engajamento:"morno", progresso:0, estagio:"ativo", responsavel:"—" };
+}
+
+/* O ecrã de convites fala em "código" e "estado"; a tabela fala em
+   token e data de aceitação. É aqui que as duas linguagens se juntam. */
+function deConvite(c){
+  return {
+    id: c.id,
+    codigo: c.token,
+    email: c.email,
+    nome: c.nome || "",
+    ofertaId: c.oferta_id,
+    cursos: c.cursos || [],
+    estado: c.aceite_em ? "aceite" : (new Date(c.expira_em) < new Date() ? "expirado" : "pendente"),
+    criadoEm: (c.criado_em || "").slice(0, 10),
+    expiraEm: (c.expira_em || "").slice(0, 10)
+  };
 }
 
 function aplicarConfig(linhas){

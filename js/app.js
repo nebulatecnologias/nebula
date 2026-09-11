@@ -77,12 +77,14 @@ async function arrancar(){
     return;
   }
 
-  /* Link de recuperação de password: o Supabase devolve a sessão no
-     endereço e o que falta é escolher a nova password. */
-  if(location.hash.includes("nova-password") || location.hash.includes("type=recovery")){
+  /* Link do email: o Supabase devolve a sessão no endereço e o que
+     falta é escolher a password. Um convite é a primeira entrada;
+     uma recuperação é quem já cá andava e se esqueceu. */
+  const convidado = location.hash.includes("type=invite") || location.hash.includes("type=signup");
+  if(convidado || location.hash.includes("nova-password") || location.hash.includes("type=recovery")){
     mostrarEcra("login");
     aplicarAparencia();
-    pedirNovaPassword();
+    pedirNovaPassword(convidado);
     return;
   }
 
@@ -180,14 +182,14 @@ document.getElementById("btn-pedir-acesso").addEventListener("click", e => {
 });
 
 /* Formulário de nova password, depois do link do email. */
-function pedirNovaPassword(){
+function pedirNovaPassword(primeiraVez){
   const cartao = document.querySelector(".login-card");
   cartao.innerHTML = `
-    <h1>Escolhe uma nova password</h1>
-    <p class="sub">Tem de ter pelo menos 8 caracteres.</p>
+    <h1>${primeiraVez ? "Boas-vindas à academia" : "Escolhe uma nova password"}</h1>
+    <p class="sub">${primeiraVez ? "Escolhe a password com que passas a entrar. Pelo menos 8 caracteres." : "Tem de ter pelo menos 8 caracteres."}</p>
     <div class="field"><label>Nova password</label><input type="password" id="pass-nova"></div>
     <div class="field"><label>Repete</label><input type="password" id="pass-repete"></div>
-    <button class="btn btn-primary btn-block btn-lg" id="btn-definir-pass">Guardar e entrar</button>
+    <button class="btn btn-primary btn-block btn-lg" id="btn-definir-pass">${primeiraVez ? "Entrar na academia" : "Guardar e entrar"}</button>
     <div class="login-aviso hidden" id="login-aviso"></div>
   `;
   document.getElementById("btn-definir-pass").addEventListener("click", async () => {
