@@ -492,7 +492,10 @@ function traduzirErroAuth(erro){
   if(m.includes("invalid login")) return "Email ou password errados.";
   if(m.includes("email not confirmed")) return "Confirma o email antes de entrares. Procura a mensagem que te enviámos.";
   if(m.includes("rate limit") || m.includes("too many")) return "Demasiadas tentativas. Espera um minuto e tenta de novo.";
-  if(m.includes("password should be")) return "A password é demasiado curta ou demasiado comum. Escolhe outra.";
+  if(m.includes("easy to guess") || m.includes("weak password") || m.includes("pwned"))
+    return "Essa password aparece em fugas de dados conhecidas. Escolhe outra que não uses noutro sítio.";
+  if(m.includes("password should be") || m.includes("password should contain"))
+    return "Essa password não cumpre as regras da academia: " + (erro.message || "") + ".";
   return erro && erro.message ? erro.message : "Não foi possível entrar.";
 }
 
