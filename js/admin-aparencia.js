@@ -65,7 +65,7 @@ function editarMarca(){
     campos: [
       { nome:"nomeEscola", rotulo:"Nome da escola", tipo:"texto", obrigatorio:true },
       { nome:"sublinha", rotulo:"Sublinha", tipo:"texto", placeholder:"ex: Formação & Mentoria" },
-      { nome:"logoUrl", rotulo:"Logótipo", tipo:"imagem", dica:"Quadrado, de preferência com fundo transparente. Sem imagem, fica o símbolo." },
+      { nome:"logoUrl", rotulo:"Logótipo", tipo:"imagem", pasta:"marca", dica:"Quadrado, de preferência com fundo transparente. Sem imagem, fica o símbolo." },
       { nome:"corAccent", rotulo:"Cor de destaque", tipo:"cor", dica:"Botões, realces e o símbolo da marca." },
       { nome:"temaPadrao", rotulo:"Tema por omissão", tipo:"select", opcoes:[{valor:"dark",rotulo:"Escuro"},{valor:"light",rotulo:"Claro"}] },
       { nome:"loginTitulo", rotulo:"Frase de entrada", tipo:"textarea" },

@@ -200,6 +200,32 @@ const API = {
     this.utilizador.nome = nome;
   },
 
+  /* ---------------- Ficheiros ----------------
+     Imagens e anexos vao para o Storage, nao para dentro de uma
+     coluna de texto. O que fica gravado na linha e' o endereco. */
+  async enviarFicheiro(balde, caminho, ficheiro){
+    const { error } = await this.cliente.storage.from(balde)
+      .upload(caminho, ficheiro, { upsert:true, contentType:ficheiro.type || undefined });
+    if(error) throw new Error(traduzirErroFicheiro(error));
+    if(balde === BALDE_PUBLICO){
+      const { data } = this.cliente.storage.from(balde).getPublicUrl(caminho);
+      return data.publicUrl;
+    }
+    return "storage:" + caminho;      // privado: assina-se na hora de abrir
+  },
+
+  /* Um endereco assinado dura o suficiente para abrir o ficheiro. */
+  async assinar(caminho, segundos){
+    const { data, error } = await this.cliente.storage.from(BALDE_PRIVADO)
+      .createSignedUrl(caminho, segundos || 3600);
+    if(error) throw new Error(traduzirErroFicheiro(error));
+    return data.signedUrl;
+  },
+
+  async apagarFicheiro(balde, caminho){
+    await this.cliente.storage.from(balde).remove([caminho]);
+  },
+
   async guardarConfig(chave, valor){
     const { error } = await this.cliente.from("config").upsert({ chave, valor });
     if(error) throw new Error(traduzirErroDados(error));
@@ -407,6 +433,18 @@ const MAPAS = {
 /* ============================================================
    Erros em português, com o que fazer a seguir
    ============================================================ */
+function traduzirErroFicheiro(erro){
+  const m = (erro && erro.message || "").toLowerCase();
+  if(m.includes("exceeded the maximum allowed size") || m.includes("payload too large"))
+    return "O ficheiro é grande de mais para este tipo de conteúdo.";
+  if(m.includes("mime type") || m.includes("invalid_mime"))
+    return "Este tipo de ficheiro não é aceite aqui.";
+  if(m.includes("row-level security") || m.includes("unauthorized"))
+    return "Não tens permissão para enviar este ficheiro.";
+  if(m.includes("failed to fetch")) return "Perdemos a ligação ao enviar o ficheiro.";
+  return erro && erro.message ? erro.message : "Não foi possível enviar o ficheiro.";
+}
+
 function traduzirErroAuth(erro){
   const m = (erro && erro.message || "").toLowerCase();
   if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
@@ -439,9 +477,30 @@ function traduzirErroDados(erro){
    servidor. Se o servidor recusar, o ecrã não pode ficar a mostrar
    uma coisa que não ficou gravada: avisamos e oferecemos recarregar.
    ============================================================ */
-function salvar(entidade, registo){
-  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
-  return API.guardar(entidade, registo).catch(erro => avisarQueNaoGuardou(erro));
+/* Imagens que ficaram gravadas como texto dentro da linha sobem para
+   o Storage na primeira vez que o registo voltar a ser guardado. */
+const IMAGENS_DA_ENTIDADE = {
+  curso:  [["capa",   "capas/cursos"]],
+  aula:   [["capa",   "capas/aulas"]],
+  banner: [["imagem", "banners"]]
+};
+
+async function curarImagens(entidade, registo){
+  const campos = IMAGENS_DA_ENTIDADE[entidade];
+  if(!campos || !registo) return;
+  for(const [campo, pasta] of campos){
+    const valor = registo[campo];
+    if(!valor || !String(valor).startsWith("data:")) continue;
+    registo[campo] = await passarParaStorage(valor, pasta);
+  }
+}
+
+async function salvar(entidade, registo){
+  if(modoDemonstracao()){ guardarDB(); return; }
+  try {
+    await curarImagens(entidade, registo);
+    await API.guardar(entidade, registo);
+  } catch(erro){ avisarQueNaoGuardou(erro); }
 }
 
 function remover(entidade, id){
@@ -462,6 +521,7 @@ function salvarOrdem(entidade, lista, extra){
 async function salvarAula(aula, moduloId){
   if(modoDemonstracao()){ guardarDB(); return; }
   try {
+    await curarImagens("aula", aula);
     await API.guardar("aula", Object.assign({}, aula, { moduloId }));
     await API.substituirFilhos("aula_ficheiros", "ficheiro", aula.id,
       (aula.ficheiros || []).map((f, i) => Object.assign({}, f, { aulaId:aula.id, ordem:i + 1, id:f.id || novoId("fich") })));
@@ -507,7 +567,11 @@ function salvarConfigGeral(){
     abasAluno: DB.config.abasAluno
   });
 }
-function salvarAparencia(){ return guardarChaveDeConfig("aparencia", DB.aparencia); }
+async function salvarAparencia(){
+  if(!modoDemonstracao() && String(DB.aparencia.logoUrl||"").startsWith("data:"))
+    DB.aparencia.logoUrl = await passarParaStorage(DB.aparencia.logoUrl, "marca");
+  return guardarChaveDeConfig("aparencia", DB.aparencia);
+}
 function salvarGamificacao(){ return guardarChaveDeConfig("gamificacao", DB.config.gamificacao); }
 function salvarCertificado(){ return guardarChaveDeConfig("certificado", DB.config.certificado); }
 function salvarIntegracoes(){
@@ -535,8 +599,10 @@ function salvarOnboarding(){
   if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
   return API.guardar("onboarding", estado.onboarding || {}).catch(erro => avisarQueNaoGuardou(erro));
 }
-function salvarPerfil(){
-  if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
+async function salvarPerfil(){
+  if(modoDemonstracao()){ guardarEstado(); return; }
+  if(String(estado.fotoUrl||"").startsWith("data:"))
+    estado.fotoUrl = await passarParaStorage(estado.fotoUrl, "perfis/" + API.utilizador.id);
   return API.guardar("perfil", {
     fotoUrl: estado.fotoUrl, tema: estado.tema,
     streakDias: estado.streakDias, notificacoes: estado.notificacoes
@@ -570,4 +636,74 @@ function soNoCRM(oQue){
     aoConfirmar: () => window.open(URL_CRM, "_blank", "noopener")
   });
   return true;
+}
+
+
+/* ============================================================
+   Enviar ficheiros
+   ============================================================ */
+const BALDE_PUBLICO = "academia-publico";
+const BALDE_PRIVADO = "academia-privado";
+
+function nomeSeguro(nome){
+  return String(nome || "ficheiro")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // tira acentos
+    .replace(/[^a-zA-Z0-9._-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(-60);
+}
+
+/* Envia e devolve o endereço a guardar na linha. Em modo de
+   demonstração devolve o data: URL de sempre, para os testes
+   continuarem a correr sem servidor. */
+async function enviarImagem(ficheiro, pasta){
+  if(modoDemonstracao()) return lerComoDataURL(ficheiro);
+  const caminho = `${pasta}/${novoId("img")}-${nomeSeguro(ficheiro.name)}`;
+  return API.enviarFicheiro(BALDE_PUBLICO, caminho, ficheiro);
+}
+
+async function enviarAnexo(ficheiro, pasta){
+  if(modoDemonstracao()) return lerComoDataURL(ficheiro);
+  const caminho = `${pasta}/${novoId("anx")}-${nomeSeguro(ficheiro.name)}`;
+  return API.enviarFicheiro(BALDE_PRIVADO, caminho, ficheiro);
+}
+
+function lerComoDataURL(ficheiro){
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onload = ev => resolve(ev.target.result);
+    leitor.onerror = () => reject(new Error("Não foi possível ler o ficheiro."));
+    leitor.readAsDataURL(ficheiro);
+  });
+}
+
+/* Um endereço do balde privado só serve depois de assinado. */
+async function abrirFicheiroPrivado(endereco, nome){
+  try {
+    const url = String(endereco || "").startsWith("storage:")
+      ? await API.assinar(endereco.slice(8))
+      : endereco;
+    const a = document.createElement("a");
+    a.href = url; a.download = nome || ""; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch(erro){
+    mostrarToast(erro.message || "Não foi possível abrir o ficheiro.");
+  }
+}
+
+/* Imagens antigas ficaram guardadas como texto dentro da base de
+   dados. Na próxima vez que o registo for gravado, passam para o
+   Storage sem ninguém ter de fazer nada. */
+async function passarParaStorage(valor, pasta){
+  if(modoDemonstracao()) return valor;
+  if(!valor || !String(valor).startsWith("data:")) return valor;
+  try {
+    const resposta = await fetch(valor);
+    const blob = await resposta.blob();
+    const extensao = (blob.type.split("/")[1] || "jpg").replace("+xml", "");
+    const ficheiro = new File([blob], "imagem." + extensao, { type:blob.type });
+    return await enviarImagem(ficheiro, pasta);
+  } catch(e){
+    return valor;         // não conseguiu: fica como estava, sem perder nada
+  }
 }

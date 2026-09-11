@@ -5,6 +5,9 @@
    na aula que o aluno abre.
    ============================================================ */
 
+/* O balde privado aceita ate 10 MB por ficheiro. */
+const LIMITE_MATERIAL = 10 * 1024 * 1024;
+
 function abrirFormAula(cursoId, moduloId, aulaId){
   estado.aulaNoForm = { cursoId, moduloId, aulaId };
   estado.abaAulaForm = "texto";
@@ -61,7 +64,7 @@ function renderFormAula(){
         </div>
         <div>
           <label class="rotulo-solto">Imagem de capa</label>
-          ${uploadHTML("capaAula", v.capa, "480 × 270 px (16:9). É a miniatura da aula na lista do curso, sem cortes.", "pequena")}
+          ${uploadHTML("capaAula", v.capa, "480 × 270 px (16:9). É a miniatura da aula na lista do curso, sem cortes.", "pequena", "capas/aulas")}
         </div>
       </div>
 
@@ -181,12 +184,14 @@ function renderPainelTexto(painel){
   const imgInput = document.getElementById("editor-imagem");
 
   corInput.addEventListener("input", () => aplicarComando("foreColor", corInput.value));
-  imgInput.addEventListener("change", e => {
+  imgInput.addEventListener("change", async e => {
     const f = e.target.files[0];
     if(!f) return;
-    const leitor = new FileReader();
-    leitor.onload = ev => aplicarComando("insertImage", ev.target.result);
-    leitor.readAsDataURL(f);
+    try {
+      const url = await enviarImagem(f, "conteudo");
+      area.focus();
+      aplicarComando("insertImage", url);
+    } catch(erro){ mostrarToast(erro.message || "Não foi possível enviar a imagem."); }
   });
 
   painel.querySelectorAll("[data-cmd]").forEach(b => b.addEventListener("click", () => {
@@ -295,20 +300,25 @@ function renderPainelFicheiros(painel){
 
   const input = document.getElementById("ficheiro-anexo");
   document.getElementById("btn-add-ficheiro").addEventListener("click", () => input.click());
-  input.addEventListener("change", e => {
+  input.addEventListener("change", async e => {
     const f = e.target.files[0];
     if(!f) return;
-    /* Ficheiros grandes não cabem no armazenamento do browser. */
-    if(f.size > 1.5 * 1024 * 1024){
-      mostrarToast("Nesta fase o ficheiro tem de ser menor que 1,5 MB.");
+    if(f.size > LIMITE_MATERIAL){
+      mostrarToast(`"${f.name}" tem ${formatarTamanho(f.size)}. O limite é ${formatarTamanho(LIMITE_MATERIAL)}.`);
       return;
     }
-    const leitor = new FileReader();
-    leitor.onload = ev => {
-      r.ficheiros.push({ nome:f.name, url:ev.target.result, tamanho:formatarTamanho(f.size) });
+    const botao = document.getElementById("btn-add-ficheiro");
+    botao.disabled = true; botao.textContent = "A enviar...";
+    try {
+      const ctxAula = contextoDaAula();
+      const aulaId = (ctxAula && ctxAula.aula) ? ctxAula.aula.id : "novas";
+      const url = await enviarAnexo(f, "materiais/" + aulaId);
+      r.ficheiros.push({ nome:f.name, url, tipo:f.type, tamanho:formatarTamanho(f.size) });
       renderPainelFicheiros(painel);
-    };
-    leitor.readAsDataURL(f);
+    } catch(erro){
+      mostrarToast(erro.message || "Não foi possível enviar o ficheiro.");
+      botao.disabled = false; botao.textContent = "+ Adicionar ficheiro";
+    }
   });
   painel.querySelectorAll("[data-remover-ficheiro]").forEach(b => b.addEventListener("click", () => {
     r.ficheiros.splice(Number(b.getAttribute("data-remover-ficheiro")), 1);

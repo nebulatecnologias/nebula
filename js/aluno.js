@@ -474,10 +474,7 @@ function materiaisHTML(aula){
 function ligarMateriais(aula){
   document.querySelectorAll("#content-aula [data-material]").forEach(b => b.addEventListener("click", () => {
     const f = (aula.ficheiros||[])[Number(b.getAttribute("data-material"))];
-    if(!f) return;
-    const a = document.createElement("a");
-    a.href = f.url; a.download = f.nome; a.target = "_blank"; a.rel = "noopener";
-    document.body.appendChild(a); a.click(); a.remove();
+    if(f) abrirFicheiroPrivado(f.url, f.nome);
   }));
 }
 
@@ -628,23 +625,29 @@ function resumoTexto(t, n){
 }
 
 /* ---------------- Anexos ---------------- */
-function escolherAnexo(ficheiro){
+async function escolherAnexo(ficheiro){
   if(!ficheiro) return;
   if(ficheiro.size > LIMITE_ANEXO){
     mostrarToast(`"${ficheiro.name}" tem ${formatarTamanho(ficheiro.size)}. O limite é 3 MB.`);
     return;
   }
-  const leitor = new FileReader();
-  leitor.onload = ev => {
+  const botao = document.getElementById("btn-anexar");
+  if(botao) botao.disabled = true;
+  try {
+    const eu = API.utilizador ? API.utilizador.id : "demo";
+    const url = await enviarAnexo(ficheiro, "comunidade/" + eu);
     estado.anexoPendente = {
       nome: ficheiro.name,
       tipo: ficheiro.type || "",
       tamanho: formatarTamanho(ficheiro.size),
-      url: ev.target.result
+      url
     };
     renderPreviaAnexo();
-  };
-  leitor.readAsDataURL(ficheiro);
+  } catch(erro){
+    mostrarToast(erro.message || "Não foi possível enviar o ficheiro.");
+  } finally {
+    if(botao) botao.disabled = false;
+  }
 }
 
 function renderPreviaAnexo(){
@@ -652,7 +655,7 @@ function renderPreviaAnexo(){
   if(!wrap) return;
   const a = estado.anexoPendente;
   if(!a){ wrap.innerHTML = ""; return; }
-  const imagem = a.tipo.startsWith("image/");
+  const imagem = a.tipo.startsWith("image/") && !String(a.url).startsWith("storage:");
   wrap.innerHTML = `
     <div class="anexo-chip">
       ${imagem ? `<img src="${a.url}" alt="">` : ICONS.ficheiro}
@@ -743,10 +746,7 @@ function renderFeedPosts(){
   }));
   feed.querySelectorAll("[data-abrir-anexo]").forEach(el => el.addEventListener("click", () => {
     const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-abrir-anexo"));
-    if(!post || !post.ficheiro) return;
-    const a = document.createElement("a");
-    a.href = post.ficheiro.url; a.download = post.ficheiro.nome; a.target = "_blank"; a.rel = "noopener";
-    document.body.appendChild(a); a.click(); a.remove();
+    if(post && post.ficheiro) abrirFicheiroPrivado(post.ficheiro.url, post.ficheiro.nome);
   }));
   feed.querySelectorAll("[data-ir-mensagem]").forEach(el => el.addEventListener("click", () => {
     const alvo = feed.querySelector(`[data-mensagem="${el.getAttribute("data-ir-mensagem")}"]`);
@@ -761,7 +761,7 @@ function mensagemHTML(post, agrupada, fixada, minha){
   const cat = post.categoria ? categoriaDe(post.categoria) : null;
   const citada = post.respostaA ? DB.posts.find(p => String(p.id) === String(post.respostaA)) : null;
   const f = post.ficheiro;
-  const imagem = f && (f.tipo||"").startsWith("image/");
+  const imagem = f && (f.tipo||"").startsWith("image/") && !String(f.url).startsWith("storage:");
 
   return `<div class="msg ${agrupada?"agrupada":""} ${fixada?"fixada":""} ${minha?"minha":""}" data-mensagem="${post.id}">
     <div class="msg-avatar">${agrupada ? "" : `<div class="avatar">${post.iniciais}</div>`}</div>
@@ -1097,18 +1097,17 @@ function renderDefinicoes(){
     el.classList.toggle("on", estado.notificacoes[key]);
   }));
   document.getElementById("btn-mudar-foto").addEventListener("click", () => document.getElementById("input-foto").click());
-  document.getElementById("input-foto").addEventListener("change", e => {
+  document.getElementById("input-foto").addEventListener("change", async e => {
     const file = e.target.files[0];
     if(!file) return;
-    const leitor = new FileReader();
-    leitor.onload = ev => {
-      estado.fotoUrl = ev.target.result;
+    try {
+      const eu = API.utilizador ? API.utilizador.id : "demo";
+      estado.fotoUrl = await enviarImagem(file, "perfis/" + eu);
       salvarPerfil();
       atualizarSidebarGlobal();
       renderDefinicoes();
       mostrarToast("Foto de perfil atualizada");
-    };
-    leitor.readAsDataURL(file);
+    } catch(erro){ mostrarToast(erro.message || "Não foi possível enviar a foto."); }
   });
   const btnRemoverFoto = document.getElementById("btn-remover-foto");
   if(btnRemoverFoto) btnRemoverFoto.addEventListener("click", () => {

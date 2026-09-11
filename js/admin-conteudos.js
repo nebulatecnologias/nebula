@@ -204,7 +204,7 @@ function renderFormCurso(){
           <p>Insere a imagem de capa conforme a dimensão de exibição na vitrine. Para ecrãs retina, usa imagens com o dobro da resolução para garantir nitidez.</p>
         </div>
         <div class="card form-card">
-          ${uploadHTML("capa", v.capa, "1280 × 720 px (16:9). É o formato do cartão em Meus cursos — a imagem aparece inteira, sem cortes.", "grande")}
+          ${uploadHTML("capa", v.capa, "1280 × 720 px (16:9). É o formato do cartão em Meus cursos — a imagem aparece inteira, sem cortes.", "grande", "capas/cursos")}
         </div>
       </div>
 

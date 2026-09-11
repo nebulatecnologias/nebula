@@ -39,17 +39,22 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
     const nome = botao.getAttribute("data-imagem");
     const input = overlay.querySelector(`#ficheiro-${nome}`);
     botao.addEventListener("click", () => input.click());
-    input.addEventListener("change", e => {
+    input.addEventListener("change", async e => {
       const ficheiro = e.target.files[0];
       if(!ficheiro) return;
-      const leitor = new FileReader();
-      leitor.onload = ev => {
-        overlay.querySelector(`#valor-${nome}`).value = ev.target.result;
+      const rotulo = botao.textContent;
+      botao.disabled = true; botao.textContent = "A enviar...";
+      try {
+        const url = await enviarImagem(ficheiro, botao.getAttribute("data-pasta") || "imagens");
+        overlay.querySelector(`#valor-${nome}`).value = url;
         const previa = overlay.querySelector(`#previa-${nome}`);
-        previa.style.backgroundImage = `url(${ev.target.result})`;
+        previa.style.backgroundImage = `url(${url})`;
         previa.classList.add("tem-imagem");
-      };
-      leitor.readAsDataURL(ficheiro);
+        botao.textContent = "Trocar imagem";
+      } catch(erro){
+        mostrarToast(erro.message || "Não foi possível enviar a imagem.");
+        botao.textContent = rotulo;
+      } finally { botao.disabled = false; }
     });
   });
 
@@ -116,7 +121,7 @@ function campoHTML(c, valor){
       <div class="campo-imagem">
         <div class="previa-imagem ${v?"tem-imagem":""}" id="previa-${c.nome}" style="${v?`background-image:url(${v})`:""}"></div>
         <div>
-          <button class="btn btn-secondary btn-sm" type="button" data-imagem="${c.nome}">Escolher imagem</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-imagem="${c.nome}" data-pasta="${c.pasta||"imagens"}">${v?"Trocar imagem":"Escolher imagem"}</button>
           <input type="file" accept="image/*" class="hidden" id="ficheiro-${c.nome}">
           ${dica}
         </div>
@@ -211,13 +216,14 @@ function ligarCheckCards(raiz){
     c.addEventListener("click", () => c.classList.toggle("marcado")));
 }
 
-/* Zona de imagem: mostra a capa atual, aceita um ficheiro e guarda-o
-   como data URL no input escondido que o formulário lê ao gravar. */
-function uploadHTML(nome, valor, dica, tamanho){
+/* Zona de imagem: mostra a capa atual, envia o ficheiro para o
+   armazenamento e guarda o endereço no input escondido que o
+   formulário lê ao gravar. */
+function uploadHTML(nome, valor, dica, tamanho, pasta){
   return `<div class="upload-box ${tamanho||""} ${valor?"tem-imagem":""}" id="caixa-${nome}" style="${valor?`background-image:url(${valor})`:""}">
     <span class="upload-dica">${dica}</span>
     <div class="upload-acoes">
-      <button class="btn btn-secondary btn-sm" type="button" data-escolher="${nome}">${valor?"Trocar imagem":"Escolher imagem"}</button>
+      <button class="btn btn-secondary btn-sm" type="button" data-escolher="${nome}" data-pasta="${pasta||"capas"}">${valor?"Trocar imagem":"Escolher imagem"}</button>
       <button class="btn btn-secondary btn-sm ${valor?"":"hidden"}" type="button" data-limpar="${nome}">Remover</button>
     </div>
     <input type="file" accept="image/*" class="hidden" id="ficheiro-${nome}">
@@ -230,12 +236,20 @@ function ligarUploads(raiz){
     const nome = b.getAttribute("data-escolher");
     const input = r.querySelector(`#ficheiro-${nome}`);
     b.addEventListener("click", () => input.click());
-    input.addEventListener("change", e => {
+    input.addEventListener("change", async e => {
       const ficheiro = e.target.files[0];
       if(!ficheiro) return;
-      const leitor = new FileReader();
-      leitor.onload = ev => aplicarImagem(r, nome, ev.target.result);
-      leitor.readAsDataURL(ficheiro);
+      const caixa = r.querySelector(`#caixa-${nome}`);
+      const botao = caixa.querySelector("[data-escolher]");
+      const rotulo = botao.textContent;
+      botao.disabled = true; botao.textContent = "A enviar...";
+      try {
+        const url = await enviarImagem(ficheiro, b.getAttribute("data-pasta") || "capas");
+        aplicarImagem(r, nome, url);
+      } catch(erro){
+        mostrarToast(erro.message || "Não foi possível enviar a imagem.");
+        botao.textContent = rotulo;
+      } finally { botao.disabled = false; }
     });
   });
   r.querySelectorAll("[data-limpar]").forEach(b =>

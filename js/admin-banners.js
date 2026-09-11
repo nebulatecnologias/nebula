@@ -99,7 +99,7 @@ function editarBanner(id){
       { nome:"titulo", rotulo:"Título", tipo:"texto", obrigatorio:true, placeholder:"A mensagem principal do banner." },
       { nome:"cta", rotulo:"Texto do botão", tipo:"texto", placeholder:"ex: Garantir vaga" },
       { nome:"link", rotulo:"Link de destino", tipo:"url", placeholder:"https://...", dica:"Para onde o aluno vai ao clicar no banner." },
-      { nome:"imagem", rotulo:"Imagem de fundo", tipo:"imagem", dica:"1600×400 px. Se não puseres imagem, é usada a cor abaixo." },
+      { nome:"imagem", rotulo:"Imagem de fundo", tipo:"imagem", pasta:"banners", dica:"1600×400 px. Se não puseres imagem, é usada a cor abaixo." },
       { nome:"gradiente", rotulo:"Cor de fundo", tipo:"select", opcoes:GRADIENTES },
       { nome:"ativo", rotulo:"Ativo", tipo:"toggle", padrao:true, dica:"Se desligares, o banner deixa de entrar no carrossel." }
     ],
