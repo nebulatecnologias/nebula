@@ -153,7 +153,7 @@ function abrirFormCurso(id){
 
 function renderFormCurso(){
   const curso = estado.cursoNoForm ? cursoPorId(estado.cursoNoForm) : null;
-  const v = curso || { vitrine:true, moderacao:false, publicado:true, certificado:true };
+  const v = curso || { vitrine:true, moderacao:false, publicado:true, certificado:true, abertoATodos:false };
 
   document.getElementById("content-admin").innerHTML = `
     <div class="form-page">
@@ -193,6 +193,7 @@ function renderFormCurso(){
               </select>
             </div>
           </div>
+          ${checkCardHTML("f-abertoATodos", !!v.abertoATodos, "Incluir no plano geral", "Qualquer aluno da academia abre este curso, mesmo sem plano ou inscrição que o inclua.")}
           ${checkCardHTML("f-vitrine", v.vitrine!==false, "Mostrar curso na vitrine de todos os alunos", "Incentiva a compra do teu conteúdo para alunos ainda não matriculados.")}
           ${checkCardHTML("f-moderacao", !!v.moderacao, "Ativar moderação de comentários", "Revê manualmente todos os comentários antes da publicação.")}
         </div>
@@ -268,6 +269,7 @@ function guardarFormCurso(){
     subtitulo: document.getElementById("f-subtitulo").value.trim(),
     categoria: document.getElementById("f-categoria").value,
     capa: document.getElementById("valor-capa").value,
+    abertoATodos: document.getElementById("f-abertoATodos").classList.contains("marcado"),
     vitrine: document.getElementById("f-vitrine").classList.contains("marcado"),
     moderacao: document.getElementById("f-moderacao").classList.contains("marcado"),
     publicado: document.getElementById("f-publicado").classList.contains("on"),
@@ -443,7 +445,7 @@ function renderModulosAdmin(curso){
               <span class="titulo">${a.titulo}</span>
               <span class="sub-celula">${etiquetasDaAula(a)}</span>
             </div>
-            <span class="aula-duracao">${a.duracao||"--:--"}</span>
+            <span class="aula-duracao">${duracaoLegivel(a) || "--:--"}</span>
             <div class="acoes-linha" data-parar>
               <button class="btn-icone" data-mover-aula="${a.id}" data-modulo="${m.id}" data-dir="-1" ${j===0?"disabled":""} title="Subir"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg></button>
               <button class="btn-icone" data-mover-aula="${a.id}" data-modulo="${m.id}" data-dir="1" ${j===m.aulas.length-1?"disabled":""} title="Descer"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>

@@ -117,6 +117,12 @@ const API = {
       lista(this.pub().from("turmas").select("id, oferta_id, nome, estado, inicio, fim").is("removido_em", null))
     ]);
 
+    /* Quem decide a que cursos esta pessoa tem acesso é o servidor.
+       Antes o browser adivinhava pelo plano — e adivinhava mal: dava
+       cartões de cursos que depois abriam sem uma única aula. */
+    const { data: meus } = await c.rpc("meus_cursos");
+    DB.meusCursos = (meus || []).map(r => (typeof r === "string" ? r : r.meus_cursos));
+
     DB.categorias  = Object.fromEntries(categorias.map(r => [r.id, { nome:r.nome, cor:r.cor }]));
     DB.cursos      = cursos.map(deCurso);
     DB.espacos     = espacos.map(deEspaco);
@@ -150,6 +156,12 @@ const API = {
       ]);
       DB.membros  = membros.map(deMembro);
       DB.convites = convites.map(deConvite);
+
+      /* Quantas pessoas confirmaram presença em cada encontro. */
+      const todas = await lista(c.from("presencas").select("evento_id"));
+      const porEvento = {};
+      todas.forEach(p => { porEvento[p.evento_id] = (porEvento[p.evento_id] || 0) + 1; });
+      DB.eventos.forEach(e => { e.confirmados = porEvento[e.id] || 0; });
     } else {
       DB.membros  = [deMembro(this.utilizador)];
       DB.convites = [];
@@ -326,6 +338,7 @@ function deCurso(r){
     id:r.id, ofertaId:r.oferta_id, titulo:r.titulo, sigla:r.sigla, subtitulo:r.subtitulo,
     categoria:r.categoria_id, capa:r.capa_url||"", urlVendas:r.url_vendas||"",
     vitrine:r.vitrine, moderacao:r.moderacao, publicado:r.publicado,
+    abertoATodos: r.aberto_a_todos === true,
     certificado:r.certificado, ordem:r.ordem,
     modulos: (r.modulos||[])
       .filter(m => !m.removido_em)
@@ -368,7 +381,9 @@ function deMensagem(r){
 function deEvento(r){
   return { id:r.id, titulo:r.titulo, descricao:r.descricao||"", data:r.data,
            hora:(r.hora||"19:00").slice(0,5), tipo:r.tipo,
-           categoria:r.categoria_id, link:r.link||"" };
+           categoria:r.categoria_id, link:r.link||"",
+           local:r.local||"", acesso:r.acesso||"gratuito",
+           ofertaId:r.oferta_id, cursos:r.cursos||[], confirmados:0 };
 }
 
 function deBanner(r){
@@ -491,6 +506,7 @@ const MAPAS = {
     para: c => ({ id:c.id, oferta_id:c.ofertaId||null, titulo:c.titulo, sigla:c.sigla,
                   subtitulo:c.subtitulo, categoria_id:c.categoria, capa_url:c.capa||null,
                   url_vendas:linkExterno(c.urlVendas) || null, vitrine:c.vitrine, moderacao:c.moderacao,
+                  aberto_a_todos: c.abertoATodos === true,
                   publicado:c.publicado, certificado:c.certificado, ordem:c.ordem||0 })
   },
   modulo: {
@@ -510,7 +526,10 @@ const MAPAS = {
   mensagem: { tabela:"mensagens", para: m => ({ id:m.id, espaco_id:m.espacoId, autor_id:m.autorId || API.utilizador.id,
                   texto:m.texto||null, resposta_a:m.respostaA||null, ficheiro:m.ficheiro||null,
                   categoria_id:m.categoria||null, fixado:!!m.fixado, oculto:!!m.oculto }) },
-  evento:   { tabela:"eventos", para: e => ({ id:e.id, titulo:e.titulo, descricao:e.descricao, data:e.data, hora:e.hora, tipo:e.tipo, categoria_id:e.categoria, link:linkExterno(e.link) || null }) },
+  evento:   { tabela:"eventos", para: e => ({ id:e.id, titulo:e.titulo, descricao:e.descricao||null, data:e.data,
+                  hora:e.hora, tipo:e.tipo, categoria_id:e.categoria, link:linkExterno(e.link) || null,
+                  local:e.local||null, acesso:e.acesso||"gratuito",
+                  oferta_id:e.ofertaId ? Number(e.ofertaId) : null, cursos:e.cursos||[] }) },
   banner:   { tabela:"banners", para: b => ({ id:b.id, eyebrow:b.eyebrow, titulo:b.titulo, cta:b.cta, link:linkExterno(b.link) || null, imagem_url:b.imagem||null, gradiente:b.gradiente||null, ativo:b.ativo, ordem:b.ordem||0 }) },
   conquista:{ tabela:"conquistas", para: c => ({ id:c.id, titulo:c.titulo, descricao:c.desc, regra:c.regra, ordem:c.ordem||0 }) },
   avaliacao:{ tabela:"avaliacoes", para: a => ({ id:a.id, utilizador_id:a.membroId || API.utilizador.id, aula_id:a.aulaId, curso_id:a.cursoId, estrelas:a.estrelas, comentario:a.comentario, oculto:!!a.oculto }) },

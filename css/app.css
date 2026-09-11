@@ -980,3 +980,14 @@ body.light .curso-hero.com-capa::after{ background:linear-gradient(100deg, #ffff
 /* Aviso de escrita que não chegou ao servidor */
 .barra-falha{ position:fixed; left:0; right:0; bottom:0; z-index:400; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:14px 20px; background:var(--danger-soft); border-top:1px solid rgba(224,72,63,.4); color:var(--danger); font-size:13px; backdrop-filter:blur(6px); }
 .barra-falha strong{ display:block; font-weight:600; opacity:.85; margin-top:2px; }
+
+/* Etiqueta de acesso do evento: gratuito, exclusivo ou pago. */
+.etiqueta-acesso{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+  padding:2px 8px; border-radius:99px; border:1px solid currentColor; }
+.etiqueta-acesso.gratuito { color:var(--success); }
+.etiqueta-acesso.exclusivo{ color:var(--accent); }
+.etiqueta-acesso.pago     { color:var(--text-dim); }
+
+/* Campo que a aplicacao preenche sozinha: mostra-se, nao se escreve. */
+.campo-lido{ padding:11px 13px; border:1px dashed var(--border-strong); border-radius:10px;
+  background:var(--surface-raised); color:var(--text-dim); font-weight:600; font-size:14px; }

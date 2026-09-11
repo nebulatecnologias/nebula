@@ -180,7 +180,19 @@ function renderCatalogo(){
 
   const lista = estado.filtroCategoria==="todos" ? cursosVisiveis() : cursosVisiveis().filter(c=>c.categoria===estado.filtroCategoria);
   const grid = document.getElementById("catalogo-grid");
-  grid.innerHTML = lista.length ? lista.map(c=>renderCourseCardHTML(c)).join("") : `<div class="empty-note">Nenhum curso nesta categoria ainda.</div>`;
+  /* Sem nenhum curso ao alcance, a pessoa não fica a olhar para o
+     vazio sem perceber porquê: dizemos-lhe onde estão os cursos. */
+  const semNada = !cursosVisiveis().length;
+  grid.innerHTML = lista.length
+    ? lista.map(c=>renderCourseCardHTML(c)).join("")
+    : semNada
+      ? `<div class="empty-note">
+           Ainda não tens nenhum curso aberto. Assim que a mentoria te der acesso, aparece aqui.
+           <br><button class="btn btn-secondary btn-sm" id="btn-ir-vitrine" style="margin-top:12px;">Ver o que há na Vitrine ${setaCirculo()}</button>
+         </div>`
+      : `<div class="empty-note">Nenhum curso nesta categoria ainda.</div>`;
+  const irVitrine = document.getElementById("btn-ir-vitrine");
+  if(irVitrine) irVitrine.addEventListener("click", () => irPara("vitrine"));
   grid.querySelectorAll(".course-card").forEach(el => el.addEventListener("click", () => irPara("curso", el.getAttribute("data-curso"))));
 }
 
@@ -245,8 +257,10 @@ function dataCurta(iso){
 function duracaoDoCurso(curso){
   let segundos = 0;
   curso.modulos.forEach(m => m.aulas.forEach(a => {
-    const partes = String(a.duracao||"").split(":").map(Number);
-    if(partes.length===2 && !partes.some(isNaN)) segundos += partes[0]*60 + partes[1];
+    /* Uma aula longa vem como H:MM:SS; as outras como MM:SS. */
+    const partes = duracaoLegivel(a).split(":").map(Number);
+    if(partes.length===3 && !partes.some(isNaN)) segundos += partes[0]*3600 + partes[1]*60 + partes[2];
+    else if(partes.length===2 && !partes.some(isNaN)) segundos += partes[0]*60 + partes[1];
   }));
   if(!segundos) return null;
   const h = Math.floor(segundos/3600), min = Math.round((segundos%3600)/60);
@@ -309,7 +323,7 @@ function renderCurso(cursoId){
       return `<div class="aula-row" data-status="${st}" data-aula="${aula.id}">
         <span class="aula-status">${icon}</span>
         <span class="aula-info"><span class="titulo">${aula.titulo}</span></span>
-        <span class="aula-duracao">${aula.duracao}</span>
+        <span class="aula-duracao">${duracaoLegivel(aula)}</span>
         <svg class="icon icon-sm aula-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </div>`;
     }).join("");
@@ -358,7 +372,7 @@ function renderAula(cursoId, aulaId){
             <h1>${aula.titulo}</h1>
           </div>
           <div class="aula-actions">
-            <span style="align-self:center;font-size:13px;color:var(--text-faint);font-weight:600;margin-right:4px;">${aula.duracao}</span>
+            <span id="aula-duracao" style="align-self:center;font-size:13px;color:var(--text-faint);font-weight:600;margin-right:4px;">${aula.duracao && aula.duracao !== "00:00" ? aula.duracao : ""}</span>
             <button class="btn btn-secondary" id="btn-concluir" data-done="${concluida}">
               <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
               <span id="btn-concluir-label">${concluida ? "Aula concluída" : "Marcar como concluída"}</span>
@@ -395,6 +409,19 @@ function renderAula(cursoId, aulaId){
       </aside>
     </div>
   `;
+
+  /* A duração vem do leitor. Se ainda não estiver gravada e for a
+     equipa a ver, fica gravada — para o aluno seguinte já a encontrar
+     feita, sem ninguém ter cronometrado nada. */
+  const leitor = document.querySelector("#content-aula iframe.player-embed");
+  if(leitor) medirDuracao(leitor, texto => {
+    const etiqueta = document.getElementById("aula-duracao");
+    if(etiqueta) etiqueta.textContent = texto;
+    if(texto && texto !== aula.duracao){
+      aula.duracao = texto;
+      if(papelEfetivo() === "administrador") salvar("aula", Object.assign({}, aula, { moduloId:modulo.id }));
+    }
+  });
 
   document.getElementById("btn-voltar-curso").addEventListener("click", () => irPara("curso", curso.id));
   if(anterior) document.getElementById("pager-anterior").addEventListener("click", () => irPara("aula", curso.id, anterior.id));
@@ -926,6 +953,7 @@ function renderCalendario(){
           <h4>${e.titulo}</h4>
           <div class="event-meta">
             <span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>
+            <span class="etiqueta-acesso ${e.acesso||"gratuito"}">${ROTULO_ACESSO[e.acesso] || "Gratuito"}</span>
             <span>${e.tipo}</span>
             <span>${e.hora}</span>
             ${!passado ? `<span>· em ${dias===0?"hoje":dias+" dia"+(dias===1?"":"s")}</span>` : ""}
@@ -940,6 +968,8 @@ function renderCalendario(){
           <div class="event-campos">
             <div><span class="rotulo">Quando</span><strong>${dataLonga}, às ${e.hora}</strong></div>
             <div><span class="rotulo">Formato</span><strong>${e.tipo}</strong></div>
+            <div><span class="rotulo">Onde</span><strong>${e.local || (e.link ? "Online" : "A anunciar")}</strong></div>
+            <div><span class="rotulo">Acesso</span><strong>${ROTULO_ACESSO[e.acesso] || "Gratuito"}</strong></div>
             <div><span class="rotulo">Área</span><strong>${cat.nome}</strong></div>
             ${confirmado && !passado ? '<div><span class="rotulo">A tua presença</span><strong class="confirmada">Confirmada</strong></div>' : ""}
           </div>
@@ -947,6 +977,7 @@ function renderCalendario(){
             ${passado
               ? `<button class="btn btn-secondary btn-sm" data-toast="Resumo disponível na comunidade">Ver resumo</button>`
               : `${e.link ? `<a class="btn btn-primary btn-sm" href="${linkExterno(e.link)}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : ""}
+                 ${e.local ? `<a class="btn btn-secondary btn-sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.local)}" target="_blank" rel="noopener">Ver no mapa ${setaCirculo()}</a>` : ""}
                  <button class="btn btn-secondary btn-sm" data-lembrete="${e.id}">Guardar lembrete</button>
                  <button class="btn btn-secondary btn-sm" data-confirmar="${e.id}" data-done="${confirmado}">${confirmado?"✓ Presença confirmada":"Confirmar presença"}</button>`
             }

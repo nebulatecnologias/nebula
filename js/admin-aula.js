@@ -56,7 +56,8 @@ function renderFormAula(){
             </div>
             <div class="field">
               <label>Duração</label>
-              <input type="text" id="a-duracao" value="${v.duracao||""}" placeholder="12:34">
+              <div class="campo-lido" id="a-duracao" data-duracao="${v.duracao||""}">${v.duracao || "—"}</div>
+              <p class="hint">Vem do próprio vídeo, assim que o leitor o carrega.</p>
             </div>
           </div>
           ${checkCardHTML("a-semComentarios", !!v.semComentarios, "Desativar comentários neste conteúdo", "O aluno deixa de poder avaliar e comentar esta aula.")}
@@ -268,6 +269,20 @@ function renderPainelVideo(painel){
   /* Colar já mostra o resultado, sem ter de sair do campo. */
   campo.addEventListener("change", () => { recolherPainelAtual(); renderPainelVideo(painel); });
   campo.addEventListener("paste", () => setTimeout(() => { recolherPainelAtual(); renderPainelVideo(painel); }, 0));
+
+  /* A duração vem do leitor, não de quem escreve. */
+  const leitor = painel.querySelector("iframe.player-embed");
+  if(leitor) medirDuracao(leitor, texto => anotarDuracao(texto));
+}
+
+/* O campo da duração é só de leitura: guarda o que o vídeo disser. */
+function anotarDuracao(texto){
+  const campo = document.getElementById("a-duracao");
+  if(!campo || !texto) return;
+  campo.setAttribute("data-duracao", texto);
+  campo.textContent = texto;
+  const rascunho = rascunhoAula();
+  if(rascunho) rascunho.duracao = texto;
 }
 
 function ondeCopiar(provedor){
@@ -402,7 +417,7 @@ function guardarFormAula(criarOutra){
 
   const dados = {
     titulo,
-    duracao: document.getElementById("a-duracao").value.trim() || "00:00",
+    duracao: document.getElementById("a-duracao").getAttribute("data-duracao") || "00:00",
     capa: document.getElementById("valor-capaAula").value,
     semComentarios: document.getElementById("a-semComentarios").classList.contains("marcado"),
     semBuscaIA: document.getElementById("a-semBuscaIA").classList.contains("marcado"),

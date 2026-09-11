@@ -13,17 +13,31 @@ function sincronizarSessaoComMembro(membro){
   estado.papel = membro.papel || "aluno";
 }
 
-/* O aluno vê os cursos publicados que o seu plano inclui.
-   Sem membro ou sem plano, vê tudo o que está publicado. */
+/* Os cursos que este aluno pode mesmo abrir.
+   Em produção a lista vem do servidor, que é quem sabe: inscrições do
+   CRM, acessos dados por convite e os cursos do plano geral. Um cartão
+   que o aluno não pode abrir não deve estar aqui — abria sem aulas
+   nenhumas, e isso não é um cartão, é uma porta fechada pintada de
+   porta aberta. A Vitrine é o lugar desses.
+   Sem servidor (demonstração) vale o plano, como sempre valeu. */
 function cursosVisiveis(){
   const publicados = DB.cursos.filter(c => c.publicado !== false);
+  if(papelEfetivo() === "administrador") return publicados;
+  if(Array.isArray(DB.meusCursos)){
+    const comAcesso = new Set(DB.meusCursos);
+    return publicados.filter(c => comAcesso.has(c.id));
+  }
   const membro = membroAtual();
   const doPlano = cursosPermitidos(membro);
+  const abertos = publicados.filter(c => c.abertoATodos).map(c => c.id);
   if(!doPlano) return publicados;                    // acesso total
-  const permitidos = new Set([...doPlano, ...cursosPorTurma(membro)]);
+  const permitidos = new Set([...doPlano, ...cursosPorTurma(membro), ...abertos]);
   return publicados.filter(c => permitidos.has(c.id));
 }
 function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
+
+/* Como um encontro se paga. O aluno vê isto como etiqueta no cartão. */
+const ROTULO_ACESSO = { gratuito:"Gratuito", exclusivo:"Exclusivo", pago:"Pago" };
 
 /* ============================================================
    Aparência
@@ -160,7 +174,7 @@ function temVideo(aula){ return !!urlDoVideo(aula); }
 function playerHTML(aula, titulo){
   const url = urlDoVideo(aula);
   if(url){
-    return `<iframe class="player-embed" src="${url}" title="${(titulo||"").replace(/"/g,"&quot;")}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+    return `<iframe class="player-embed" src="${comApiDoPlayer(url)}" title="${(titulo||"").replace(/"/g,"&quot;")}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
   }
   const temCodigo = (aula && aula.embed || "").trim();
   return `
@@ -172,6 +186,95 @@ function playerHTML(aula, titulo){
         : "Cola o código de incorporação em Conteúdos › aula › Vídeo."}</div>
     </div>`;
 }
+/* ============================================================
+   Quanto tempo tem a aula
+   Ninguém devia ter de cronometrar um vídeo à mão para escrever a
+   duração num campo. Quem sabe é o próprio leitor: pergunta-se-lhe.
+   ============================================================ */
+
+/* O YouTube só responde a quem lhe pede com a API ligada. */
+function comApiDoPlayer(url){
+  try {
+    const u = new URL(url, location.href);
+    if(u.hostname.replace(/^www\./, "").endsWith("youtube.com") && !u.searchParams.has("enablejsapi")){
+      u.searchParams.set("enablejsapi", "1");
+      u.searchParams.set("origin", location.origin);
+      return u.href;
+    }
+    return url;
+  } catch(e){ return url; }
+}
+
+/* "00:00" gravado não é uma duração, é a falta dela. */
+function duracaoLegivel(aula){
+  const d = String((aula && aula.duracao) || "").trim();
+  return (!d || /^0+:0+$/.test(d)) ? "" : d;
+}
+
+function formatarDuracao(segundos){
+  const t = Math.round(Number(segundos) || 0);
+  if(t <= 0) return "";
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  const dois = n => String(n).padStart(2, "0");
+  return h ? `${h}:${dois(m)}:${dois(s)}` : `${dois(m)}:${dois(s)}`;
+}
+
+/* Cada leitor responde à sua maneira; só nos interessa o número. */
+function duracaoNaMensagem(dados){
+  let d = dados;
+  if(typeof d === "string"){
+    try { d = JSON.parse(d); } catch(e){ return 0; }
+  }
+  if(!d || typeof d !== "object") return 0;
+  const candidatos = [
+    d.duration,                                   // Panda e a maioria
+    d.info && d.info.duration,                    // YouTube
+    d.data && d.data.duration,                    // Vimeo (eventos)
+    d.method === "getDuration" ? d.value : null   // Vimeo (resposta directa)
+  ];
+  for(const c of candidatos){
+    const n = Number(c);
+    if(n > 0 && n < 86400) return n;              // nada dura mais de um dia
+  }
+  return 0;
+}
+
+/* Pergunta ao leitor quanto tempo tem, e desiste em silêncio se ele
+   não responder: uma duração em falta nunca pode partir uma aula. */
+function medirDuracao(iframe, aoSaber){
+  if(!iframe || !iframe.contentWindow) return;
+  const leitor = iframe.contentWindow;
+  let terminado = false;
+
+  const desistir = () => {
+    if(terminado) return;
+    terminado = true;
+    clearInterval(relogio);
+    window.removeEventListener("message", aoResponder);
+  };
+
+  function aoResponder(ev){
+    if(ev.source !== leitor) return;
+    const segundos = duracaoNaMensagem(ev.data);
+    if(!segundos) return;
+    desistir();
+    aoSaber(formatarDuracao(segundos), segundos);
+  }
+
+  function perguntar(){
+    try {
+      leitor.postMessage('{"event":"listening"}', "*");                                        // YouTube
+      leitor.postMessage(JSON.stringify({ method:"addEventListener", value:"loaded" }), "*");  // Vimeo
+      leitor.postMessage(JSON.stringify({ method:"getDuration" }), "*");                       // Vimeo
+    } catch(e){ /* o leitor ainda não está pronto */ }
+  }
+
+  window.addEventListener("message", aoResponder);
+  const relogio = setInterval(perguntar, 1200);
+  perguntar();
+  setTimeout(desistir, 20000);
+}
+
 function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
 function fundoBanner(b){
   return b.imagem
