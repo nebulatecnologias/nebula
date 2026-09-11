@@ -116,19 +116,35 @@ function renderDashboard(){
   document.querySelectorAll(".course-card").forEach(el => el.addEventListener("click", () => irPara("curso", el.getAttribute("data-curso"))));
 }
 
-function renderCourseCardHTML(c){
-  const p = progressoCurso(c);
+/* O mesmo cartão serve o aluno e o painel: em "admin" troca o progresso
+   pessoal pela conclusão média da turma e junta as ações de gestão. */
+function renderCourseCardHTML(c, opcoes){
+  const admin = opcoes && opcoes.admin;
   const cat = categoriaDe(c.categoria);
-  return `<div class="card course-card" data-curso="${c.id}">
+  const p = progressoCurso(c);
+  const pct = admin ? statsCurso(c.id).conclusao : p.pct;
+  const aulas = c.modulos.reduce((n,m)=>n+m.aulas.length, 0);
+  const legenda = admin
+    ? `${c.modulos.length} módulo${c.modulos.length===1?"":"s"} · ${aulas} aula${aulas===1?"":"s"}`
+    : `${p.concluidas} de ${p.total} aulas`;
+
+  return `<div class="card course-card ${admin?"admin":""}" data-curso="${c.id}">
     <div class="course-cover ${c.capa?"com-capa":""}" style="${c.capa?`background-image:url(${c.capa})`:""}">
       <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
-      ${p.pct===100 ? '<span class="cover-badge done">CONCLUÍDO</span>' : ""}
+      ${admin ? `
+        ${c.publicado===false ? '<span class="cover-badge estado">RASCUNHO</span>' : ""}
+        ${c.publicado!==false && c.vitrine===false ? '<span class="cover-badge estado">FORA DA VITRINE</span>' : ""}
+        <div class="course-card-acoes" data-parar>
+          <button class="btn-icone" data-editar="${c.id}" title="Editar curso">${ICONS.lapis}</button>
+          <button class="btn-icone perigo" data-apagar="${c.id}" title="Apagar curso"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+        </div>`
+      : (p.pct===100 ? '<span class="cover-badge done">CONCLUÍDO</span>' : "")}
     </div>
     <div class="course-body">
       <h3>${c.titulo}</h3>
-      <p class="course-desc">${c.subtitulo}</p>
-      <div class="course-progress-row"><span style="font-size:12.5px;color:var(--text-faint);">${p.concluidas} de ${p.total} aulas</span><span class="pct">${p.pct}%</span></div>
-      <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
+      <p class="course-desc">${c.subtitulo||""}</p>
+      <div class="course-progress-row"><span class="course-legenda">${legenda}</span><span class="pct">${pct}%</span></div>
+      <div class="progress-track thin"><div class="progress-fill mini" style="width:${pct}%"></div></div>
     </div>
   </div>`;
 }

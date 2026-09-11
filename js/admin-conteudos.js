@@ -31,6 +31,7 @@ function renderAdminConteudos(){
       </div>
       <div class="search-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="conteudos-busca" placeholder="Procurar..." value="${estado.buscaConteudos||""}"></div>
     </div>
+    ${aba==="cursos" ? `<div class="chip-row" id="chips-conteudos"></div>` : ""}
     <div id="conteudos-tabela"></div>
   `;
 
@@ -46,54 +47,56 @@ function renderAdminConteudos(){
     if((estado.abaConteudos||"cursos")==="cursos") abrirFormCurso(null); else editarCategoria(null);
   });
 
+  renderChipsConteudos();
   renderTabelaConteudos();
 }
 
 function renderTabelaConteudos(){
   const wrap = document.getElementById("conteudos-tabela");
   if(!wrap) return;
-  wrap.innerHTML = (estado.abaConteudos||"cursos")==="categorias" ? tabelaCategoriasHTML() : tabelaCursosAdminHTML();
+  wrap.innerHTML = (estado.abaConteudos||"cursos")==="categorias" ? tabelaCategoriasHTML() : grelhaCursosAdminHTML();
   ligarAcoesConteudos();
 }
 
-/* ---------------- Tabela de cursos ---------------- */
-function tabelaCursosAdminHTML(){
+/* ---------------- Cursos em cartões ---------------- */
+/* O painel mostra os cursos com o mesmo cartão que o aluno vê em
+   "Meus cursos" — o que se cria aqui é o que aparece lá. */
+function cursosFiltradosAdmin(){
   const busca = (estado.buscaConteudos||"").trim().toLowerCase();
-  const lista = DB.cursos.filter(c => !busca || c.titulo.toLowerCase().includes(busca));
+  const cat = estado.filtroCategoriaConteudos || "todos";
+  return DB.cursos.filter(c =>
+    (cat==="todos" || c.categoria===cat) &&
+    (!busca || c.titulo.toLowerCase().includes(busca) || (c.subtitulo||"").toLowerCase().includes(busca)));
+}
+
+function renderChipsConteudos(){
+  const row = document.getElementById("chips-conteudos");
+  if(!row) return;
+  const atual = estado.filtroCategoriaConteudos || "todos";
+  const chips = [{ id:"todos", nome:"Todos", cor:null, n:DB.cursos.length }];
+  Object.entries(DB.categorias).forEach(([id,c]) => {
+    const n = DB.cursos.filter(x=>x.categoria===id).length;
+    if(n) chips.push({ id, nome:c.nome, cor:c.cor, n });
+  });
+  row.innerHTML = chips.map(ch =>
+    `<div class="chip ${atual===ch.id?"active":""}" data-cat="${ch.id}">${ch.cor?`<span class="dot" style="--c:${ch.cor}"></span>`:""}${ch.nome} <span class="chip-n">${ch.n}</span></div>`).join("");
+  row.querySelectorAll(".chip").forEach(el => el.addEventListener("click", () => {
+    estado.filtroCategoriaConteudos = el.getAttribute("data-cat");
+    renderChipsConteudos();
+    renderTabelaConteudos();
+  }));
+}
+
+function grelhaCursosAdminHTML(){
+  const lista = cursosFiltradosAdmin();
+  if(!lista.length){
+    return `<div class="card painel"><div class="empty-note">${DB.cursos.length
+      ? "Nenhum curso encontrado com estes filtros."
+      : 'Ainda não há cursos. Cria o primeiro em "Novo curso".'}</div></div>`;
+  }
   return `
-    <div class="card table-card">
-      <div class="table-card-head">
-        <h3>Cursos</h3>
-        <span class="count">${lista.length} de ${DB.cursos.length} registos</span>
-      </div>
-      <div class="table-wrap">
-        <table class="admin-table">
-          <thead><tr><th>Curso</th><th>Categoria</th><th class="num">Módulos</th><th class="num">Aulas</th><th>Vitrine</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            ${lista.length ? lista.map(c => {
-              const cat = categoriaDe(c.categoria);
-              return `<tr>
-                <td>
-                  <div class="cell-curso">
-                    <span class="mini-capa" style="${c.capa?`background-image:url(${c.capa})`:""}">${c.capa?"":(c.sigla||siglaSugerida(c.titulo))}</span>
-                    <span>
-                      <button class="ligacao-tabela" data-abrir="${c.id}">${c.titulo}</button>
-                      <span class="sub-celula">${c.subtitulo||""}</span>
-                    </span>
-                  </div>
-                </td>
-                <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
-                <td class="num">${c.modulos.length}</td>
-                <td class="num">${contarAulas(c)}</td>
-                <td><span class="pill ${c.vitrine!==false?"pill-ativo":"pill-inativo"}">${c.vitrine!==false?"Na vitrine":"Escondido"}</span></td>
-                <td><span class="pill ${cursoPublicado(c)?"pill-publicado":"pill-inativo"}">${cursoPublicado(c)?"Publicado":"Rascunho"}</span></td>
-                <td>${acoesLinha(c.id)}</td>
-              </tr>`;
-            }).join("") : `<tr><td colspan="7"><div class="empty-note">Ainda não há cursos. Cria o primeiro em "Novo curso".</div></td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <div class="contagem-grelha">${lista.length} de ${DB.cursos.length} curso${DB.cursos.length===1?"":"s"}</div>
+    <div class="course-grid">${lista.map(c => renderCourseCardHTML(c, { admin:true })).join("")}</div>
   `;
 }
 
@@ -129,8 +132,12 @@ function tabelaCategoriasHTML(){
 
 function ligarAcoesConteudos(){
   const emCursos = (estado.abaConteudos||"cursos")==="cursos";
-  document.querySelectorAll("#conteudos-tabela [data-abrir]").forEach(b =>
-    b.addEventListener("click", () => irPara("admin-curso-editor", b.getAttribute("data-abrir"))));
+  /* O cartão inteiro abre a gestão do curso; os botões de canto não. */
+  document.querySelectorAll("#conteudos-tabela .course-card").forEach(el =>
+    el.addEventListener("click", e => {
+      if(e.target.closest("[data-parar]")) return;
+      irPara("admin-curso-editor", el.getAttribute("data-curso"));
+    }));
   document.querySelectorAll("#conteudos-tabela [data-editar]").forEach(b =>
     b.addEventListener("click", () => emCursos ? abrirFormCurso(b.getAttribute("data-editar")) : editarCategoria(b.getAttribute("data-editar"))));
   document.querySelectorAll("#conteudos-tabela [data-apagar]").forEach(b =>
