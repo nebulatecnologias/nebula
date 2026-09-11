@@ -99,11 +99,19 @@ async function arrancar(){
   }
 }
 
-/* Carrega tudo o que esta pessoa pode ver e abre a área. */
+/* Carrega tudo o que esta pessoa pode ver e abre a área. Se alguma
+   coisa falhar a meio, volta ao login com o motivo à vista: ficar para
+   sempre no ecrã de carregamento é a pior saída possível. */
 async function entrarNaArea(){
   mostrarEcra("arranque");
   document.getElementById("arranque-texto").textContent = "A carregar os teus cursos...";
-  await API.carregarTudo();
+  try {
+    await API.carregarTudo();
+  } catch(erro){
+    aplicarAparencia();
+    mostrarEcra("login");
+    throw erro;
+  }
   normalizarDB();
   aplicarAparencia();
   mostrarEcra("app");

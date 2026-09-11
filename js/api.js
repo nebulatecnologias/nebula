@@ -74,8 +74,9 @@ const API = {
 
     /* Se esta pessoa foi convidada, é aqui que o convite vira acesso.
        Corre no servidor e não tem efeito nenhum para quem não tem
-       convite à espera, por isso pode correr sempre. */
-    await c.rpc("aceitar_convite").catch(() => {});
+       convite à espera, por isso pode correr sempre. Um erro aqui não
+       pode impedir a entrada de quem já tem acesso. */
+    try { await c.rpc("aceitar_convite"); } catch(e){ /* segue-se na mesma */ }
 
     const [
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
