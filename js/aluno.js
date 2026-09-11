@@ -295,23 +295,12 @@ function renderAula(cursoId, aulaId){
 
   const { anterior, proxima } = aulaAnteriorProxima(curso, aula.id);
   const concluida = !!estado.progresso[aula.id];
-  const videoUrl = urlDoVideo(aula);
 
   document.getElementById("content-aula").innerHTML = `
     <div class="back-link" id="btn-voltar-curso"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar ao curso</div>
     <div class="aula-layout">
       <div>
-        <div class="player-wrap">
-          ${videoUrl ? `
-            <iframe class="player-embed" src="${videoUrl}" title="${aula.titulo}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
-          ` : `
-            <div class="placeholder-inner">
-              <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
-              <div class="placeholder-label">PLACEHOLDER DE VÍDEO — ${(DB.config.integracoes.player||"VÍDEO").toUpperCase()}</div>
-              <div class="placeholder-sub">${DB.config.integracoes.playerAtivo ? "Esta aula ainda não tem ID de vídeo" : "O embed real entra aqui após a integração"}</div>
-            </div>
-          `}
-        </div>
+        <div class="player-wrap">${playerHTML(aula, aula.titulo)}</div>
         <div class="aula-header-row">
           <div>
             <div class="aula-breadcrumb">${curso.titulo.toUpperCase()} · ${modulo.titulo.toUpperCase()}</div>

@@ -110,6 +110,7 @@ function rascunhoAula(){
     const a = ctx && ctx.aula;
     estado.rascunhoAula = {
       conteudo: a ? (a.conteudo||"") : "",
+      embed: a ? (a.embed||"") : "",
       videoId: a ? (a.videoId||"") : "",
       descricao: a ? (a.descricao||"") : "",
       ficheiros: a ? JSON.parse(JSON.stringify(a.ficheiros||[])) : [],
@@ -123,8 +124,8 @@ function recolherPainelAtual(){
   const r = rascunhoAula();
   const editor = document.getElementById("editor-texto");
   if(editor) r.conteudo = editor.innerHTML;
-  const vid = document.getElementById("a-videoId");
-  if(vid) r.videoId = vid.value.trim();
+  const emb = document.getElementById("a-embed");
+  if(emb) r.embed = emb.value.trim();
   const desc = document.getElementById("a-descricao");
   if(desc) r.descricao = desc.value.trim();
 }
@@ -230,29 +231,45 @@ function sugerirTextoDaAula(){
 /* ---------------- Vídeo ---------------- */
 function renderPainelVideo(painel){
   const r = rascunhoAula();
-  const i = DB.config.integracoes;
-  const url = r.videoId && i.playerAtivo
-    ? (i.playerUrl||"").replace("{conta}", i.playerId||"").replace("{id}", r.videoId)
-    : null;
+  const provedor = (DB.config.integracoes||{}).player || "Panda Video";
+  const aulaFicticia = { embed:r.embed };
+  const url = urlDoVideo(aulaFicticia);
+  const codigoDado = (r.embed||"").trim();
 
   painel.innerHTML = `
     <div class="card painel">
       <div class="field">
-        <label>ID do vídeo (${i.player})</label>
-        <input type="text" id="a-videoId" value="${r.videoId||""}" placeholder="Cola aqui o ID do vídeo">
-        <p class="hint">${i.playerAtivo
-          ? "O player está ligado: com o ID preenchido, a aula reproduz."
-          : 'O player está desligado. Liga-o em <strong>Integrações</strong> para o vídeo aparecer ao aluno.'}</p>
+        <label>Código de incorporação (embed)</label>
+        <textarea id="a-embed" rows="4" class="campo-codigo" placeholder="Cola aqui o código copiado do ${provedor} — algo como &lt;iframe src=&quot;...&quot;&gt;&lt;/iframe&gt;">${(r.embed||"").replace(/</g,"&lt;")}</textarea>
+        <p class="hint">Aceita o código completo, ou só o endereço do vídeo. Aproveitamos apenas o endereço: o player é montado por nós, com o estilo da academia.</p>
       </div>
-      <div class="field">
+      <div class="estado-embed ${codigoDado ? (url?"bom":"mau") : ""}">
+        ${codigoDado
+          ? (url ? `${iconeCheck()} Endereço reconhecido: <code>${url}</code>`
+                 : `⚠ Não encontrámos um endereço neste código. Copia o bloco que traz <code>&lt;iframe&gt;</code>.`)
+          : `Sem código, a aula mostra o marcador ao aluno.`}
+      </div>
+      <div class="field" style="margin-top:18px;">
         <label>Descrição curta</label>
         <textarea id="a-descricao" rows="3" placeholder="A frase que aparece logo por baixo do título.">${r.descricao||""}</textarea>
       </div>
-      ${url ? `<div class="previa-player"><iframe src="${url}" title="Pré-visualização" allow="encrypted-media" allowfullscreen loading="lazy"></iframe></div>`
-            : `<div class="upload-box grande sem-fundo"><span class="upload-dica">${r.videoId ? "Liga o player em Integrações para veres a pré-visualização." : "Sem ID de vídeo, a aula mostra o marcador ao aluno."}</span></div>`}
+      <label class="rotulo-solto">Como o aluno vai ver</label>
+      <div class="player-wrap previa">${playerHTML(aulaFicticia, "Pré-visualização")}</div>
+      <p class="hint" style="margin-top:10px;">Onde copiar no ${provedor}: ${ondeCopiar(provedor)}</p>
     </div>
   `;
-  document.getElementById("a-videoId").addEventListener("change", () => { recolherPainelAtual(); renderPainelVideo(painel); });
+
+  const campo = document.getElementById("a-embed");
+  /* Colar já mostra o resultado, sem ter de sair do campo. */
+  campo.addEventListener("change", () => { recolherPainelAtual(); renderPainelVideo(painel); });
+  campo.addEventListener("paste", () => setTimeout(() => { recolherPainelAtual(); renderPainelVideo(painel); }, 0));
+}
+
+function ondeCopiar(provedor){
+  if(/panda/i.test(provedor)) return "abre o vídeo na biblioteca, carrega em <strong>Compartilhar › Embed</strong> e copia o bloco inteiro.";
+  if(/youtube/i.test(provedor)) return "no vídeo, <strong>Partilhar › Incorporar</strong>, e copia o código.";
+  if(/vimeo/i.test(provedor)) return "no vídeo, <strong>Share › Embed</strong>, e copia o código.";
+  return "procura a opção de partilha ou incorporação (embed) do teu provedor e copia o bloco com <code>&lt;iframe&gt;</code>.";
 }
 
 /* ---------------- Ficheiros ---------------- */
@@ -386,7 +403,7 @@ function guardarFormAula(criarOutra){
     semComentarios: document.getElementById("a-semComentarios").classList.contains("marcado"),
     semBuscaIA: document.getElementById("a-semBuscaIA").classList.contains("marcado"),
     conteudo: r.conteudo,
-    videoId: r.videoId,
+    embed: r.embed,
     descricao: r.descricao,
     ficheiros: r.ficheiros,
     /* Perguntas em branco não servem de nada ao aluno. */

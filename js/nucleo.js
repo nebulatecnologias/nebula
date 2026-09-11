@@ -99,6 +99,72 @@ function abaDoAlunoLigada(view){
 }
 /* Cursos criados pelo administrador ainda não têm estatísticas registadas. */
 function statsCurso(id){ return DB.cursoStats[id] || { inscritos:0, conclusao:0, avaliacao:0 }; }
+
+/* ============================================================
+   Vídeo das aulas
+   O endereço vem do código de incorporação que o administrador
+   copia do provedor (Panda Video, YouTube, Vimeo...). Só se
+   aproveita o endereço: o iframe é sempre construído por nós,
+   para o player ficar com o nosso estilo e para nenhum HTML
+   vindo de fora entrar na página.
+   ============================================================ */
+function urlDoEmbed(texto){
+  if(!texto) return null;
+  const t = String(texto).trim();
+  if(!t) return null;
+  const comIframe = t.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+  const bruto = comIframe ? comIframe[1] : (/^https?:\/\//i.test(t) ? t.split(/\s/)[0] : null);
+  if(!bruto) return null;
+  return normalizarUrlVideo(bruto.replace(/&amp;/g, "&"));
+}
+
+/* Endereços de partilha do YouTube e do Vimeo não reproduzem dentro de
+   um iframe — passam-se para a forma de incorporação. */
+function normalizarUrlVideo(url){
+  try {
+    const u = new URL(url, location.href);
+    if(u.protocol !== "http:" && u.protocol !== "https:") return null;
+    const host = u.hostname.replace(/^www\./, "");
+    if(host === "youtu.be") return "https://www.youtube.com/embed" + u.pathname + u.search;
+    if(host.endsWith("youtube.com")){
+      const v = u.searchParams.get("v");
+      if(u.pathname === "/watch" && v) return "https://www.youtube.com/embed/" + v;
+      if(u.pathname.startsWith("/shorts/")) return "https://www.youtube.com/embed/" + u.pathname.split("/")[2];
+    }
+    if(host === "vimeo.com" && /^\/\d+/.test(u.pathname)) return "https://player.vimeo.com/video" + u.pathname;
+    return u.href;
+  } catch(e){ return null; }
+}
+
+function urlDoVideo(aula){
+  if(!aula) return null;
+  const doEmbed = urlDoEmbed(aula.embed);
+  if(doEmbed) return doEmbed;
+  /* Aulas de versões anteriores guardam só o ID, com o modelo de
+     endereço definido em Integrações. Continuam a funcionar. */
+  const i = DB.config.integracoes || {};
+  if(!i.playerAtivo || !aula.videoId) return null;
+  return normalizarUrlVideo((i.playerUrl||"").replace("{conta}", i.playerId||"").replace("{id}", aula.videoId));
+}
+
+function temVideo(aula){ return !!urlDoVideo(aula); }
+
+/* O player, sempre com a nossa moldura. */
+function playerHTML(aula, titulo){
+  const url = urlDoVideo(aula);
+  if(url){
+    return `<iframe class="player-embed" src="${url}" title="${(titulo||"").replace(/"/g,"&quot;")}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  }
+  const temCodigo = (aula && aula.embed || "").trim();
+  return `
+    <div class="placeholder-inner">
+      <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
+      <div class="placeholder-label">${temCodigo ? "CÓDIGO DE INCORPORAÇÃO NÃO RECONHECIDO" : "AULA SEM VÍDEO"}</div>
+      <div class="placeholder-sub">${temCodigo
+        ? "O código colado não traz um endereço de vídeo."
+        : "Cola o código de incorporação em Conteúdos › aula › Vídeo."}</div>
+    </div>`;
+}
 function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
 function fundoBanner(b){
   return b.imagem

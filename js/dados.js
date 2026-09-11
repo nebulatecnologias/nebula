@@ -91,87 +91,87 @@ const CURSOS_PADRAO = [
   { id:"kt", categoria:"negocios", titulo:"Kingdom Tracktion", subtitulo:"Mastermind de empresários para decisões de alto impacto entre pares.",
     modulos:[
       { id:"kt-m1", titulo:"Módulo 1: Fundamentos da Autoridade", descricao:"Antes de escalar um negócio, escala-se a si mesmo.", aulas:[
-        { id:"kt-m1a1", titulo:"A identidade do fundador", duracao:"12:34", descricao:"Como a forma como te vês a ti mesmo determina o teto do teu negócio, muito antes de qualquer estratégia entrar em jogo.", videoId:"kt-m1a1" },
-        { id:"kt-m1a2", titulo:"Visão vs. ambição", duracao:"09:15", descricao:"A diferença entre construir a partir de um chamado e construir a partir da pressa.", videoId:"kt-m1a2" },
-        { id:"kt-m1a3", titulo:"Construir antes de escalar", duracao:"15:02", descricao:"Os alicerces que a maioria ignora sob pressão de crescer depressa.", videoId:"kt-m1a3" },
-        { id:"kt-m1a4", titulo:"O preço da liderança", duracao:"11:48", descricao:"Decisões impopulares, solidão no topo e a disciplina de manter o rumo.", videoId:"kt-m1a4" }
+        { id:"kt-m1a1", titulo:"A identidade do fundador", duracao:"12:34", descricao:"Como a forma como te vês a ti mesmo determina o teto do teu negócio, muito antes de qualquer estratégia entrar em jogo." },
+        { id:"kt-m1a2", titulo:"Visão vs. ambição", duracao:"09:15", descricao:"A diferença entre construir a partir de um chamado e construir a partir da pressa." },
+        { id:"kt-m1a3", titulo:"Construir antes de escalar", duracao:"15:02", descricao:"Os alicerces que a maioria ignora sob pressão de crescer depressa." },
+        { id:"kt-m1a4", titulo:"O preço da liderança", duracao:"11:48", descricao:"Decisões impopulares, solidão no topo e a disciplina de manter o rumo." }
       ]},
       { id:"kt-m2", titulo:"Módulo 2: Estrutura e Sistemas", descricao:"Negócios que dependem de ti não escalam — dependem de sistemas.", aulas:[
-        { id:"kt-m2a1", titulo:"Modelar o negócio", duracao:"14:20", descricao:"Desenhar o modelo de receita e operação antes de contratar a próxima pessoa.", videoId:"kt-m2a1" },
-        { id:"kt-m2a2", titulo:"Processos que escalam", duracao:"10:33", descricao:"Documentar o que funciona para que deixe de depender só de ti.", videoId:"kt-m2a2" },
-        { id:"kt-m2a3", titulo:"Equipas de alto nível", duracao:"13:07", descricao:"Contratar por carácter e treinar por competência.", videoId:"kt-m2a3" },
-        { id:"kt-m2a4", titulo:"Cultura como vantagem competitiva", duracao:"10:58", descricao:"Como princípios claros substituem centenas de regras não escritas.", videoId:"kt-m2a4" }
+        { id:"kt-m2a1", titulo:"Modelar o negócio", duracao:"14:20", descricao:"Desenhar o modelo de receita e operação antes de contratar a próxima pessoa." },
+        { id:"kt-m2a2", titulo:"Processos que escalam", duracao:"10:33", descricao:"Documentar o que funciona para que deixe de depender só de ti." },
+        { id:"kt-m2a3", titulo:"Equipas de alto nível", duracao:"13:07", descricao:"Contratar por carácter e treinar por competência." },
+        { id:"kt-m2a4", titulo:"Cultura como vantagem competitiva", duracao:"10:58", descricao:"Como princípios claros substituem centenas de regras não escritas." }
       ]},
       { id:"kt-m3", titulo:"Módulo 3: Capital e Decisão", descricao:"Ler números com clareza para decidir com coragem.", aulas:[
-        { id:"kt-m3a1", titulo:"Ler os números com clareza", duracao:"16:45", descricao:"Os quatro indicadores que todo o fundador deveria conhecer de memória.", videoId:"kt-m3a1" },
-        { id:"kt-m3a2", titulo:"Risco calculado", duracao:"12:10", descricao:"Separar risco de imprudência.", videoId:"kt-m3a2" },
-        { id:"kt-m3a3", titulo:"Negociação de alto nível", duracao:"14:58", descricao:"Negociar a partir de posição, não de necessidade.", videoId:"kt-m3a3" },
-        { id:"kt-m3a4", titulo:"Sair da sala com decisões", duracao:"09:40", descricao:"Porque reuniões sem decisão são o maior custo escondido de uma equipa.", videoId:"kt-m3a4" }
+        { id:"kt-m3a1", titulo:"Ler os números com clareza", duracao:"16:45", descricao:"Os quatro indicadores que todo o fundador deveria conhecer de memória." },
+        { id:"kt-m3a2", titulo:"Risco calculado", duracao:"12:10", descricao:"Separar risco de imprudência." },
+        { id:"kt-m3a3", titulo:"Negociação de alto nível", duracao:"14:58", descricao:"Negociar a partir de posição, não de necessidade." },
+        { id:"kt-m3a4", titulo:"Sair da sala com decisões", duracao:"09:40", descricao:"Porque reuniões sem decisão são o maior custo escondido de uma equipa." }
       ]}
     ]},
   { id:"mi", categoria:"mentalidade", titulo:"Mentalidade Inquebrável", subtitulo:"Reprograma crenças limitantes e constrói uma mente antifrágil.",
     modulos:[
       { id:"mi-m1", titulo:"Módulo 1: A Origem das Crenças", descricao:"O que molda a tua forma de pensar sem que percebas.", aulas:[
-        { id:"mi-m1a1", titulo:"Como se formam as crenças limitantes", duracao:"08:12", descricao:"A raiz emocional por trás de quase toda a autossabotagem.", videoId:"mi-m1a1" },
-        { id:"mi-m1a2", titulo:"O ciclo pensamento-emoção-ação", duracao:"10:05", descricao:"Como um pensamento automático se transforma num resultado real.", videoId:"mi-m1a2" },
-        { id:"mi-m1a3", titulo:"Identificar o teu diálogo interno", duracao:"07:40", descricao:"A voz que te acompanha o dia todo — e como a treinar.", videoId:"mi-m1a3" }
+        { id:"mi-m1a1", titulo:"Como se formam as crenças limitantes", duracao:"08:12", descricao:"A raiz emocional por trás de quase toda a autossabotagem." },
+        { id:"mi-m1a2", titulo:"O ciclo pensamento-emoção-ação", duracao:"10:05", descricao:"Como um pensamento automático se transforma num resultado real." },
+        { id:"mi-m1a3", titulo:"Identificar o teu diálogo interno", duracao:"07:40", descricao:"A voz que te acompanha o dia todo — e como a treinar." }
       ]},
       { id:"mi-m2", titulo:"Módulo 2: Reprogramação Mental", descricao:"Ferramentas práticas para mudar padrões em semanas, não anos.", aulas:[
-        { id:"mi-m2a1", titulo:"A técnica dos 90 segundos", duracao:"09:30", descricao:"Como deixar uma emoção intensa passar sem te dominar.", videoId:"mi-m2a1" },
-        { id:"mi-m2a2", titulo:"Ancorar novos estados emocionais", duracao:"11:15", descricao:"Criar gatilhos físicos para estados de confiança sob comando.", videoId:"mi-m2a2" },
-        { id:"mi-m2a3", titulo:"Rotina matinal de mentalidade vencedora", duracao:"06:55", descricao:"Os primeiros 20 minutos do dia que decidem os outros 23 horas.", videoId:"mi-m2a3" }
+        { id:"mi-m2a1", titulo:"A técnica dos 90 segundos", duracao:"09:30", descricao:"Como deixar uma emoção intensa passar sem te dominar." },
+        { id:"mi-m2a2", titulo:"Ancorar novos estados emocionais", duracao:"11:15", descricao:"Criar gatilhos físicos para estados de confiança sob comando." },
+        { id:"mi-m2a3", titulo:"Rotina matinal de mentalidade vencedora", duracao:"06:55", descricao:"Os primeiros 20 minutos do dia que decidem os outros 23 horas." }
       ]}
     ]},
   { id:"ia", categoria:"ia", titulo:"IA Aplicada aos Negócios", subtitulo:"Usa inteligência artificial para vender mais e trabalhar menos.",
     modulos:[
       { id:"ia-m1", titulo:"Módulo 1: Fundamentos de IA para Empresários", descricao:"O essencial sem jargão técnico.", aulas:[
-        { id:"ia-m1a1", titulo:"O que a IA já pode fazer pelo teu negócio", duracao:"10:20", descricao:"Um mapa realista de onde a IA já poupa tempo e dinheiro hoje.", videoId:"ia-m1a1" },
-        { id:"ia-m1a2", titulo:"Escolher as ferramentas certas", duracao:"08:45", descricao:"Como não te perderes entre centenas de opções novas todas as semanas.", videoId:"ia-m1a2" },
-        { id:"ia-m1a3", titulo:"Prompting eficaz para resultados de negócio", duracao:"12:30", descricao:"A estrutura de prompt que transforma respostas genéricas em trabalho pronto a usar.", videoId:"ia-m1a3" }
+        { id:"ia-m1a1", titulo:"O que a IA já pode fazer pelo teu negócio", duracao:"10:20", descricao:"Um mapa realista de onde a IA já poupa tempo e dinheiro hoje." },
+        { id:"ia-m1a2", titulo:"Escolher as ferramentas certas", duracao:"08:45", descricao:"Como não te perderes entre centenas de opções novas todas as semanas." },
+        { id:"ia-m1a3", titulo:"Prompting eficaz para resultados de negócio", duracao:"12:30", descricao:"A estrutura de prompt que transforma respostas genéricas em trabalho pronto a usar." }
       ]},
       { id:"ia-m2", titulo:"Módulo 2: Automação e Escala", descricao:"Da ferramenta isolada ao sistema que trabalha por ti.", aulas:[
-        { id:"ia-m2a1", titulo:"Automatizar atendimento ao cliente", duracao:"09:50", descricao:"Responder mais rápido sem contratar mais uma pessoa.", videoId:"ia-m2a1" },
-        { id:"ia-m2a2", titulo:"IA na criação de conteúdo", duracao:"11:05", descricao:"Produzir semanas de conteúdo em horas, mantendo a tua voz.", videoId:"ia-m2a2" },
-        { id:"ia-m2a3", titulo:"Montar o teu primeiro fluxo automatizado", duracao:"13:40", descricao:"Passo a passo para ligar as tuas primeiras ferramentas entre si.", videoId:"ia-m2a3" }
+        { id:"ia-m2a1", titulo:"Automatizar atendimento ao cliente", duracao:"09:50", descricao:"Responder mais rápido sem contratar mais uma pessoa." },
+        { id:"ia-m2a2", titulo:"IA na criação de conteúdo", duracao:"11:05", descricao:"Produzir semanas de conteúdo em horas, mantendo a tua voz." },
+        { id:"ia-m2a3", titulo:"Montar o teu primeiro fluxo automatizado", duracao:"13:40", descricao:"Passo a passo para ligar as tuas primeiras ferramentas entre si." }
       ]}
     ]},
   { id:"vv", categoria:"marketing", titulo:"Vendas de Alto Impacto", subtitulo:"Sistemas e psicologia de venda para fechar mais, com mais dignidade.",
     modulos:[
       { id:"vv-m1", titulo:"Módulo 1: Psicologia da Venda", descricao:"Entender antes de convencer.", aulas:[
-        { id:"vv-m1a1", titulo:"Porque as pessoas realmente compram", duracao:"09:12", descricao:"A diferença entre a razão que dizem e o motivo que sentem.", videoId:"vv-m1a1" },
-        { id:"vv-m1a2", titulo:"Construir confiança em 60 segundos", duracao:"07:28", descricao:"Os sinais que fazem alguém baixar a guarda numa conversa de venda.", videoId:"vv-m1a2" },
-        { id:"vv-m1a3", titulo:"Lidar com objeções sem parecer desesperado", duracao:"10:44", descricao:"Responder ao \"vou pensar\" sem pressionar nem desistir.", videoId:"vv-m1a3" }
+        { id:"vv-m1a1", titulo:"Porque as pessoas realmente compram", duracao:"09:12", descricao:"A diferença entre a razão que dizem e o motivo que sentem." },
+        { id:"vv-m1a2", titulo:"Construir confiança em 60 segundos", duracao:"07:28", descricao:"Os sinais que fazem alguém baixar a guarda numa conversa de venda." },
+        { id:"vv-m1a3", titulo:"Lidar com objeções sem parecer desesperado", duracao:"10:44", descricao:"Responder ao \"vou pensar\" sem pressionar nem desistir." }
       ]},
       { id:"vv-m2", titulo:"Módulo 2: Sistemas de Vendas", descricao:"Processos que vendem mesmo quando não estás a olhar.", aulas:[
-        { id:"vv-m2a1", titulo:"O funil que nunca dorme", duracao:"12:15", descricao:"Desenhar um percurso de venda que continua a trabalhar 24 horas.", videoId:"vv-m2a1" },
-        { id:"vv-m2a2", titulo:"Scripts que convertem", duracao:"08:50", descricao:"Estrutura de conversa que se adapta sem soar decorada.", videoId:"vv-m2a2" },
-        { id:"vv-m2a3", titulo:"Fechar sem pressionar", duracao:"09:33", descricao:"Convidar para a decisão em vez de empurrar para ela.", videoId:"vv-m2a3" }
+        { id:"vv-m2a1", titulo:"O funil que nunca dorme", duracao:"12:15", descricao:"Desenhar um percurso de venda que continua a trabalhar 24 horas." },
+        { id:"vv-m2a2", titulo:"Scripts que convertem", duracao:"08:50", descricao:"Estrutura de conversa que se adapta sem soar decorada." },
+        { id:"vv-m2a3", titulo:"Fechar sem pressionar", duracao:"09:33", descricao:"Convidar para a decisão em vez de empurrar para ela." }
       ]}
     ]},
   { id:"pf", categoria:"espiritualidade", titulo:"Propósito em Movimento", subtitulo:"Fé, direção e significado para quem lidera um negócio.",
     modulos:[
       { id:"pf-m1", titulo:"Módulo 1: Fé e Direção", descricao:"Discernir o caminho em meio ao ruído da vida empresarial.", aulas:[
-        { id:"pf-m1a1", titulo:"Ouvir a voz certa em meio ao ruído", duracao:"11:02", descricao:"Como distinguir intuição, medo e direção real.", videoId:"pf-m1a1" },
-        { id:"pf-m1a2", titulo:"Propósito não é destino, é caminho", duracao:"09:18", descricao:"Porque a pergunta \"para quê\" importa mais do que \"para onde\".", videoId:"pf-m1a2" },
-        { id:"pf-m1a3", titulo:"Disciplina espiritual do empresário", duracao:"10:07", descricao:"Práticas diárias que sustentam decisões de longo prazo.", videoId:"pf-m1a3" }
+        { id:"pf-m1a1", titulo:"Ouvir a voz certa em meio ao ruído", duracao:"11:02", descricao:"Como distinguir intuição, medo e direção real." },
+        { id:"pf-m1a2", titulo:"Propósito não é destino, é caminho", duracao:"09:18", descricao:"Porque a pergunta \"para quê\" importa mais do que \"para onde\"." },
+        { id:"pf-m1a3", titulo:"Disciplina espiritual do empresário", duracao:"10:07", descricao:"Práticas diárias que sustentam decisões de longo prazo." }
       ]},
       { id:"pf-m2", titulo:"Módulo 2: Serviço e Significado", descricao:"Fazer do negócio um instrumento maior do que o lucro.", aulas:[
-        { id:"pf-m2a1", titulo:"Negócio como instrumento, não como ídolo", duracao:"08:40", descricao:"Reordenar prioridades sem perder ambição.", videoId:"pf-m2a1" },
-        { id:"pf-m2a2", titulo:"Gerar impacto além do lucro", duracao:"09:55", descricao:"Formas concretas de servir através daquilo que já constróis.", videoId:"pf-m2a2" },
-        { id:"pf-m2a3", titulo:"Descansar sem culpa", duracao:"07:20", descricao:"Porque parar também é uma decisão de liderança.", videoId:"pf-m2a3" }
+        { id:"pf-m2a1", titulo:"Negócio como instrumento, não como ídolo", duracao:"08:40", descricao:"Reordenar prioridades sem perder ambição." },
+        { id:"pf-m2a2", titulo:"Gerar impacto além do lucro", duracao:"09:55", descricao:"Formas concretas de servir através daquilo que já constróis." },
+        { id:"pf-m2a3", titulo:"Descansar sem culpa", duracao:"07:20", descricao:"Porque parar também é uma decisão de liderança." }
       ]}
     ]},
   { id:"he", categoria:"pessoal", titulo:"Hábitos de Elite", subtitulo:"A rotina diária que separa quem sonha de quem executa.",
     modulos:[
       { id:"he-m1", titulo:"Módulo 1: Fundamentos dos Hábitos", descricao:"A ciência simples por trás de mudanças duradouras.", aulas:[
-        { id:"he-m1a1", titulo:"A ciência por trás dos hábitos", duracao:"09:40", descricao:"O loop de hábito e porque a força de vontade não é suficiente.", videoId:"he-m1a1" },
-        { id:"he-m1a2", titulo:"Empilhar hábitos pequenos", duracao:"07:55", descricao:"Como usar o que já fazes para instalar o que ainda não fazes.", videoId:"he-m1a2" },
-        { id:"he-m1a3", titulo:"Eliminar o que já não serve", duracao:"08:22", descricao:"Identificar hábitos que só existem por inércia.", videoId:"he-m1a3" }
+        { id:"he-m1a1", titulo:"A ciência por trás dos hábitos", duracao:"09:40", descricao:"O loop de hábito e porque a força de vontade não é suficiente." },
+        { id:"he-m1a2", titulo:"Empilhar hábitos pequenos", duracao:"07:55", descricao:"Como usar o que já fazes para instalar o que ainda não fazes." },
+        { id:"he-m1a3", titulo:"Eliminar o que já não serve", duracao:"08:22", descricao:"Identificar hábitos que só existem por inércia." }
       ]},
       { id:"he-m2", titulo:"Módulo 2: Rotinas de Alta Performance", descricao:"Desenhar dias que produzem resultados de anos.", aulas:[
-        { id:"he-m2a1", titulo:"Desenhar o teu dia ideal", duracao:"10:12", descricao:"Partir do resultado desejado para montar a rotina, não o contrário.", videoId:"he-m2a1" },
-        { id:"he-m2a2", titulo:"Energia antes de tempo", duracao:"08:47", descricao:"Porque geris energia, não apenas minutos.", videoId:"he-m2a2" },
-        { id:"he-m2a3", titulo:"Revisão semanal de elite", duracao:"06:58", descricao:"O ritual de 20 minutos que mantém tudo o resto no rumo.", videoId:"he-m2a3" }
+        { id:"he-m2a1", titulo:"Desenhar o teu dia ideal", duracao:"10:12", descricao:"Partir do resultado desejado para montar a rotina, não o contrário." },
+        { id:"he-m2a2", titulo:"Energia antes de tempo", duracao:"08:47", descricao:"Porque geris energia, não apenas minutos." },
+        { id:"he-m2a3", titulo:"Revisão semanal de elite", duracao:"06:58", descricao:"O ritual de 20 minutos que mantém tudo o resto no rumo." }
       ]}
     ]}
 ];
@@ -393,6 +393,7 @@ function normalizarDB(){
         if(!Array.isArray(a.ficheiros)) a.ficheiros = [];
         if(!Array.isArray(a.quiz)) a.quiz = [];
         if(a.conteudo === undefined) a.conteudo = "";
+        if(a.embed === undefined) a.embed = "";
         if(a.semComentarios === undefined) a.semComentarios = false;
         if(a.semBuscaIA === undefined) a.semBuscaIA = false;
       });

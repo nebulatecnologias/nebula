@@ -495,7 +495,7 @@ function renderModulosAdmin(curso){
 
 function etiquetasDaAula(a){
   const partes = [];
-  partes.push(a.videoId ? "Vídeo" : "Sem vídeo");
+  partes.push(temVideo(a) ? "Vídeo" : "Sem vídeo");
   if((a.conteudo||"").trim()) partes.push("Texto");
   if((a.ficheiros||[]).length) partes.push(`${a.ficheiros.length} ficheiro${a.ficheiros.length===1?"":"s"}`);
   if((a.quiz||[]).length) partes.push(`Quiz de ${a.quiz.length}`);
