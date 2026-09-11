@@ -230,7 +230,7 @@ function abrirPaginaDeVendas(cursoId){
   const oferta = ofertaParaCurso(cursoId);
   const destino = (curso.urlVendas||"").trim() || (oferta && oferta.link && oferta.link!=="#" ? oferta.link : "");
   if(!destino){ mostrarToast("Fala com a tua mentoria para desbloqueares este curso."); return; }
-  window.open(destino, "_blank", "noopener");
+  abrirLink(destino);
 }
 
 /* "2026-09-01" → "1 de setembro". */
@@ -861,7 +861,7 @@ function carrosselBannersHTML(id){
   return `
     <div class="banner-carousel" id="${id}">
       <div class="banner-track">
-        ${banners.map(b => `<a class="banner-slide" href="${b.link||"#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
+        ${banners.map(b => `<a class="banner-slide" href="${linkExterno(b.link) || "#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
           <span class="banner-eyebrow">${b.eyebrow}</span>
           <span class="banner-title">${b.titulo}</span>
           <span class="banner-cta">${b.cta} ${setaCirculo()}</span>
@@ -930,7 +930,7 @@ function renderCalendario(){
           <div class="event-acoes">
             ${passado
               ? `<button class="btn btn-secondary btn-sm" data-toast="Resumo disponível na comunidade">Ver resumo</button>`
-              : `${e.link ? `<a class="btn btn-primary btn-sm" href="${e.link}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : ""}
+              : `${e.link ? `<a class="btn btn-primary btn-sm" href="${linkExterno(e.link)}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : ""}
                  <button class="btn btn-secondary btn-sm" data-lembrete="${e.id}">Guardar lembrete</button>
                  <button class="btn btn-secondary btn-sm" data-confirmar="${e.id}" data-done="${confirmado}">${confirmado?"✓ Presença confirmada":"Confirmar presença"}</button>`
             }
@@ -1079,7 +1079,7 @@ function renderDefinicoes(){
             <div class="t-title">Precisas de ajuda?</div>
             <div class="t-sub">Fala diretamente com quem acompanha o teu percurso.</div>
           </div>
-          <a class="btn btn-secondary" href="${DB.config.integracoes.suporteUrl}" target="_blank" rel="noopener">${DB.config.integracoes.suporteRotulo || "Falar com a mentoria"}</a>
+          <a class="btn btn-secondary" href="${linkExterno(DB.config.integracoes.suporteUrl)}" target="_blank" rel="noopener">${DB.config.integracoes.suporteRotulo || "Falar com a mentoria"}</a>
         </div>` : ""}
       </div>
       <div class="card settings-card">

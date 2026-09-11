@@ -380,7 +380,7 @@ function renderAdminCursoEditor(cursoId){
         <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
         <span class="curso-resumo-pct">${p.pct}%</span>
         <button class="btn btn-contorno btn-block" id="btn-comecar-agora">${total ? "ver como aluno" : "criar primeira aula"}</button>
-        ${curso.urlVendas ? `<a class="ligacao-vendas" href="${curso.urlVendas}" target="_blank" rel="noopener">Página de vendas ↗</a>` : ""}
+        ${curso.urlVendas ? `<a class="ligacao-vendas" href="${linkExterno(curso.urlVendas)}" target="_blank" rel="noopener">Página de vendas ↗</a>` : ""}
       </div>
 
       <div id="lista-modulos-admin"></div>

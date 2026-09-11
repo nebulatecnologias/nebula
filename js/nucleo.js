@@ -258,6 +258,35 @@ function postsVisiveis(){
 
 function iconeCheck(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>'; }
 /* Seta dentro de um círculo, à medida do texto onde está (1em). */
+/* ============================================================
+   Links para fora
+   Um endereço escrito sem "https://" é lido pelo browser como um
+   caminho dentro da própria plataforma — e a página de destino nunca
+   abre. Aqui damos-lhe o esquema que falta, e recusamos os esquemas
+   que não servem para navegar.
+   ============================================================ */
+function linkExterno(url){
+  const t = String(url || "").trim();
+  if(!t || t === "#") return "";
+  /* mailto: e tel: são legítimos e não levam https. */
+  if(/^(mailto:|tel:)/i.test(t)) return t;
+  /* Um esquema perigoso não passa, venha de onde vier. */
+  if(/^(javascript|data|vbscript):/i.test(t)) return "";
+  if(/^https?:\/\//i.test(t)) return t;
+  /* Parece um email escrito à mão? Trata-se como email. */
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return "mailto:" + t;
+  /* Falta o esquema: é o caso do kingdomcompny.com/pagina. */
+  return "https://" + t.replace(/^\/+/, "");
+}
+
+/* Abre um endereço numa aba nova, já normalizado. */
+function abrirLink(url){
+  const destino = linkExterno(url);
+  if(!destino){ mostrarToast("Este link não é válido."); return false; }
+  window.open(destino, "_blank", "noopener");
+  return true;
+}
+
 function setaCirculo(){
   return '<svg class="seta-circulo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.5 13.5 12 10 15.5"/></svg>';
 }

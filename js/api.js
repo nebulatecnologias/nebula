@@ -374,7 +374,7 @@ const MAPAS = {
     tabela:"cursos", suave:true,
     para: c => ({ id:c.id, oferta_id:c.ofertaId||null, titulo:c.titulo, sigla:c.sigla,
                   subtitulo:c.subtitulo, categoria_id:c.categoria, capa_url:c.capa||null,
-                  url_vendas:c.urlVendas||null, vitrine:c.vitrine, moderacao:c.moderacao,
+                  url_vendas:linkExterno(c.urlVendas) || null, vitrine:c.vitrine, moderacao:c.moderacao,
                   publicado:c.publicado, certificado:c.certificado, ordem:c.ordem||0 })
   },
   modulo: {
@@ -394,8 +394,8 @@ const MAPAS = {
   mensagem: { tabela:"mensagens", para: m => ({ id:m.id, espaco_id:m.espacoId, autor_id:m.autorId || API.utilizador.id,
                   texto:m.texto||null, resposta_a:m.respostaA||null, ficheiro:m.ficheiro||null,
                   categoria_id:m.categoria||null, fixado:!!m.fixado, oculto:!!m.oculto }) },
-  evento:   { tabela:"eventos", para: e => ({ id:e.id, titulo:e.titulo, descricao:e.descricao, data:e.data, hora:e.hora, tipo:e.tipo, categoria_id:e.categoria, link:e.link }) },
-  banner:   { tabela:"banners", para: b => ({ id:b.id, eyebrow:b.eyebrow, titulo:b.titulo, cta:b.cta, link:b.link, imagem_url:b.imagem||null, gradiente:b.gradiente||null, ativo:b.ativo, ordem:b.ordem||0 }) },
+  evento:   { tabela:"eventos", para: e => ({ id:e.id, titulo:e.titulo, descricao:e.descricao, data:e.data, hora:e.hora, tipo:e.tipo, categoria_id:e.categoria, link:linkExterno(e.link) || null }) },
+  banner:   { tabela:"banners", para: b => ({ id:b.id, eyebrow:b.eyebrow, titulo:b.titulo, cta:b.cta, link:linkExterno(b.link) || null, imagem_url:b.imagem||null, gradiente:b.gradiente||null, ativo:b.ativo, ordem:b.ordem||0 }) },
   conquista:{ tabela:"conquistas", para: c => ({ id:c.id, titulo:c.titulo, descricao:c.desc, regra:c.regra, ordem:c.ordem||0 }) },
   avaliacao:{ tabela:"avaliacoes", para: a => ({ id:a.id, utilizador_id:a.membroId || API.utilizador.id, aula_id:a.aulaId, curso_id:a.cursoId, estrelas:a.estrelas, comentario:a.comentario, oculto:!!a.oculto }) },
   acesso:   { tabela:"acessos", para: a => ({ id:a.id, utilizador_id:a.utilizadorId, curso_id:a.cursoId, origem:a.origem||"manual", expira_em:a.expiraEm||null, nota:a.nota||null }) },
@@ -510,7 +510,10 @@ function salvarConfigGeral(){
 function salvarAparencia(){ return guardarChaveDeConfig("aparencia", DB.aparencia); }
 function salvarGamificacao(){ return guardarChaveDeConfig("gamificacao", DB.config.gamificacao); }
 function salvarCertificado(){ return guardarChaveDeConfig("certificado", DB.config.certificado); }
-function salvarIntegracoes(){ return guardarChaveDeConfig("integracoes", DB.config.integracoes); }
+function salvarIntegracoes(){
+  DB.config.integracoes.suporteUrl = linkExterno(DB.config.integracoes.suporteUrl);
+  return guardarChaveDeConfig("integracoes", DB.config.integracoes);
+}
 
 function guardarChaveDeConfig(chave, valor){
   if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }

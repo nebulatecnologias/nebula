@@ -175,7 +175,7 @@ document.getElementById("btn-esqueci").addEventListener("click", async e => {
 document.getElementById("btn-pedir-acesso").addEventListener("click", e => {
   e.preventDefault();
   const apoio = (DB.config.integracoes || {}).suporteUrl;
-  if(apoio) window.open(apoio, "_blank", "noopener");
+  if(apoio) abrirLink(apoio);
   else avisoLogin("Pede o convite a quem te acompanha na academia.", "nota");
 });
 
