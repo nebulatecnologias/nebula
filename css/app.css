@@ -973,3 +973,7 @@ body.light .curso-hero.com-capa::after{ background:linear-gradient(100deg, #ffff
 .login-aviso{ margin-top:18px; padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; line-height:1.55; }
 .login-aviso.erro{ background:var(--danger-soft); border:1px solid rgba(224,72,63,.35); color:var(--danger); }
 .login-aviso.nota{ background:var(--accent-soft); border:1px solid var(--accent-line); color:var(--accent); }
+
+/* Aviso de escrita que não chegou ao servidor */
+.barra-falha{ position:fixed; left:0; right:0; bottom:0; z-index:400; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:14px 20px; background:var(--danger-soft); border-top:1px solid rgba(224,72,63,.4); color:var(--danger); font-size:13px; backdrop-filter:blur(6px); }
+.barra-falha strong{ display:block; font-weight:600; opacity:.85; margin-top:2px; }

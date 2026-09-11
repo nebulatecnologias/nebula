@@ -404,18 +404,22 @@ function guardarFormAula(criarOutra){
     quiz: r.quiz.filter(q => q.pergunta.trim() && q.opcoes.filter(o=>o.trim()).length >= 2)
   };
 
+  let aulaGravada;
   if(ctx.aula){
     Object.assign(ctx.aula, dados);
+    aulaGravada = ctx.aula;
     /* Mudou de módulo: sai de um e entra no outro, no fim. */
     if(moduloDestino.id !== ctx.modulo.id){
       ctx.modulo.aulas = ctx.modulo.aulas.filter(a => a.id !== ctx.aula.id);
       moduloDestino.aulas.push(ctx.aula);
+      ctx.aula.ordem = moduloDestino.aulas.length;
     }
   } else {
-    moduloDestino.aulas.push(Object.assign({ id:novoId("aula") }, dados));
+    aulaGravada = Object.assign({ id:novoId("aula"), ordem:moduloDestino.aulas.length + 1 }, dados);
+    moduloDestino.aulas.push(aulaGravada);
   }
 
-  guardarDB();
+  salvarAula(aulaGravada, moduloDestino.id);
   estado.rascunhoAula = null;
   mostrarToast(ctx.aula ? "Aula atualizada" : "Aula criada");
 

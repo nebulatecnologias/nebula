@@ -277,13 +277,13 @@ function guardarFormCurso(){
   const curso = estado.cursoNoForm ? cursoPorId(estado.cursoNoForm) : null;
   if(curso){
     Object.assign(curso, dados);
-    guardarDB();
+    salvar("curso", curso);
     mostrarToast("Curso atualizado");
     irPara("admin-curso-editor", curso.id);
   } else {
-    const novo = Object.assign({ id:novoId("curso"), modulos:[] }, dados);
+    const novo = Object.assign({ id:novoId("curso"), modulos:[], ordem:DB.cursos.length + 1 }, dados);
     DB.cursos.push(novo);
-    guardarDB();
+    salvar("curso", novo);
     mostrarToast("Curso criado. Agora cria o primeiro módulo.");
     irPara("admin-curso-editor", novo.id);
   }
@@ -296,7 +296,7 @@ function apagarCurso(id){
     mensagem: `"${curso.titulo}" e os seus ${curso.modulos.length} módulos deixam de estar disponíveis para os alunos. Esta ação não pode ser desfeita.`,
     aoConfirmar: () => {
       DB.cursos = DB.cursos.filter(c=>c.id!==id);
-      guardarDB();
+      remover("curso", id);
       irPara("admin-conteudos");
       mostrarToast("Curso apagado");
     }
@@ -315,9 +315,10 @@ function editarCategoria(id){
     ],
     valores: cat ? { nome:cat.nome, cor:cat.cor } : {},
     aoGuardar: v => {
-      if(cat){ Object.assign(cat, v); }
-      else { DB.categorias[novoId("cat")] = { nome:v.nome, cor:v.cor }; }
-      guardarDB();
+      const idCat = id || novoId("cat");
+      if(cat) Object.assign(cat, v);
+      else DB.categorias[idCat] = { nome:v.nome, cor:v.cor };
+      salvar("categoria", { id:idCat, nome:v.nome, cor:v.cor, ordem:Object.keys(DB.categorias).length });
       renderAdminConteudos();
       mostrarToast(cat ? "Categoria atualizada" : "Categoria criada");
     }
@@ -335,7 +336,7 @@ function apagarCategoria(id){
     mensagem: `A categoria "${DB.categorias[id].nome}" deixa de aparecer nos filtros do aluno.`,
     aoConfirmar: () => {
       delete DB.categorias[id];
-      guardarDB();
+      remover("categoria", id);
       renderAdminConteudos();
       mostrarToast("Categoria apagada");
     }
@@ -403,8 +404,9 @@ function renderAdminCursoEditor(cursoId){
 /* Sem módulos não há onde pôr a aula: cria-se o primeiro pelo caminho. */
 function novoConteudo(curso){
   if(!curso.modulos.length){
-    curso.modulos.push({ id:novoId("mod"), titulo:"Módulo 1", descricao:"", aulas:[] });
-    guardarDB();
+    const primeiro = { id:novoId("mod"), titulo:"Módulo 1", descricao:"", aulas:[], ordem:1 };
+    curso.modulos.push(primeiro);
+    salvar("modulo", Object.assign({}, primeiro, { cursoId:curso.id }));
   }
   abrirFormAula(curso.id, curso.modulos[0].id, null);
 }
@@ -470,8 +472,8 @@ function renderModulosAdmin(curso){
     abrirMenu(b, [
       { rotulo:"Editar módulo", accao:() => editarModulo(curso, m) },
       { rotulo:"Nova aula", accao:() => abrirFormAula(curso.id, m.id, null) },
-      { rotulo:"Mover para cima", desativado:i===0, accao:() => { mover(curso.modulos, i, -1); guardarDB(); renderModulosAdmin(curso); } },
-      { rotulo:"Mover para baixo", desativado:i===curso.modulos.length-1, accao:() => { mover(curso.modulos, i, 1); guardarDB(); renderModulosAdmin(curso); } },
+      { rotulo:"Mover para cima", desativado:i===0, accao:() => { mover(curso.modulos, i, -1); salvarOrdem("modulo", curso.modulos, { cursoId:curso.id }); renderModulosAdmin(curso); } },
+      { rotulo:"Mover para baixo", desativado:i===curso.modulos.length-1, accao:() => { mover(curso.modulos, i, 1); salvarOrdem("modulo", curso.modulos, { cursoId:curso.id }); renderModulosAdmin(curso); } },
       { rotulo:"Apagar módulo", perigo:true, accao:() => apagarModulo(curso, m) }
     ]);
   }));
@@ -488,7 +490,8 @@ function renderModulosAdmin(curso){
   wrap.querySelectorAll("[data-mover-aula]").forEach(b => b.addEventListener("click", () => {
     const m = mod(b.getAttribute("data-modulo"));
     mover(m.aulas, m.aulas.findIndex(a=>a.id===b.getAttribute("data-mover-aula")), Number(b.getAttribute("data-dir")));
-    guardarDB(); renderModulosAdmin(curso);
+    salvarOrdem("aula", m.aulas, { moduloId:m.id });
+    renderModulosAdmin(curso);
   }));
 }
 
@@ -513,9 +516,10 @@ function editarModulo(curso, modulo){
     ],
     valores: modulo ? { titulo:modulo.titulo, descricao:modulo.descricao } : { titulo:`Módulo ${curso.modulos.length+1}` },
     aoGuardar: v => {
-      if(modulo) Object.assign(modulo, v);
-      else curso.modulos.push({ id:novoId("mod"), titulo:v.titulo, descricao:v.descricao, aulas:[] });
-      guardarDB();
+      const alvo = modulo || { id:novoId("mod"), aulas:[], ordem:curso.modulos.length + 1 };
+      Object.assign(alvo, v);
+      if(!modulo) curso.modulos.push(alvo);
+      salvar("modulo", Object.assign({}, alvo, { cursoId:curso.id }));
       renderAdminCursoEditor();
       mostrarToast(modulo ? "Módulo atualizado" : "Módulo criado");
     }
@@ -528,7 +532,7 @@ function apagarModulo(curso, modulo){
     mensagem: `"${modulo.titulo}" e as suas ${modulo.aulas.length} aulas serão removidos do curso.`,
     aoConfirmar: () => {
       curso.modulos = curso.modulos.filter(m=>m.id!==modulo.id);
-      guardarDB();
+      remover("modulo", modulo.id);
       renderAdminCursoEditor();
       mostrarToast("Módulo apagado");
     }
@@ -541,7 +545,7 @@ function apagarAula(curso, modulo, aula){
     mensagem: `"${aula.titulo}" será removida do módulo. O progresso dos alunos nesta aula perde-se.`,
     aoConfirmar: () => {
       modulo.aulas = modulo.aulas.filter(a=>a.id!==aula.id);
-      guardarDB();
+      remover("aula", aula.id);
       renderAdminCursoEditor();
       mostrarToast("Aula apagada");
     }

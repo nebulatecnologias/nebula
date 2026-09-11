@@ -171,6 +171,17 @@ const API = {
     if(error) throw new Error(traduzirErroDados(error));
   },
 
+  /* Substitui a lista de filhos de um registo: apaga o que saiu e
+     grava o que ficou. Usado pelos materiais e pelo quiz da aula. */
+  async substituirFilhos(tabela, entidade, paiId, filhos){
+    const { error: erroApagar } = await this.cliente.from(tabela).delete().eq("aula_id", paiId);
+    if(erroApagar) throw new Error(traduzirErroDados(erroApagar));
+    if(!filhos.length) return;
+    const linhas = filhos.map(f => MAPAS[entidade].para(f));
+    const { error } = await this.cliente.from(tabela).insert(linhas);
+    if(error) throw new Error(traduzirErroDados(error));
+  },
+
   async guardarConfig(chave, valor){
     const { error } = await this.cliente.from("config").upsert({ chave, valor });
     if(error) throw new Error(traduzirErroDados(error));
@@ -391,4 +402,65 @@ function traduzirErroDados(erro){
   if(codigo === "23505") return "Já existe um registo com estes dados.";
   if(codigo === "23503") return "Este registo está ligado a outro e não pode ficar assim.";
   return erro && erro.message ? erro.message : "Não foi possível guardar.";
+}
+
+
+/* ============================================================
+   Guardar a partir dos ecrãs
+   A interface já mostrou a alteração — estas funções levam-na ao
+   servidor. Se o servidor recusar, o ecrã não pode ficar a mostrar
+   uma coisa que não ficou gravada: avisamos e oferecemos recarregar.
+   ============================================================ */
+function salvar(entidade, registo){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  return API.guardar(entidade, registo).catch(erro => avisarQueNaoGuardou(erro));
+}
+
+function remover(entidade, id){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  return API.apagar(entidade, id).catch(erro => avisarQueNaoGuardou(erro));
+}
+
+/* Reordenar mexe em várias linhas de uma vez. */
+function salvarOrdem(entidade, lista, extra){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  const linhas = lista.map((item, i) => Object.assign({}, item, extra, { ordem:i + 1 }));
+  return Promise.all(linhas.map(l => API.guardar(entidade, l)))
+    .catch(erro => avisarQueNaoGuardou(erro));
+}
+
+/* A aula é um conjunto: a aula, os materiais e as perguntas do quiz.
+   Os filhos são substituídos por inteiro, que é o que o editor faz. */
+async function salvarAula(aula, moduloId){
+  if(modoDemonstracao()){ guardarDB(); return; }
+  try {
+    await API.guardar("aula", Object.assign({}, aula, { moduloId }));
+    await API.substituirFilhos("aula_ficheiros", "ficheiro", aula.id,
+      (aula.ficheiros || []).map((f, i) => Object.assign({}, f, { aulaId:aula.id, ordem:i + 1, id:f.id || novoId("fich") })));
+    await API.substituirFilhos("aula_quiz", "pergunta", aula.id,
+      (aula.quiz || []).map((q, i) => Object.assign({}, q, { aulaId:aula.id, ordem:i + 1, id:q.id || novoId("perg") })));
+  } catch(erro){ avisarQueNaoGuardou(erro); }
+}
+
+function avisarQueNaoGuardou(erro){
+  const motivo = erro && erro.message ? erro.message : String(erro);
+  mostrarToast("Não ficou guardado: " + motivo);
+  mostrarBarraDeFalha(motivo);
+  console.error("Falha ao guardar:", erro);
+}
+
+/* Uma barra que não desaparece sozinha: enquanto houver diferença
+   entre o ecrã e o servidor, quem está a usar tem de saber. */
+function mostrarBarraDeFalha(motivo){
+  if(document.getElementById("barra-falha")) return;
+  const barra = document.createElement("div");
+  barra.id = "barra-falha";
+  barra.className = "barra-falha";
+  barra.innerHTML = `
+    <span>Uma alteração não chegou ao servidor — o que vês pode não estar gravado.
+    <strong>${motivo}</strong></span>
+    <button class="btn btn-secondary btn-sm" id="btn-recarregar-falha">Recarregar</button>
+  `;
+  document.body.appendChild(barra);
+  document.getElementById("btn-recarregar-falha").addEventListener("click", () => location.reload());
 }
