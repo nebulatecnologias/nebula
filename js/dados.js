@@ -358,7 +358,21 @@ function escreverArmazenado(chave, valor){
   catch(e){ return false; }
 }
 
-let DB = Object.assign(dbPadrao(), lerArmazenado(DB_CHAVE) || {});
+/* A academia arranca vazia: o conteúdo vem do Supabase, carregado
+   depois de sabermos quem entrou. Só o modo de demonstração usa os
+   dados de exemplo deste ficheiro. */
+function dbVazio(){
+  const molde = dbPadrao();
+  Object.keys(molde).forEach(chave => {
+    if(Array.isArray(molde[chave])) molde[chave] = [];
+    else if(chave !== "config" && chave !== "aparencia" && typeof molde[chave] === "object") molde[chave] = {};
+  });
+  return molde;
+}
+
+let DB = modoDemonstracao()
+  ? Object.assign(dbPadrao(), lerArmazenado(DB_CHAVE) || {})
+  : dbVazio();
 
 /* Um DB guardado por uma versão anterior pode não ter campos novos.
    Preenche-os aqui para as abas de administração nunca receberem
@@ -423,7 +437,10 @@ function normalizarDB(){
 }
 normalizarDB();
 
+/* Em produção quem guarda é o Supabase, registo a registo. Esta função
+   só escreve no browser no modo de demonstração. */
 function guardarDB(){
+  if(!modoDemonstracao()) return;
   if(!escreverArmazenado(DB_CHAVE, DB)) mostrarToast("Não foi possível guardar neste browser");
 }
 
@@ -464,7 +481,7 @@ const estado = {
   }
 };
 
-Object.assign(estado, lerArmazenado(ESTADO_CHAVE) || {});
+if(modoDemonstracao()) Object.assign(estado, lerArmazenado(ESTADO_CHAVE) || {});
 
 /* O mesmo cuidado do DB, para a sessão guardada no browser. */
 ["ultimaAulaPorCurso","notificacoes","progresso","avaliacoes","presencasConfirmadas"].forEach(chave => {
@@ -473,6 +490,7 @@ Object.assign(estado, lerArmazenado(ESTADO_CHAVE) || {});
 
 /* Guarda apenas o que interessa manter entre sessões (não os filtros de ecrã). */
 function guardarEstado(){
+  if(!modoDemonstracao()) return;
   escreverArmazenado(ESTADO_CHAVE, {
     nome: estado.nome,
     email: estado.email,

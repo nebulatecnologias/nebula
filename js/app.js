@@ -40,16 +40,107 @@ function mostrarEcraDeRecuperacao(detalhe){
 }
 
 /* ============================================================
-   Login / logout / shell
+   Arranque
+   Em produção nada aparece antes de sabermos quem entrou: a área
+   de membros carrega-se do Supabase depois da sessão confirmada.
    ============================================================ */
-document.getElementById("form-login").addEventListener("submit", e => {
+const ecraArranque = document.getElementById("view-arranque");
+const ecraLogin    = document.getElementById("view-login");
+const ecraApp      = document.getElementById("app-shell");
+
+function mostrarEcra(qual){
+  ecraArranque.classList.toggle("hidden", qual !== "arranque");
+  ecraLogin.classList.toggle("hidden", qual !== "login");
+  ecraApp.classList.toggle("hidden", qual !== "app");
+}
+
+function avisoLogin(texto, tom){
+  const el = document.getElementById("login-aviso");
+  el.className = "login-aviso " + (tom || "erro");
+  el.textContent = texto;
+  el.classList.remove("hidden");
+}
+
+async function arrancar(){
+  if(modoDemonstracao()){
+    /* Modo de demonstração: dados de exemplo, sem servidor. */
+    aplicarAparencia();
+    mostrarEcra("login");
+    return;
+  }
+  try {
+    API.iniciar();
+  } catch(e){
+    mostrarEcra("arranque");
+    document.getElementById("arranque-texto").innerHTML =
+      "Não foi possível carregar a biblioteca do Supabase.<br>Verifica a ligação à internet e recarrega a página.";
+    return;
+  }
+
+  /* Link de recuperação de password: o Supabase devolve a sessão no
+     endereço e o que falta é escolher a nova password. */
+  if(location.hash.includes("nova-password") || location.hash.includes("type=recovery")){
+    mostrarEcra("login");
+    aplicarAparencia();
+    pedirNovaPassword();
+    return;
+  }
+
+  try {
+    const utilizador = await API.sessao();
+    if(!utilizador){ aplicarAparencia(); mostrarEcra("login"); return; }
+    await entrarNaArea();
+  } catch(erro){
+    aplicarAparencia();
+    mostrarEcra("login");
+    avisoLogin(erro.message || "Não foi possível ligar à academia.");
+  }
+}
+
+/* Carrega tudo o que esta pessoa pode ver e abre a área. */
+async function entrarNaArea(){
+  mostrarEcra("arranque");
+  document.getElementById("arranque-texto").textContent = "A carregar os teus cursos...";
+  await API.carregarTudo();
+  normalizarDB();
+  aplicarAparencia();
+  mostrarEcra("app");
+  estado.prevendoComoAluno = false;
+  irPara(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+  if(onboardingPendente()) abrirOnboarding(false);
+}
+
+/* ============================================================
+   Login / logout
+   ============================================================ */
+document.getElementById("form-login").addEventListener("submit", async e => {
   e.preventDefault();
   const email = document.getElementById("input-email").value.trim();
-  /* A conta vem do registo criado pelo administrador em Membros.
-     Se não existir, um convite pendente cria-a; caso contrário entra-se
-     como visitante, para a pré-visualização continuar a funcionar. */
+  const password = document.querySelector("#form-login input[type=password]").value;
+  const botao = document.getElementById("btn-entrar");
+
+  if(modoDemonstracao()) return entrarEmDemonstracao(email);
+
+  if(!email || !password){ avisoLogin("Preenche o email e a password."); return; }
+
+  botao.disabled = true;
+  botao.textContent = "A entrar...";
+  try {
+    await API.entrar(email, password);
+    await entrarNaArea();
+  } catch(erro){
+    avisoLogin(erro.message);
+  } finally {
+    botao.disabled = false;
+    botao.textContent = "Entrar";
+  }
+});
+
+/* O modo de demonstração mantém o comportamento antigo, para os
+   testes automáticos e para mostrar a aplicação sem servidor. */
+function entrarEmDemonstracao(email){
   let membro = membroPorEmail(email) || aceitarConvitePendente(email);
-  if(membro && membro.acesso==="bloqueado"){
+  if(membro && membro.acesso === "bloqueado"){
     mostrarToast("Este acesso está bloqueado. Fala com a tua mentoria.");
     return;
   }
@@ -64,17 +155,60 @@ document.getElementById("form-login").addEventListener("submit", e => {
   }
   estado.prevendoComoAluno = false;
   guardarEstado();
-  document.getElementById("view-login").classList.add("hidden");
-  document.getElementById("app-shell").classList.remove("hidden");
-  irPara(estado.papel==="administrador" ? "admin-visao" : "dashboard");
-  /* Primeira entrada de um aluno: o questionário abre por cima do Início. */
+  mostrarEcra("app");
+  irPara(estado.papel === "administrador" ? "admin-visao" : "dashboard");
   if(onboardingPendente()) abrirOnboarding(false);
+}
+
+/* ---------------- Recuperar password ---------------- */
+document.getElementById("btn-esqueci").addEventListener("click", async e => {
+  e.preventDefault();
+  const email = document.getElementById("input-email").value.trim();
+  if(!email){ avisoLogin("Escreve primeiro o teu email, e depois carrega aqui."); return; }
+  if(modoDemonstracao()){ avisoLogin("Em modo de demonstração não há emails.", "nota"); return; }
+  try {
+    await API.pedirNovaPassword(email);
+    avisoLogin("Enviámos-te um link para " + email + ". Confirma também a pasta de spam.", "nota");
+  } catch(erro){ avisoLogin(erro.message); }
 });
 
-document.getElementById("btn-logout").addEventListener("click", () => {
+document.getElementById("btn-pedir-acesso").addEventListener("click", e => {
+  e.preventDefault();
+  const apoio = (DB.config.integracoes || {}).suporteUrl;
+  if(apoio) window.open(apoio, "_blank", "noopener");
+  else avisoLogin("Pede o convite a quem te acompanha na academia.", "nota");
+});
+
+/* Formulário de nova password, depois do link do email. */
+function pedirNovaPassword(){
+  const cartao = document.querySelector(".login-card");
+  cartao.innerHTML = `
+    <h1>Escolhe uma nova password</h1>
+    <p class="sub">Tem de ter pelo menos 8 caracteres.</p>
+    <div class="field"><label>Nova password</label><input type="password" id="pass-nova"></div>
+    <div class="field"><label>Repete</label><input type="password" id="pass-repete"></div>
+    <button class="btn btn-primary btn-block btn-lg" id="btn-definir-pass">Guardar e entrar</button>
+    <div class="login-aviso hidden" id="login-aviso"></div>
+  `;
+  document.getElementById("btn-definir-pass").addEventListener("click", async () => {
+    const nova = document.getElementById("pass-nova").value;
+    const repete = document.getElementById("pass-repete").value;
+    if(nova.length < 8){ avisoLogin("A password tem de ter pelo menos 8 caracteres."); return; }
+    if(nova !== repete){ avisoLogin("As duas passwords não são iguais."); return; }
+    try {
+      await API.definirPassword(nova);
+      history.replaceState(null, "", location.pathname);
+      const utilizador = await API.sessao();
+      if(utilizador) await entrarNaArea();
+      else location.reload();
+    } catch(erro){ avisoLogin(erro.message); }
+  });
+}
+
+document.getElementById("btn-logout").addEventListener("click", async () => {
   estado.prevendoComoAluno = false;
-  document.getElementById("app-shell").classList.add("hidden");
-  document.getElementById("view-login").classList.remove("hidden");
+  if(!modoDemonstracao()) await API.sair();
+  location.reload();
 });
 
 document.getElementById("avatar-iniciais").addEventListener("click", () => {
@@ -107,7 +241,7 @@ document.getElementById("btn-tema").addEventListener("click", () => {
 });
 
 /* A identidade definida no painel é aplicada logo no ecrã de entrada. */
-aplicarAparencia();
+arrancar();
 
 document.getElementById("btn-menu").addEventListener("click", () => {
   document.getElementById("sidebar").classList.add("open");

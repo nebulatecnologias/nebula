@@ -963,3 +963,13 @@ body.light .curso-hero.com-capa::after{ background:linear-gradient(100deg, #ffff
   .onboarding-card{ padding:24px 20px; }
   .chat-mensagens{ padding:14px 12px; }
 }
+
+/* Arranque e avisos de entrada */
+#view-arranque{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); }
+.arranque-caixa{ text-align:center; }
+.arranque-caixa .crest{ width:52px; height:52px; margin:0 auto 18px; animation:pulsar 1.6s ease-in-out infinite; }
+.arranque-caixa p{ font-size:14px; color:var(--text-dim); max-width:38ch; line-height:1.6; }
+@keyframes pulsar{ 0%,100%{ opacity:.4 } 50%{ opacity:1 } }
+.login-aviso{ margin-top:18px; padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; line-height:1.55; }
+.login-aviso.erro{ background:var(--danger-soft); border:1px solid rgba(224,72,63,.35); color:var(--danger); }
+.login-aviso.nota{ background:var(--accent-soft); border:1px solid var(--accent-line); color:var(--accent); }

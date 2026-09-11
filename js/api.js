@@ -370,6 +370,8 @@ const MAPAS = {
    ============================================================ */
 function traduzirErroAuth(erro){
   const m = (erro && erro.message || "").toLowerCase();
+  if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
+    return "Não conseguimos falar com o servidor. Verifica a tua ligação à internet e tenta de novo.";
   if(m.includes("invalid login")) return "Email ou password errados.";
   if(m.includes("email not confirmed")) return "Confirma o email antes de entrares. Procura a mensagem que te enviámos.";
   if(m.includes("rate limit") || m.includes("too many")) return "Demasiadas tentativas. Espera um minuto e tenta de novo.";
@@ -379,6 +381,9 @@ function traduzirErroAuth(erro){
 
 function traduzirErroDados(erro){
   const codigo = erro && erro.code;
+  const m = (erro && erro.message || "").toLowerCase();
+  if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
+    return "Perdemos a ligação ao servidor. Verifica a internet e recarrega a página.";
   if(codigo === "42P01" || (erro.message||"").includes("schema must be one of"))
     return 'O schema "academia" ainda não está exposto na API do Supabase (Settings → Data API → Exposed schemas).';
   if(codigo === "42501" || codigo === "PGRST301")
