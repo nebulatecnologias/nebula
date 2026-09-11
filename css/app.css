@@ -218,7 +218,7 @@ img{ max-width:100%; display:block; }
 .course-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; }
 .course-card{ overflow:hidden; transition:border-color .15s ease,transform .15s ease; cursor:pointer; display:block; }
 .course-card:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
-.course-cover{ height:110px; position:relative; background:radial-gradient(120% 140% at 100% 0%,rgba(255,90,31,.25),transparent 60%),linear-gradient(160deg,#1b1512,#0f0d0c); border-bottom:1px solid var(--border); }
+.course-cover{ aspect-ratio:16/9; position:relative; background:radial-gradient(120% 140% at 100% 0%,rgba(255,90,31,.25),transparent 60%),linear-gradient(160deg,#1b1512,#0f0d0c); border-bottom:1px solid var(--border); }
 .course-cover::after{ content:""; position:absolute; inset:0; background-image:var(--contour-lines); opacity:.35; }
 .course-cover .cover-badge{ position:absolute; top:14px; left:16px; background:rgba(10,10,11,.7); backdrop-filter:blur(4px); border:1px solid var(--border-strong); font-size:11px; font-weight:700; letter-spacing:.03em; padding:5px 10px; border-radius:var(--radius-pill); z-index:1; }
 .course-cover .cover-badge.done{ left:auto; right:16px; background:rgba(61,220,132,.18); border-color:rgba(61,220,132,.4); color:var(--success); }
@@ -668,7 +668,7 @@ body.light .modal-cert h2{ color:var(--text); }
 .gestao-acoes{ display:flex; gap:10px; flex-wrap:wrap; }
 .gestao-grid{ display:grid; grid-template-columns:320px 1fr; gap:24px; align-items:start; }
 .curso-resumo{ position:relative; }
-.curso-resumo-capa{ height:150px; border-radius:var(--radius-lg); border:1px solid var(--border); background:linear-gradient(160deg,#1b1512,#0f0d0c); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; margin-bottom:16px; position:relative; }
+.curso-resumo-capa{ aspect-ratio:16/9; border-radius:var(--radius-lg); border:1px solid var(--border); background:linear-gradient(160deg,#1b1512,#0f0d0c); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; margin-bottom:16px; position:relative; }
 .curso-resumo-capa .sigla-grande{ font-family:var(--font-display); font-size:34px; font-weight:700; color:var(--accent); letter-spacing:.04em; }
 .curso-resumo-capa .cover-badge{ position:absolute; top:12px; left:12px; background:rgba(10,10,11,.75); border:1px solid var(--border-strong); font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:var(--radius-pill); }
 .curso-resumo h3{ font-size:19px; margin-bottom:4px; }
@@ -693,7 +693,7 @@ body.light .modal-cert h2{ color:var(--text); }
 .modulo-acordeao.aberto .modulo-acordeao-corpo{ display:block; }
 .aula-linha{ display:flex; align-items:center; gap:14px; padding:10px 8px; border-radius:var(--radius-sm); cursor:pointer; }
 .aula-linha:hover{ background:var(--surface-hover); }
-.aula-linha-capa{ width:56px; height:32px; border-radius:6px; background:var(--surface-hover); border:1px solid var(--border); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-faint); flex-shrink:0; }
+.aula-linha-capa{ width:56px; aspect-ratio:16/9; border-radius:6px; background:var(--surface-hover); border:1px solid var(--border); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-faint); flex-shrink:0; }
 .aula-linha-info{ flex:1; min-width:0; }
 .aula-linha-info .titulo{ display:block; font-size:13.5px; font-weight:600; }
 .aula-duracao{ font-size:12px; color:var(--text-faint); white-space:nowrap; }
@@ -817,3 +817,149 @@ body.light .course-card-acoes .btn-icone{ background:rgba(255,255,255,.9); }
 .passos{ list-style:decimal; padding-left:20px; margin:0 0 14px; }
 .passos li{ font-size:13.5px; color:var(--text-dim); margin-bottom:8px; line-height:1.6; }
 .passos li strong{ color:var(--text); }
+
+/* ============================================================
+   Hero do curso, vitrine, trilha, eventos e chat
+   ============================================================ */
+
+/* Seta em círculo — acompanha o tamanho do texto onde está */
+.seta-circulo{ width:1em; height:1em; vertical-align:-0.12em; flex-shrink:0; }
+
+/* Hero do curso */
+.curso-hero{ position:relative; overflow:hidden; margin-bottom:28px; background:linear-gradient(160deg,#1b1512,#0f0d0c); background-size:cover; background-position:center; }
+.curso-hero::before{ content:""; position:absolute; inset:0; background-image:var(--contour-lines); opacity:.16; }
+.curso-hero.com-capa::after{ content:""; position:absolute; inset:0; background:linear-gradient(100deg, var(--bg-panel) 0%, rgba(16,16,18,.92) 42%, rgba(16,16,18,.25) 100%); }
+body.light .curso-hero{ background:linear-gradient(160deg,#fff,#f3f1ec); }
+body.light .curso-hero.com-capa::after{ background:linear-gradient(100deg, #ffffff 0%, rgba(255,255,255,.94) 42%, rgba(255,255,255,.3) 100%); }
+.curso-hero-conteudo{ position:relative; z-index:1; padding:40px 42px; max-width:620px; }
+.curso-hero h1{ font-size:30px; margin:8px 0 10px; }
+.curso-hero-desc{ font-size:15px; color:var(--text-dim); margin-bottom:16px; max-width:52ch; }
+.curso-hero-meta{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--text-faint); margin-bottom:6px; }
+.curso-hero-meta strong{ color:var(--accent); font-weight:600; }
+.curso-hero-turma{ font-size:12.5px; color:var(--text-faint); margin:6px 0 0; }
+.curso-hero-progresso{ display:flex; align-items:center; gap:14px; margin:20px 0 22px; max-width:420px; }
+.curso-hero-progresso .progress-track{ flex:1; }
+.curso-hero-progresso span{ font-size:12.5px; font-weight:700; color:var(--accent); }
+.curso-hero-acoes{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* Vitrine */
+.course-card.vitrine{ cursor:pointer; }
+.course-card.vitrine:hover{ transform:translateY(-2px); border-color:var(--accent-line); }
+.course-card.vitrine .btn-block{ width:100%; margin-top:14px; gap:6px; }
+.course-card.bloqueado.vitrine .course-cover{ opacity:.7; }
+
+/* Trilha no Início */
+.trilha-card{ padding:22px 24px; margin-bottom:24px; }
+.trilha-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+.trilha-head h3{ font-size:16px; margin:6px 0 2px; }
+.trilha-passos{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+.trilha-passo{ display:flex; align-items:center; gap:14px; padding:11px 12px; border-radius:var(--radius-sm); cursor:pointer; transition:background .15s; }
+.trilha-passo:hover{ background:var(--surface-hover); }
+.trilha-num{ width:26px; height:26px; border-radius:99px; background:var(--accent-soft); color:var(--accent); font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.trilha-passo.concluido .trilha-num{ background:var(--success-soft); color:var(--success); }
+.trilha-txt{ flex:1; min-width:0; }
+.trilha-txt strong{ display:block; font-size:14px; }
+.trilha-pct{ font-size:12.5px; font-weight:700; color:var(--text-faint); }
+
+/* Onboarding */
+.onboarding-overlay{ align-items:center; }
+.onboarding-card{ width:100%; max-width:560px; padding:32px; max-height:88vh; overflow-y:auto; }
+.onb-passos{ display:flex; gap:6px; margin-bottom:20px; }
+.onb-passos span{ flex:1; height:3px; border-radius:99px; background:var(--border-strong); }
+.onb-passos span.feito{ background:var(--accent); }
+.onboarding-card h2{ font-size:23px; margin:8px 0 8px; }
+.onb-sub{ font-size:14px; color:var(--text-dim); margin-bottom:22px; }
+.onb-opcoes{ display:flex; flex-direction:column; gap:10px; margin-bottom:26px; }
+.onb-opcao{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:15px 16px; border:1px solid var(--border); border-radius:var(--radius); color:var(--text); transition:border-color .15s, background .15s; }
+.onb-opcao:hover{ border-color:var(--border-strong); background:var(--surface-hover); }
+.onb-opcao.escolhida{ border-color:var(--accent); background:var(--accent-soft); }
+.onb-opcao-txt{ flex:1; min-width:0; }
+.onb-opcao-txt strong{ display:block; font-size:14px; }
+.onb-opcao-txt span{ display:block; font-size:12.5px; color:var(--text-faint); margin-top:2px; }
+.onb-check{ width:20px; height:20px; border-radius:99px; border:1.5px solid var(--border-strong); display:flex; align-items:center; justify-content:center; color:transparent; flex-shrink:0; }
+.onb-opcao.escolhida .onb-check{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.onb-check .icon{ width:12px; height:12px; }
+.onb-acoes{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.onb-acoes .btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+.onb-trilha{ list-style:none; margin:0 0 26px; padding:0; display:flex; flex-direction:column; gap:10px; counter-reset:t; }
+.onb-trilha li{ display:flex; align-items:center; gap:14px; padding:12px; border:1px solid var(--border); border-radius:var(--radius); }
+.onb-trilha-capa{ width:64px; aspect-ratio:16/9; border-radius:7px; background:var(--surface-hover); border:1px solid var(--border); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--accent); flex-shrink:0; }
+.onb-trilha-txt strong{ display:block; font-size:14px; }
+.onb-trilha-txt span{ display:block; font-size:12.5px; color:var(--text-faint); }
+
+/* Eventos que abrem para baixo */
+/* Anula o antigo layout em linha: agora a linha é um filho, não o cartão. */
+.event-row{ display:block; padding:0; border-top:1px solid var(--border); }
+.event-row:first-child{ border-top:none; }
+.event-linha{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:16px 20px; cursor:pointer; }
+.event-linha:hover{ background:var(--surface-hover); }
+.event-chevron{ color:var(--text-faint); transition:transform .15s; flex-shrink:0; }
+.event-row.aberto .event-chevron{ transform:rotate(180deg); }
+.event-detalhe{ display:none; padding:0 20px 20px 76px; }
+.event-row.aberto .event-detalhe{ display:block; }
+.event-detalhe-corpo{ border-left:2px solid var(--accent-line); padding-left:18px; }
+.event-descricao{ font-size:13.5px; color:var(--text-dim); margin-bottom:16px; max-width:64ch; }
+.event-campos{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:18px; }
+.event-campos .rotulo{ display:block; font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-faint); margin-bottom:3px; }
+.event-campos strong{ font-size:13.5px; font-weight:600; }
+.event-campos strong.confirmada{ color:var(--success); }
+.event-acoes{ display:flex; gap:10px; flex-wrap:wrap; }
+.event-acoes .btn{ gap:6px; }
+
+/* Comunidade em formato de conversa */
+.chat{ display:flex; flex-direction:column; overflow:hidden; }
+.chat-mensagens{ min-height:300px; max-height:min(60vh, 560px); overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:2px; }
+.msg{ display:flex; gap:12px; padding:5px 10px; border-radius:var(--radius-sm); transition:background .15s; }
+.msg:hover{ background:var(--surface-hover); }
+.msg:not(.agrupada){ margin-top:14px; }
+.msg.fixada{ background:var(--accent-soft); border:1px solid var(--accent-line); margin-bottom:10px; }
+.msg.realcada{ background:var(--warning-soft); }
+.msg-avatar{ width:38px; flex-shrink:0; }
+.msg-corpo{ flex:1; min-width:0; }
+.msg-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:3px; }
+.msg-autor{ font-size:13.5px; font-weight:700; }
+.msg.minha .msg-autor{ color:var(--accent); }
+.msg-tempo{ font-size:11.5px; color:var(--text-faint); }
+.msg-pin{ font-size:10px; padding:2px 8px; }
+.msg-texto{ font-size:14px; color:var(--text-dim); margin:0; white-space:pre-wrap; word-break:break-word; }
+.msg-citada{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; font-size:12.5px; color:var(--text-faint); padding:3px 0 5px; }
+.msg-citada::before{ content:""; width:18px; height:10px; border-left:2px solid var(--border-strong); border-top:2px solid var(--border-strong); border-top-left-radius:6px; flex-shrink:0; margin-left:4px; }
+.msg-citada-autor{ font-weight:700; color:var(--text-dim); }
+.msg-citada span:last-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.msg-citada:hover{ color:var(--accent); }
+.msg-imagem{ display:block; margin-top:8px; border-radius:10px; overflow:hidden; border:1px solid var(--border); max-width:340px; }
+.msg-imagem img{ display:block; width:100%; }
+.msg-ficheiro{ display:flex; align-items:center; gap:12px; margin-top:8px; padding:11px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); max-width:340px; text-align:left; }
+.msg-ficheiro:hover{ border-color:var(--accent-line); background:var(--surface); }
+.msg-ficheiro .icon{ color:var(--text-faint); }
+.anexo-info{ flex:1; min-width:0; }
+.anexo-info strong{ display:block; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.msg-acoes{ display:flex; gap:4px; margin-top:6px; opacity:0; transition:opacity .15s; }
+.msg:hover .msg-acoes, .msg.fixada .msg-acoes{ opacity:1; }
+.msg-accao{ display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:var(--radius-pill); font-size:12px; font-weight:600; color:var(--text-faint); }
+.msg-accao:hover{ background:var(--surface); color:var(--text); }
+.msg-accao.liked{ color:var(--accent); }
+@media (hover: none){ .msg-acoes{ opacity:1; } }
+
+.chat-composer{ border-top:1px solid var(--border); padding:14px 20px 16px; background:var(--bg-panel); }
+.chat-resposta-a{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 12px; margin-bottom:10px; border-radius:var(--radius-sm); background:var(--surface-hover); font-size:12.5px; color:var(--text-faint); }
+.chat-resposta-a span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-caixa{ display:flex; align-items:flex-end; gap:10px; }
+.chat-caixa textarea{ flex:1; resize:none; min-height:42px; max-height:160px; padding:11px 14px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius-sm); color:var(--text); font-family:inherit; font-size:14px; line-height:1.5; }
+.chat-caixa textarea:focus{ outline:none; border-color:var(--accent); }
+.chat-caixa .avatar{ width:34px; height:34px; font-size:12px; margin-bottom:4px; }
+.chat-caixa .btn-icone{ margin-bottom:4px; }
+.chat-fechado{ border-top:1px solid var(--border); padding:16px 20px; font-size:13.5px; color:var(--text-dim); }
+.anexo-chip{ display:flex; align-items:center; gap:12px; padding:10px 12px; margin-bottom:10px; border:1px solid var(--border); border-radius:var(--radius-sm); }
+.anexo-chip img{ width:44px; height:44px; object-fit:cover; border-radius:6px; }
+.anexo-chip .icon{ color:var(--text-faint); }
+
+@media (max-width: 720px){
+  .curso-hero-conteudo{ padding:26px 22px; }
+  .curso-hero h1{ font-size:24px; }
+  .curso-hero.com-capa::after{ background:linear-gradient(180deg, rgba(16,16,18,.82) 0%, rgba(16,16,18,.95) 60%); }
+  body.light .curso-hero.com-capa::after{ background:linear-gradient(180deg, rgba(255,255,255,.86) 0%, rgba(255,255,255,.96) 60%); }
+  .event-detalhe{ padding-left:20px; }
+  .onboarding-card{ padding:24px 20px; }
+  .chat-mensagens{ padding:14px 12px; }
+}

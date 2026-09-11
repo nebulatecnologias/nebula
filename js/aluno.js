@@ -33,6 +33,8 @@ function renderDashboard(){
       <h1>Olá, ${estado.nome.split(" ")[0]}.</h1>
       <p class="desc">Continua a construir. Aqui está o ponto em que ficaste no teu percurso.</p>
     </div>
+    ${carrosselBannersHTML("carrossel-inicio")}
+    ${trilhaHTML()}
     <div class="stat-row">
       <div class="card stat-card"><div class="stat-label">Progresso geral</div><div class="stat-value">${geral.pct}<span>%</span></div></div>
       <div class="card stat-card"><div class="stat-label">Aulas concluídas</div><div class="stat-value">${geral.concluidas}<span>/ ${geral.total}</span></div></div>
@@ -104,6 +106,8 @@ function renderDashboard(){
     </div>
   `;
 
+  iniciarCarrosselBanners("#carrossel-inicio");
+  ligarTrilha();
   const btnContinuar = document.getElementById("btn-continuar");
   if(btnContinuar) btnContinuar.addEventListener("click", () => irPara("aula", cursoPrincipal.id, aulaPrincipalId));
   document.querySelectorAll(".continue-mini").forEach(el => el.addEventListener("click", () => {
@@ -160,7 +164,6 @@ function renderCatalogo(){
     </div>
     <div class="chip-row" id="chip-row"></div>
     <div class="course-grid" id="catalogo-grid"></div>
-    <div id="catalogo-bloqueados"></div>
   `;
   document.getElementById("content-catalogo").innerHTML = html;
 
@@ -179,23 +182,26 @@ function renderCatalogo(){
   const grid = document.getElementById("catalogo-grid");
   grid.innerHTML = lista.length ? lista.map(c=>renderCourseCardHTML(c)).join("") : `<div class="empty-note">Nenhum curso nesta categoria ainda.</div>`;
   grid.querySelectorAll(".course-card").forEach(el => el.addEventListener("click", () => irPara("curso", el.getAttribute("data-curso"))));
-  renderCursosBloqueados();
 }
 
-/* Cursos fora do plano do aluno, com a oferta que os desbloqueia. */
-function renderCursosBloqueados(){
-  const wrap = document.getElementById("catalogo-bloqueados");
-  if(!wrap) return;
-  const bloqueados = DB.config.mostrarCursosBloqueados === false ? [] : cursosBloqueados();
-  if(!bloqueados.length){ wrap.innerHTML = ""; return; }
-
-  wrap.innerHTML = `
-    <div class="section-title" style="margin-top:32px;"><h2>Disponível noutros planos</h2></div>
-    <div class="course-grid">
-      ${bloqueados.map(c => {
+/* ---------------- Vitrine ----------------
+   Os cursos que o plano do aluno ainda não inclui. Cada cartão leva à
+   página de vendas que o administrador definiu no curso — o endereço
+   nunca chega ao HTML, só é usado na abertura. */
+function renderVitrine(){
+  const bloqueados = cursosBloqueados();
+  document.getElementById("content-vitrine").innerHTML = `
+    <div class="page-head">
+      <span class="eyebrow">VITRINE</span>
+      <h1>Disponível para desbloquear</h1>
+      <p class="desc">Cursos que ainda não fazem parte do teu acesso. Toca num para saberes como entrar.</p>
+    </div>
+    <div class="course-grid" id="vitrine-grid">
+      ${bloqueados.length ? bloqueados.map(c => {
         const cat = categoriaDe(c.categoria);
         const oferta = ofertaParaCurso(c.id);
-        return `<div class="card course-card bloqueado">
+        const aulas = contarAulas(c);
+        return `<div class="card course-card bloqueado vitrine" data-curso="${c.id}">
           <div class="course-cover ${c.capa?"com-capa":""}" style="${c.capa?`background-image:url(${c.capa})`:""}">
             <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
             <span class="cadeado">${ICONS.cadeado}</span>
@@ -203,45 +209,90 @@ function renderCursosBloqueados(){
           <div class="course-body">
             <h3>${c.titulo}</h3>
             <p class="course-desc">${c.subtitulo||""}</p>
-            ${oferta ? `
-              <div class="oferta-linha">
-                <div><div class="oferta-preco">${formatarPreco(oferta.preco)}<span>/ ${oferta.periodo}</span></div><div class="sub-celula">${oferta.nome}</div></div>
-                <a class="btn btn-primary btn-sm" href="${oferta.link||"#"}" target="_blank" rel="noopener">Desbloquear</a>
-              </div>` : `<p class="sub-celula">Fala com a tua mentoria para teres acesso.</p>`}
+            <div class="course-progress-row">
+              <span class="course-legenda">${c.modulos.length} módulo${c.modulos.length===1?"":"s"} · ${aulas} aula${aulas===1?"":"s"}</span>
+              ${oferta ? `<span class="pct">${formatarPreco(oferta.preco)}</span>` : ""}
+            </div>
+            <button class="btn btn-primary btn-block btn-sm" data-desbloquear="${c.id}">Quero este curso ${setaCirculo()}</button>
           </div>
         </div>`;
-      }).join("")}
+      }).join("") : `<div class="empty-note">Já tens acesso a tudo o que está publicado. Bom trabalho.</div>`}
     </div>
   `;
+  document.querySelectorAll("#vitrine-grid .course-card").forEach(el =>
+    el.addEventListener("click", () => abrirPaginaDeVendas(el.getAttribute("data-curso"))));
 }
 
-/* ---------------- Curso ---------------- */
+/* O destino é o link do curso; na falta dele, o da oferta que o desbloqueia. */
+function abrirPaginaDeVendas(cursoId){
+  const curso = cursoPorId(cursoId);
+  if(!curso) return;
+  const oferta = ofertaParaCurso(cursoId);
+  const destino = (curso.urlVendas||"").trim() || (oferta && oferta.link && oferta.link!=="#" ? oferta.link : "");
+  if(!destino){ mostrarToast("Fala com a tua mentoria para desbloqueares este curso."); return; }
+  window.open(destino, "_blank", "noopener");
+}
+
+/* "2026-09-01" → "1 de setembro". */
+function dataCurta(iso){
+  if(!iso) return "—";
+  const [a,m,d] = String(iso).split("-").map(Number);
+  if(!a || !m || !d) return iso;
+  return new Date(a, m-1, d).toLocaleDateString("pt-PT", { day:"numeric", month:"long" });
+}
+
+/* Soma as durações "mm:ss" das aulas e devolve "2h 54m". */
+function duracaoDoCurso(curso){
+  let segundos = 0;
+  curso.modulos.forEach(m => m.aulas.forEach(a => {
+    const partes = String(a.duracao||"").split(":").map(Number);
+    if(partes.length===2 && !partes.some(isNaN)) segundos += partes[0]*60 + partes[1];
+  }));
+  if(!segundos) return null;
+  const h = Math.floor(segundos/3600), min = Math.round((segundos%3600)/60);
+  return h ? `${h}h ${String(min).padStart(2,"0")}m` : `${min}m`;
+}
+
 function renderCurso(cursoId){
   const curso = cursoPorId(cursoId);
   if(!curso){ document.getElementById("content-curso").innerHTML = '<div class="empty-note">Este curso não foi encontrado.</div>'; return; }
   const p = progressoCurso(curso);
   const cat = categoriaDe(curso.categoria);
   const turmaDoCurso = turmasDoMembro(membroAtual()).find(t => t.cursoId === curso.id);
+  const total = contarAulas(curso);
+  const duracao = duracaoDoCurso(curso);
+  const loc = localizarAula(curso.id, estado.ultimaAulaPorCurso[curso.id]) || primeiraAulaDoCurso(curso);
+  const assinatura = DB.config.certificado.assinaturaNome;
   const html = `
     <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
-    <div class="page-head">
-      <span class="eyebrow" style="--c:${cat.cor}">${cat.nome.toUpperCase()}${turmaDoCurso ? " · " + turmaDoCurso.nome.toUpperCase() : ""}</span>
-      <h1>${curso.titulo}</h1>
-      <p class="desc">${curso.subtitulo}</p>
-      ${turmaDoCurso ? `<p class="desc" style="font-size:13px;">Turma de ${turmaDoCurso.inicio||"—"} a ${turmaDoCurso.fim||"—"}.</p>` : ""}
-    </div>
-    <div class="card" style="padding:20px 22px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:200px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;color:var(--text-dim);font-weight:600;"><span>Progresso geral do curso</span><span>${p.pct}%</span></div>
-        <div class="progress-track"><div class="progress-fill" style="width:${p.pct}%"></div></div>
+    <div class="card curso-hero ${curso.capa?"com-capa":""}" style="${curso.capa?`background-image:url(${curso.capa})`:""}">
+      <div class="curso-hero-conteudo">
+        <span class="eyebrow" style="--c:${cat.cor}">${cat.nome.toUpperCase()}${turmaDoCurso ? " · " + turmaDoCurso.nome.toUpperCase() : ""}</span>
+        <h1>${curso.titulo}</h1>
+        <p class="curso-hero-desc">${curso.subtitulo||""}</p>
+        <div class="curso-hero-meta">
+          ${duracao ? `<span>${duracao}</span>` : ""}
+          <span>${total} conteúdo${total===1?"":"s"}</span>
+          ${assinatura ? `<strong>Originais · ${assinatura}</strong>` : ""}
+        </div>
+        ${turmaDoCurso ? `<p class="curso-hero-turma">Turma de ${dataCurta(turmaDoCurso.inicio)} a ${dataCurta(turmaDoCurso.fim)}.</p>` : ""}
+        <div class="curso-hero-progresso">
+          <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
+          <span>${p.pct}%</span>
+        </div>
+        <div class="curso-hero-acoes">
+          ${loc ? `<button class="btn btn-primary" id="btn-continuar-curso">${p.concluidas ? "continuar de onde parei" : "começar agora"}</button>` : ""}
+          ${certificadoDesbloqueado(curso) ? `<button class="btn btn-secondary" id="btn-ver-certificado-curso">Ver certificado</button>` : ""}
+        </div>
       </div>
-      <span style="font-size:12.5px;color:var(--text-faint);white-space:nowrap;">${p.concluidas} de ${p.total} aulas</span>
-      ${certificadoDesbloqueado(curso) ? `<button class="btn btn-secondary btn-sm" id="btn-ver-certificado-curso">Ver certificado</button>` : ""}
     </div>
+    <div class="section-title"><h2>Conteúdo do curso</h2><span class="sub-celula">${curso.modulos.length} módulo${curso.modulos.length===1?"":"s"} · ${p.concluidas} de ${p.total} aulas concluídas</span></div>
     <div id="lista-modulos"></div>
   `;
   document.getElementById("content-curso").innerHTML = html;
   document.getElementById("btn-voltar-catalogo").addEventListener("click", () => irPara("catalogo"));
+  const btnContinuar = document.getElementById("btn-continuar-curso");
+  if(btnContinuar) btnContinuar.addEventListener("click", () => irPara("aula", curso.id, loc.aula.id));
   const btnCert = document.getElementById("btn-ver-certificado-curso");
   if(btnCert) btnCert.addEventListener("click", () => abrirCertificado(curso));
 
@@ -502,6 +553,7 @@ function renderComunidade(){
   const podePublicar = atual
     && (!atual.soAdminPublica || equipa)
     && (DB.config.alunosPublicam !== false || equipa);
+  const aResponder = estado.respondendoA ? DB.posts.find(p => String(p.id) === String(estado.respondendoA)) : null;
 
   document.getElementById("content-comunidade").innerHTML = `
     <div class="page-head">
@@ -512,20 +564,32 @@ function renderComunidade(){
     <div class="chip-row" id="espacos-row">
       ${espacos.map(e => `<div class="chip ${atual && e.id===atual.id?"active":""}" data-espaco="${e.id}"><span class="dot" style="--c:${e.cor}"></span>${e.nome}</div>`).join("")}
     </div>
-    ${podePublicar ? `
-    <div class="card post-composer">
-      <div class="avatar">${avatarConteudo()}</div>
-      <div style="flex:1;">
-        <textarea id="novo-post" placeholder="Partilha em ${atual.nome}..."></textarea>
-        <div class="post-composer-actions"><button class="btn btn-primary btn-sm" id="btn-publicar">Publicar</button></div>
-      </div>
-    </div>` : `
-    <div class="card" style="padding:16px 20px;margin-bottom:20px;">
-      <p style="margin:0;font-size:13.5px;">${DB.config.alunosPublicam === false
-        ? "O mural está em modo de leitura. Por agora, só a equipa da academia publica."
-        : `Só a equipa da academia publica em ${atual ? atual.nome : "este espaço"}.`}</p>
-    </div>`}
-    <div id="feed-posts"></div>
+    <div class="card chat">
+      <div class="chat-mensagens" id="feed-posts"></div>
+      ${podePublicar ? `
+      <div class="chat-composer">
+        ${aResponder ? `
+          <div class="chat-resposta-a">
+            <span>A responder a <strong>${aResponder.autor}</strong>: ${resumoTexto(aResponder.texto, 60)}</span>
+            <button class="btn-icone" id="btn-cancelar-resposta" title="Cancelar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>` : ""}
+        <div id="anexo-previa"></div>
+        <div class="chat-caixa">
+          <div class="avatar">${avatarConteudo()}</div>
+          <textarea id="novo-post" rows="1" placeholder="Escreve em ${atual.nome}..."></textarea>
+          <button class="btn-icone" id="btn-anexar" title="Anexar ficheiro (até 3 MB)">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21.4 11.05 12.2 20.3a5 5 0 0 1-7.07-7.07l9.19-9.2a3.33 3.33 0 0 1 4.72 4.72l-9.2 9.19a1.67 1.67 0 0 1-2.35-2.36l8.49-8.48"/></svg>
+          </button>
+          <input type="file" class="hidden" id="ficheiro-post">
+          <button class="btn btn-primary btn-sm" id="btn-publicar">Enviar</button>
+        </div>
+      </div>` : `
+      <div class="chat-fechado">
+        ${DB.config.alunosPublicam === false
+          ? "O mural está em modo de leitura. Por agora, só a equipa da academia publica."
+          : `Só a equipa da academia publica em ${atual ? atual.nome : "este espaço"}.`}
+      </div>`}
+    </div>
   `;
 
   document.querySelectorAll("#espacos-row .chip").forEach(c => c.addEventListener("click", () => {
@@ -534,48 +598,136 @@ function renderComunidade(){
   }));
 
   const btnPublicar = document.getElementById("btn-publicar");
-  if(btnPublicar) btnPublicar.addEventListener("click", () => {
+  if(btnPublicar){
     const textarea = document.getElementById("novo-post");
-    const texto = textarea.value.trim();
-    if(!texto) return;
-    DB.posts.unshift({
-      id: novoId("post"), autor: estado.nome, iniciais: iniciais(estado.nome),
-      tempo: "agora", categoria: null, espacoId: atual.id, fixado: false, oculto: false,
-      texto, likes: 0, curtido: false
+    /* A caixa cresce com o texto, como num chat. */
+    const crescer = () => { textarea.style.height = "auto"; textarea.style.height = Math.min(textarea.scrollHeight, 160) + "px"; };
+    textarea.addEventListener("input", crescer);
+    textarea.addEventListener("keydown", e => {
+      if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); enviarMensagem(atual); }
     });
-    guardarDB();
-    mostrarToast("Publicação criada na comunidade");
-    renderComunidade();
-  });
+    btnPublicar.addEventListener("click", () => enviarMensagem(atual));
+
+    const input = document.getElementById("ficheiro-post");
+    document.getElementById("btn-anexar").addEventListener("click", () => input.click());
+    input.addEventListener("change", e => escolherAnexo(e.target.files[0]));
+    renderPreviaAnexo();
+
+    const cancelar = document.getElementById("btn-cancelar-resposta");
+    if(cancelar) cancelar.addEventListener("click", () => { estado.respondendoA = null; renderComunidade(); });
+  }
 
   renderFeedPosts();
 }
 
-function renderFeedPosts(){
-  const feed = document.getElementById("feed-posts");
-  const espacoAtual = estado.espacoComunidade || (espacosAtivos()[0]||{}).id;
-  const lista = postsVisiveis().filter(p => (p.espacoId||"geral") === espacoAtual);
-  if(!lista.length){
-    feed.innerHTML = `<div class="card"><div class="empty-note">Ainda não há publicações neste espaço.</div></div>`;
+const LIMITE_ANEXO = 3 * 1024 * 1024;   // 3 MB
+
+function resumoTexto(t, n){
+  const limpo = String(t||"").replace(/\s+/g," ").trim();
+  return limpo.length > n ? limpo.slice(0,n) + "…" : limpo;
+}
+
+/* ---------------- Anexos ---------------- */
+function escolherAnexo(ficheiro){
+  if(!ficheiro) return;
+  if(ficheiro.size > LIMITE_ANEXO){
+    mostrarToast(`"${ficheiro.name}" tem ${formatarTamanho(ficheiro.size)}. O limite é 3 MB.`);
     return;
   }
-  feed.innerHTML = lista.map(post => {
-    const cat = post.categoria ? categoriaDe(post.categoria) : null;
-    return `<div class="card post-card">
-      <div class="post-head">
-        <div class="avatar">${post.iniciais}</div>
-        <div><div class="post-author">${post.autor}${post.fixado?' <span class="pill pill-morno" style="font-size:10px;padding:2px 8px;">Fixado</span>':""}</div><div class="post-meta">${post.tempo}</div></div>
-        ${cat ? `<span class="post-tag cat-tag" style="--c:${cat.cor}">${cat.nome}</span>` : ""}
-      </div>
-      <p class="post-text">${post.texto}</p>
-      <div class="post-actions">
-        <div class="post-action ${post.curtido?"liked":""}" data-like="${post.id}">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="${post.curtido?"currentColor":"none"}" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 0 0-3-3l-1 9v10h8.28a2 2 0 0 0 2-1.7l1.35-9A2 2 0 0 0 19.65 8H14ZM7 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h3v12Z"/></svg>
-          ${post.likes}
-        </div>
-      </div>
+  const leitor = new FileReader();
+  leitor.onload = ev => {
+    estado.anexoPendente = {
+      nome: ficheiro.name,
+      tipo: ficheiro.type || "",
+      tamanho: formatarTamanho(ficheiro.size),
+      url: ev.target.result
+    };
+    renderPreviaAnexo();
+  };
+  leitor.readAsDataURL(ficheiro);
+}
+
+function renderPreviaAnexo(){
+  const wrap = document.getElementById("anexo-previa");
+  if(!wrap) return;
+  const a = estado.anexoPendente;
+  if(!a){ wrap.innerHTML = ""; return; }
+  const imagem = a.tipo.startsWith("image/");
+  wrap.innerHTML = `
+    <div class="anexo-chip">
+      ${imagem ? `<img src="${a.url}" alt="">` : ICONS.ficheiro}
+      <span class="anexo-info"><strong>${a.nome}</strong><span class="sub-celula">${a.tamanho}</span></span>
+      <button class="btn-icone" id="btn-tirar-anexo" title="Remover"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>`;
-  }).join("");
+  document.getElementById("btn-tirar-anexo").addEventListener("click", () => {
+    estado.anexoPendente = null;
+    renderPreviaAnexo();
+  });
+}
+
+/* ---------------- Enviar ---------------- */
+function enviarMensagem(espaco){
+  const textarea = document.getElementById("novo-post");
+  const texto = textarea.value.trim();
+  const anexo = estado.anexoPendente;
+  if(!texto && !anexo) return;
+
+  const mensagem = {
+    id: novoId("post"), autor: estado.nome, iniciais: iniciais(estado.nome),
+    tempo: "agora", categoria: null, espacoId: espaco.id, fixado: false, oculto: false,
+    texto, likes: 0, curtido: false,
+    respostaA: estado.respondendoA || null,
+    ficheiro: anexo || null,
+    criadoEm: Date.now()
+  };
+  /* O DB guarda as publicações da mais recente para a mais antiga; a
+     conversa inverte-as para a última ficar em baixo. */
+  DB.posts.unshift(mensagem);
+
+  /* Um anexo grande pode não caber no armazenamento do browser. Se a
+     gravação falhar, desfazemos em vez de deixar a mensagem a mentir. */
+  if(!escreverArmazenado(DB_CHAVE, DB)){
+    DB.posts = DB.posts.filter(p => p.id !== mensagem.id);
+    mostrarToast("Não há espaço neste browser para este ficheiro. Tenta um mais pequeno.");
+    return;
+  }
+
+  estado.anexoPendente = null;
+  estado.respondendoA = null;
+  textarea.value = "";
+  renderComunidade();
+  const lista = document.getElementById("feed-posts");
+  if(lista) lista.scrollTop = lista.scrollHeight;
+}
+
+/* ---------------- O mural, em formato de conversa ---------------- */
+function renderFeedPosts(){
+  const feed = document.getElementById("feed-posts");
+  if(!feed) return;
+  const espacoAtual = estado.espacoComunidade || (espacosAtivos()[0]||{}).id;
+  const doEspaco = postsVisiveis().filter(p => (p.espacoId||"geral") === espacoAtual);
+  const fixadas = doEspaco.filter(p => p.fixado);
+  /* postsVisiveis() põe as fixadas à frente; na conversa a ordem é a da
+     chegada, com as fixadas destacadas por cima. */
+  const conversa = doEspaco.filter(p => !p.fixado).slice().reverse();
+
+  if(!doEspaco.length){
+    feed.innerHTML = `<div class="empty-note">Ainda não há mensagens neste espaço. Começa tu.</div>`;
+    return;
+  }
+
+  const eu = estado.nome;
+  let autorAnterior = null;
+
+  feed.innerHTML = `
+    ${fixadas.map(p => mensagemHTML(p, false, true)).join("")}
+    ${conversa.map(p => {
+      const agrupada = p.autor === autorAnterior;
+      autorAnterior = p.autor;
+      return mensagemHTML(p, agrupada, false, p.autor === eu);
+    }).join("")}
+  `;
+
   feed.querySelectorAll("[data-like]").forEach(el => el.addEventListener("click", () => {
     const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-like"));
     post.curtido = !post.curtido;
@@ -583,6 +735,58 @@ function renderFeedPosts(){
     guardarDB();
     renderFeedPosts();
   }));
+  feed.querySelectorAll("[data-responder]").forEach(el => el.addEventListener("click", () => {
+    estado.respondendoA = el.getAttribute("data-responder");
+    renderComunidade();
+    const caixa = document.getElementById("novo-post");
+    if(caixa) caixa.focus();
+  }));
+  feed.querySelectorAll("[data-abrir-anexo]").forEach(el => el.addEventListener("click", () => {
+    const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-abrir-anexo"));
+    if(!post || !post.ficheiro) return;
+    const a = document.createElement("a");
+    a.href = post.ficheiro.url; a.download = post.ficheiro.nome; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  }));
+  feed.querySelectorAll("[data-ir-mensagem]").forEach(el => el.addEventListener("click", () => {
+    const alvo = feed.querySelector(`[data-mensagem="${el.getAttribute("data-ir-mensagem")}"]`);
+    if(!alvo) return;
+    alvo.scrollIntoView({ behavior:"smooth", block:"center" });
+    alvo.classList.add("realcada");
+    setTimeout(() => alvo.classList.remove("realcada"), 1200);
+  }));
+}
+
+function mensagemHTML(post, agrupada, fixada, minha){
+  const cat = post.categoria ? categoriaDe(post.categoria) : null;
+  const citada = post.respostaA ? DB.posts.find(p => String(p.id) === String(post.respostaA)) : null;
+  const f = post.ficheiro;
+  const imagem = f && (f.tipo||"").startsWith("image/");
+
+  return `<div class="msg ${agrupada?"agrupada":""} ${fixada?"fixada":""} ${minha?"minha":""}" data-mensagem="${post.id}">
+    <div class="msg-avatar">${agrupada ? "" : `<div class="avatar">${post.iniciais}</div>`}</div>
+    <div class="msg-corpo">
+      ${citada ? `<button class="msg-citada" data-ir-mensagem="${citada.id}"><span class="msg-citada-autor">${citada.autor}</span><span>${resumoTexto(citada.texto, 70) || (citada.ficheiro ? citada.ficheiro.nome : "")}</span></button>` : ""}
+      ${agrupada ? "" : `<div class="msg-head">
+        <span class="msg-autor">${post.autor}</span>
+        <span class="msg-tempo">${post.tempo}</span>
+        ${fixada ? '<span class="pill pill-morno msg-pin">Fixado</span>' : ""}
+        ${cat ? `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>` : ""}
+      </div>`}
+      ${post.texto ? `<p class="msg-texto">${post.texto}</p>` : ""}
+      ${f ? (imagem
+        ? `<button class="msg-imagem" data-abrir-anexo="${post.id}"><img src="${f.url}" alt="${f.nome}"></button>`
+        : `<button class="msg-ficheiro" data-abrir-anexo="${post.id}">${ICONS.ficheiro}<span class="anexo-info"><strong>${f.nome}</strong><span class="sub-celula">${f.tamanho||""}</span></span></button>`) : ""}
+      <div class="msg-acoes">
+        <button class="msg-accao ${post.curtido?"liked":""}" data-like="${post.id}">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="${post.curtido?"currentColor":"none"}" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 0 0-3-3l-1 9v10h8.28a2 2 0 0 0 2-1.7l1.35-9A2 2 0 0 0 19.65 8H14ZM7 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h3v12Z"/></svg>${post.likes||0}
+        </button>
+        <button class="msg-accao" data-responder="${post.id}">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>Responder
+        </button>
+      </div>
+    </div>
+  </div>`;
 }
 
 /* ---------------- Conquistas ---------------- */
@@ -649,6 +853,26 @@ function baixarLembrete(evento){
 }
 
 let bannerTimer = null;
+/* Um só carrossel, usado no Início e no Calendário — cada um com o seu id,
+   para os dois não disputarem os mesmos elementos. */
+function carrosselBannersHTML(id){
+  const banners = bannersAtivos();
+  if(!banners.length) return "";
+  return `
+    <div class="banner-carousel" id="${id}">
+      <div class="banner-track">
+        ${banners.map(b => `<a class="banner-slide" href="${b.link||"#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
+          <span class="banner-eyebrow">${b.eyebrow}</span>
+          <span class="banner-title">${b.titulo}</span>
+          <span class="banner-cta">${b.cta} ${setaCirculo()}</span>
+        </a>`).join("")}
+      </div>
+      <div class="banner-dots">
+        ${banners.map((_,i)=>`<span class="banner-dot ${i===0?"active":""}" data-slide="${i}"></span>`).join("")}
+      </div>
+    </div>`;
+}
+
 function iniciarCarrosselBanners(seletorRaiz){
   const raiz = document.querySelector(seletorRaiz);
   if(!raiz) return;
@@ -677,23 +901,42 @@ function renderCalendario(){
     const { dia, mes } = formatarDataEvento(e.data);
     const dias = diasAte(e.dt);
     const confirmado = !!estado.presencasConfirmadas[e.id];
-    return `<div class="event-row">
-      <div class="event-date-badge"><span class="day">${dia}</span><span class="mon">${mes}</span></div>
-      <div class="event-info">
-        <h4>${e.titulo}</h4>
-        <div class="event-meta">
-          <span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>
-          <span>${e.tipo}</span>
-          <span>${e.hora}</span>
-          ${!passado ? `<span>· em ${dias===0?"hoje":dias+" dia"+(dias===1?"":"s")}</span>` : ""}
+    const aberto = estado.eventoAberto === e.id;
+    const dataLonga = e.dt.toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+    return `<div class="event-row ${aberto?"aberto":""}" data-evento="${e.id}">
+      <div class="event-linha">
+        <div class="event-date-badge"><span class="day">${dia}</span><span class="mon">${mes}</span></div>
+        <div class="event-info">
+          <h4>${e.titulo}</h4>
+          <div class="event-meta">
+            <span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>
+            <span>${e.tipo}</span>
+            <span>${e.hora}</span>
+            ${!passado ? `<span>· em ${dias===0?"hoje":dias+" dia"+(dias===1?"":"s")}</span>` : ""}
+          </div>
+        </div>
+        <span class="event-status-pill ${passado?"past":"upcoming"}">${passado?"Realizado":"Em breve"}</span>
+        <svg class="icon event-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="event-detalhe">
+        <div class="event-detalhe-corpo">
+          <p class="event-descricao">${e.descricao || "Sem descrição para este encontro."}</p>
+          <div class="event-campos">
+            <div><span class="rotulo">Quando</span><strong>${dataLonga}, às ${e.hora}</strong></div>
+            <div><span class="rotulo">Formato</span><strong>${e.tipo}</strong></div>
+            <div><span class="rotulo">Área</span><strong>${cat.nome}</strong></div>
+            ${confirmado && !passado ? '<div><span class="rotulo">A tua presença</span><strong class="confirmada">Confirmada</strong></div>' : ""}
+          </div>
+          <div class="event-acoes">
+            ${passado
+              ? `<button class="btn btn-secondary btn-sm" data-toast="Resumo disponível na comunidade">Ver resumo</button>`
+              : `${e.link ? `<a class="btn btn-primary btn-sm" href="${e.link}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : ""}
+                 <button class="btn btn-secondary btn-sm" data-lembrete="${e.id}">Guardar lembrete</button>
+                 <button class="btn btn-secondary btn-sm" data-confirmar="${e.id}" data-done="${confirmado}">${confirmado?"✓ Presença confirmada":"Confirmar presença"}</button>`
+            }
+          </div>
         </div>
       </div>
-      <span class="event-status-pill ${passado?"past":"upcoming"}">${passado?"Realizado":"Em breve"}</span>
-      ${passado
-        ? `<button class="btn btn-secondary btn-sm" data-toast="Resumo disponível na comunidade">Ver resumo</button>`
-        : `<button class="btn btn-secondary btn-sm" data-lembrete="${e.id}">Guardar lembrete</button>
-           <button class="btn btn-secondary btn-sm" data-confirmar="${e.id}" data-done="${confirmado}">${confirmado?"✓ Presença confirmada":"Confirmar presença"}</button>`
-      }
     </div>`;
   }
 
@@ -703,18 +946,7 @@ function renderCalendario(){
       <h1>Calendário</h1>
       <p class="desc">Mentorias em grupo, masterclasses e encontros ao vivo com a Kingdom Academy.</p>
     </div>
-    <div class="banner-carousel" id="carrossel-aluno">
-      <div class="banner-track">
-        ${bannersAtivos().map(b => `<a class="banner-slide" href="${b.link||"#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
-          <span class="banner-eyebrow">${b.eyebrow}</span>
-          <span class="banner-title">${b.titulo}</span>
-          <span class="banner-cta">${b.cta} →</span>
-        </a>`).join("")}
-      </div>
-      <div class="banner-dots">
-        ${bannersAtivos().map((_,i)=>`<span class="banner-dot ${i===0?"active":""}" data-slide="${i}"></span>`).join("")}
-      </div>
-    </div>
+    ${carrosselBannersHTML("carrossel-aluno")}
     <div class="section-title"><h2>Próximos encontros</h2></div>
     <div class="card" style="margin-bottom:24px;">
       ${proximos.length ? proximos.map(e=>linhaEvento(e,false)).join("") : '<div class="empty-note">Sem encontros agendados de momento.</div>'}
@@ -724,6 +956,13 @@ function renderCalendario(){
       ${passados.length ? passados.map(e=>linhaEvento(e,true)).join("") : '<div class="empty-note">Ainda não houve encontros.</div>'}
     </div>
   `;
+  /* O cartão abre para baixo; os botões lá dentro não voltam a fechá-lo. */
+  document.querySelectorAll("#content-calendario .event-linha").forEach(linha => linha.addEventListener("click", () => {
+    const id = linha.closest(".event-row").getAttribute("data-evento");
+    estado.eventoAberto = estado.eventoAberto === id ? null : id;
+    renderCalendario();
+  }));
+  document.querySelectorAll("#content-calendario .event-detalhe").forEach(d => d.addEventListener("click", e => e.stopPropagation()));
   document.querySelectorAll("#content-calendario [data-toast]").forEach(el => el.addEventListener("click", () => mostrarToast(el.getAttribute("data-toast"))));
   document.querySelectorAll("#content-calendario [data-lembrete]").forEach(el => el.addEventListener("click", () => {
     const evento = DB.eventos.find(x=>x.id===el.getAttribute("data-lembrete"));
@@ -906,6 +1145,7 @@ function renderDefinicoes(){
 registarViews({
   dashboard: renderDashboard,
   catalogo: renderCatalogo,
+  vitrine: renderVitrine,
   curso: renderCurso,
   aula: renderAula,
   comunidade: renderComunidade,

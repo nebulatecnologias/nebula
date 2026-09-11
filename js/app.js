@@ -67,6 +67,8 @@ document.getElementById("form-login").addEventListener("submit", e => {
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app-shell").classList.remove("hidden");
   irPara(estado.papel==="administrador" ? "admin-visao" : "dashboard");
+  /* Primeira entrada de um aluno: o questionário abre por cima do Início. */
+  if(onboardingPendente()) abrirOnboarding(false);
 });
 
 document.getElementById("btn-logout").addEventListener("click", () => {

@@ -35,6 +35,7 @@ const NAV_ALUNO = [
   { grupo:"Geral", itens:[
     { view:"dashboard", label:"Início", icon:ICONS.home },
     { view:"catalogo", label:"Meus cursos", icon:ICONS.book },
+    { view:"vitrine", label:"Vitrine", icon:ICONS.tag },
     { view:"calendario", label:"Calendário", icon:ICONS.cal, dot:"calendario" },
     { view:"comunidade", label:"Comunidade", icon:ICONS.people, dot:"comunidade" }
   ]},
@@ -311,7 +312,7 @@ const CONFIG_PADRAO = {
   planoPadrao: "Kingdom All Access",
   mostrarCursosBloqueados: true,
   /* Abas da área do aluno que estão ligadas. */
-  abasAluno: ["dashboard","catalogo","calendario","comunidade","conquistas","certificados","definicoes"],
+  abasAluno: ["dashboard","catalogo","vitrine","calendario","comunidade","conquistas","certificados","definicoes"],
   alunosPublicam: true
 };
 
@@ -442,6 +443,7 @@ const estado = {
   ultimaAulaPorCurso: { kt:"kt-m1a3", ia:"ia-m1a3", pf:"pf-m1a2" },
   streakDias: 6,
   tema: null,
+  onboarding: null,
   filtroCategoria: "todos",
   abaAdmin: "alunos",
   filtroCategoriaAdmin: "todos",
@@ -482,6 +484,7 @@ function guardarEstado(){
     avaliacoes: estado.avaliacoes,
     presencasConfirmadas: estado.presencasConfirmadas,
     tema: estado.tema,
+    onboarding: estado.onboarding,
     ultimoCurso: estado.ultimoCurso,
     ultimaAulaPorCurso: estado.ultimaAulaPorCurso
   });

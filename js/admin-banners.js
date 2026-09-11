@@ -34,7 +34,7 @@ function renderAdminBanners(){
         ${bannersAtivos().map(b => `<div class="banner-slide" style="${fundoBanner(b)}">
           <span class="banner-eyebrow">${b.eyebrow||""}</span>
           <span class="banner-title">${b.titulo||""}</span>
-          <span class="banner-cta">${b.cta||""} →</span>
+          <span class="banner-cta">${b.cta||""} ${setaCirculo()}</span>
         </div>`).join("")}
       </div>
       <div class="banner-dots">

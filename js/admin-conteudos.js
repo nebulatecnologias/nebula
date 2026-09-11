@@ -7,7 +7,6 @@
    formulários longos, com capa, conteúdo e materiais.
    ============================================================ */
 
-function contarAulas(curso){ return curso.modulos.reduce((s,m)=>s+m.aulas.length, 0); }
 function cursoPublicado(c){ return c.publicado !== false; }
 function siglaSugerida(titulo){
   return (titulo||"").split(/\s+/).filter(Boolean).map(p=>p[0]).join("").slice(0,3).toUpperCase();
@@ -205,7 +204,7 @@ function renderFormCurso(){
           <p>Insere a imagem de capa conforme a dimensão de exibição na vitrine. Para ecrãs retina, usa imagens com o dobro da resolução para garantir nitidez.</p>
         </div>
         <div class="card form-card">
-          ${uploadHTML("capa", v.capa, "Usa uma imagem com 430 x 215 pixels ou 300 x 420 para posters verticais.", "grande")}
+          ${uploadHTML("capa", v.capa, "1280 × 720 px (16:9). É o formato do cartão em Meus cursos — a imagem aparece inteira, sem cortes.", "grande")}
         </div>
       </div>
 

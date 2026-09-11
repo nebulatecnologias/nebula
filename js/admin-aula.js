@@ -61,7 +61,7 @@ function renderFormAula(){
         </div>
         <div>
           <label class="rotulo-solto">Imagem de capa</label>
-          ${uploadHTML("capaAula", v.capa, "Usa uma imagem com 120 x 68 pixels de tamanho.", "pequena")}
+          ${uploadHTML("capaAula", v.capa, "480 × 270 px (16:9). É a miniatura da aula na lista do curso, sem cortes.", "pequena")}
         </div>
       </div>
 
@@ -314,12 +314,6 @@ function renderPainelFicheiros(painel){
     r.ficheiros.splice(Number(b.getAttribute("data-remover-ficheiro")), 1);
     renderPainelFicheiros(painel);
   }));
-}
-
-function formatarTamanho(bytes){
-  if(bytes < 1024) return bytes + " B";
-  if(bytes < 1024*1024) return Math.round(bytes/1024) + " KB";
-  return (bytes/1024/1024).toFixed(1) + " MB";
 }
 
 /* ---------------- Quiz ---------------- */

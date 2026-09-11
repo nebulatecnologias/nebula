@@ -99,6 +99,13 @@ function abaDoAlunoLigada(view){
 }
 /* Cursos criados pelo administrador ainda não têm estatísticas registadas. */
 function statsCurso(id){ return DB.cursoStats[id] || { inscritos:0, conclusao:0, avaliacao:0 }; }
+function formatarTamanho(bytes){
+  if(bytes < 1024) return bytes + " B";
+  if(bytes < 1024*1024) return Math.round(bytes/1024) + " KB";
+  return (bytes/1024/1024).toFixed(1) + " MB";
+}
+
+function contarAulas(curso){ return curso.modulos.reduce((s,m)=>s+m.aulas.length, 0); }
 
 /* ============================================================
    Vídeo das aulas
@@ -250,6 +257,10 @@ function postsVisiveis(){
 }
 
 function iconeCheck(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>'; }
+/* Seta dentro de um círculo, à medida do texto onde está (1em). */
+function setaCirculo(){
+  return '<svg class="seta-circulo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.5 13.5 12 10 15.5"/></svg>';
+}
 function iconePlay(){ return '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>'; }
 
 /* ============================================================
@@ -294,7 +305,7 @@ function registarViews(mapa){ Object.assign(VIEWS, mapa); }
 
 function irPara(view, a, b){
   estado.viewAtual = view;
-  if(view!=="calendario" && view!=="admin-banners" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
+  if(view!=="calendario" && view!=="dashboard" && view!=="admin-banners" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
   const ehAdmin = view.indexOf("admin-")===0;
   const containerId = ehAdmin ? "content-admin" : "content-"+view;
   const container = document.getElementById(containerId);
