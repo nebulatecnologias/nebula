@@ -669,7 +669,7 @@ function renderPreviaAnexo(){
 }
 
 /* ---------------- Enviar ---------------- */
-function enviarMensagem(espaco){
+async function enviarMensagem(espaco){
   const textarea = document.getElementById("novo-post");
   const texto = textarea.value.trim();
   const anexo = estado.anexoPendente;
@@ -677,19 +677,21 @@ function enviarMensagem(espaco){
 
   const mensagem = {
     id: novoId("post"), autor: estado.nome, iniciais: iniciais(estado.nome),
+    autorId: API.utilizador ? API.utilizador.id : null,
     tempo: "agora", categoria: null, espacoId: espaco.id, fixado: false, oculto: false,
     texto, likes: 0, curtido: false,
     respostaA: estado.respondendoA || null,
     ficheiro: anexo || null,
-    criadoEm: Date.now()
+    criadoEm: new Date().toISOString()
   };
   /* O DB guarda as publicações da mais recente para a mais antiga; a
      conversa inverte-as para a última ficar em baixo. */
   DB.posts.unshift(mensagem);
 
-  /* Um anexo grande pode não caber no armazenamento do browser. Se a
-     gravação falhar, desfazemos em vez de deixar a mensagem a mentir. */
-  if(!escreverArmazenado(DB_CHAVE, DB)){
+  /* Em demonstração, um anexo grande pode não caber no armazenamento
+     do browser. Se a gravação falhar, desfazemos em vez de deixar a
+     mensagem a mentir. */
+  if(modoDemonstracao() && !escreverArmazenado(DB_CHAVE, DB)){
     DB.posts = DB.posts.filter(p => p.id !== mensagem.id);
     mostrarToast("Não há espaço neste browser para este ficheiro. Tenta um mais pequeno.");
     return;
@@ -701,6 +703,20 @@ function enviarMensagem(espaco){
   renderComunidade();
   const lista = document.getElementById("feed-posts");
   if(lista) lista.scrollTop = lista.scrollHeight;
+
+  /* A mensagem aparece já no ecrã, mas quem a lê é o servidor. Se não
+     chegar lá, sai do ecrã: mais vale perdê-la do que fingir que os
+     outros a receberam. */
+  if(modoDemonstracao()) return;
+  try {
+    await API.guardar("mensagem", mensagem);
+  } catch(erro){
+    DB.posts = DB.posts.filter(p => p.id !== mensagem.id);
+    renderComunidade();
+    const caixa = document.getElementById("novo-post");
+    if(caixa) caixa.value = texto;          // o que escreveu não se perde
+    mostrarToast(erro.message || "A mensagem não chegou a sair. Tenta outra vez.");
+  }
 }
 
 /* ---------------- O mural, em formato de conversa ---------------- */

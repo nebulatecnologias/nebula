@@ -315,13 +315,36 @@ function renderNotificacoes(){
     <div class="notif-panel-head">Notificações</div>
     <div class="notif-list">
       ${DB.notificacoes.length ? DB.notificacoes.map(n => `
-        <div class="notif-item">
+        <div class="notif-item ${destinoDaNotificacao(n)?"clicavel":""}" data-notif="${n.id}">
           <span class="dot-unread ${n.lida?"lida":""}"></span>
           <div class="txt"><strong>${n.titulo}</strong><p>${n.desc}</p><span class="tempo">${n.tempo}</span></div>
         </div>
       `).join("") : '<div class="notif-empty">Sem notificações por agora.</div>'}
     </div>
   `;
+
+  painel.querySelectorAll("[data-notif]").forEach(el => el.addEventListener("click", () => {
+    const n = DB.notificacoes.find(x => x.id === el.getAttribute("data-notif"));
+    const destino = n && destinoDaNotificacao(n);
+    if(!destino) return;
+    painel.classList.add("hidden");
+    irPara(destino.view, destino.id);
+  }));
+}
+
+/* Um aviso que não leva a lado nenhum é só ruído: só fica clicável se
+   o que anuncia ainda existir e esta pessoa o puder abrir. */
+function destinoDaNotificacao(n){
+  if(!n.link) return null;
+  if(n.tipo === "curso" || n.tipo === "aula"){
+    const curso = (DB.cursos || []).find(c => c.id === n.link);
+    return curso ? { view:"curso", id:curso.id } : null;
+  }
+  if(n.tipo === "evento"){
+    const evento = (DB.eventos || []).find(e => e.id === n.link);
+    return evento ? { view:"calendario" } : null;
+  }
+  return null;
 }
 
 /* ============================================================

@@ -280,7 +280,7 @@ function mostrarLinkDoConvite(email, link, aviso){
   confirmarAcao({
     titulo: "O convite ficou criado",
     mensagem: `${aviso || "O email não chegou a sair."}<br><br>Envia este link a <strong>${email}</strong>:
-      <span style="display:block;margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--fundo-2,#f5f5f4);font-size:12px;word-break:break-all;">${seguro}</span>`,
+      <span style="display:block;margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--surface-raised);font-size:12px;word-break:break-all;">${seguro}</span>`,
     textoConfirmar: "Copiar link",
     aoConfirmar: () => {
       if(navigator.clipboard) navigator.clipboard.writeText(link).catch(()=>{});

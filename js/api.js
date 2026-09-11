@@ -122,7 +122,7 @@ const API = {
     const idsLidas = new Set(lidas.map(l => l.notificacao_id));
     DB.notificacoes = notificacoes.map(n => ({
       id:n.id, titulo:n.titulo, desc:n.descricao||"", tempo:tempoRelativo(n.criado_em),
-      lida: idsLidas.has(n.id)
+      tipo:n.tipo || "geral", link:n.link || "", lida: idsLidas.has(n.id)
     }));
 
     aplicarConfig(config);
@@ -158,6 +158,28 @@ const API = {
     return data;
   },
 
+  /* ---------------- Tempo real ----------------
+     A conversa da comunidade chega sozinha. O Realtime usa as mesmas
+     políticas de leitura da tabela, por isso ninguém recebe o que não
+     podia ler numa consulta normal. */
+  canalComunidade: null,
+
+  ouvirComunidade(aoMudar){
+    if(this.canalComunidade) return this.canalComunidade;
+    this.canalComunidade = this.cliente
+      .channel("comunidade")
+      .on("postgres_changes", { event:"*", schema:ESQUEMA, table:"mensagens" }, c => aoMudar("mensagem", c))
+      .on("postgres_changes", { event:"*", schema:ESQUEMA, table:"reacoes" },   c => aoMudar("reacao", c))
+      .subscribe();
+    return this.canalComunidade;
+  },
+
+  pararDeOuvir(){
+    if(!this.canalComunidade) return;
+    this.cliente.removeChannel(this.canalComunidade);
+    this.canalComunidade = null;
+  },
+
   /* ---------------- Escrita ---------------- */
   async guardar(entidade, registo){
     const mapa = MAPAS[entidade];
@@ -177,6 +199,16 @@ const API = {
     const { error } = mapa.suave
       ? await this.cliente.from(mapa.tabela).update({ removido_em:new Date().toISOString() }).eq("id", id)
       : await this.cliente.from(mapa.tabela).delete().eq("id", id);
+    if(error) throw new Error(traduzirErroDados(error));
+  },
+
+  /* O sino só fica limpo se o servidor souber disso: a marca de lida
+     é uma linha por pessoa e por notificação. */
+  async marcarLidas(ids){
+    if(!ids.length) return;
+    const eu = this.utilizador.id;
+    const { error } = await this.cliente.from("notificacoes_lidas")
+      .upsert(ids.map(id => ({ notificacao_id:id, utilizador_id:eu })), { onConflict:"notificacao_id,utilizador_id" });
     if(error) throw new Error(traduzirErroDados(error));
   },
 
@@ -652,6 +684,11 @@ async function salvarPerfil(){
   }).catch(erro => avisarQueNaoGuardou(erro));
 }
 
+function salvarNotificacoesLidas(ids){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  return API.marcarLidas(ids).catch(erro => avisarQueNaoGuardou(erro));
+}
+
 function salvarReacao(mensagemId, gostou){
   if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
   return API.reagir(mensagemId, gostou).catch(erro => avisarQueNaoGuardou(erro));
@@ -681,6 +718,67 @@ function soNoCRM(oQue){
   return true;
 }
 
+
+/* ============================================================
+   A conversa em direto
+   Chega uma alteração, arrumamos o DB em memória e, se a comunidade
+   estiver aberta, o ecrã acompanha. O que já fizemos nós não conta
+   duas vezes: a nossa mensagem e o nosso gosto já estão no ecrã.
+   ============================================================ */
+function ligarComunidadeEmDireto(){
+  if(modoDemonstracao()) return;
+  API.ouvirComunidade((tipo, carga) => {
+    const mudou = tipo === "mensagem"
+      ? aplicarMensagemEmDireto(carga)
+      : aplicarReacaoEmDireto(carga);
+    if(mudou && estado.viewAtual === "comunidade") renderComunidade();
+  });
+}
+
+function aplicarMensagemEmDireto(carga){
+  const eu = API.utilizador ? API.utilizador.id : null;
+
+  if(carga.eventType === "DELETE"){
+    const id = (carga.old || {}).id;
+    if(!id) return false;
+    const antes = DB.posts.length;
+    DB.posts = DB.posts.filter(p => String(p.id) !== String(id));
+    return DB.posts.length !== antes;
+  }
+
+  const nova = deMensagem(carga.new);
+  const existente = DB.posts.find(p => String(p.id) === String(nova.id));
+
+  if(existente){
+    /* Os gostos vivem noutra tabela: não os deitamos fora ao atualizar. */
+    Object.assign(existente, nova, { likes:existente.likes, curtido:existente.curtido });
+    return true;
+  }
+  if(carga.eventType !== "INSERT") return false;
+
+  DB.posts.unshift(nova);
+  if(nova.autorId !== eu) notificarMensagemNova(nova);
+  return true;
+}
+
+function aplicarReacaoEmDireto(carga){
+  const eu = API.utilizador ? API.utilizador.id : null;
+  const linha = carga.new && carga.new.mensagem_id ? carga.new : carga.old;
+  if(!linha) return false;
+  if(linha.utilizador_id === eu) return false;   // o nosso gosto já está contado
+
+  const post = DB.posts.find(p => String(p.id) === String(linha.mensagem_id));
+  if(!post) return false;
+  post.likes = Math.max(0, post.likes + (carga.eventType === "INSERT" ? 1 : -1));
+  return true;
+}
+
+/* Uma mensagem nova noutro espaço não deve passar despercebida. */
+function notificarMensagemNova(mensagem){
+  if(estado.viewAtual === "comunidade" && (estado.espacoComunidade || "geral") === (mensagem.espacoId || "geral")) return;
+  const espaco = (DB.espacos || []).find(e => e.id === mensagem.espacoId);
+  mostrarToast(`${mensagem.autor} escreveu em ${espaco ? espaco.nome : "Comunidade"}`);
+}
 
 /* ============================================================
    Enviar ficheiros

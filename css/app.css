@@ -401,6 +401,8 @@ body.light .modal-cert h2{ color:var(--text); }
 .notif-list{ max-height:340px; overflow-y:auto; }
 .notif-item{ padding:13px 18px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:flex-start; }
 .notif-item:first-child{ border-top:none; }
+.notif-item.clicavel{ cursor:pointer; }
+.notif-item.clicavel:hover{ background:var(--surface-hover); }
 .notif-item .dot-unread{ width:7px; height:7px; border-radius:99px; background:var(--accent); margin-top:6px; flex-shrink:0; }
 .notif-item .dot-unread.lida{ background:transparent; }
 .notif-item .txt strong{ display:block; font-size:13px; margin-bottom:2px; }

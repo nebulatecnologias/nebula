@@ -109,6 +109,7 @@ async function entrarNaArea(){
   mostrarEcra("app");
   estado.prevendoComoAluno = false;
   irPara(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+  ligarComunidadeEmDireto();
   if(onboardingPendente()) abrirOnboarding(false);
 }
 
@@ -209,7 +210,7 @@ function pedirNovaPassword(primeiraVez){
 
 document.getElementById("btn-logout").addEventListener("click", async () => {
   estado.prevendoComoAluno = false;
-  if(!modoDemonstracao()) await API.sair();
+  if(!modoDemonstracao()){ API.pararDeOuvir(); await API.sair(); }
   location.reload();
 });
 
@@ -224,8 +225,10 @@ document.getElementById("btn-notif").addEventListener("click", e => {
   painel.classList.toggle("hidden");
   if(vaiAbrir){
     renderNotificacoes();
+    const porLer = DB.notificacoes.filter(n => !n.lida).map(n => n.id);
     DB.notificacoes.forEach(n => n.lida = true);
     atualizarSidebarGlobal();
+    if(porLer.length) salvarNotificacoesLidas(porLer);
   }
 });
 document.addEventListener("click", e => {
