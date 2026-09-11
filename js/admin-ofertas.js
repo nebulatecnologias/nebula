@@ -64,7 +64,7 @@ function renderAdminOfertas(){
   document.getElementById("btn-nova-oferta").addEventListener("click", () => editarOferta(null));
   document.getElementById("card-bloqueados").addEventListener("click", () => {
     DB.config.mostrarCursosBloqueados = DB.config.mostrarCursosBloqueados === false;
-    guardarDB();
+    salvarConfigGeral();
     renderAdminOfertas();
     mostrarToast(DB.config.mostrarCursosBloqueados
       ? "Os alunos passam a ver os cursos bloqueados, com a oferta"
@@ -94,6 +94,7 @@ function editarOferta(id){
     ],
     valores: oferta || { periodo:"mês", ativa:true, destaque:false, planoId:(DB.planos[0]||{}).id },
     aoGuardar: v => {
+      if(soNoCRM("As ofertas")) return false;
       if(oferta) Object.assign(oferta, v);
       else DB.ofertas.push({ id:novoId("oferta"), ...v });
       guardarDB();
@@ -104,6 +105,7 @@ function editarOferta(id){
 }
 
 function apagarOferta(id){
+  if(soNoCRM("As ofertas")) return;
   const oferta = DB.ofertas.find(o=>o.id===id);
   confirmarAcao({
     titulo: "Apagar oferta",

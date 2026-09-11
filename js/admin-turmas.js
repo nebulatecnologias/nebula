@@ -85,6 +85,7 @@ function editarTurma(id){
     ],
     valores: turma || { ativa:true, membros:[], cursoId:(DB.cursos[0]||{}).id },
     aoGuardar: v => {
+      if(soNoCRM("As turmas")) return false;
       if(turma) Object.assign(turma, v);
       else DB.turmas.push({ id:novoId("turma"), ...v });
       guardarDB();
@@ -95,6 +96,7 @@ function editarTurma(id){
 }
 
 function apagarTurma(id){
+  if(soNoCRM("As turmas")) return;
   const turma = turmaPorId(id);
   confirmarAcao({
     titulo: "Apagar turma",
@@ -139,7 +141,7 @@ function renderAdminCertificados(){
     t.addEventListener("click", () => {
       const curso = cursoPorId(t.getAttribute("data-curso-cert"));
       curso.certificado = curso.certificado === false;
-      guardarDB();
+      salvar("curso", curso);
       renderAdminCertificados();
       mostrarToast(curso.certificado ? "Curso passa a emitir certificado" : "Curso deixa de emitir certificado");
     }));
@@ -227,7 +229,7 @@ function editarModeloCertificado(){
     aoGuardar: v => {
       v.regraPct = Math.min(100, Math.max(1, v.regraPct || 100));
       Object.assign(DB.config.certificado, v);
-      guardarDB();
+      salvarCertificado();
       renderAdminCertificados();
       mostrarToast("Modelo atualizado");
     }

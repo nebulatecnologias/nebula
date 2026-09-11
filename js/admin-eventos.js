@@ -82,9 +82,10 @@ function editarEvento(id){
     ],
     valores: evento || { hora:"19:00" },
     aoGuardar: v => {
-      if(evento) Object.assign(evento, v);
-      else DB.eventos.push({ id:novoId("evento"), ...v });
-      guardarDB();
+      const alvo = evento || { id:novoId("evento") };
+      Object.assign(alvo, v);
+      if(!evento) DB.eventos.push(alvo);
+      salvar("evento", alvo);
       renderAdminEventos();
       mostrarToast(evento ? "Evento atualizado" : "Evento criado");
     }
@@ -98,7 +99,7 @@ function apagarEvento(id){
     mensagem: `"${evento.titulo}" deixa de aparecer no calendário dos alunos.`,
     aoConfirmar: () => {
       DB.eventos = DB.eventos.filter(e=>e.id!==id);
-      guardarDB();
+      remover("evento", id);
       renderAdminEventos();
       mostrarToast("Evento apagado");
     }

@@ -237,7 +237,7 @@ document.getElementById("btn-tema").addEventListener("click", () => {
   const claro = !document.body.classList.contains("light");
   document.body.classList.toggle("light", claro);
   estado.tema = claro ? "light" : "dark";
-  guardarEstado();
+  salvarPerfil();
 });
 
 /* A identidade definida no painel é aplicada logo no ecrã de entrada. */

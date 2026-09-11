@@ -84,7 +84,7 @@ function renderAdminBanners(){
   document.querySelectorAll("#content-admin [data-mover-banner]").forEach(b =>
     b.addEventListener("click", () => {
       mover(DB.banners, DB.banners.findIndex(x=>x.id===b.getAttribute("data-mover-banner")), Number(b.getAttribute("data-dir")));
-      guardarDB();
+      salvarOrdem("banner", DB.banners);
       renderAdminBanners();
     }));
 }
@@ -105,9 +105,10 @@ function editarBanner(id){
     ],
     valores: banner || { ativo:true, gradiente:GRADIENTES[0].valor },
     aoGuardar: v => {
-      if(banner) Object.assign(banner, v);
-      else DB.banners.push({ id:novoId("banner"), ...v });
-      guardarDB();
+      const alvo = banner || { id:novoId("banner"), ordem:DB.banners.length + 1 };
+      Object.assign(alvo, v);
+      if(!banner) DB.banners.push(alvo);
+      salvar("banner", alvo);
       renderAdminBanners();
       mostrarToast(banner ? "Banner atualizado" : "Banner criado");
     }
@@ -121,7 +122,7 @@ function apagarBanner(id){
     mensagem: `"${banner.titulo}" deixa de aparecer no calendário dos alunos.`,
     aoConfirmar: () => {
       DB.banners = DB.banners.filter(b=>b.id!==id);
-      guardarDB();
+      remover("banner", id);
       renderAdminBanners();
       mostrarToast("Banner apagado");
     }
@@ -138,7 +139,7 @@ function ajustarIntervaloBanners(){
     valores: { bannerIntervalo: DB.config.bannerIntervalo },
     aoGuardar: v => {
       DB.config.bannerIntervalo = Math.max(5, v.bannerIntervalo || 60);
-      guardarDB();
+      salvarConfigGeral();
       renderAdminBanners();
       mostrarToast("Rotação atualizada");
     }

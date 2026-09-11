@@ -60,7 +60,7 @@ function renderAdminRanking(){
   document.querySelectorAll("#content-admin [data-mover-emblema]").forEach(b =>
     b.addEventListener("click", () => {
       mover(DB.conquistas, DB.conquistas.findIndex(x=>x.id===b.getAttribute("data-mover-emblema")), Number(b.getAttribute("data-dir")));
-      guardarDB();
+      salvarOrdem("conquista", DB.conquistas);
       renderAdminRanking();
     }));
 }
@@ -141,7 +141,7 @@ function editarGamificacao(){
     aoGuardar: v => {
       DB.config.gamificacao.xpPorAula = Math.max(1, v.xpPorAula || 50);
       DB.config.gamificacao.xpPorNivel = Math.max(10, v.xpPorNivel || 500);
-      guardarDB();
+      salvarGamificacao();
       renderAdminRanking();
       mostrarToast("Pontuação atualizada");
     }
@@ -164,9 +164,10 @@ function editarEmblema(id){
       : { tipo:"aulas", valor:1 },
     aoGuardar: v => {
       const dados = { titulo:v.titulo, desc:v.desc, regra:{ tipo:v.tipo, valor:v.valor||0 } };
-      if(emblema) Object.assign(emblema, dados);
-      else DB.conquistas.push({ id:novoId("emb"), ...dados });
-      guardarDB();
+      const alvo = emblema || { id:novoId("emb"), ordem:DB.conquistas.length + 1 };
+      Object.assign(alvo, dados);
+      if(!emblema) DB.conquistas.push(alvo);
+      salvar("conquista", alvo);
       renderAdminRanking();
       mostrarToast(emblema ? "Emblema atualizado" : "Emblema criado");
     }
@@ -180,7 +181,7 @@ function apagarEmblema(id){
     mensagem: `"${emblema.titulo}" desaparece da página Conquistas, mesmo para quem já o tinha.`,
     aoConfirmar: () => {
       DB.conquistas = DB.conquistas.filter(b=>b.id!==id);
-      guardarDB();
+      remover("conquista", id);
       renderAdminRanking();
       mostrarToast("Emblema apagado");
     }

@@ -120,7 +120,7 @@ function renderPassoOnboarding(){
   if(saltar) saltar.addEventListener("click", () => {
     /* Saltar não deixa o aluno sem trilha: fica a ordem natural dos cursos. */
     estado.onboarding = { feito:true, saltado:true, objetivos:[], ritmo:null, momento:null };
-    guardarEstado();
+    salvarOnboarding();
     fecharOnboarding();
   });
 }
@@ -128,7 +128,7 @@ function renderPassoOnboarding(){
 function guardarOnboarding(){
   const r = estado.respostasOnb;
   estado.onboarding = { feito:true, saltado:false, objetivos:r.objetivos, ritmo:r.ritmo, momento:r.momento };
-  guardarEstado();
+  salvarOnboarding();
 }
 
 /* A trilha: primeiro os cursos das áreas escolhidas, depois os restantes.

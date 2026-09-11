@@ -110,7 +110,7 @@ function configurarPlayer(){
     valores: DB.config.integracoes,
     aoGuardar: v => {
       Object.assign(DB.config.integracoes, v);
-      guardarDB();
+      salvarIntegracoes();
       renderAdminIntegracoes();
       mostrarToast("Provedor definido: " + v.player);
     }
@@ -128,7 +128,7 @@ function configurarSuporte(){
     valores: DB.config.integracoes,
     aoGuardar: v => {
       Object.assign(DB.config.integracoes, v);
-      guardarDB();
+      salvarIntegracoes();
       renderAdminIntegracoes();
       mostrarToast(v.suporteUrl ? "Canal de apoio ativo" : "Canal de apoio removido");
     }

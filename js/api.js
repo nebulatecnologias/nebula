@@ -73,7 +73,7 @@ const API = {
     const eu = this.utilizador.id;
 
     const [
-      categorias, cursos, espacos, mensagens, eventos, banners,
+      categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
       ofertas, turmas
@@ -84,6 +84,7 @@ const API = {
       `).is("removido_em", null).order("ordem")),
       lista(c.from("espacos").select("*").order("ordem")),
       lista(c.from("mensagens").select("*").order("criado_em", { ascending:false }).limit(300)),
+      lista(c.from("reacoes").select("mensagem_id, utilizador_id")),
       lista(c.from("eventos").select("*").order("data")),
       lista(c.from("banners").select("*").order("ordem")),
       lista(c.from("conquistas").select("*").order("ordem")),
@@ -104,6 +105,7 @@ const API = {
     DB.cursos      = cursos.map(deCurso);
     DB.espacos     = espacos.map(deEspaco);
     DB.posts       = mensagens.map(deMensagem);
+    aplicarReacoes(DB.posts, reacoes, eu);
     DB.eventos     = eventos.map(deEvento);
     DB.banners     = banners.map(deBanner);
     DB.conquistas  = conquistas.map(deConquista);
@@ -180,6 +182,22 @@ const API = {
     const linhas = filhos.map(f => MAPAS[entidade].para(f));
     const { error } = await this.cliente.from(tabela).insert(linhas);
     if(error) throw new Error(traduzirErroDados(error));
+  },
+
+  /* Um gosto é uma linha que existe ou não existe. */
+  async reagir(mensagemId, gostou){
+    const eu = this.utilizador.id;
+    const { error } = gostou
+      ? await this.cliente.from("reacoes").upsert({ mensagem_id:mensagemId, utilizador_id:eu })
+      : await this.cliente.from("reacoes").delete().eq("mensagem_id", mensagemId).eq("utilizador_id", eu);
+    if(error) throw new Error(traduzirErroDados(error));
+  },
+
+  /* O aluno pode mudar o próprio nome; o email é do administrador. */
+  async atualizarNome(nome){
+    const { error } = await this.pub().from("utilizadores").update({ nome }).eq("id", this.utilizador.id);
+    if(error) throw new Error(traduzirErroDados(error));
+    this.utilizador.nome = nome;
   },
 
   async guardarConfig(chave, valor){
@@ -325,6 +343,16 @@ function ehEquipa(){
   return API.utilizador && API.utilizador.perfil !== "aluno";
 }
 
+function aplicarReacoes(posts, reacoes, eu){
+  const contagem = {};
+  const minhas = new Set();
+  reacoes.forEach(r => {
+    contagem[r.mensagem_id] = (contagem[r.mensagem_id] || 0) + 1;
+    if(r.utilizador_id === eu) minhas.add(r.mensagem_id);
+  });
+  posts.forEach(p => { p.likes = contagem[p.id] || 0; p.curtido = minhas.has(p.id); });
+}
+
 function porOrdem(a, b){ return (a.ordem||0) - (b.ordem||0); }
 
 function tempoRelativo(iso){
@@ -463,4 +491,80 @@ function mostrarBarraDeFalha(motivo){
   `;
   document.body.appendChild(barra);
   document.getElementById("btn-recarregar-falha").addEventListener("click", () => location.reload());
+}
+
+
+/* ============================================================
+   Configuração
+   Está repartida por chaves para cada área poder ser gravada
+   sozinha, sem arrastar o resto.
+   ============================================================ */
+function salvarConfigGeral(){
+  return guardarChaveDeConfig("geral", {
+    bannerIntervalo: DB.config.bannerIntervalo,
+    mostrarCursosBloqueados: DB.config.mostrarCursosBloqueados,
+    alunosPublicam: DB.config.alunosPublicam,
+    abasAluno: DB.config.abasAluno
+  });
+}
+function salvarAparencia(){ return guardarChaveDeConfig("aparencia", DB.aparencia); }
+function salvarGamificacao(){ return guardarChaveDeConfig("gamificacao", DB.config.gamificacao); }
+function salvarCertificado(){ return guardarChaveDeConfig("certificado", DB.config.certificado); }
+function salvarIntegracoes(){ return guardarChaveDeConfig("integracoes", DB.config.integracoes); }
+
+function guardarChaveDeConfig(chave, valor){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  return API.guardarConfig(chave, valor).catch(erro => avisarQueNaoGuardou(erro));
+}
+
+/* ============================================================
+   O que o aluno faz enquanto estuda
+   ============================================================ */
+function salvarProgresso(aulaId, concluida){
+  if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
+  return API.marcarAula(aulaId, concluida).catch(erro => avisarQueNaoGuardou(erro));
+}
+function salvarPresenca(eventoId, confirmada){
+  if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
+  return API.marcarPresenca(eventoId, confirmada).catch(erro => avisarQueNaoGuardou(erro));
+}
+function salvarOnboarding(){
+  if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
+  return API.guardar("onboarding", estado.onboarding || {}).catch(erro => avisarQueNaoGuardou(erro));
+}
+function salvarPerfil(){
+  if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
+  return API.guardar("perfil", {
+    fotoUrl: estado.fotoUrl, tema: estado.tema,
+    streakDias: estado.streakDias, notificacoes: estado.notificacoes
+  }).catch(erro => avisarQueNaoGuardou(erro));
+}
+
+function salvarReacao(mensagemId, gostou){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  return API.reagir(mensagemId, gostou).catch(erro => avisarQueNaoGuardou(erro));
+}
+function salvarNome(nome){
+  if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
+  return API.atualizarNome(nome).catch(erro => avisarQueNaoGuardou(erro));
+}
+
+
+/* ============================================================
+   O que pertence ao CRM
+   Membros, planos, turmas e ofertas sao do Kingdom Dashboard. A
+   academia le-os, nao os escreve: duas listas do mesmo acabam sempre
+   a divergir. Estes ecras mostram o que la esta e mandam editar la.
+   ============================================================ */
+const URL_CRM = "https://kingdom-dashboard.vercel.app";
+
+function soNoCRM(oQue){
+  if(modoDemonstracao()) return false;
+  confirmarAcao({
+    titulo: oQue + " vivem no Kingdom Dashboard",
+    mensagem: `Para a academia e o teu CRM não ficarem com duas listas diferentes, ${oQue.toLowerCase()} são geridos num só lugar. Cria ou altera lá, e aqui aparece no próximo carregamento.`,
+    textoConfirmar: "Abrir o Dashboard",
+    aoConfirmar: () => window.open(URL_CRM, "_blank", "noopener")
+  });
+  return true;
 }

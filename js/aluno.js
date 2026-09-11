@@ -403,7 +403,7 @@ function renderAula(cursoId, aulaId){
   document.getElementById("btn-concluir").addEventListener("click", () => {
     const antes = badgesDesbloqueados();
     estado.progresso[aula.id] = !estado.progresso[aula.id];
-    guardarEstado();
+    salvarProgresso(aula.id, estado.progresso[aula.id]);
     const depois = badgesDesbloqueados();
     atualizarSidebarGlobal();
     renderAula(curso.id, aula.id);
@@ -542,7 +542,7 @@ function guardarAvaliacao(curso, aula, campos){
     DB.avaliacoes.push(registo);
   }
   Object.assign(registo, campos);
-  guardarDB();
+  salvar("avaliacao", registo);
 }
 
 /* ---------------- Comunidade ---------------- */
@@ -732,7 +732,7 @@ function renderFeedPosts(){
     const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-like"));
     post.curtido = !post.curtido;
     post.likes += post.curtido ? 1 : -1;
-    guardarDB();
+    salvarReacao(post.id, post.curtido);
     renderFeedPosts();
   }));
   feed.querySelectorAll("[data-responder]").forEach(el => el.addEventListener("click", () => {
@@ -971,7 +971,7 @@ function renderCalendario(){
   document.querySelectorAll("#content-calendario [data-confirmar]").forEach(el => el.addEventListener("click", () => {
     const id = el.getAttribute("data-confirmar");
     estado.presencasConfirmadas[id] = !estado.presencasConfirmadas[id];
-    guardarEstado();
+    salvarPresenca(id, estado.presencasConfirmadas[id]);
     renderCalendario();
     if(estado.presencasConfirmadas[id]) mostrarToast("Presença confirmada!");
   }));
@@ -1103,7 +1103,7 @@ function renderDefinicoes(){
     const leitor = new FileReader();
     leitor.onload = ev => {
       estado.fotoUrl = ev.target.result;
-      guardarEstado();
+      salvarPerfil();
       atualizarSidebarGlobal();
       renderDefinicoes();
       mostrarToast("Foto de perfil atualizada");
@@ -1113,7 +1113,7 @@ function renderDefinicoes(){
   const btnRemoverFoto = document.getElementById("btn-remover-foto");
   if(btnRemoverFoto) btnRemoverFoto.addEventListener("click", () => {
     estado.fotoUrl = null;
-    guardarEstado();
+    salvarPerfil();
     atualizarSidebarGlobal();
     renderDefinicoes();
   });
@@ -1123,9 +1123,10 @@ function renderDefinicoes(){
     if(novoNome){
       estado.nome = novoNome;
       const membro = membroAtual();
-      if(membro){ membro.nome = novoNome; guardarDB(); }
+      if(membro) membro.nome = novoNome;
+      salvarNome(novoNome);
     }
-    guardarEstado();
+    salvarPerfil();
 
     const passAtual = document.getElementById("input-pass-atual").value;
     const passNova = document.getElementById("input-pass-nova").value;

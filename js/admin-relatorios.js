@@ -298,14 +298,16 @@ function renderAdminIA(){
   if(aplicar) aplicar.addEventListener("click", () => {
     const curso = cursoPorId(cursoId);
     if(!curso) return;
-    curso.descricao = document.getElementById("texto-ia").value.trim();
-    guardarDB();
+    /* O campo que a interface mostra é o subtítulo — era aí que isto
+       tinha de escrever. */
+    curso.subtitulo = document.getElementById("texto-ia").value.trim();
+    salvar("curso", curso);
     mostrarToast(`Descrição de "${curso.titulo}" atualizada`);
   });
 
   const publicar = document.getElementById("btn-publicar-ia");
   if(publicar) publicar.addEventListener("click", () => {
-    DB.posts.unshift({
+    const mensagem = {
       id: novoId("post"),
       espacoId: (espacosAtivos()[0]||{id:"geral"}).id,
       autor: DB.aparencia.nomeEscola,
@@ -314,8 +316,9 @@ function renderAdminIA(){
       tempo: "agora",
       texto: document.getElementById("texto-ia").value.trim(),
       likes: 0, comentarios: 0, fixado: true, oculto: false
-    });
-    guardarDB();
+    };
+    DB.posts.unshift(mensagem);
+    salvar("mensagem", mensagem);
     mostrarToast("Publicado na comunidade, já fixado");
   });
 }

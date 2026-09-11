@@ -101,6 +101,7 @@ function editarMembro(id){
     ],
     valores: membro || { papel:"aluno", acesso:"ativo", planoId:(DB.planos[0]||{}).id, membroDesde:new Date().toISOString().slice(0,10) },
     aoGuardar: v => {
+      if(soNoCRM("Os membros")) return false;
       const repetido = DB.membros.find(m => (m.email||"").toLowerCase()===v.email.toLowerCase() && m.id!==(membro||{}).id);
       if(repetido){ mostrarToast("Já existe um membro com esse email"); return false; }
       if(membro) Object.assign(membro, v);
@@ -114,6 +115,7 @@ function editarMembro(id){
 }
 
 function apagarMembro(id){
+  if(soNoCRM("Os membros")) return;
   const membro = DB.membros.find(m=>m.id===id);
   confirmarAcao({
     titulo: "Remover membro",
@@ -198,14 +200,16 @@ function criarConvite(){
     aoGuardar: v => {
       if(membroPorEmail(v.email)){ mostrarToast("Esse email já é membro"); return false; }
       DB.convites = DB.convites || [];
-      DB.convites.unshift({
+      const convite = {
         codigo: novoId("cv"),
+        id: novoId("cv"),
         email: v.email,
         planoId: v.planoId,
         estado: "pendente",
         criadoEm: new Date().toISOString().slice(0,10)
-      });
-      guardarDB();
+      };
+      DB.convites.unshift(convite);
+      salvar("convite", { id:convite.id, email:v.email, ofertaId:null, cursos:[] });
       renderAdminConvites();
       mostrarToast("Convite criado");
     }
@@ -220,7 +224,7 @@ function revogarConvite(codigo){
     textoConfirmar: "Revogar",
     aoConfirmar: () => {
       DB.convites = DB.convites.filter(c=>c.codigo!==codigo);
-      guardarDB();
+      remover("convite", convite.id || codigo);
       renderAdminConvites();
       mostrarToast("Convite revogado");
     }
@@ -351,6 +355,7 @@ function editarPlano(id){
     ],
     valores: plano || { periodo:"mês", acessoTotal:true, ativo:true, cursos:[] },
     aoGuardar: v => {
+      if(soNoCRM("Os planos")) return false;
       if(plano) Object.assign(plano, v);
       else DB.planos.push({ id:novoId("plano"), ...v });
       guardarDB();
@@ -361,6 +366,7 @@ function editarPlano(id){
 }
 
 function apagarPlano(id){
+  if(soNoCRM("Os planos")) return;
   const plano = planoPorId(id);
   const emUso = DB.membros.filter(m=>m.planoId===id).length;
   if(emUso){ mostrarToast(`Move primeiro os ${emUso} membro(s) deste plano`); return; }

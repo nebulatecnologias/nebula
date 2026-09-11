@@ -51,7 +51,7 @@ function renderAdminAparencia(){
   document.getElementById("card-tema").addEventListener("click", () => {
     DB.aparencia.temaPadrao = a.temaPadrao==="light" ? "dark" : "light";
     estado.tema = null;                      // volta a seguir o tema por omissão
-    guardarDB(); guardarEstado();
+    salvarAparencia(); salvarPerfil();
     aplicarAparencia();
     renderAdminAparencia();
     mostrarToast("Tema por omissão: " + (DB.aparencia.temaPadrao==="light" ? "claro" : "escuro"));
@@ -76,7 +76,7 @@ function editarMarca(){
     aoGuardar: v => {
       Object.assign(DB.aparencia, v);
       estado.tema = null;
-      guardarDB(); guardarEstado();
+      salvarAparencia(); salvarPerfil();
       aplicarAparencia();
       renderAdminAparencia();
       mostrarToast("Identidade atualizada");
@@ -165,16 +165,16 @@ function renderAdminConfig(){
 
   document.getElementById("tg-publicar").addEventListener("click", () => {
     DB.config.alunosPublicam = DB.config.alunosPublicam === false;
-    guardarDB(); renderAdminConfig();
+    salvarConfigGeral(); renderAdminConfig();
     mostrarToast(DB.config.alunosPublicam ? "Os alunos voltam a poder publicar" : "O feed passa a ser só de leitura");
   });
   document.getElementById("tg-bloqueados").addEventListener("click", () => {
     DB.config.mostrarCursosBloqueados = DB.config.mostrarCursosBloqueados === false;
-    guardarDB(); renderAdminConfig();
+    salvarConfigGeral(); renderAdminConfig();
   });
   document.getElementById("sel-intervalo").addEventListener("change", e => {
     DB.config.bannerIntervalo = Number(e.target.value);
-    guardarDB();
+    salvarConfigGeral();
     mostrarToast("Os banners passam a mudar a cada " + DB.config.bannerIntervalo + " segundos");
   });
 
@@ -186,7 +186,13 @@ function renderAdminConfig(){
     titulo: "Repor a demonstração",
     mensagem: "Todo o conteúdo que criaste — cursos, membros, eventos, banners — volta ao estado original. Não há forma de desfazer.",
     textoConfirmar: "Repor tudo",
-    aoConfirmar: () => { reporDB(); location.reload(); }
+    aoConfirmar: () => {
+      if(!modoDemonstracao()){
+        mostrarToast("Repor apagaria o conteúdo real de toda a academia. Apaga curso a curso em Conteúdos.");
+        return;
+      }
+      reporDB(); location.reload();
+    }
   }));
 }
 
@@ -196,7 +202,7 @@ function alternarAba(view){
   const abas = new Set(DB.config.abasAluno || []);
   abas.has(view) ? abas.delete(view) : abas.add(view);
   DB.config.abasAluno = NAV_ALUNO.flatMap(g=>g.itens).map(i=>i.view).filter(v => abas.has(v));
-  guardarDB();
+  salvarConfigGeral();
   renderAdminConfig();
 }
 
@@ -230,6 +236,10 @@ function importarConfiguracao(ficheiro){
       mensagem: `Vais substituir o conteúdo atual por ${novo.cursos.length} cursos e ${(novo.membros||[]).length} membros do ficheiro.`,
       textoConfirmar: "Importar",
       aoConfirmar: () => {
+        if(!modoDemonstracao()){
+          mostrarToast("A importação em massa ainda não está ligada ao servidor. Cria o conteúdo no painel, ou fala comigo.");
+          return;
+        }
         DB = Object.assign(dbPadrao(), novo);
         normalizarDB();
         guardarDB();

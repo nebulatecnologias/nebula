@@ -119,7 +119,7 @@ function ligarAcoesModeracao(){
   document.querySelectorAll("#content-admin [data-ocultar-av]").forEach(b => b.addEventListener("click", () => {
     const a = DB.avaliacoes.find(x=>x.id===b.getAttribute("data-ocultar-av"));
     a.oculto = !a.oculto;
-    guardarDB(); renderAdminComentarios();
+    salvar("avaliacao", a); renderAdminComentarios();
     mostrarToast(a.oculto ? "Avaliação ocultada" : "Avaliação visível outra vez");
   }));
   document.querySelectorAll("#content-admin [data-apagar-av]").forEach(b => b.addEventListener("click", () => {
@@ -129,20 +129,20 @@ function ligarAcoesModeracao(){
       mensagem: `A avaliação de ${a.nome} desaparece definitivamente.`,
       aoConfirmar: () => {
         DB.avaliacoes = DB.avaliacoes.filter(x=>x.id!==a.id);
-        guardarDB(); renderAdminComentarios(); mostrarToast("Avaliação apagada");
+        remover("avaliacao", a.id); renderAdminComentarios(); mostrarToast("Avaliação apagada");
       }
     });
   }));
   document.querySelectorAll("#content-admin [data-fixar]").forEach(b => b.addEventListener("click", () => {
     const p = DB.posts.find(x=>String(x.id)===b.getAttribute("data-fixar"));
     p.fixado = !p.fixado;
-    guardarDB(); renderAdminComentarios();
+    salvar("mensagem", p); renderAdminComentarios();
     mostrarToast(p.fixado ? "Publicação fixada no topo" : "Publicação desafixada");
   }));
   document.querySelectorAll("#content-admin [data-ocultar-post]").forEach(b => b.addEventListener("click", () => {
     const p = DB.posts.find(x=>String(x.id)===b.getAttribute("data-ocultar-post"));
     p.oculto = !p.oculto;
-    guardarDB(); renderAdminComentarios();
+    salvar("mensagem", p); renderAdminComentarios();
     mostrarToast(p.oculto ? "Publicação ocultada" : "Publicação visível outra vez");
   }));
   document.querySelectorAll("#content-admin [data-apagar-post]").forEach(b => b.addEventListener("click", () => {
@@ -152,7 +152,7 @@ function ligarAcoesModeracao(){
       mensagem: `A publicação de ${p.autor} desaparece da comunidade.`,
       aoConfirmar: () => {
         DB.posts = DB.posts.filter(x=>x.id!==p.id);
-        guardarDB(); renderAdminComentarios(); mostrarToast("Publicação apagada");
+        remover("mensagem", p.id); renderAdminComentarios(); mostrarToast("Publicação apagada");
       }
     });
   }));
@@ -219,9 +219,10 @@ function editarEspaco(id){
     ],
     valores: espaco || { ativo:true, soAdminPublica:false, cor:"#ff5a1f" },
     aoGuardar: v => {
-      if(espaco) Object.assign(espaco, v);
-      else DB.espacos.push({ id:novoId("esp"), ...v });
-      guardarDB();
+      const alvo = espaco || { id:novoId("esp"), ordem:DB.espacos.length + 1 };
+      Object.assign(alvo, v);
+      if(!espaco) DB.espacos.push(alvo);
+      salvar("espaco", alvo);
       renderAdminComunidades();
       mostrarToast(espaco ? "Espaço atualizado" : "Espaço criado");
     }
@@ -237,7 +238,7 @@ function apagarEspaco(id){
     mensagem: `"${espaco.nome}" deixa de aparecer na Comunidade.`,
     aoConfirmar: () => {
       DB.espacos = DB.espacos.filter(e=>e.id!==id);
-      guardarDB();
+      remover("espaco", id);
       renderAdminComunidades();
       mostrarToast("Espaço apagado");
     }
@@ -256,15 +257,16 @@ function publicarComoAcademia(){
     valores: { espacoId:"avisos", fixado:true },
     textoGuardar: "Publicar",
     aoGuardar: v => {
-      DB.posts.unshift({
+      const mensagem = {
         id: novoId("post"),
         autor: DB.aparencia.nomeEscola,
         iniciais: iniciais(DB.aparencia.nomeEscola),
         tempo: "agora", categoria: null,
         espacoId: v.espacoId, fixado: v.fixado, oculto: false,
         texto: v.texto, likes: 0, curtido: false
-      });
-      guardarDB();
+      };
+      DB.posts.unshift(mensagem);
+      salvar("mensagem", mensagem);
       renderAdminComunidades();
       mostrarToast("Publicado na comunidade");
     }
