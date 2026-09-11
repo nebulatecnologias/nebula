@@ -25,9 +25,15 @@ const API = {
   pub(){ return this.cliente.schema("public"); },
 
   /* ---------------- Autenticação ---------------- */
+  /* Quem foi convidado entra pela primeira vez sem password nenhuma.
+     Essa marca fica na conta, não no endereço: assim não se perde num
+     redireccionamento nem se apaga ao recarregar a página. */
+  precisaDePassword: false,
+
   async sessao(){
     const { data } = await this.cliente.auth.getSession();
     if(!data.session) return null;
+    this.precisaDePassword = !!(data.session.user.user_metadata || {}).precisa_password;
     return this.carregarUtilizador(data.session.user.id);
   },
 
@@ -63,8 +69,12 @@ const API = {
   },
 
   async definirPassword(nova){
-    const { error } = await this.cliente.auth.updateUser({ password: nova });
+    const { error } = await this.cliente.auth.updateUser({
+      password: nova,
+      data: { precisa_password: false }        // já tem: deixa de ser pedida
+    });
     if(error) throw new Error(traduzirErroAuth(error));
+    this.precisaDePassword = false;
   },
 
   /* ---------------- Leitura ---------------- */

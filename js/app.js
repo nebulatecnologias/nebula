@@ -91,6 +91,15 @@ async function arrancar(){
   try {
     const utilizador = await API.sessao();
     if(!utilizador){ aplicarAparencia(); mostrarEcra("login"); return; }
+    /* Convidado que ainda não escolheu password: não entra sem a
+       escolher, ou fica com uma conta em que nunca mais consegue
+       entrar por si. A marca está na conta, não no endereço. */
+    if(API.precisaDePassword){
+      aplicarAparencia();
+      mostrarEcra("login");
+      pedirNovaPassword(true);
+      return;
+    }
     await entrarNaArea();
   } catch(erro){
     aplicarAparencia();
