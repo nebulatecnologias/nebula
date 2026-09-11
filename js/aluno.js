@@ -120,7 +120,7 @@ function renderCourseCardHTML(c){
   const p = progressoCurso(c);
   const cat = categoriaDe(c.categoria);
   return `<div class="card course-card" data-curso="${c.id}">
-    <div class="course-cover">
+    <div class="course-cover ${c.capa?"com-capa":""}" style="${c.capa?`background-image:url(${c.capa})`:""}">
       <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
       ${p.pct===100 ? '<span class="cover-badge done">CONCLUÍDO</span>' : ""}
     </div>
@@ -180,7 +180,7 @@ function renderCursosBloqueados(){
         const cat = categoriaDe(c.categoria);
         const oferta = ofertaParaCurso(c.id);
         return `<div class="card course-card bloqueado">
-          <div class="course-cover">
+          <div class="course-cover ${c.capa?"com-capa":""}" style="${c.capa?`background-image:url(${c.capa})`:""}">
             <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
             <span class="cadeado">${ICONS.cadeado}</span>
           </div>
@@ -309,15 +309,19 @@ function renderAula(cursoId, aulaId){
             </button>
           </div>
         </div>
-        <p class="aula-desc">${aula.descricao}</p>
-        <div class="card avaliacao-aula">
+        <p class="aula-desc">${aula.descricao||""}</p>
+        ${(aula.conteudo||"").trim() ? `<div class="card conteudo-aula">${aula.conteudo}</div>` : ""}
+        ${materiaisHTML(aula)}
+        ${quizHTML(aula)}
+        ${aula.semComentarios ? "" : `<div class="card avaliacao-aula">
           <h4>Avalia esta aula</h4>
           <div class="estrelas" id="estrelas-aula">
             ${[1,2,3,4,5].map(n => `<button class="estrela" type="button" data-estrela="${n}">${ICONS.star}</button>`).join("")}
           </div>
           <textarea id="comentario-aula" placeholder="Deixa um comentário sobre esta aula (opcional)...">${(minhaAvaliacao(aula.id)||{}).comentario || ""}</textarea>
           <button class="btn btn-primary btn-sm" id="btn-enviar-avaliacao">Enviar avaliação</button>
-        </div>
+          ${curso.moderacao ? '<p class="hint" style="margin:10px 0 0;">Os comentários deste curso são revistos antes de aparecerem.</p>' : ""}
+        </div>`}
         <div class="nav-pager">
           <div class="pager-btn prev ${anterior ? "" : "disabled"}" id="pager-anterior">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -365,26 +369,101 @@ function renderAula(cursoId, aulaId){
   }).join("");
   lista.querySelectorAll(".mini-aula").forEach(el => el.addEventListener("click", () => irPara("aula", curso.id, el.getAttribute("data-aula"))));
 
+  ligarMateriais(aula);
+  ligarQuiz(aula);
+
+  /* O bloco de avaliação pode estar desligado nesta aula. */
   const estrelasEl = document.getElementById("estrelas-aula");
-  const estrelaAtual = () => (minhaAvaliacao(aula.id)||{}).estrelas || 0;
-  function pintarEstrelas(valor){ estrelasEl.querySelectorAll(".estrela").forEach(btn => btn.classList.toggle("ativa", Number(btn.getAttribute("data-estrela"))<=valor)); }
-  pintarEstrelas(estrelaAtual());
-  estrelasEl.querySelectorAll(".estrela").forEach(btn => {
-    const n = Number(btn.getAttribute("data-estrela"));
-    btn.addEventListener("mouseenter", () => pintarEstrelas(n));
-    btn.addEventListener("mouseleave", () => pintarEstrelas(estrelaAtual()));
-    btn.addEventListener("click", () => {
-      guardarAvaliacao(curso, aula, { estrelas:n });
-      pintarEstrelas(n);
+  if(estrelasEl){
+    const estrelaAtual = () => (minhaAvaliacao(aula.id)||{}).estrelas || 0;
+    const pintarEstrelas = valor => estrelasEl.querySelectorAll(".estrela").forEach(btn => btn.classList.toggle("ativa", Number(btn.getAttribute("data-estrela"))<=valor));
+    pintarEstrelas(estrelaAtual());
+    estrelasEl.querySelectorAll(".estrela").forEach(btn => {
+      const n = Number(btn.getAttribute("data-estrela"));
+      btn.addEventListener("mouseenter", () => pintarEstrelas(n));
+      btn.addEventListener("mouseleave", () => pintarEstrelas(estrelaAtual()));
+      btn.addEventListener("click", () => {
+        guardarAvaliacao(curso, aula, { estrelas:n });
+        pintarEstrelas(n);
+      });
     });
-  });
-  document.getElementById("btn-enviar-avaliacao").addEventListener("click", () => {
-    const comentario = document.getElementById("comentario-aula").value.trim();
-    guardarAvaliacao(curso, aula, { comentario });
-    mostrarToast("Avaliação enviada. Obrigado pelo feedback!");
-  });
+    document.getElementById("btn-enviar-avaliacao").addEventListener("click", () => {
+      const comentario = document.getElementById("comentario-aula").value.trim();
+      guardarAvaliacao(curso, aula, { comentario });
+      mostrarToast(curso.moderacao
+        ? "Avaliação enviada. Aparece assim que a mentoria a aprovar."
+        : "Avaliação enviada. Obrigado pelo feedback!");
+    });
+  }
 
   atualizarSidebarGlobal();
+}
+
+/* ---------------- Materiais e quiz da aula ---------------- */
+function materiaisHTML(aula){
+  const fs = aula.ficheiros || [];
+  if(!fs.length) return "";
+  return `
+    <div class="card materiais-aula">
+      <h4>Materiais desta aula</h4>
+      ${fs.map((f,i) => `
+        <button class="material-linha" data-material="${i}">
+          ${ICONS.ficheiro}
+          <span class="material-info"><strong>${f.nome}</strong><span class="sub-celula">${f.tamanho||"Descarregar"}</span></span>
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        </button>`).join("")}
+    </div>`;
+}
+
+function ligarMateriais(aula){
+  document.querySelectorAll("#content-aula [data-material]").forEach(b => b.addEventListener("click", () => {
+    const f = (aula.ficheiros||[])[Number(b.getAttribute("data-material"))];
+    if(!f) return;
+    const a = document.createElement("a");
+    a.href = f.url; a.download = f.nome; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  }));
+}
+
+function quizHTML(aula){
+  const q = aula.quiz || [];
+  if(!q.length) return "";
+  return `
+    <div class="card quiz-aula" id="quiz-aula">
+      <h4>Testa o que ficou</h4>
+      ${q.map((p,i) => `
+        <div class="quiz-pergunta-aluno" data-pergunta="${i}">
+          <p class="quiz-enunciado"><span class="quiz-num">${i+1}</span>${p.pergunta}</p>
+          <div class="quiz-opcoes-aluno">
+            ${p.opcoes.map((o,j) => `<button class="quiz-opcao-aluno" data-resposta="${i}-${j}">${o}</button>`).join("")}
+          </div>
+        </div>`).join("")}
+      <div class="quiz-resultado hidden" id="quiz-resultado"></div>
+    </div>`;
+}
+
+function ligarQuiz(aula){
+  const bloco = document.getElementById("quiz-aula");
+  if(!bloco) return;
+  const respostas = {};
+  bloco.querySelectorAll("[data-resposta]").forEach(b => b.addEventListener("click", () => {
+    const [i,j] = b.getAttribute("data-resposta").split("-").map(Number);
+    const pergunta = aula.quiz[i];
+    if(respostas[i] !== undefined) return;             // uma resposta por pergunta
+    respostas[i] = j;
+    const linha = bloco.querySelector(`[data-pergunta="${i}"]`);
+    linha.querySelectorAll(".quiz-opcao-aluno").forEach((op, k) => {
+      op.classList.toggle("certa", k === pergunta.certa);
+      op.classList.toggle("errada", k === j && j !== pergunta.certa);
+      op.disabled = true;
+    });
+    if(Object.keys(respostas).length === aula.quiz.length){
+      const certas = aula.quiz.filter((p,idx) => respostas[idx] === p.certa).length;
+      const res = document.getElementById("quiz-resultado");
+      res.className = "quiz-resultado " + (certas === aula.quiz.length ? "tudo-certo" : "");
+      res.textContent = `${certas} de ${aula.quiz.length} certas.` + (certas === aula.quiz.length ? " Perfeito." : " Revê a aula e tenta de novo.");
+    }
+  }));
 }
 
 /* Cria ou atualiza a avaliação desta aula feita por quem está na sessão. */
@@ -401,7 +480,8 @@ function guardarAvaliacao(curso, aula, campos){
       estrelas: 0,
       comentario: "",
       data: new Date().toISOString().slice(0,10),
-      oculto: false
+      /* Curso com moderação ligada: só aparece depois de aprovado. */
+      oculto: curso.moderacao === true
     };
     DB.avaliacoes.push(registo);
   }

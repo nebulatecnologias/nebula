@@ -2,10 +2,17 @@
    Administração › Conteúdos
    Cursos, categorias, módulos e aulas — tudo o que o aluno vê
    em "Meus cursos" e no leitor de vídeo.
+
+   Curso e aula têm página própria em vez de gaveta: são
+   formulários longos, com capa, conteúdo e materiais.
    ============================================================ */
 
 function contarAulas(curso){ return curso.modulos.reduce((s,m)=>s+m.aulas.length, 0); }
 function cursoPublicado(c){ return c.publicado !== false; }
+function siglaSugerida(titulo){
+  return (titulo||"").split(/\s+/).filter(Boolean).map(p=>p[0]).join("").slice(0,3).toUpperCase();
+}
+function moduloPorIdNoCurso(curso, id){ return curso.modulos.find(m=>m.id===id); }
 
 /* ---------------- Ecrã principal ---------------- */
 function renderAdminConteudos(){
@@ -36,7 +43,7 @@ function renderAdminConteudos(){
     renderTabelaConteudos();
   });
   document.getElementById("btn-novo-conteudo").addEventListener("click", () => {
-    if((estado.abaConteudos||"cursos")==="cursos") editarCurso(null); else editarCategoria(null);
+    if((estado.abaConteudos||"cursos")==="cursos") abrirFormCurso(null); else editarCategoria(null);
   });
 
   renderTabelaConteudos();
@@ -61,19 +68,28 @@ function tabelaCursosAdminHTML(){
       </div>
       <div class="table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Curso</th><th>Categoria</th><th>Módulos</th><th>Aulas</th><th>Estado</th><th></th></tr></thead>
+          <thead><tr><th>Curso</th><th>Categoria</th><th class="num">Módulos</th><th class="num">Aulas</th><th>Vitrine</th><th>Estado</th><th></th></tr></thead>
           <tbody>
             ${lista.length ? lista.map(c => {
               const cat = categoriaDe(c.categoria);
               return `<tr>
-                <td><button class="ligacao-tabela" data-abrir="${c.id}">${c.titulo}</button><div class="sub-celula">${c.subtitulo||""}</div></td>
+                <td>
+                  <div class="cell-curso">
+                    <span class="mini-capa" style="${c.capa?`background-image:url(${c.capa})`:""}">${c.capa?"":(c.sigla||siglaSugerida(c.titulo))}</span>
+                    <span>
+                      <button class="ligacao-tabela" data-abrir="${c.id}">${c.titulo}</button>
+                      <span class="sub-celula">${c.subtitulo||""}</span>
+                    </span>
+                  </div>
+                </td>
                 <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
                 <td class="num">${c.modulos.length}</td>
                 <td class="num">${contarAulas(c)}</td>
+                <td><span class="pill ${c.vitrine!==false?"pill-ativo":"pill-inativo"}">${c.vitrine!==false?"Na vitrine":"Escondido"}</span></td>
                 <td><span class="pill ${cursoPublicado(c)?"pill-publicado":"pill-inativo"}">${cursoPublicado(c)?"Publicado":"Rascunho"}</span></td>
                 <td>${acoesLinha(c.id)}</td>
               </tr>`;
-            }).join("") : `<tr><td colspan="6"><div class="empty-note">Ainda não há cursos. Cria o primeiro em "Novo curso".</div></td></tr>`}
+            }).join("") : `<tr><td colspan="7"><div class="empty-note">Ainda não há cursos. Cria o primeiro em "Novo curso".</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -93,7 +109,7 @@ function tabelaCategoriasHTML(){
       </div>
       <div class="table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Categoria</th><th>Cor</th><th>Cursos</th><th></th></tr></thead>
+          <thead><tr><th>Categoria</th><th>Cor</th><th class="num">Cursos</th><th></th></tr></thead>
           <tbody>
             ${entradas.length ? entradas.map(([id,c]) => {
               const usados = DB.cursos.filter(x=>x.categoria===id).length;
@@ -116,35 +132,155 @@ function ligarAcoesConteudos(){
   document.querySelectorAll("#conteudos-tabela [data-abrir]").forEach(b =>
     b.addEventListener("click", () => irPara("admin-curso-editor", b.getAttribute("data-abrir"))));
   document.querySelectorAll("#conteudos-tabela [data-editar]").forEach(b =>
-    b.addEventListener("click", () => emCursos ? editarCurso(b.getAttribute("data-editar")) : editarCategoria(b.getAttribute("data-editar"))));
+    b.addEventListener("click", () => emCursos ? abrirFormCurso(b.getAttribute("data-editar")) : editarCategoria(b.getAttribute("data-editar"))));
   document.querySelectorAll("#conteudos-tabela [data-apagar]").forEach(b =>
     b.addEventListener("click", () => emCursos ? apagarCurso(b.getAttribute("data-apagar")) : apagarCategoria(b.getAttribute("data-apagar"))));
 }
 
-/* ---------------- Curso: criar / editar / apagar ---------------- */
-function editarCurso(id){
-  const curso = id ? cursoPorId(id) : null;
-  abrirDrawer({
-    titulo: curso ? "Editar curso" : "Novo curso",
-    subtitulo: "Aparece em “Meus cursos” na área do aluno.",
-    campos: [
-      { nome:"titulo", rotulo:"Título do curso", tipo:"texto", obrigatorio:true, placeholder:"ex: Mentalidade Inquebrável" },
-      { nome:"subtitulo", rotulo:"Descrição curta", tipo:"textarea", placeholder:"Uma frase que explique a promessa do curso." },
-      { nome:"categoria", rotulo:"Categoria", tipo:"select", opcoes:opcoesCategorias() },
-      { nome:"publicado", rotulo:"Publicado", tipo:"toggle", padrao:true, dica:"Se desligares, o curso deixa de aparecer para os alunos." }
-    ],
-    valores: curso ? { titulo:curso.titulo, subtitulo:curso.subtitulo, categoria:curso.categoria, publicado:cursoPublicado(curso) } : { publicado:true },
-    aoGuardar: v => {
-      if(curso){
-        Object.assign(curso, v);
-      } else {
-        DB.cursos.push({ id:novoId("curso"), titulo:v.titulo, subtitulo:v.subtitulo, categoria:v.categoria, publicado:v.publicado, modulos:[] });
-      }
-      guardarDB();
-      renderAdminConteudos();
-      mostrarToast(curso ? "Curso atualizado" : "Curso criado");
-    }
+/* ============================================================
+   Página do curso: Novo curso / Editar curso
+   ============================================================ */
+function abrirFormCurso(id){
+  estado.cursoNoForm = id || null;
+  irPara("admin-curso-form");
+}
+
+function renderFormCurso(){
+  const curso = estado.cursoNoForm ? cursoPorId(estado.cursoNoForm) : null;
+  const v = curso || { vitrine:true, moderacao:false, publicado:true, certificado:true };
+
+  document.getElementById("content-admin").innerHTML = `
+    <div class="form-page">
+      <div class="form-topo">
+        <h1>${curso ? "Editar Curso" : "Novo Curso"}</h1>
+      </div>
+
+      <div class="form-secao">
+        <div class="form-secao-desc">
+          <h3>Detalhes do Curso</h3>
+          <p>Escolhe um nome atrativo, insere a URL da página de vendas e descreve de forma clara e impactante a promessa única do curso.</p>
+        </div>
+        <div class="card form-card">
+          <div class="campo-linha nome-sigla">
+            <div class="field">
+              <label>Nome do curso</label>
+              <input type="text" id="f-titulo" value="${(v.titulo||"").replace(/"/g,"&quot;")}" placeholder="Escolhe um nome que atraia os teus compradores">
+            </div>
+            <div class="field">
+              <label>Sigla</label>
+              <input type="text" id="f-sigla" maxlength="4" value="${v.sigla||""}" placeholder="PRO">
+            </div>
+          </div>
+          <div class="field">
+            <label>URL da página de vendas</label>
+            <input type="url" id="f-urlVendas" value="${v.urlVendas||""}" placeholder="https://meusite.co.mz/pagina-de-vendas">
+          </div>
+          <div class="field">
+            <label>Descreve a promessa do teu curso</label>
+            <textarea id="f-subtitulo" rows="3" placeholder="Explica o produto e os benefícios de forma clara e breve.">${v.subtitulo||""}</textarea>
+          </div>
+          <div class="field">
+            <label>Categoria na vitrine</label>
+            <div class="select-wrap" style="display:block;">
+              <select id="f-categoria" style="width:100%;">
+                ${opcoesCategorias().map(o=>`<option value="${o.valor}" ${o.valor===v.categoria?"selected":""}>${o.rotulo}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          ${checkCardHTML("f-vitrine", v.vitrine!==false, "Mostrar curso na vitrine de todos os alunos", "Incentiva a compra do teu conteúdo para alunos ainda não matriculados.")}
+          ${checkCardHTML("f-moderacao", !!v.moderacao, "Ativar moderação de comentários", "Revê manualmente todos os comentários antes da publicação.")}
+        </div>
+      </div>
+
+      <div class="form-secao">
+        <div class="form-secao-desc">
+          <h3>Imagem de capa</h3>
+          <p>Insere a imagem de capa conforme a dimensão de exibição na vitrine. Para ecrãs retina, usa imagens com o dobro da resolução para garantir nitidez.</p>
+        </div>
+        <div class="card form-card">
+          ${uploadHTML("capa", v.capa, "Usa uma imagem com 430 x 215 pixels ou 300 x 420 para posters verticais.", "grande")}
+        </div>
+      </div>
+
+      <div class="form-secao">
+        <div class="form-secao-desc">
+          <h3>Publicação</h3>
+          <p>Um curso em rascunho fica invisível para os alunos, mesmo para quem o tem no plano.</p>
+        </div>
+        <div class="card form-card">
+          <div class="toggle-row">
+            <div><div class="t-title">Curso publicado</div><div class="t-sub">Desligado, desaparece do catálogo, do progresso e das conquistas.</div></div>
+            <div class="toggle ${v.publicado!==false?"on":""}" id="f-publicado"><div class="knob"></div></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="t-title">Emite certificado</div><div class="t-sub">A percentagem de conclusão exigida define-se em Certificados.</div></div>
+            <div class="toggle ${v.certificado!==false?"on":""}" id="f-certificado"><div class="knob"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-rodape">
+        ${curso ? `<button class="btn btn-perigo-suave" id="btn-apagar-curso-form">Apagar curso</button>` : ""}
+        <div class="form-rodape-acoes">
+          <button class="btn btn-texto" id="btn-cancelar-curso">Cancelar</button>
+          <button class="btn btn-primary" id="btn-guardar-curso">${curso ? "Guardar" : "Criar curso"}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  ligarCheckCards();
+  ligarUploads();
+  document.querySelectorAll("#content-admin .toggle").forEach(t => t.addEventListener("click", () => t.classList.toggle("on")));
+
+  /* A sigla escreve-se sozinha enquanto ninguém lhe tocar. */
+  const campoSigla = document.getElementById("f-sigla");
+  document.getElementById("f-titulo").addEventListener("input", e => {
+    if(!campoSigla.dataset.tocado) campoSigla.value = siglaSugerida(e.target.value);
   });
+  campoSigla.addEventListener("input", () => { campoSigla.dataset.tocado = "1"; });
+
+  document.getElementById("btn-cancelar-curso").addEventListener("click", voltarDoFormCurso);
+  document.getElementById("btn-guardar-curso").addEventListener("click", guardarFormCurso);
+  const btnApagar = document.getElementById("btn-apagar-curso-form");
+  if(btnApagar) btnApagar.addEventListener("click", () => apagarCurso(curso.id));
+}
+
+function voltarDoFormCurso(){
+  if(estado.cursoNoForm && estado.cursoEditando === estado.cursoNoForm) irPara("admin-curso-editor", estado.cursoNoForm);
+  else irPara("admin-conteudos");
+}
+
+function guardarFormCurso(){
+  const titulo = document.getElementById("f-titulo").value.trim();
+  if(!titulo){ mostrarToast("Dá um nome ao curso."); return; }
+
+  const dados = {
+    titulo,
+    sigla: document.getElementById("f-sigla").value.trim().toUpperCase() || siglaSugerida(titulo),
+    urlVendas: document.getElementById("f-urlVendas").value.trim(),
+    subtitulo: document.getElementById("f-subtitulo").value.trim(),
+    categoria: document.getElementById("f-categoria").value,
+    capa: document.getElementById("valor-capa").value,
+    vitrine: document.getElementById("f-vitrine").classList.contains("marcado"),
+    moderacao: document.getElementById("f-moderacao").classList.contains("marcado"),
+    publicado: document.getElementById("f-publicado").classList.contains("on"),
+    certificado: document.getElementById("f-certificado").classList.contains("on")
+  };
+
+  const curso = estado.cursoNoForm ? cursoPorId(estado.cursoNoForm) : null;
+  if(curso){
+    Object.assign(curso, dados);
+    guardarDB();
+    mostrarToast("Curso atualizado");
+    irPara("admin-curso-editor", curso.id);
+  } else {
+    const novo = Object.assign({ id:novoId("curso"), modulos:[] }, dados);
+    DB.cursos.push(novo);
+    guardarDB();
+    mostrarToast("Curso criado. Agora cria o primeiro módulo.");
+    irPara("admin-curso-editor", novo.id);
+  }
 }
 
 function apagarCurso(id){
@@ -155,13 +291,13 @@ function apagarCurso(id){
     aoConfirmar: () => {
       DB.cursos = DB.cursos.filter(c=>c.id!==id);
       guardarDB();
-      renderAdminConteudos();
+      irPara("admin-conteudos");
       mostrarToast("Curso apagado");
     }
   });
 }
 
-/* ---------------- Categoria: criar / editar / apagar ---------------- */
+/* ---------------- Categoria ---------------- */
 function editarCategoria(id){
   const cat = id ? DB.categorias[id] : null;
   abrirDrawer({
@@ -201,108 +337,163 @@ function apagarCategoria(id){
 }
 
 /* ============================================================
-   Editor de um curso: módulos e aulas
+   Gestão de conteúdo: o curso, os seus módulos e as suas aulas
    ============================================================ */
 function renderAdminCursoEditor(cursoId){
   if(cursoId) estado.cursoEditando = cursoId;
   const curso = cursoPorId(estado.cursoEditando);
   if(!curso){ irPara("admin-conteudos"); return; }
   const cat = categoriaDe(curso.categoria);
+  const p = progressoCurso(curso);
+  const total = contarAulas(curso);
 
   document.getElementById("content-admin").innerHTML = `
     <div class="back-link" id="btn-voltar-conteudos"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Conteúdos</div>
-    <div class="page-head-flex">
-      <div class="page-head">
-        <span class="eyebrow" style="--c:${cat.cor}">${cat.nome.toUpperCase()}</span>
-        <h1>${curso.titulo}</h1>
-        <p class="desc">${curso.subtitulo||""}</p>
+    <div class="gestao-head">
+      <div>
+        <h2>Gestão de conteúdo</h2>
+        <p>Edita os detalhes, cria módulos e organiza as aulas deste curso.</p>
       </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-secondary" id="btn-editar-curso">Editar curso</button>
-        <button class="btn btn-primary" id="btn-novo-modulo">+ Novo módulo</button>
+      <div class="gestao-acoes">
+        <button class="btn btn-secondary" id="btn-editar-curso">${ICONS.lapis} Editar curso</button>
+        <button class="btn btn-secondary" id="btn-novo-modulo">+ Novo módulo</button>
+        <button class="btn btn-primary" id="btn-novo-conteudo-curso">+ Novo conteúdo</button>
       </div>
     </div>
-    <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon">${ICONS.layers}</div><div class="stat-label">Módulos</div><div class="stat-value">${curso.modulos.length}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.book}</div><div class="stat-label">Aulas</div><div class="stat-value">${contarAulas(curso)}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.chart}</div><div class="stat-label">Estado</div><div class="stat-value" style="font-size:20px;">${cursoPublicado(curso)?"Publicado":"Rascunho"}</div></div>
+
+    <div class="gestao-grid">
+      <div class="curso-resumo">
+        <div class="curso-resumo-capa" style="${curso.capa?`background-image:url(${curso.capa})`:""}">
+          ${curso.capa ? "" : `<span class="sigla-grande">${curso.sigla||siglaSugerida(curso.titulo)}</span>`}
+          ${cursoPublicado(curso) ? "" : '<span class="cover-badge">RASCUNHO</span>'}
+        </div>
+        <h3>${curso.titulo}</h3>
+        <p class="curso-resumo-sub">${curso.subtitulo||"Sem descrição"}</p>
+        <p class="curso-resumo-meta">${total} conteúdo${total===1?"":"s"} <span class="cat-ligacao" style="color:${cat.cor}">${cat.nome}</span></p>
+        <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
+        <span class="curso-resumo-pct">${p.pct}%</span>
+        <button class="btn btn-contorno btn-block" id="btn-comecar-agora">${total ? "ver como aluno" : "criar primeira aula"}</button>
+        ${curso.urlVendas ? `<a class="ligacao-vendas" href="${curso.urlVendas}" target="_blank" rel="noopener">Página de vendas ↗</a>` : ""}
+      </div>
+
+      <div id="lista-modulos-admin"></div>
     </div>
-    <div id="lista-modulos-admin"></div>
   `;
 
   document.getElementById("btn-voltar-conteudos").addEventListener("click", () => irPara("admin-conteudos"));
-  document.getElementById("btn-editar-curso").addEventListener("click", () => editarCurso(curso.id));
+  document.getElementById("btn-editar-curso").addEventListener("click", () => abrirFormCurso(curso.id));
   document.getElementById("btn-novo-modulo").addEventListener("click", () => editarModulo(curso, null));
+  document.getElementById("btn-novo-conteudo-curso").addEventListener("click", () => novoConteudo(curso));
+  document.getElementById("btn-comecar-agora").addEventListener("click", () => {
+    if(!total){ novoConteudo(curso); return; }
+    const loc = primeiraAulaDoCurso(curso);
+    estado.prevendoComoAluno = true;
+    irPara("aula", curso.id, loc.aula.id);
+  });
 
   renderModulosAdmin(curso);
 }
 
+/* Sem módulos não há onde pôr a aula: cria-se o primeiro pelo caminho. */
+function novoConteudo(curso){
+  if(!curso.modulos.length){
+    curso.modulos.push({ id:novoId("mod"), titulo:"Módulo 1", descricao:"", aulas:[] });
+    guardarDB();
+  }
+  abrirFormAula(curso.id, curso.modulos[0].id, null);
+}
+
 function renderModulosAdmin(curso){
   const wrap = document.getElementById("lista-modulos-admin");
+  if(!wrap) return;
   if(!curso.modulos.length){
-    wrap.innerHTML = `<div class="card"><div class="empty-note">Este curso ainda não tem módulos. Começa por criar o primeiro.</div></div>`;
+    wrap.innerHTML = `<div class="card painel"><div class="empty-note">Este curso ainda não tem módulos. Começa por criar o primeiro.</div></div>`;
     return;
   }
-  wrap.innerHTML = curso.modulos.map((m, i) => `
-    <div class="card modulo-admin">
-      <div class="modulo-admin-head">
-        <div class="modulo-num">${String(i+1).padStart(2,"0")}</div>
-        <div class="modulo-info">
+  const abertos = estado.modulosAbertos || (estado.modulosAbertos = {});
+
+  wrap.innerHTML = curso.modulos.map((m, i) => {
+    const aberto = abertos[m.id] !== false;
+    return `
+    <div class="card modulo-acordeao ${aberto?"aberto":""}">
+      <div class="modulo-acordeao-head" data-abrir-modulo="${m.id}">
+        <svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        <div class="modulo-acordeao-titulo">
           <h3>${m.titulo}</h3>
-          <p class="modulo-desc">${m.descricao||"Sem descrição"}</p>
+          ${m.descricao ? `<p>${m.descricao}</p>` : ""}
         </div>
         <span class="modulo-count">${m.aulas.length} aula${m.aulas.length===1?"":"s"}</span>
-        <div class="acoes-linha">
-          <button class="btn-icone" data-mover-modulo="${m.id}" data-dir="-1" ${i===0?"disabled":""} title="Subir"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg></button>
-          <button class="btn-icone" data-mover-modulo="${m.id}" data-dir="1" ${i===curso.modulos.length-1?"disabled":""} title="Descer"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
-          <button class="btn-icone" data-editar-modulo="${m.id}" title="Editar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-          <button class="btn-icone perigo" data-apagar-modulo="${m.id}" title="Apagar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
-        </div>
+        <button class="btn-icone" data-menu-modulo="${m.id}" title="Opções">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
       </div>
-      <div class="aulas-admin">
-        ${m.aulas.map((a, j) => `
-          <div class="aula-admin">
-            <span class="aula-admin-num">${i+1}.${j+1}</span>
-            <div class="aula-admin-info">
+      <div class="modulo-acordeao-corpo">
+        ${m.aulas.length ? m.aulas.map((a, j) => `
+          <div class="aula-linha" data-editar-aula="${a.id}" data-modulo="${m.id}">
+            <span class="aula-linha-capa" style="${a.capa?`background-image:url(${a.capa})`:""}">${a.capa?"":`${i+1}.${j+1}`}</span>
+            <div class="aula-linha-info">
               <span class="titulo">${a.titulo}</span>
-              <span class="sub-celula">${a.videoId ? "Vídeo: "+a.videoId : "Sem vídeo associado"}</span>
+              <span class="sub-celula">${etiquetasDaAula(a)}</span>
             </div>
             <span class="aula-duracao">${a.duracao||"--:--"}</span>
-            <div class="acoes-linha">
+            <div class="acoes-linha" data-parar>
               <button class="btn-icone" data-mover-aula="${a.id}" data-modulo="${m.id}" data-dir="-1" ${j===0?"disabled":""} title="Subir"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg></button>
               <button class="btn-icone" data-mover-aula="${a.id}" data-modulo="${m.id}" data-dir="1" ${j===m.aulas.length-1?"disabled":""} title="Descer"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
-              <button class="btn-icone" data-editar-aula="${a.id}" data-modulo="${m.id}" title="Editar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
               <button class="btn-icone perigo" data-apagar-aula="${a.id}" data-modulo="${m.id}" title="Apagar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
             </div>
           </div>
-        `).join("")}
+        `).join("") : `<div class="empty-note">Nenhuma aula publicada ainda.</div>`}
         <button class="btn-nova-aula" data-nova-aula="${m.id}">+ Nova aula neste módulo</button>
       </div>
-    </div>
-  `).join("");
+    </div>`;
+  }).join("");
 
-  const moduloPorId = id => curso.modulos.find(m=>m.id===id);
+  const mod = id => moduloPorIdNoCurso(curso, id);
 
-  wrap.querySelectorAll("[data-editar-modulo]").forEach(b => b.addEventListener("click", () => editarModulo(curso, moduloPorId(b.getAttribute("data-editar-modulo")))));
-  wrap.querySelectorAll("[data-apagar-modulo]").forEach(b => b.addEventListener("click", () => apagarModulo(curso, moduloPorId(b.getAttribute("data-apagar-modulo")))));
-  wrap.querySelectorAll("[data-nova-aula]").forEach(b => b.addEventListener("click", () => editarAula(curso, moduloPorId(b.getAttribute("data-nova-aula")), null)));
-  wrap.querySelectorAll("[data-mover-modulo]").forEach(b => b.addEventListener("click", () => {
-    mover(curso.modulos, curso.modulos.findIndex(m=>m.id===b.getAttribute("data-mover-modulo")), Number(b.getAttribute("data-dir")));
-    guardarDB(); renderModulosAdmin(curso);
+  wrap.querySelectorAll("[data-abrir-modulo]").forEach(h => h.addEventListener("click", e => {
+    if(e.target.closest("[data-menu-modulo]")) return;
+    const id = h.getAttribute("data-abrir-modulo");
+    abertos[id] = abertos[id] === false;
+    renderModulosAdmin(curso);
   }));
-  wrap.querySelectorAll("[data-editar-aula]").forEach(b => {
-    const m = moduloPorId(b.getAttribute("data-modulo"));
-    b.addEventListener("click", () => editarAula(curso, m, m.aulas.find(a=>a.id===b.getAttribute("data-editar-aula"))));
-  });
-  wrap.querySelectorAll("[data-apagar-aula]").forEach(b => {
-    const m = moduloPorId(b.getAttribute("data-modulo"));
-    b.addEventListener("click", () => apagarAula(curso, m, m.aulas.find(a=>a.id===b.getAttribute("data-apagar-aula"))));
-  });
+
+  wrap.querySelectorAll("[data-menu-modulo]").forEach(b => b.addEventListener("click", e => {
+    e.stopPropagation();
+    const m = mod(b.getAttribute("data-menu-modulo"));
+    const i = curso.modulos.indexOf(m);
+    abrirMenu(b, [
+      { rotulo:"Editar módulo", accao:() => editarModulo(curso, m) },
+      { rotulo:"Nova aula", accao:() => abrirFormAula(curso.id, m.id, null) },
+      { rotulo:"Mover para cima", desativado:i===0, accao:() => { mover(curso.modulos, i, -1); guardarDB(); renderModulosAdmin(curso); } },
+      { rotulo:"Mover para baixo", desativado:i===curso.modulos.length-1, accao:() => { mover(curso.modulos, i, 1); guardarDB(); renderModulosAdmin(curso); } },
+      { rotulo:"Apagar módulo", perigo:true, accao:() => apagarModulo(curso, m) }
+    ]);
+  }));
+
+  wrap.querySelectorAll("[data-nova-aula]").forEach(b => b.addEventListener("click", () => abrirFormAula(curso.id, b.getAttribute("data-nova-aula"), null)));
+  wrap.querySelectorAll(".aula-linha").forEach(l => l.addEventListener("click", e => {
+    if(e.target.closest("[data-parar]")) return;
+    abrirFormAula(curso.id, l.getAttribute("data-modulo"), l.getAttribute("data-editar-aula"));
+  }));
+  wrap.querySelectorAll("[data-apagar-aula]").forEach(b => b.addEventListener("click", () => {
+    const m = mod(b.getAttribute("data-modulo"));
+    apagarAula(curso, m, m.aulas.find(a=>a.id===b.getAttribute("data-apagar-aula")));
+  }));
   wrap.querySelectorAll("[data-mover-aula]").forEach(b => b.addEventListener("click", () => {
-    const m = moduloPorId(b.getAttribute("data-modulo"));
+    const m = mod(b.getAttribute("data-modulo"));
     mover(m.aulas, m.aulas.findIndex(a=>a.id===b.getAttribute("data-mover-aula")), Number(b.getAttribute("data-dir")));
     guardarDB(); renderModulosAdmin(curso);
   }));
+}
+
+function etiquetasDaAula(a){
+  const partes = [];
+  partes.push(a.videoId ? "Vídeo" : "Sem vídeo");
+  if((a.conteudo||"").trim()) partes.push("Texto");
+  if((a.ficheiros||[]).length) partes.push(`${a.ficheiros.length} ficheiro${a.ficheiros.length===1?"":"s"}`);
+  if((a.quiz||[]).length) partes.push(`Quiz de ${a.quiz.length}`);
+  if(a.semComentarios) partes.push("Comentários desligados");
+  return partes.join(" · ");
 }
 
 /* ---------------- Módulo ---------------- */
@@ -314,7 +505,7 @@ function editarModulo(curso, modulo){
       { nome:"titulo", rotulo:"Título do módulo", tipo:"texto", obrigatorio:true, placeholder:"ex: Módulo 1: Fundamentos" },
       { nome:"descricao", rotulo:"Descrição", tipo:"textarea", placeholder:"O que o aluno vai aprender neste módulo." }
     ],
-    valores: modulo ? { titulo:modulo.titulo, descricao:modulo.descricao } : {},
+    valores: modulo ? { titulo:modulo.titulo, descricao:modulo.descricao } : { titulo:`Módulo ${curso.modulos.length+1}` },
     aoGuardar: v => {
       if(modulo) Object.assign(modulo, v);
       else curso.modulos.push({ id:novoId("mod"), titulo:v.titulo, descricao:v.descricao, aulas:[] });
@@ -338,28 +529,6 @@ function apagarModulo(curso, modulo){
   });
 }
 
-/* ---------------- Aula ---------------- */
-function editarAula(curso, modulo, aula){
-  abrirDrawer({
-    titulo: aula ? "Editar aula" : "Nova aula",
-    subtitulo: `${curso.titulo} · ${modulo.titulo}`,
-    campos: [
-      { nome:"titulo", rotulo:"Título da aula", tipo:"texto", obrigatorio:true, placeholder:"ex: A identidade do fundador" },
-      { nome:"duracao", rotulo:"Duração", tipo:"texto", placeholder:"12:34", dica:"Formato minutos:segundos." },
-      { nome:"descricao", rotulo:"Descrição", tipo:"textarea", placeholder:"Texto que aparece por baixo do vídeo." },
-      { nome:"videoId", rotulo:"ID do vídeo", tipo:"texto", placeholder:"ID no Panda Video", dica:"Deixa vazio enquanto o vídeo não estiver carregado." }
-    ],
-    valores: aula ? { titulo:aula.titulo, duracao:aula.duracao, descricao:aula.descricao, videoId:aula.videoId } : {},
-    aoGuardar: v => {
-      if(aula) Object.assign(aula, v);
-      else modulo.aulas.push({ id:novoId("aula"), titulo:v.titulo, duracao:v.duracao||"00:00", descricao:v.descricao, videoId:v.videoId });
-      guardarDB();
-      renderAdminCursoEditor();
-      mostrarToast(aula ? "Aula atualizada" : "Aula criada");
-    }
-  });
-}
-
 function apagarAula(curso, modulo, aula){
   confirmarAcao({
     titulo: "Apagar aula",
@@ -375,5 +544,6 @@ function apagarAula(curso, modulo, aula){
 
 registarViews({
   "admin-conteudos": renderAdminConteudos,
+  "admin-curso-form": renderFormCurso,
   "admin-curso-editor": renderAdminCursoEditor
 });

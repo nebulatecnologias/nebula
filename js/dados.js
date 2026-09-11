@@ -10,6 +10,9 @@ const ICONS = {
   people: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="6" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   trophy: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a1 1 0 0 0-1 1 5 5 0 0 0 4 4.9"/><path d="M17 5h3a1 1 0 0 1 1 1 5 5 0 0 1-4 4.9"/></svg>',
   cert:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>',
+  lapis:  '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  ficheiro: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>',
+  quiz:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5"/><path d="m3 12 1.5 1.5L7 11"/><path d="m3 18 1.5 1.5L7 17"/></svg>',
   gear:   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>',
   layers: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
   image:  '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 16-5-5-9 9"/></svg>',
@@ -376,7 +379,25 @@ function normalizarDB(){
   DB.config.certificado = Object.assign({}, CONFIG_PADRAO.certificado, DB.config.certificado || {});
   if(!Array.isArray(DB.turmas)) DB.turmas = [];
   DB.turmas.forEach(t => { if(!t.id) t.id = novoId("turma"); if(!Array.isArray(t.membros)) t.membros = []; });
-  (DB.cursos||[]).forEach(c => { if(c.publicado === undefined) c.publicado = true; });
+  (DB.cursos||[]).forEach(c => {
+    if(c.publicado === undefined) c.publicado = true;
+    if(c.sigla === undefined) c.sigla = c.titulo.split(/\s+/).map(x=>x[0]).join("").slice(0,3).toUpperCase();
+    if(c.vitrine === undefined) c.vitrine = true;
+    if(c.moderacao === undefined) c.moderacao = false;
+    if(!Array.isArray(c.modulos)) c.modulos = [];
+    c.modulos.forEach(m => {
+      if(!m.id) m.id = novoId("mod");
+      if(!Array.isArray(m.aulas)) m.aulas = [];
+      m.aulas.forEach(a => {
+        if(!a.id) a.id = novoId("aula");
+        if(!Array.isArray(a.ficheiros)) a.ficheiros = [];
+        if(!Array.isArray(a.quiz)) a.quiz = [];
+        if(a.conteudo === undefined) a.conteudo = "";
+        if(a.semComentarios === undefined) a.semComentarios = false;
+        if(a.semBuscaIA === undefined) a.semBuscaIA = false;
+      });
+    });
+  });
   (DB.banners||[]).forEach(b => {
     if(!b.id) b.id = novoId("banner");
     if(b.ativo === undefined) b.ativo = true;

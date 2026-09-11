@@ -158,7 +158,8 @@ function gerarTexto(tarefa, cursoId){
   const escola = DB.aparencia.nomeEscola;
   const curso = cursoPorId(cursoId);
   const cat = curso ? categoriaDe(curso.categoria) : null;
-  const aulas = curso ? curso.modulos.flatMap(m=>m.aulas) : [];
+  /* Aulas marcadas como fora da busca por IA não entram nos rascunhos. */
+  const aulas = curso ? curso.modulos.flatMap(m=>m.aulas).filter(a=>!a.semBuscaIA) : [];
   /* Os módulos costumam chamar-se "Módulo 2: Estrutura" — dentro de uma
      frase só interessa a parte depois dos dois pontos. */
   const temas = curso ? curso.modulos.map(m => m.titulo.replace(/^M[óo]dulo\s*\d+\s*[:.\-–—]\s*/i, "")) : [];

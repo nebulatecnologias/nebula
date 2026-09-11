@@ -193,3 +193,84 @@ function mover(lista, indice, direcao){
   if(indice<0 || destino<0 || destino>=lista.length) return;
   [lista[indice], lista[destino]] = [lista[destino], lista[indice]];
 }
+
+
+/* ============================================================
+   Peças dos formulários de página inteira (curso e aula)
+   ============================================================ */
+
+/* Caixa de escolha com título e explicação, como nas páginas de curso. */
+function checkCardHTML(id, marcado, titulo, sub){
+  return `<div class="check-card ${marcado?"marcado":""}" id="${id}">
+    <span class="check-quadro">${iconeCheck()}</span>
+    <div><strong>${titulo}</strong>${sub?`<span>${sub}</span>`:""}</div>
+  </div>`;
+}
+function ligarCheckCards(raiz){
+  (raiz||document).querySelectorAll(".check-card").forEach(c =>
+    c.addEventListener("click", () => c.classList.toggle("marcado")));
+}
+
+/* Zona de imagem: mostra a capa atual, aceita um ficheiro e guarda-o
+   como data URL no input escondido que o formulário lê ao gravar. */
+function uploadHTML(nome, valor, dica, tamanho){
+  return `<div class="upload-box ${tamanho||""} ${valor?"tem-imagem":""}" id="caixa-${nome}" style="${valor?`background-image:url(${valor})`:""}">
+    <span class="upload-dica">${dica}</span>
+    <div class="upload-acoes">
+      <button class="btn btn-secondary btn-sm" type="button" data-escolher="${nome}">${valor?"Trocar imagem":"Escolher imagem"}</button>
+      <button class="btn btn-secondary btn-sm ${valor?"":"hidden"}" type="button" data-limpar="${nome}">Remover</button>
+    </div>
+    <input type="file" accept="image/*" class="hidden" id="ficheiro-${nome}">
+    <input type="hidden" id="valor-${nome}" value="${valor||""}">
+  </div>`;
+}
+function ligarUploads(raiz){
+  const r = raiz || document;
+  r.querySelectorAll("[data-escolher]").forEach(b => {
+    const nome = b.getAttribute("data-escolher");
+    const input = r.querySelector(`#ficheiro-${nome}`);
+    b.addEventListener("click", () => input.click());
+    input.addEventListener("change", e => {
+      const ficheiro = e.target.files[0];
+      if(!ficheiro) return;
+      const leitor = new FileReader();
+      leitor.onload = ev => aplicarImagem(r, nome, ev.target.result);
+      leitor.readAsDataURL(ficheiro);
+    });
+  });
+  r.querySelectorAll("[data-limpar]").forEach(b =>
+    b.addEventListener("click", () => aplicarImagem(r, b.getAttribute("data-limpar"), "")));
+}
+function aplicarImagem(raiz, nome, url){
+  const caixa = raiz.querySelector(`#caixa-${nome}`);
+  raiz.querySelector(`#valor-${nome}`).value = url;
+  caixa.style.backgroundImage = url ? `url(${url})` : "";
+  caixa.classList.toggle("tem-imagem", !!url);
+  caixa.querySelector("[data-escolher]").textContent = url ? "Trocar imagem" : "Escolher imagem";
+  caixa.querySelector("[data-limpar]").classList.toggle("hidden", !url);
+}
+
+/* Menu de três pontos, ancorado ao botão que o abriu. */
+function abrirMenu(botao, itens){
+  fecharMenus();
+  const menu = document.createElement("div");
+  menu.className = "menu-flutuante";
+  menu.innerHTML = itens.map((it,i) =>
+    `<button type="button" data-i="${i}" class="${it.perigo?"perigo":""}" ${it.desativado?"disabled":""}>${it.rotulo}</button>`).join("");
+  document.body.appendChild(menu);
+
+  const r = botao.getBoundingClientRect();
+  /* Abre para cima quando não há espaço por baixo. */
+  const altura = menu.offsetHeight;
+  const paraCima = r.bottom + altura + 8 > window.innerHeight;
+  menu.style.top = (paraCima ? r.top - altura - 6 : r.bottom + 6) + window.scrollY + "px";
+  menu.style.left = Math.max(12, r.right - menu.offsetWidth) + window.scrollX + "px";
+
+  menu.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const it = itens[Number(b.getAttribute("data-i"))];
+    fecharMenus();
+    if(!it.desativado) it.accao();
+  }));
+  setTimeout(() => document.addEventListener("click", fecharMenus, { once:true }), 0);
+}
+function fecharMenus(){ document.querySelectorAll(".menu-flutuante").forEach(m => m.remove()); }

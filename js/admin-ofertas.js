@@ -16,7 +16,7 @@ function ofertaParaCurso(cursoId){
 /* Cursos publicados que este aluno ainda não pode abrir. */
 function cursosBloqueados(){
   const abertos = new Set(cursosVisiveis().map(c=>c.id));
-  return DB.cursos.filter(c => c.publicado !== false && !abertos.has(c.id));
+  return DB.cursos.filter(c => c.publicado !== false && c.vitrine !== false && !abertos.has(c.id));
 }
 
 function renderAdminOfertas(){
