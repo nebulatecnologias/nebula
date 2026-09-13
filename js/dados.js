@@ -68,7 +68,6 @@ const NAV_ADMIN = [
     { view:"admin-ranking", label:"Ranking", icon:ICONS.flag }
   ]},
   { grupo:"Negócio", itens:[
-    { view:"admin-ofertas", label:"Ofertas", icon:ICONS.tag },
     { view:"admin-relatorios", label:"Relatórios", icon:ICONS.chart },
     { view:"admin-ia", label:"Assistente IA", icon:ICONS.spark },
     { view:"admin-integracoes", label:"Integrações", icon:ICONS.plug }
