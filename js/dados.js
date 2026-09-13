@@ -79,7 +79,7 @@ const NAV_ADMIN = [
 ];
 
 const CATEGORIAS_PADRAO = {
-  negocios:      { nome:"Negócios",                  cor:"#7f3aed" },
+  negocios:      { nome:"Negócios",                  cor:"#ff5a1f" },
   mentalidade:   { nome:"Mentalidade",                cor:"#7c9eff" },
   ia:            { nome:"Inteligência Artificial",    cor:"#34d1c9" },
   marketing:     { nome:"Marketing e Vendas",         cor:"#ffcf5c" },
@@ -221,7 +221,7 @@ const EVENTOS_PADRAO = [
 ];
 
 const ESPACOS_PADRAO = [
-  { id:"geral",    nome:"Geral",              descricao:"Conversa aberta a toda a academia.",            cor:"#7f3aed", ativo:true, soAdminPublica:false },
+  { id:"geral",    nome:"Geral",              descricao:"Conversa aberta a toda a academia.",            cor:"#ff5a1f", ativo:true, soAdminPublica:false },
   { id:"vitorias", nome:"Vitórias",           descricao:"Partilha resultados e conquistas.",             cor:"#3ddc84", ativo:true, soAdminPublica:false },
   { id:"duvidas",  nome:"Dúvidas",            descricao:"Perguntas sobre as aulas e os exercícios.",     cor:"#7c9eff", ativo:true, soAdminPublica:false },
   { id:"avisos",   nome:"Avisos da Academia", descricao:"Comunicados oficiais. Só a equipa publica.",    cor:"#ffcf5c", ativo:true, soAdminPublica:true }
@@ -261,7 +261,7 @@ const NOTIFICACOES_PADRAO = [
 ];
 
 const BANNERS_PADRAO = [
-  { id:"b1", ativo:true, eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#7f3aed,#4c1d95)" },
+  { id:"b1", ativo:true, eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#ff5a1f,#c23f13)" },
   { id:"b2", ativo:true, eyebrow:"OFERTA POR TEMPO LIMITADO", titulo:"IA Aplicada aos Negócios com 20% de desconto", cta:"Ver oferta", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)" },
   { id:"b3", ativo:true, eyebrow:"NOVO EVENTO", titulo:"Roda de Espiritualidade e Propósito — 24 de Setembro", cta:"Confirmar presença", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#7c5cff,#3d2b8f)" }
 ];
@@ -281,7 +281,7 @@ const APARENCIA_PADRAO = {
   nomeEscola: "Kingdom Academy",
   sublinha: "Formação & Mentoria",
   logoUrl: "",
-  corAccent: "#7f3aed",
+  corAccent: "#ff5a1f",
   temaPadrao: "dark",
   rodape: "© 2026 Kingdom Company",
   loginTitulo: "Autoridade constrói-se em privado, muito antes de aparecer em público.",

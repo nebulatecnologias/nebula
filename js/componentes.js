@@ -117,7 +117,7 @@ function campoHTML(c, valor){
   }
   if(c.tipo==="cor"){
     return `<div class="field"><label>${c.rotulo}</label>
-      <div class="campo-cor"><input type="color" id="valor-${c.nome}" value="${v||"#7f3aed"}"><span>${c.dica||"Cor da categoria"}</span></div></div>`;
+      <div class="campo-cor"><input type="color" id="valor-${c.nome}" value="${v||"#ff5a1f"}"><span>${c.dica||"Cor da categoria"}</span></div></div>`;
   }
   if(c.tipo==="imagem"){
     return `<div class="field"><label>${c.rotulo}</label>

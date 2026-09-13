@@ -213,11 +213,11 @@ function editarEspaco(id){
     campos: [
       { nome:"nome", rotulo:"Nome do espaço", tipo:"texto", obrigatorio:true, placeholder:"ex: Vitórias" },
       { nome:"descricao", rotulo:"Descrição", tipo:"textarea", placeholder:"Aparece por baixo do título, a explicar o espaço." },
-      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#7f3aed" },
+      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#ff5a1f" },
       { nome:"soAdminPublica", rotulo:"Só a equipa publica", tipo:"toggle", dica:"Os alunos leem, mas não escrevem neste espaço." },
       { nome:"ativo", rotulo:"Espaço ativo", tipo:"toggle", padrao:true }
     ],
-    valores: espaco || { ativo:true, soAdminPublica:false, cor:"#7f3aed" },
+    valores: espaco || { ativo:true, soAdminPublica:false, cor:"#ff5a1f" },
     aoGuardar: v => {
       const alvo = espaco || { id:novoId("esp"), ordem:DB.espacos.length + 1 };
       Object.assign(alvo, v);

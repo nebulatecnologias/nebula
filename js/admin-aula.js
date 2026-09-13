@@ -174,7 +174,7 @@ function renderPainelTexto(painel){
         ${FERRAMENTAS.map(f=>`<button type="button" data-cmd="${f.cmd}" title="${f.titulo}">${f.rotulo}</button>`).join("")}
       </div>
       <div class="editor-area" id="editor-texto" contenteditable="true" spellcheck="true">${r.conteudo}</div>
-      <input type="color" class="hidden" id="editor-cor" value="#7f3aed">
+      <input type="color" class="hidden" id="editor-cor" value="#ff5a1f">
       <input type="file" accept="image/*" class="hidden" id="editor-imagem">
     </div>
     <p class="hint" style="margin-top:8px;">Este texto aparece por baixo do vídeo, na aula do aluno.</p>

@@ -46,13 +46,13 @@ const ROTULO_ACESSO = { gratuito:"Gratuito", exclusivo:"Exclusivo", pago:"Pago" 
    e sempre que a configuração muda.
    ============================================================ */
 function hexParaRgba(hex, alfa){
-  const h = (hex||"#7f3aed").replace("#","");
+  const h = (hex||"#ff5a1f").replace("#","");
   const n = h.length===3 ? h.split("").map(c=>c+c).join("") : h;
   const num = parseInt(n,16);
   return `rgba(${(num>>16)&255}, ${(num>>8)&255}, ${num&255}, ${alfa})`;
 }
 function clarearHex(hex, quanto){
-  const h = (hex||"#7f3aed").replace("#","");
+  const h = (hex||"#ff5a1f").replace("#","");
   const n = h.length===3 ? h.split("").map(c=>c+c).join("") : h;
   const num = parseInt(n,16);
   const mistura = c => Math.round(c + (255-c)*quanto);
@@ -279,7 +279,7 @@ function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
 function fundoBanner(b){
   return b.imagem
     ? `background-image:url(${b.imagem});background-size:cover;background-position:center;`
-    : `background:${b.gradiente || "linear-gradient(120deg,#7f3aed,#4c1d95)"};`;
+    : `background:${b.gradiente || "linear-gradient(120deg,#ff5a1f,#c23f13)"};`;
 }
 /* Primeira aula de um curso, no formato de localizarAula(). Serve de recurso
    quando a última aula vista já não existe. */
@@ -349,7 +349,7 @@ function minhaAvaliacao(aulaId){
   const membro = membroAtual();
   return (DB.avaliacoes||[]).find(a => a.aulaId===aulaId && (membro ? a.membroId===membro.id : a.membroId===null));
 }
-function espacoPorId(id){ return (DB.espacos||[]).find(e=>e.id===id) || { nome:"Geral", cor:"#7f3aed" }; }
+function espacoPorId(id){ return (DB.espacos||[]).find(e=>e.id===id) || { nome:"Geral", cor:"#ff5a1f" }; }
 function espacosAtivos(){ return (DB.espacos||[]).filter(e=>e.ativo!==false); }
 /* O feed do aluno esconde o que foi moderado e põe os fixados à frente. */
 function postsVisiveis(){
