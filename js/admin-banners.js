@@ -4,7 +4,7 @@
    ============================================================ */
 
 const GRADIENTES = [
-  { valor:"linear-gradient(120deg,#ff5a1f,#c23f13)", rotulo:"Laranja (marca)" },
+  { valor:"linear-gradient(120deg,#7f3aed,#4c1d95)", rotulo:"Violeta (marca)" },
   { valor:"linear-gradient(120deg,#1f8f8a,#0d4d4a)", rotulo:"Verde-azulado" },
   { valor:"linear-gradient(120deg,#7c5cff,#3d2b8f)", rotulo:"Roxo" },
   { valor:"linear-gradient(120deg,#2b6cb0,#12325a)", rotulo:"Azul" },

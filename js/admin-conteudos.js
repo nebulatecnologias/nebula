@@ -313,7 +313,7 @@ function editarCategoria(id){
     subtitulo: "As categorias filtram os cursos na área do aluno.",
     campos: [
       { nome:"nome", rotulo:"Nome", tipo:"texto", obrigatorio:true, placeholder:"ex: Inteligência Artificial" },
-      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#ff5a1f", dica:"Usada nas etiquetas e nos filtros." }
+      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#7f3aed", dica:"Usada nas etiquetas e nos filtros." }
     ],
     valores: cat ? { nome:cat.nome, cor:cat.cor } : {},
     aoGuardar: v => {
