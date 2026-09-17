@@ -270,6 +270,37 @@ function duracaoDoCurso(curso){
 function renderCurso(cursoId){
   const curso = cursoPorId(cursoId);
   if(!curso){ document.getElementById("content-curso").innerHTML = '<div class="empty-note">Este curso não foi encontrado.</div>'; return; }
+
+  /* Agora que um curso tem morada, qualquer pessoa pode escrever a de um curso
+     que nao comprou. O conteudo nao vai com ela -- a base de dados nao lhe da
+     modulos nem aulas -- mas isso, sozinho, desenhava-lhe um curso vazio: uma
+     porta fechada pintada de porta aberta, que e a coisa que a Vitrine existe
+     para evitar. Diz-se-lhe por palavras, e manda-se para onde ela pode
+     resolver. */
+  if(!cursosVisiveis().some(c => c.id === curso.id)){
+    /* O id da oferta chega como texto em DB.ofertas e como numero no curso --
+       comparar com === dava sempre falso e escondia o link de vendas. */
+    const oferta = curso.ofertaId != null
+      ? (DB.ofertas || []).find(o => String(o.id) === String(curso.ofertaId))
+      : null;
+    document.getElementById("content-curso").innerHTML = `
+      <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
+      <div class="card" style="padding:32px; text-align:center">
+        <h1 style="margin:0 0 8px">${curso.titulo}</h1>
+        <p class="sub" style="margin:0 0 20px">Ainda não tens acesso a este curso.</p>
+        <p style="margin:0 0 22px; color:var(--muted)">
+          Se acabaste de pagar, o acesso abre-se assim que confirmarmos — avisamos-te por email.
+        </p>
+        ${oferta && oferta.link
+          ? `<a class="btn btn-primary" href="${oferta.link}" target="_blank" rel="noopener">Ver como ter acesso</a>`
+          : `<button class="btn btn-secondary" id="btn-ir-vitrine">Ver o que está disponível</button>`}
+      </div>`;
+    const voltar = document.getElementById("btn-voltar-catalogo");
+    if(voltar) voltar.addEventListener("click", () => irPara("catalogo"));
+    const vitrine = document.getElementById("btn-ir-vitrine");
+    if(vitrine) vitrine.addEventListener("click", () => irPara("vitrine"));
+    return;
+  }
   const p = progressoCurso(curso);
   const cat = categoriaDe(curso.categoria);
   const turmaDoCurso = turmasDoMembro(membroAtual()).find(t => t.cursoId === curso.id);

@@ -458,6 +458,75 @@ function destinoDaNotificacao(n){
 const VIEWS = {};
 function registarViews(mapa){ Object.assign(VIEWS, mapa); }
 
+/* ---- O ENDERECO ----------------------------------------------------------
+
+   Ate aqui a Academia era uma pagina so: navegava-se por dentro e a barra de
+   endereco dizia sempre a mesma coisa, estivesse a pessoa onde estivesse. Isso
+   queria dizer tres coisas, todas mas: nao se podia mandar o link de um curso a
+   ninguem, recarregar a pagina levava a pessoa de volta ao inicio, e o botao de
+   recuar do browser saia da Academia em vez de recuar um passo.
+
+   So o curso e a aula tem morada. O resto sao ecras da aplicacao, nao sitios
+   para onde se manda alguem -- e cada morada a mais e uma coisa a mais que tem
+   de continuar a funcionar para sempre.
+
+   O conteudo NAO e protegido por aqui. Quem abrir a morada de um curso que nao
+   comprou nao ve aulas nenhumas porque a base de dados nao lhas da: as
+   politicas de leitura de 'modulos' e 'aulas' passam por tem_acesso(). O que
+   esta funcao faz e dizer-lhe isso por palavras, em vez de lhe mostrar um curso
+   vazio -- uma porta fechada pintada de porta aberta. */
+
+function enderecoDe(view, a, b){
+  if(view === "curso" && a) return "#/curso/" + encodeURIComponent(a);
+  if(view === "aula"  && a && b) return "#/curso/" + encodeURIComponent(a) + "/aula/" + encodeURIComponent(b);
+  return "";
+}
+
+/* So se le o que comeca por "#/". O Supabase deixa no endereco coisas como
+   #access_token=... e #type=invite ao entrar, e nada disso e uma morada nossa. */
+function lerEndereco(){
+  const bruto = location.hash || "";
+  if(!bruto.startsWith("#/")) return null;
+  const partes = bruto.slice(2).split("/").filter(Boolean).map(decodeURIComponent);
+  if(partes[0] !== "curso" || !partes[1]) return null;
+  if(partes[2] === "aula" && partes[3]) return { view:"aula", a:partes[1], b:partes[3] };
+  return { view:"curso", a:partes[1] };
+}
+
+/* Escrever o endereco faz o browser disparar hashchange, e o hashchange volta a
+   navegar -- um ciclo. A bandeira corta-o. */
+let aEscreverEndereco = false;
+
+function escreverEndereco(view, a, b){
+  const novo = enderecoDe(view, a, b);
+  const actual = location.hash || "";
+  if(novo === actual) return;
+  if(!novo){
+    /* Limpar com replaceState em vez de location.hash="": o segundo deixa um
+       "#" pendurado no endereco e nao dispara hashchange na mesma. */
+    if(actual) history.replaceState(null, "", location.pathname + location.search);
+    return;
+  }
+  aEscreverEndereco = true;
+  location.hash = novo;
+  setTimeout(() => { aEscreverEndereco = false; }, 0);
+}
+
+window.addEventListener("hashchange", () => {
+  if(aEscreverEndereco) return;
+  const destino = lerEndereco();
+  if(destino) irPara(destino.view, destino.a, destino.b);
+  else irPara(papelEfetivo() === "administrador" ? "admin-visao" : "dashboard");
+});
+
+/* Chamado depois de entrar, em vez de se ir sempre para o inicio: se a pessoa
+   veio de um link, e para esse sitio que ela quer ir. */
+function arrancarNoEndereco(porOmissao){
+  const destino = lerEndereco();
+  if(destino) irPara(destino.view, destino.a, destino.b);
+  else irPara(porOmissao);
+}
+
 function irPara(view, a, b){
   estado.viewAtual = view;
   if(view!=="calendario" && view!=="dashboard" && view!=="admin-banners" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
@@ -480,6 +549,7 @@ function irPara(view, a, b){
   atualizarTopbarCTA(view);
   renderAvisoPrevia();
   fecharMenuMobile();
+  escreverEndereco(view, a, b);
   window.scrollTo(0,0);
 }
 

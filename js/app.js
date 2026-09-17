@@ -125,7 +125,7 @@ async function entrarNaArea(){
   aplicarAparencia();
   mostrarEcra("app");
   estado.prevendoComoAluno = false;
-  irPara(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+  arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
   ligarComunidadeEmDireto();
   if(onboardingPendente()) abrirOnboarding(false);
 }
@@ -176,7 +176,7 @@ function entrarEmDemonstracao(email){
   estado.prevendoComoAluno = false;
   guardarEstado();
   mostrarEcra("app");
-  irPara(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+  arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
   if(onboardingPendente()) abrirOnboarding(false);
 }
 
