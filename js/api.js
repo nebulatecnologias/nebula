@@ -255,6 +255,13 @@ const API = {
     return data || [];
   },
 
+  /* O ensaio da migração. Só lê — não há nada do outro lado que escreva. */
+  async ensaioDaMigracao(){
+    const { data, error } = await this.cliente.rpc("ensaio_da_migracao");
+    if(error) throw new Error(traduzirErroDados(error));
+    return data || { resumo:{}, porOferta:[] };
+  },
+
   async mostrarNaVitrine(ofertaId, mostrar, extra){
     const { data, error } = await this.cliente.rpc("vitrine_mostrar", {
       p_oferta: Number(ofertaId),
