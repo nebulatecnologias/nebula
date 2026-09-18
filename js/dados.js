@@ -54,6 +54,7 @@ const NAV_ADMIN = [
   ]},
   { grupo:"Conteúdo", itens:[
     { view:"admin-conteudos", label:"Conteúdos", icon:ICONS.book },
+    { view:"admin-vitrine", label:"Vitrine", icon:ICONS.tag },
     { view:"admin-turmas", label:"Turmas", icon:ICONS.layers },
     { view:"admin-eventos", label:"Eventos", icon:ICONS.cal },
     { view:"admin-certificados", label:"Certificados", icon:ICONS.cert },
@@ -179,6 +180,22 @@ const CURSOS_PADRAO = [
 const OFERTAS_PADRAO = [
   { id:"of1", nome:"Kingdom All Access", descricao:"Todos os cursos, mentorias ao vivo e comunidade.", preco:2500,  precoAntes:3500, periodo:"mês",   planoId:"all-access", link:"#", destaque:true,  ativa:true },
   { id:"of2", nome:"Acesso Vitalício",   descricao:"Paga uma vez e fica com tudo, para sempre.",       preco:38000, precoAntes:0,    periodo:"único", planoId:"vitalicio",  link:"#", destaque:false, ativa:true }
+];
+
+/* A Vitrine da demonstração. Com servidor isto vem de vitrine_do_aluno(), já
+   filtrado e guardado; aqui é escrito à mão para os ecrãs se poderem ver e
+   testar sem ligação nenhuma. */
+const VITRINE_PADRAO = [
+  { ofertaId:"of1", nome:"Kingdom All Access", preco:2500, moeda:"MZN", mensal:true,
+    entrega:"Plano", destaque:true, chamada:"Todos os cursos, mentorias ao vivo e comunidade.",
+    ordem:1, aulas:24, checkout:true, destino:"https://payflow.kingdomcompny.com/all-access",
+    cursos:[{ id:"kt", titulo:"Kingdom Tracktion", subtitulo:"", capa:"", categoria:"negocios", aulas:12, modulos:3 },
+            { id:"mi", titulo:"Mentalidade Inquebrável", subtitulo:"", capa:"", categoria:"mentalidade", aulas:12, modulos:3 }] },
+  { ofertaId:"of2", nome:"Hábitos de Elite", preco:1200, moeda:"MZN", mensal:false,
+    entrega:"Academia", destaque:false, chamada:"", ordem:2, aulas:8,
+    checkout:true, destino:"https://payflow.kingdomcompny.com/habitos-de-elite",
+    cursos:[{ id:"he", titulo:"Hábitos de Elite", subtitulo:"O que se faz todos os dias.",
+              capa:"", categoria:"pessoal", aulas:8, modulos:2 }] }
 ];
 
 const TURMAS_PADRAO = [
@@ -339,6 +356,7 @@ function dbPadrao(){
     membros: MEMBROS_PADRAO,
     planos: PLANOS_PADRAO,
     ofertas: OFERTAS_PADRAO,
+    vitrine: VITRINE_PADRAO,
     cursoStats: CURSO_STATS_PADRAO,
     posts: POSTS_PADRAO,
     espacos: ESPACOS_PADRAO,

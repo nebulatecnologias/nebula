@@ -113,7 +113,7 @@ const API = {
       um(c.from("onboarding").select("*").eq("utilizador_id", eu)),
       um(c.from("perfis").select("*").eq("utilizador_id", eu)),
       lista(c.from("certificados").select("*").eq("utilizador_id", eu)),
-      lista(this.pub().from("ofertas").select("id, nome, preco, moeda, cobranca, link_vendas, estado").is("removido_em", null)),
+      lista(this.pub().from("ofertas").select("id, nome, preco, moeda, cobranca, link_vendas, estado, atalho").is("removido_em", null)),
       lista(this.pub().from("turmas").select("id, oferta_id, nome, estado, inicio, fim").is("removido_em", null)),
       lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem"))
     ]);
@@ -123,6 +123,11 @@ const API = {
        cartões de cursos que depois abriam sem uma única aula. */
     const { data: meus } = await c.rpc("meus_cursos");
     DB.meusCursos = (meus || []).map(r => (typeof r === "string" ? r : r.meus_cursos));
+
+    /* A Vitrine vem decidida de lá: o que mostrar, a que preço e para onde
+       mandar quem carregar. O browser não escolhe nada disto. */
+    const { data: montra } = await c.rpc("vitrine_do_aluno");
+    DB.vitrine = (montra || []).map(deVitrine);
 
     DB.categorias  = Object.fromEntries(categorias.map(r => [r.id, { nome:r.nome, cor:r.cor }]));
     DB.cursos      = cursos.map(deCurso);
@@ -206,10 +211,70 @@ const API = {
     return this.canalComunidade;
   },
 
+  /* Os acessos da própria pessoa. Quem paga faz isso NOUTRO separador -- o
+     checkout abre-se ao lado -- e por isso a Academia fica parada num ecrã
+     que já não corresponde ao que ela tem. Isto trata do caso em que o
+     acesso é escrito enquanto ela está a olhar. */
+  canalAcessos: null,
+
+  ouvirAcessos(aoMudar){
+    if(this.canalAcessos || !this.utilizador) return this.canalAcessos;
+    this.canalAcessos = this.cliente
+      .channel("os-meus-acessos")
+      .on("postgres_changes", {
+        event: "*", schema: ESQUEMA, table: "acessos",
+        filter: `utilizador_id=eq.${this.utilizador.id}`
+      }, aoMudar)
+      .subscribe();
+    return this.canalAcessos;
+  },
+
+  /* Reconfirmar quem tem acesso a quê. Devolve true se alguma coisa mudou,
+     para o ecrã só se redesenhar quando há razão. */
+  async relerAcesso(){
+    const c = this.cliente;
+    const [{ data: meus }, { data: montra }] = await Promise.all([
+      c.rpc("meus_cursos"),
+      c.rpc("vitrine_do_aluno")
+    ]);
+    const cursos = (meus || []).map(r => (typeof r === "string" ? r : r.meus_cursos));
+    const vitrine = (montra || []).map(deVitrine);
+
+    const mudou = cursos.slice().sort().join("|") !== (DB.meusCursos || []).slice().sort().join("|")
+               || vitrine.map(v => v.ofertaId).join("|") !== (DB.vitrine || []).map(v => v.ofertaId).join("|");
+
+    DB.meusCursos = cursos;
+    DB.vitrine = vitrine;
+    return mudou;
+  },
+
+  /* ---------------- A montra, do lado da equipa ---------------- */
+  async vitrineDaEquipa(){
+    const { data, error } = await this.cliente.rpc("vitrine_para_equipa");
+    if(error) throw new Error(traduzirErroDados(error));
+    return data || [];
+  },
+
+  async mostrarNaVitrine(ofertaId, mostrar, extra){
+    const { data, error } = await this.cliente.rpc("vitrine_mostrar", {
+      p_oferta: Number(ofertaId),
+      p_mostrar: !!mostrar,
+      p_destaque: extra && "destaque" in extra ? !!extra.destaque : null,
+      p_chamada: extra && "chamada" in extra ? (extra.chamada || null) : null
+    });
+    if(error) throw new Error(traduzirErroDados(error));
+    return data;
+  },
+
   pararDeOuvir(){
-    if(!this.canalComunidade) return;
-    this.cliente.removeChannel(this.canalComunidade);
-    this.canalComunidade = null;
+    if(this.canalComunidade){
+      this.cliente.removeChannel(this.canalComunidade);
+      this.canalComunidade = null;
+    }
+    if(this.canalAcessos){
+      this.cliente.removeChannel(this.canalAcessos);
+      this.canalAcessos = null;
+    }
   },
 
   /* ---------------- Escrita ---------------- */
@@ -431,7 +496,28 @@ function deAvaliacao(r){
 function deOferta(r){
   return { id:String(r.id), nome:r.nome, preco:Number(r.preco)||0,
            periodo: r.cobranca === "Recorrente mensal" ? "mês" : "único",
-           link:r.link_vendas||"", ativa:r.estado === "Ativa", descricao:"" };
+           link:r.link_vendas||"", atalho:r.atalho||"",
+           ativa:r.estado === "Ativa", descricao:"" };
+}
+
+/* Um cartão da Vitrine, já decidido pelo servidor: se chegou aqui é porque
+   passou nas cinco guardas. O destino é o checkout da oferta; a página de
+   vendas só entra quando não há atalho nenhum. */
+function deVitrine(r){
+  const destino = linkCheckout(r.atalho) || linkExterno(r.linkVendas || "") || "";
+  return {
+    ofertaId: String(r.ofertaId), nome: r.nome,
+    preco: Number(r.preco) || 0, moeda: r.moeda || "MZN",
+    mensal: r.cobranca === "Recorrente mensal",
+    entrega: r.entrega, destaque: !!r.destaque, chamada: r.chamada || "",
+    ordem: r.ordem || 0, aulas: Number(r.aulas) || 0,
+    checkout: !!linkCheckout(r.atalho), destino,
+    cursos: (r.cursos || []).map(c => ({
+      id: c.id, titulo: c.titulo, subtitulo: c.subtitulo || "",
+      capa: c.capa || "", categoria: c.categoria,
+      aulas: Number(c.aulas) || 0, modulos: Number(c.modulos) || 0
+    }))
+  };
 }
 
 /* Um plano é um nome e os cursos que vão dentro dele. O preço não está aqui:
@@ -815,6 +901,46 @@ function soNoCRM(oQue){
    estiver aberta, o ecrã acompanha. O que já fizemos nós não conta
    duas vezes: a nossa mensagem e o nosso gosto já estão no ecrã.
    ============================================================ */
+/* ============================================================
+   O acesso que muda enquanto a pessoa está a olhar
+   Quem compra paga no checkout, que abre NOUTRO separador. Sem isto, a
+   Academia ficava a mostrar o curso na Vitrine, com botão de comprar, a
+   alguém que acabou de o comprar — e só se corrigia ao recarregar.
+
+   São duas redes, porque nenhuma delas chega sozinha:
+
+   - O Realtime avisa quando a linha do acesso é escrita. É instantâneo, mas
+     só vê linhas a mudar.
+   - Voltar ao separador reconfirma. É o que apanha um acesso que CADUCOU por
+     data — nessa não muda linha nenhuma, e o Realtime nunca dispara — e
+     também o que apanha um aviso perdido por a ligação ter caído.
+   ============================================================ */
+/* Só as listas. Uma aula NÃO se redesenha: quem está a ver um vídeo perdia o
+   sítio a meio por causa de uma compra feita ao lado. E não é preciso — quem
+   guarda o conteúdo é o RLS na base, não este ecrã. */
+const VISTAS_DE_ACESSO = ["vitrine", "catalogo", "dashboard"];
+
+async function reverAcesso(){
+  if(modoDemonstracao() || !API.utilizador) return;
+  try {
+    if(await API.relerAcesso() && VISTAS_DE_ACESSO.includes(estado.viewAtual)){
+      irPara(estado.viewAtual);
+    }
+  } catch(e){ /* sem rede: fica como está, e tenta-se outra vez à próxima */ }
+}
+
+function ligarAcessoEmDireto(){
+  if(modoDemonstracao()) return;
+
+  API.ouvirAcessos(() => reverAcesso());
+
+  /* Um atraso curto porque quem volta do checkout chega muitas vezes à frente
+     da confirmação: o pagamento foi aceite, a ponte ainda está a escrever. */
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "visible") setTimeout(reverAcesso, 1200);
+  });
+}
+
 function ligarComunidadeEmDireto(){
   if(modoDemonstracao()) return;
   API.ouvirComunidade((tipo, carga) => {
