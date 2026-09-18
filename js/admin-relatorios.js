@@ -11,14 +11,14 @@ function alunosAtivos(){ return alunosDoSistema().filter(m => m.acesso === "ativ
    um pagamento único não se repete e ficaria a inflacionar o número. */
 function receitaMensal(){
   return alunosAtivos().reduce((s,m) => {
-    const p = planoPorId(m.planoId);
-    return s + (p && p.periodo === "mês" ? (p.preco||0) : 0);
+    const v = precoDoPlano(planoPorId(m.planoId));
+    return s + (v && v.periodo === "mês" ? (v.preco||0) : 0);
   }, 0);
 }
 function receitaUnica(){
   return alunosAtivos().reduce((s,m) => {
-    const p = planoPorId(m.planoId);
-    return s + (p && p.periodo !== "mês" ? (p.preco||0) : 0);
+    const v = precoDoPlano(planoPorId(m.planoId));
+    return s + (v && v.periodo !== "mês" ? (v.preco||0) : 0);
   }, 0);
 }
 

@@ -92,7 +92,7 @@ const API = {
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
-      ofertas, turmas
+      ofertas, turmas, planos
     ] = await Promise.all([
       lista(c.from("categorias").select("*").order("ordem")),
       lista(c.from("cursos").select(`
@@ -114,7 +114,8 @@ const API = {
       um(c.from("perfis").select("*").eq("utilizador_id", eu)),
       lista(c.from("certificados").select("*").eq("utilizador_id", eu)),
       lista(this.pub().from("ofertas").select("id, nome, preco, moeda, cobranca, link_vendas, estado").is("removido_em", null)),
-      lista(this.pub().from("turmas").select("id, oferta_id, nome, estado, inicio, fim").is("removido_em", null))
+      lista(this.pub().from("turmas").select("id, oferta_id, nome, estado, inicio, fim").is("removido_em", null)),
+      lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem"))
     ]);
 
     /* Quem decide a que cursos esta pessoa tem acesso é o servidor.
@@ -133,6 +134,7 @@ const API = {
     DB.conquistas  = conquistas.map(deConquista);
     DB.avaliacoes  = avaliacoes.map(deAvaliacao);
     DB.ofertas     = ofertas.map(deOferta);
+    DB.planos      = planos.map(dePlano);
     DB.turmas      = turmas.map(t => deTurma(t, cursos));
     DB.certificados = certificados;
 
@@ -268,6 +270,30 @@ const API = {
     const linhas = filhos.map(f => MAPAS[entidade].para(f));
     const { error } = await this.cliente.from(tabela).insert(linhas);
     if(error) throw new Error(traduzirErroDados(error));
+  },
+
+  /* O plano é o registo e a lista de cursos que vão dentro dele. A lista é
+     substituída por inteiro — é o que o editor mostra — e a ordem em que ficam
+     é a ordem por que o aluno os vê. */
+  async guardarPlano(plano){
+    const linha = MAPAS.plano.para(plano);
+    if(!linha.id) delete linha.id;          /* plano novo: o id nasce na base */
+    const { data, error } = await this.cliente
+      .from("planos").upsert(linha).select("id").maybeSingle();
+    if(error) throw new Error(traduzirErroDados(error));
+
+    const id = data?.id || plano.id;
+    const { error: erroApagar } = await this.cliente
+      .from("plano_cursos").delete().eq("plano_id", id);
+    if(erroApagar) throw new Error(traduzirErroDados(erroApagar));
+
+    const cursos = plano.cursos || [];
+    if(cursos.length){
+      const { error: erroPor } = await this.cliente.from("plano_cursos")
+        .insert(cursos.map((cursoId, i) => ({ plano_id:id, curso_id:cursoId, ordem:i + 1 })));
+      if(erroPor) throw new Error(traduzirErroDados(erroPor));
+    }
+    return id;
   },
 
   /* Um gosto é uma linha que existe ou não existe. */
@@ -408,6 +434,20 @@ function deOferta(r){
            link:r.link_vendas||"", ativa:r.estado === "Ativa", descricao:"" };
 }
 
+/* Um plano é um nome e os cursos que vão dentro dele. O preço não está aqui:
+   está na oferta que o vende, no Payflow. Guardar o preço nos dois sítios era
+   garantir que um dia diziam valores diferentes. */
+function dePlano(r){
+  return {
+    id: r.id, nome: r.nome, descricao: r.descricao || "",
+    ofertaId: r.oferta_id != null ? String(r.oferta_id) : null,
+    cursos: (r.plano_cursos || [])
+              .slice().sort((a,b) => (a.ordem||0) - (b.ordem||0))
+              .map(pc => pc.curso_id),
+    ordem: r.ordem || 0
+  };
+}
+
 function deTurma(t, cursos){
   const curso = cursos.find(c => c.oferta_id === t.oferta_id);
   return { id:String(t.id), nome:t.nome, cursoId:curso ? curso.id : null,
@@ -535,6 +575,11 @@ const MAPAS = {
   avaliacao:{ tabela:"avaliacoes", para: a => ({ id:a.id, utilizador_id:a.membroId || API.utilizador.id, aula_id:a.aulaId, curso_id:a.cursoId, estrelas:a.estrelas, comentario:a.comentario, oculto:!!a.oculto }) },
   acesso:   { tabela:"acessos", para: a => ({ id:a.id, utilizador_id:a.utilizadorId, curso_id:a.cursoId, origem:a.origem||"manual", expira_em:a.expiraEm||null, nota:a.nota||null }) },
   convite:  { tabela:"convites", para: c => ({ id:c.id, email:c.email, nome:c.nome, oferta_id:c.ofertaId||null, cursos:c.cursos||[] }) },
+  /* Repara na ausência: oferta_id não vai aqui. Quem liga um plano a uma oferta
+     é o Payflow, e uma escrita daqui apagava essa ligação sem ninguém dar por
+     ela — o upsert só toca nas colunas que lhe damos. */
+  plano:    { tabela:"planos", suave:true,
+              para: p => ({ id:p.id, nome:p.nome, descricao:p.descricao||null, ordem:p.ordem||0 }) },
   onboarding:{ tabela:"onboarding", para: o => ({ utilizador_id:API.utilizador.id, objetivos:o.objetivos||[], ritmo:o.ritmo, momento:o.momento, saltado:!!o.saltado }) },
   perfil:   { tabela:"perfis", para: p => ({ utilizador_id:API.utilizador.id, foto_url:p.fotoUrl||null, tema:p.tema||null, streak_dias:p.streakDias||0, notificacoes:p.notificacoes||{} }) }
 };
@@ -618,6 +663,14 @@ async function salvar(entidade, registo){
 function remover(entidade, id){
   if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
   return API.apagar(entidade, id).catch(erro => avisarQueNaoGuardou(erro));
+}
+
+/* O plano guarda-se inteiro: o nome e os cursos que leva dentro. Devolve o id
+   porque um plano novo só o recebe aqui. */
+async function salvarPlano(plano){
+  if(modoDemonstracao()){ guardarDB(); return plano.id; }
+  try { return await API.guardarPlano(plano); }
+  catch(erro){ avisarQueNaoGuardou(erro); return plano.id; }
 }
 
 /* Reordenar mexe em várias linhas de uma vez. */

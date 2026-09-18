@@ -186,10 +186,12 @@ const TURMAS_PADRAO = [
   { id:"t2", nome:"IA Aplicada · Janeiro",       cursoId:"ia", inicio:"2026-01-15", fim:"2026-03-30", membros:["m2"],      ativa:true }
 ];
 
+/* Um plano é só um nome e os cursos que leva dentro. O preço não está aqui:
+   está na oferta que o vende, no Payflow. Enquanto estiveram nos dois sítios,
+   os dois números discordavam. */
 const PLANOS_PADRAO = [
-  { id:"all-access", nome:"Kingdom All Access", preco:2500, periodo:"mês",   acessoTotal:true,  cursos:[], ativo:true },
-  { id:"essencial",  nome:"Essencial",          preco:1200, periodo:"mês",   acessoTotal:false, cursos:["mi","he"], ativo:true },
-  { id:"vitalicio",  nome:"Vitalício",          preco:38000, periodo:"único", acessoTotal:true,  cursos:[], ativo:true }
+  { id:"all-access", nome:"Kingdom All Access", descricao:"Tudo o que há na academia.", ofertaId:null, cursos:["kt","mi","he"], ordem:1 },
+  { id:"essencial",  nome:"Essencial",          descricao:"Os dois cursos de base.",    ofertaId:null, cursos:["mi","he"],      ordem:2 }
 ];
 
 const MEMBROS_PADRAO = [

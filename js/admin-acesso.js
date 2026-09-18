@@ -12,11 +12,19 @@ function opcoesPlanos(){ return (DB.planos||[]).map(p => ({ valor:p.id, rotulo:p
 function opcoesCursos(){ return DB.cursos.map(c => ({ valor:c.id, rotulo:c.titulo })); }
 function formatarPreco(v){ return (v||0).toLocaleString("pt-PT") + " MT"; }
 
-/* Um membro sem plano, ou com plano de acesso total, vê tudo o que está publicado. */
+/* Só serve à demonstração: com servidor, quem decide é a base de dados.
+   Um membro sem plano vê tudo o que está publicado; com plano, vê o que o
+   plano leva dentro. */
 function cursosPermitidos(membro){
   const plano = membro && planoPorId(membro.planoId);
-  if(!plano || plano.acessoTotal) return null;
+  if(!plano) return null;
   return plano.cursos || [];
+}
+
+/* O que um plano custa é o que custa a oferta que o vende. */
+function precoDoPlano(plano){
+  const o = plano && ofertaDoPlano(plano);
+  return o ? { preco:o.preco, periodo:o.periodo } : null;
 }
 
 /* ============================================================
@@ -357,7 +365,7 @@ function renderAdminAssinaturas(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Assinaturas",
-      descricao: "Os planos definem o preço e a que cursos cada aluno tem acesso.",
+      descricao: "Um plano junta cursos sob um nome; a oferta que o vende, no Payflow, é que diz quanto custa.",
       acaoRotulo: aba==="planos" ? "Novo plano" : null,
       acaoId: "btn-novo-plano"
     })}
@@ -382,27 +390,42 @@ function renderAdminAssinaturas(){
     b.addEventListener("click", () => apagarPlano(b.getAttribute("data-apagar"))));
 }
 
+/* Um plano é um pacote de cursos com nome. Quanto custa e como se cobra é da
+   oferta que o vende, no Payflow — aqui só se diz o que vai dentro. Enquanto
+   nenhuma oferta o vender, o plano existe e não entrega nada a ninguém: é isso
+   que a coluna "Vendido por" serve para mostrar sem se ter de ir lá ver. */
+function ofertaDoPlano(plano){
+  return plano.ofertaId ? (DB.ofertas || []).find(o => String(o.id) === String(plano.ofertaId)) : null;
+}
+
 function tabelaPlanosHTML(){
   const planos = DB.planos || [];
   return `
     <div class="card table-card">
-      <div class="table-card-head"><h3>Planos</h3><span class="count">${planos.length} registos</span></div>
+      <div class="table-card-head">
+        <h3>Planos</h3>
+        <span class="count">${planos.length} ${planos.length === 1 ? "plano" : "planos"} · o preço é o da oferta que o vende</span>
+      </div>
       <div class="table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Plano</th><th>Preço</th><th>Acesso</th><th>Assinantes</th><th>Estado</th><th></th></tr></thead>
+          <thead><tr><th>Plano</th><th>Cursos</th><th>Vendido por</th><th>Preço</th><th></th></tr></thead>
           <tbody>
             ${planos.length ? planos.map(p => {
-              const assinantes = DB.membros.filter(m=>m.planoId===p.id).length;
-              const acesso = p.acessoTotal ? "Todos os cursos" : `${(p.cursos||[]).length} curso(s)`;
+              const oferta = ofertaDoPlano(p);
+              const dentro = (p.cursos || []).map(id => (DB.cursos.find(c => c.id === id) || {}).titulo).filter(Boolean);
+              const vazios = (p.cursos || []).filter(id => {
+                const c = DB.cursos.find(x => x.id === id);
+                return c && !(c.modulos || []).some(m => (m.aulas || []).length);
+              }).length;
               return `<tr>
-                <td><div class="nome" style="font-weight:600;">${p.nome}</div><div class="sub-celula">por ${p.periodo}</div></td>
-                <td class="num">${formatarPreco(p.preco)}</td>
-                <td>${acesso}</td>
-                <td class="num">${assinantes}</td>
-                <td><span class="pill ${p.ativo!==false?"pill-ativo":"pill-inativo"}">${p.ativo!==false?"Ativo":"Inativo"}</span></td>
+                <td><div class="nome" style="font-weight:600;">${p.nome}</div>
+                    <div class="sub-celula">${dentro.join(" · ") || "sem cursos"}</div></td>
+                <td class="num">${(p.cursos || []).length}${vazios ? `<div class="sub-celula">${vazios} sem aulas</div>` : ""}</td>
+                <td>${oferta ? oferta.nome : `<span class="sub-celula">ninguém — não entrega nada</span>`}</td>
+                <td class="num">${oferta ? formatarPreco(oferta.preco) + (oferta.periodo === "mês" ? "/mês" : "") : "—"}</td>
                 <td>${acoesLinha(p.id)}</td>
               </tr>`;
-            }).join("") : `<tr><td colspan="6"><div class="empty-note">Ainda não há planos.</div></td></tr>`}
+            }).join("") : `<tr><td colspan="5"><div class="empty-note">Ainda não há planos. Um plano junta vários cursos sob um nome, para uma oferta os vender de uma vez.</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -423,7 +446,7 @@ function tabelaAssinantesHTML(){
               return `<tr class="${m.acesso==="bloqueado"?"tint-risco":""}">
                 <td><div class="cell-user"><div class="avatar">${iniciais(m.nome)}</div><div class="meta"><div class="nome">${m.nome}</div><div class="sub">${m.email}</div></div></div></td>
                 <td>${plano ? plano.nome : "<span class='sub-celula'>Sem plano</span>"}</td>
-                <td class="num">${plano ? formatarPreco(plano.preco) : "—"}</td>
+                <td class="num">${(() => { const v = precoDoPlano(plano); return v ? formatarPreco(v.preco) : "—"; })()}</td>
                 <td>${m.membroDesde||"—"}</td>
                 <td><span class="pill ${PILLS_ACESSO[m.acesso]||"pill-inativo"}">${ROTULOS_ACESSO[m.acesso]||"—"}</span></td>
                 <td><div class="acoes-linha"><button class="btn-icone" data-editar="${m.id}" title="Editar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div></td>
@@ -436,25 +459,36 @@ function tabelaAssinantesHTML(){
   `;
 }
 
+/* Os cursos, com um aviso ao lado dos que não têm nenhuma aula: pôr um curso
+   vazio dentro de um plano é vender uma porta fechada, e já aconteceu. */
+function opcoesCursosDoPlano(){
+  return DB.cursos.map(c => {
+    const aulas = (c.modulos || []).reduce((s,m) => s + (m.aulas || []).length, 0);
+    return { valor:c.id, rotulo: aulas ? c.titulo : `${c.titulo} — ainda sem aulas` };
+  });
+}
+
 function editarPlano(id){
   const plano = id ? planoPorId(id) : null;
+  const oferta = plano ? ofertaDoPlano(plano) : null;
   abrirDrawer({
     titulo: plano ? "Editar plano" : "Novo plano",
-    subtitulo: "Define o preço e o que o aluno passa a ver.",
+    subtitulo: oferta
+      ? `Vendido pela oferta "${oferta.nome}". O preço e a cobrança são de lá.`
+      : "Junta vários cursos sob um nome. O preço é da oferta que o vender, no Payflow.",
     campos: [
       { nome:"nome", rotulo:"Nome do plano", tipo:"texto", obrigatorio:true, placeholder:"ex: Kingdom All Access" },
-      { nome:"preco", rotulo:"Preço (MT)", tipo:"numero", placeholder:"2500" },
-      { nome:"periodo", rotulo:"Período", tipo:"select", opcoes:[{valor:"mês",rotulo:"Mensal"},{valor:"ano",rotulo:"Anual"},{valor:"único",rotulo:"Pagamento único"}] },
-      { nome:"acessoTotal", rotulo:"Acesso a todos os cursos", tipo:"toggle", padrao:true, dica:"Se desligares, escolhe abaixo os cursos incluídos." },
-      { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", opcoes:opcoesCursos(), dica:"Só usado quando o acesso total está desligado." },
-      { nome:"ativo", rotulo:"Plano ativo", tipo:"toggle", padrao:true }
+      { nome:"descricao", rotulo:"Descrição", tipo:"texto", placeholder:"Para que serve este pacote." },
+      { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", opcoes:opcoesCursosDoPlano(),
+        dica:"Quem comprar a oferta que vende este plano abre todos estes cursos." }
     ],
-    valores: plano || { periodo:"mês", acessoTotal:true, ativo:true, cursos:[] },
-    aoGuardar: v => {
-      if(soNoCRM("Os planos")) return false;
-      if(plano) Object.assign(plano, v);
-      else DB.planos.push({ id:novoId("plano"), ...v });
-      guardarDB();
+    valores: plano || { cursos:[] },
+    aoGuardar: async v => {
+      const alvo = plano || { id:null, ordem:(DB.planos || []).length + 1 };
+      Object.assign(alvo, v);
+      alvo.cursos = v.cursos || [];
+      const novoIdDado = await salvarPlano(alvo);
+      if(!plano){ alvo.id = novoIdDado; DB.planos.push(alvo); }
       renderAdminAssinaturas();
       mostrarToast(plano ? "Plano atualizado" : "Plano criado");
     }
@@ -462,16 +496,20 @@ function editarPlano(id){
 }
 
 function apagarPlano(id){
-  if(soNoCRM("Os planos")) return;
   const plano = planoPorId(id);
-  const emUso = DB.membros.filter(m=>m.planoId===id).length;
-  if(emUso){ mostrarToast(`Move primeiro os ${emUso} membro(s) deste plano`); return; }
+  const oferta = ofertaDoPlano(plano);
+  /* Apagar um plano que uma oferta ainda vende deixa a oferta a cobrar e a não
+     entregar nada. Desliga-se lá primeiro, onde a ligação foi feita. */
+  if(oferta){
+    mostrarToast(`A oferta "${oferta.nome}" ainda vende este plano — desliga-a no Payflow primeiro`);
+    return;
+  }
   confirmarAcao({
     titulo: "Apagar plano",
-    mensagem: `O plano "${plano.nome}" deixa de estar disponível.`,
-    aoConfirmar: () => {
+    mensagem: `O plano "${plano.nome}" deixa de existir. Os cursos ficam onde estão; quem já tem acesso não o perde.`,
+    aoConfirmar: async () => {
       DB.planos = DB.planos.filter(p=>p.id!==id);
-      guardarDB();
+      await remover("plano", id);
       renderAdminAssinaturas();
       mostrarToast("Plano apagado");
     }
