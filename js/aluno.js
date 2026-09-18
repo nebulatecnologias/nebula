@@ -197,52 +197,68 @@ function renderCatalogo(){
 }
 
 /* ---------------- Vitrine ----------------
-   Os cursos que o plano do aluno ainda não inclui. Cada cartão leva à
-   página de vendas que o administrador definiu no curso — o endereço
-   nunca chega ao HTML, só é usado na abertura. */
+   O que está à venda, e não os cursos soltos. Um cartão é uma OFERTA: pode
+   trazer um curso ou um plano inteiro, e leva ao checkout onde se paga.
+
+   Quem decide o que aparece aqui é a base de dados — a função
+   vitrine_do_aluno() só devolve ofertas activas, mandadas mostrar, com
+   conteúdo publicado e com pelo menos uma aula lá dentro. Este ecrã desenha
+   o que recebe; não tem critério nenhum próprio, de propósito. Um botão de
+   947 MT em cima de um curso vazio é uma coisa que já aconteceu a uma pessoa
+   a sério, e não é decisão para ficar no browser. */
 function renderVitrine(){
-  const bloqueados = cursosBloqueados();
+  const montra = DB.vitrine || [];
   document.getElementById("content-vitrine").innerHTML = `
     <div class="page-head">
       <span class="eyebrow">VITRINE</span>
       <h1>Disponível para desbloquear</h1>
-      <p class="desc">Cursos que ainda não fazem parte do teu acesso. Toca num para saberes como entrar.</p>
+      <p class="desc">O que ainda não faz parte do teu acesso. Toca num para veres como entrar.</p>
     </div>
     <div class="course-grid" id="vitrine-grid">
-      ${bloqueados.length ? bloqueados.map(c => {
-        const cat = categoriaDe(c.categoria);
-        const oferta = ofertaParaCurso(c.id);
-        const aulas = contarAulas(c);
-        return `<div class="card course-card bloqueado vitrine" data-curso="${c.id}">
-          <div class="course-cover ${c.capa?"com-capa":""}" style="${c.capa?`background-image:url(${c.capa})`:""}">
-            <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
-            <span class="cadeado">${ICONS.cadeado}</span>
-          </div>
-          <div class="course-body">
-            <h3>${c.titulo}</h3>
-            <p class="course-desc">${c.subtitulo||""}</p>
-            <div class="course-progress-row">
-              <span class="course-legenda">${c.modulos.length} módulo${c.modulos.length===1?"":"s"} · ${aulas} aula${aulas===1?"":"s"}</span>
-              ${oferta ? `<span class="pct">${formatarPreco(oferta.preco)}</span>` : ""}
-            </div>
-            <button class="btn btn-primary btn-block btn-sm" data-desbloquear="${c.id}">Quero este curso ${setaCirculo()}</button>
-          </div>
-        </div>`;
-      }).join("") : `<div class="empty-note">Já tens acesso a tudo o que está publicado. Bom trabalho.</div>`}
+      ${montra.length ? montra.map(cartaoDaVitrine).join("")
+        : `<div class="empty-note">Já tens acesso a tudo o que está disponível. Bom trabalho.</div>`}
     </div>
   `;
   document.querySelectorAll("#vitrine-grid .course-card").forEach(el =>
-    el.addEventListener("click", () => abrirPaginaDeVendas(el.getAttribute("data-curso"))));
+    el.addEventListener("click", () => abrirOferta(el.getAttribute("data-oferta"))));
 }
 
-/* O destino é o link do curso; na falta dele, o da oferta que o desbloqueia. */
-function abrirPaginaDeVendas(cursoId){
-  const curso = cursoPorId(cursoId);
-  if(!curso) return;
-  const oferta = ofertaParaCurso(cursoId);
-  const destino = (curso.urlVendas||"").trim() || (oferta && oferta.link && oferta.link!=="#" ? oferta.link : "");
-  if(!destino){ mostrarToast("Fala com a tua mentoria para desbloqueares este curso."); return; }
-  abrirLink(destino);
+function cartaoDaVitrine(o){
+  /* A capa e a categoria são do primeiro curso; num plano, é a cara do
+     pacote. O resto vai na legenda, que é onde cabe dizer quantos são. */
+  const primeiro = o.cursos[0] || {};
+  const cat = categoriaDe(primeiro.categoria);
+  const varios = o.cursos.length > 1;
+  const legenda = varios
+    ? `${o.cursos.length} cursos · ${o.aulas} aula${o.aulas === 1 ? "" : "s"}`
+    : `${primeiro.modulos || 0} módulo${primeiro.modulos === 1 ? "" : "s"} · ${o.aulas} aula${o.aulas === 1 ? "" : "s"}`;
+
+  return `<div class="card course-card bloqueado vitrine" data-oferta="${o.ofertaId}">
+    <div class="course-cover ${primeiro.capa?"com-capa":""}" style="${primeiro.capa?`background-image:url(${primeiro.capa})`:""}">
+      <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${varios ? "PLANO" : cat.nome}</span>
+      <span class="cadeado">${ICONS.cadeado}</span>
+    </div>
+    <div class="course-body">
+      <h3>${varios ? o.nome : primeiro.titulo}</h3>
+      <p class="course-desc">${o.chamada || (varios ? o.cursos.map(c=>c.titulo).join(" · ") : (primeiro.subtitulo||""))}</p>
+      <div class="course-progress-row">
+        <span class="course-legenda">${legenda}</span>
+        <span class="pct">${formatarPreco(o.preco)}${o.mensal ? "<small>/mês</small>" : ""}</span>
+      </div>
+      <button class="btn btn-primary btn-block btn-sm" data-desbloquear="${o.ofertaId}">
+        ${o.checkout ? "Quero este acesso" : "Saber como entrar"} ${setaCirculo()}</button>
+    </div>
+  </div>`;
+}
+
+/* O destino é o checkout da oferta. Só na falta de atalho é que se cai para a
+   página de vendas — e se não houver nenhuma das duas, diz-se em vez de abrir
+   uma janela em branco. */
+function abrirOferta(ofertaId){
+  const o = (DB.vitrine || []).find(x => String(x.ofertaId) === String(ofertaId));
+  if(!o) return;
+  if(!o.destino){ mostrarToast("Fala com a tua mentoria para desbloqueares isto."); return; }
+  abrirLink(o.destino);
 }
 
 /* "2026-09-01" → "1 de setembro". */
@@ -278,11 +294,10 @@ function renderCurso(cursoId){
      para evitar. Diz-se-lhe por palavras, e manda-se para onde ela pode
      resolver. */
   if(!cursosVisiveis().some(c => c.id === curso.id)){
-    /* O id da oferta chega como texto em DB.ofertas e como numero no curso --
-       comparar com === dava sempre falso e escondia o link de vendas. */
-    const oferta = curso.ofertaId != null
-      ? (DB.ofertas || []).find(o => String(o.id) === String(curso.ofertaId))
-      : null;
+    /* O caminho para comprar é o mesmo da Vitrine, e vem já guardado de lá.
+       Escrever aqui uma segunda maneira de encontrar a oferta era arranjar um
+       sítio onde as guardas do servidor não se aplicam. */
+    const oferta = ofertaNaVitrinePara(curso.id);
     document.getElementById("content-curso").innerHTML = `
       <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
       <div class="card" style="padding:32px; text-align:center">
@@ -291,8 +306,9 @@ function renderCurso(cursoId){
         <p style="margin:0 0 22px; color:var(--muted)">
           Se acabaste de pagar, o acesso abre-se assim que confirmarmos — avisamos-te por email.
         </p>
-        ${oferta && oferta.link
-          ? `<a class="btn btn-primary" href="${oferta.link}" target="_blank" rel="noopener">Ver como ter acesso</a>`
+        ${oferta && oferta.destino
+          ? `<a class="btn btn-primary" href="${oferta.destino}" target="_blank" rel="noopener">
+               ${oferta.checkout ? "Quero este acesso" : "Ver como ter acesso"} · ${formatarPreco(oferta.preco)}${oferta.mensal ? "/mês" : ""}</a>`
           : `<button class="btn btn-secondary" id="btn-ir-vitrine">Ver o que está disponível</button>`}
       </div>`;
     const voltar = document.getElementById("btn-voltar-catalogo");

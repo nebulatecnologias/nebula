@@ -118,10 +118,6 @@ function renderAdminConfig(){
         <div class="toggle ${c.alunosPublicam!==false?"on":""}" id="tg-publicar"><div class="knob"></div></div>
       </div>
       <div class="toggle-row">
-        <div><div class="t-title">Mostrar cursos bloqueados</div><div class="t-sub">O aluno vê os cursos fora do plano dele, com cadeado e a oferta que os desbloqueia.</div></div>
-        <div class="toggle ${c.mostrarCursosBloqueados!==false?"on":""}" id="tg-bloqueados"><div class="knob"></div></div>
-      </div>
-      <div class="toggle-row">
         <div><div class="t-title">Intervalo do carrossel de banners</div><div class="t-sub">Tempo entre banners no topo do Calendário.</div></div>
         <div class="select-wrap">
           <select id="sel-intervalo">
@@ -167,10 +163,6 @@ function renderAdminConfig(){
     DB.config.alunosPublicam = DB.config.alunosPublicam === false;
     salvarConfigGeral(); renderAdminConfig();
     mostrarToast(DB.config.alunosPublicam ? "Os alunos voltam a poder publicar" : "O feed passa a ser só de leitura");
-  });
-  document.getElementById("tg-bloqueados").addEventListener("click", () => {
-    DB.config.mostrarCursosBloqueados = DB.config.mostrarCursosBloqueados === false;
-    salvarConfigGeral(); renderAdminConfig();
   });
   document.getElementById("sel-intervalo").addEventListener("change", e => {
     DB.config.bannerIntervalo = Number(e.target.value);
