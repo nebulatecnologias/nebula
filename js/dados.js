@@ -63,6 +63,7 @@ const NAV_ADMIN = [
   { grupo:"Alunos e Comunidade", itens:[
     { view:"admin-assinaturas", label:"Assinaturas", icon:ICONS.card },
     { view:"admin-convites", label:"Convites", icon:ICONS.mail },
+    { view:"admin-migracao", label:"Migração", icon:ICONS.people },
     { view:"admin-membros", label:"Membros", icon:ICONS.people },
     { view:"admin-comentarios", label:"Comentários", icon:ICONS.chat },
     { view:"admin-comunidades", label:"Comunidades", icon:ICONS.globe },
