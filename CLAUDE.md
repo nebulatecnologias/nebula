@@ -1,5 +1,18 @@
 # Kingdom — regras de trabalho
 
+## Trabalho em curso — ler primeiro
+
+O plano em curso está em **`PLANO.md`, no repositório `kingdom-dashboard`**.
+Também vive como documento em
+https://claude.ai/code/artifact/444f99f3-7f1d-4e62-8c2c-2859975afbf9
+
+**Numa sessão nova, ou depois de um `/clear`: lê o `PLANO.md` antes de qualquer
+outra coisa.** A secção «REGISTO» diz em que passo se parou. Não é preciso reler
+conversas antigas nem voltar a perguntar o que já foi decidido.
+
+Ao fechar um passo, actualizar o registo **nos dois sítios** — o ficheiro e o
+documento. Um plano desactualizado é pior do que nenhum, porque alguém confia nele.
+
 ## Testes: nunca com dados de alunos reais
 
 **Todos os testes são internos.** Os únicos dados de pessoa que se podem usar
