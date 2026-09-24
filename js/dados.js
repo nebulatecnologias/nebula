@@ -281,9 +281,9 @@ const NOTIFICACOES_PADRAO = [
 ];
 
 const BANNERS_PADRAO = [
-  { id:"b1", ativo:true, eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#ff5a1f,#c23f13)" },
+  { id:"b1", ativo:true, eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", imagem:"", gradiente:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)" },
   { id:"b2", ativo:true, eyebrow:"OFERTA POR TEMPO LIMITADO", titulo:"IA Aplicada aos Negócios com 20% de desconto", cta:"Ver oferta", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)" },
-  { id:"b3", ativo:true, eyebrow:"NOVO EVENTO", titulo:"Roda de Espiritualidade e Propósito — 24 de Setembro", cta:"Confirmar presença", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#7c5cff,#3d2b8f)" }
+  { id:"b3", ativo:true, eyebrow:"NOVO EVENTO", titulo:"Roda de Espiritualidade e Propósito — 24 de Setembro", cta:"Confirmar presença", link:"#", imagem:"", gradiente:"linear-gradient(160deg,#7b72e8,#564cc9)" }
 ];
 
 /* Regras declarativas (guardáveis): avaliadas por conquistaDesbloqueada() em nucleo.js */
@@ -301,8 +301,8 @@ const APARENCIA_PADRAO = {
   nomeEscola: "Kingdom Academy",
   sublinha: "Formação & Mentoria",
   logoUrl: "",
-  corAccent: "#ff5a1f",
-  temaPadrao: "dark",
+  corAccent: "#f4621d",
+  temaPadrao: "auto",
   rodape: "© 2026 Kingdom Company",
   loginTitulo: "Autoridade constrói-se em privado, muito antes de aparecer em público.",
   loginTexto: "Acede à tua área de membros para continuares os teus cursos onde ficaste — módulos, aulas, comunidade e o teu progresso, tudo num só lugar."

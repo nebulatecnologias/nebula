@@ -4,7 +4,9 @@
    ============================================================ */
 
 const GRADIENTES = [
-  { valor:"linear-gradient(120deg,#ff5a1f,#c23f13)", rotulo:"Laranja (marca)" },
+  { valor:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)", rotulo:"Laranja Kingdom" },
+  { valor:"linear-gradient(160deg,#7b72e8,#564cc9)", rotulo:"Violeta (encontros e prazos)" },
+  { valor:"linear-gradient(120deg,#ff5a1f,#c23f13)", rotulo:"Laranja (anterior)" },
   { valor:"linear-gradient(120deg,#1f8f8a,#0d4d4a)", rotulo:"Verde-azulado" },
   { valor:"linear-gradient(120deg,#7c5cff,#3d2b8f)", rotulo:"Roxo" },
   { valor:"linear-gradient(120deg,#2b6cb0,#12325a)", rotulo:"Azul" },
@@ -32,7 +34,7 @@ function renderAdminBanners(){
     <div class="banner-carousel" id="carrossel-admin">
       <div class="banner-track">
         ${bannersAtivos().map(b => `<div class="banner-slide" style="${fundoBanner(b)}">
-          <span class="banner-eyebrow">${b.eyebrow||""}</span>
+          ${b.eyebrow ? `<span class="banner-etiqueta">${b.eyebrow}</span>` : ""}
           <span class="banner-title">${b.titulo||""}</span>
           <span class="banner-cta">${b.cta||""} ${setaCirculo()}</span>
         </div>`).join("")}
@@ -95,7 +97,7 @@ function editarBanner(id){
     titulo: banner ? "Editar banner" : "Novo banner",
     subtitulo: "Aparece no topo do Calendário do aluno.",
     campos: [
-      { nome:"eyebrow", rotulo:"Etiqueta", tipo:"texto", placeholder:"ex: OFERTA POR TEMPO LIMITADO" },
+      { nome:"eyebrow", rotulo:"Etiqueta", tipo:"texto", placeholder:"ex: Oferta por tempo limitado" },
       { nome:"titulo", rotulo:"Título", tipo:"texto", obrigatorio:true, placeholder:"A mensagem principal do banner." },
       { nome:"cta", rotulo:"Texto do botão", tipo:"texto", placeholder:"ex: Garantir vaga" },
       { nome:"link", rotulo:"Link de destino", tipo:"url", placeholder:"https://...", dica:"Para onde o aluno vai ao clicar no banner." },

@@ -68,11 +68,11 @@ async function renderAdminMigracao(){
     </div>
 
     ${magras.length ? `
-      <div class="card" style="margin-bottom:24px;border-left:3px solid var(--erro,#e5484d)">
+      <div class="card" style="margin-bottom:24px;background:var(--red-soft);border-color:transparent;box-shadow:none;">
         <div style="padding:18px 20px">
           <h3 style="margin:0 0 8px">Isto é o que trava a migração hoje</h3>
           ${magras.map(o => `<p style="margin:0 0 6px">
-            <b>${o.pessoas} ${o.pessoas === 1 ? "pessoa pagou" : "pessoas pagaram"} ${formatarPreco(Number(o.preco)||0)}</b>
+            <b>${o.pessoas} ${o.pessoas === 1 ? "pessoa pagou" : "pessoas pagaram"} ${formatarPreco(Number(o.preco)||0, o.moeda)}</b>
             pelo ${o.nome}, e o que ela entrega tem
             <b>${o.aulas} ${o.aulas === 1 ? "aula" : "aulas"}</b>.
           </p>`).join("")}
@@ -131,8 +131,8 @@ function linhaDaMigracao(o){
 
   return `<tr class="${o.motivo ? "" : (o.aulas <= 2 ? "tint-risco" : "")}">
     <td>
-      <div class="nome" style="font-weight:600;">${o.nome}</div>
-      <div class="sub-celula">${formatarPreco(Number(o.preco)||0)}${o.cobranca === "Recorrente mensal" ? " por mês" : ""}</div>
+      <div class="nome" style="font-weight:500;">${o.nome}</div>
+      <div class="sub-celula">${formatarPreco(Number(o.preco)||0, o.moeda)}${o.cobranca === "Recorrente mensal" ? " por mês" : ""}</div>
     </td>
     <td class="num">${o.pessoas}${o.semEmail ? `<div class="sub-celula">${o.semEmail} sem email</div>` : ""}</td>
     <td>${entrega}</td>

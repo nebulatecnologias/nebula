@@ -10,7 +10,24 @@ function membroPorEmail(email){
 }
 function opcoesPlanos(){ return (DB.planos||[]).map(p => ({ valor:p.id, rotulo:p.nome })); }
 function opcoesCursos(){ return DB.cursos.map(c => ({ valor:c.id, rotulo:c.titulo })); }
-function formatarPreco(v){ return (v||0).toLocaleString("pt-PT") + " MT"; }
+/* «MZ 1 500,00» — símbolo à frente, duas casas, vírgula decimal, a mesma
+   disposição do Payflow e dos relatórios financeiros da empresa. Era
+   «1 500 MT»: sufixo e sem casas decimais. */
+function formatarPreco(v, moedaOuSimbolo){
+  return simboloDaMoeda(moedaOuSimbolo) + " " + Number(v||0)
+    .toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2,
+                               useGrouping: "always" });
+}
+
+/* Uma oferta do mercado sul-africano paga-se em rands, e a Vitrine mostra as duas
+   ao lado. Aceita já o símbolo ou o código da moeda: quem chama nem sempre sabe
+   qual dos dois tem na mão. */
+function simboloDaMoeda(m){
+  const s = String(m || "").toUpperCase();
+  if(!s) return "MZ";
+  return { MZN: "MZ", ZAR: "R", NGN: "₦", GHS: "GH₵", KES: "KSh",
+           USD: "$", EUR: "€" }[s] || s;
+}
 
 /* Só serve à demonstração: com servidor, quem decide é a base de dados.
    Um membro sem plano vê tudo o que está publicado; com plano, vê o que o
@@ -173,7 +190,7 @@ function renderAdminConvites(){
             ${convites.length ? convites.map(c => `
               <tr class="${c.estado==="aceite"?"tint-concluido":""}">
                 <td>
-                  <div class="nome" style="font-weight:600;">${c.email}</div>
+                  <div class="nome" style="font-weight:500;">${c.email}</div>
                   <div class="sub-celula">${c.nome || "Sem nome"}</div>
                 </td>
                 <td>${resumoDoConvite(c)}</td>
@@ -418,7 +435,7 @@ function tabelaPlanosHTML(){
                 return c && !(c.modulos || []).some(m => (m.aulas || []).length);
               }).length;
               return `<tr>
-                <td><div class="nome" style="font-weight:600;">${p.nome}</div>
+                <td><div class="nome" style="font-weight:500;">${p.nome}</div>
                     <div class="sub-celula">${dentro.join(" · ") || "sem cursos"}</div></td>
                 <td class="num">${(p.cursos || []).length}${vazios ? `<div class="sub-celula">${vazios} sem aulas</div>` : ""}</td>
                 <td>${oferta ? oferta.nome : `<span class="sub-celula">ninguém — não entrega nada</span>`}</td>

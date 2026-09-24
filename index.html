@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kingdom Academy — Área de Membros</title>
+<meta name="description" content="Área de membros da Kingdom Academy: os teus cursos, aulas, encontros ao vivo e comunidade.">
+<meta name="theme-color" content="#f5f3f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="img/coroa.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -11,7 +20,7 @@
 <!-- ==================== ARRANQUE ==================== -->
 <div id="view-arranque">
   <div class="arranque-caixa">
-    <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="#ff5a1f" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"><defs><linearGradient id="kc-html1" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#kc-html1)"/><path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
     <p id="arranque-texto">A preparar a tua área de membros...</p>
   </div>
 </div>
@@ -21,26 +30,25 @@
   <div class="login-shell">
     <aside class="login-brandside">
       <div class="brand-mark">
-        <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="#ff5a1f" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"><defs><linearGradient id="kc-html2" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#kc-html2)"/><path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
         <span class="wordmark">Kingdom Academy<small>Formação & Mentoria</small></span>
       </div>
       <div class="login-quote" id="login-quote">
-        <span class="kicker">KINGDOM ACADEMY</span>
         <h2>Autoridade constrói-se em privado, muito antes de aparecer em público.</h2>
         <p>Acede à tua área de membros para continuares os teus cursos onde ficaste — módulos, aulas, comunidade e o teu progresso, tudo num só lugar.</p>
       </div>
-      <p id="login-rodape" style="font-size:12.5px;color:var(--text-faint);position:relative;z-index:1;">© 2026 Kingdom Company</p>
+      <p id="login-rodape">© 2026 Kingdom Company</p>
     </aside>
     <main class="login-formside">
       <div class="login-card">
         <h1>Entrar na tua conta</h1>
         <p class="sub">Introduz os teus dados para aceder aos teus cursos.</p>
         <form id="form-login" novalidate>
-          <div class="field"><label>Email</label><input type="email" id="input-email" placeholder="ex: sofia@empresa.co"></div>
-          <div class="field"><label>Senha</label><input type="password" placeholder="••••••••"></div>
+          <div class="field"><label for="input-email">Email</label><input type="email" id="input-email" placeholder="o-teu-email@exemplo.com" autocomplete="email" required></div>
+          <div class="field"><label for="input-password">Password</label><input type="password" id="input-password" placeholder="A tua password" autocomplete="current-password"></div>
           <div class="form-row-between">
             <label class="checkbox-row"><input type="checkbox" checked> Manter sessão iniciada</label>
-            <a href="#" class="link-muted" id="btn-esqueci">Esqueceste a senha?</a>
+            <a href="#" class="link-muted" id="btn-esqueci">Esqueceste a password?</a>
           </div>
           <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-entrar">Entrar</button>
         </form>
@@ -58,13 +66,13 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <div class="brand-mark">
-        <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="30" height="30"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="#ff5a1f" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"><defs><linearGradient id="kc-html3" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#kc-html3)"/><path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
         <span class="wordmark">Kingdom Academy<small>Formação & Mentoria</small></span>
       </div>
     </div>
     <nav class="sidebar-nav">
       <div id="sidebar-nav-items"></div>
-      <div class="nav-item" id="btn-logout">
+      <div class="nav-item" id="btn-logout" role="button" tabindex="0">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
         Sair
       </div>
@@ -75,6 +83,7 @@
   <div class="main-col">
     <header class="topbar">
       <button class="menu-toggle icon-btn" id="btn-menu" aria-label="Abrir menu"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="brand-mark topbar-marca"></div>
       <div class="topbar-search"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="text" placeholder="Pesquisar aulas, módulos..."></div>
       <div class="topbar-actions">
         <span id="topbar-cta"></span>
@@ -101,6 +110,7 @@
       <div id="content-admin" class="hidden"></div>
     </main>
   </div>
+  <nav class="tabbar" id="tabbar" aria-label="Navegação principal"></nav>
 </div>
 
 <div class="modal-overlay hidden" id="modal-certificado">

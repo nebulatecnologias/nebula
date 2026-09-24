@@ -52,6 +52,7 @@ function mostrarEcra(qual){
   ecraArranque.classList.toggle("hidden", qual !== "arranque");
   ecraLogin.classList.toggle("hidden", qual !== "login");
   ecraApp.classList.toggle("hidden", qual !== "app");
+  if(qual === "login" && typeof despedidaDeQuemSaiu === "function") despedidaDeQuemSaiu();
 }
 
 function avisoLogin(texto, tom){
@@ -206,8 +207,8 @@ function pedirNovaPassword(primeiraVez){
   cartao.innerHTML = `
     <h1>${primeiraVez ? "Boas-vindas à academia" : "Escolhe uma nova password"}</h1>
     <p class="sub">${primeiraVez ? "Escolhe a password com que passas a entrar. Pelo menos 8 caracteres." : "Tem de ter pelo menos 8 caracteres."}</p>
-    <div class="field"><label>Nova password</label><input type="password" id="pass-nova"></div>
-    <div class="field"><label>Repete</label><input type="password" id="pass-repete"></div>
+    <div class="field"><label for="pass-nova">Nova password</label><input type="password" id="pass-nova" autocomplete="new-password" placeholder="Pelo menos 8 caracteres"></div>
+    <div class="field"><label for="pass-repete">Repete a password</label><input type="password" id="pass-repete" autocomplete="new-password"></div>
     <button class="btn btn-primary btn-block btn-lg" id="btn-definir-pass">${primeiraVez ? "Entrar na academia" : "Guardar e entrar"}</button>
     <div class="login-aviso hidden" id="login-aviso"></div>
   `;
@@ -226,11 +227,23 @@ function pedirNovaPassword(primeiraVez){
   });
 }
 
-document.getElementById("btn-logout").addEventListener("click", async () => {
+async function sairDaConta(){
   estado.prevendoComoAluno = false;
   if(!modoDemonstracao()){ API.pararDeOuvir(); await API.sair(); }
+  /* Quem sai vê uma despedida no ecrã de entrada, e não um formulário
+     igual ao de quem nunca entrou. */
+  try { sessionStorage.setItem("academia-saiu", "1"); } catch(e){ /* sem armazenamento: sai na mesma */ }
   location.reload();
-});
+}
+const botaoSair = document.getElementById("btn-logout");
+botaoSair.addEventListener("click", sairDaConta);
+botaoSair.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); sairDaConta(); } });
+
+function despedidaDeQuemSaiu(){
+  let saiu = false;
+  try { saiu = sessionStorage.getItem("academia-saiu") === "1"; sessionStorage.removeItem("academia-saiu"); } catch(e){}
+  if(saiu) avisoLogin("Saíste da tua conta. Até à próxima aula!", "nota");
+}
 
 document.getElementById("avatar-iniciais").addEventListener("click", () => {
   irPara(papelEfetivo()==="administrador" ? "admin-config" : "definicoes");
@@ -257,10 +270,20 @@ document.addEventListener("click", e => {
 document.getElementById("btn-tema").addEventListener("click", () => {
   /* A escolha de quem está a usar guarda-se e passa a mandar sobre o
      tema por omissão definido em Aparência. */
-  const claro = !document.body.classList.contains("light");
-  document.body.classList.toggle("light", claro);
-  estado.tema = claro ? "light" : "dark";
+  estado.tema = temaEfetivo() === "dark" ? "light" : "dark";
+  aplicarTema();
   salvarPerfil();
+});
+
+/* Elementos que se comportam como botões ou ligações sem o serem
+   (linhas de navegação, "Ver todos") respondem também ao teclado. */
+document.addEventListener("keydown", e => {
+  if(e.key !== "Enter" && e.key !== " ") return;
+  const alvo = e.target.closest && e.target.closest('[role="link"],[role="button"]');
+  if(!alvo || alvo.tagName === "BUTTON" || alvo.tagName === "A") return;
+  if(alvo.id === "btn-logout" || alvo.classList.contains("nav-item")) return;  /* já tratam a tecla */
+  e.preventDefault();
+  alvo.click();
 });
 
 /* A identidade definida no painel é aplicada logo no ecrã de entrada. */

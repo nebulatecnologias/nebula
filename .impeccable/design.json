@@ -1,0 +1,768 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-24T18:47:56+00:00",
+  "title": "Design System: Kingdom Academy",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Kingdom Orange (admin-configurable)",
+        "canonical": "#f4621d",
+        "tonalRamp": [
+          "#491d09",
+          "#7a310e",
+          "#ab4514",
+          "#d7561a",
+          "#f6814a",
+          "#f9a983",
+          "#fcd0bb",
+          "#feefe8"
+        ],
+        "note": "Default value. Any Aparência colour other than #f4621d or #ff5a1f replaces it and derives accent-soft (color-mix 14% with surface), accent-ink (color-mix 72% with ink), cta, cta-hover, cta-shadow, brand-panel and ring."
+      },
+      "orange-500": {
+        "role": "primary",
+        "displayName": "Kingdom Orange",
+        "canonical": "#f4621d",
+        "tonalRamp": [
+          "#5a2208",
+          "#8a3510",
+          "#b8400a",
+          "#e14e0c",
+          "#f4621d",
+          "#ff8a4c",
+          "#ffb38a",
+          "#fff0e7"
+        ]
+      },
+      "cta-deep": {
+        "role": "primary",
+        "displayName": "Sunrise CTA (deep stop)",
+        "canonical": "#f2570f",
+        "tonalRamp": [
+          "#491a05",
+          "#792c08",
+          "#a93d0a",
+          "#d54d0d",
+          "#f5793f",
+          "#f8a37b",
+          "#fbcdb7",
+          "#feeee7"
+        ]
+      },
+      "cta-glow": {
+        "role": "primary",
+        "displayName": "Sunrise CTA (glow stop)",
+        "canonical": "#ff7f37",
+        "tonalRamp": [
+          "#4d2611",
+          "#80401c",
+          "#b25926",
+          "#e07030",
+          "#ff995f",
+          "#ffb991",
+          "#ffd9c3",
+          "#fff2eb"
+        ]
+      },
+      "orange-soft": {
+        "role": "primary",
+        "displayName": "Apricot Wash",
+        "canonical": "#fff0e7",
+        "tonalRamp": [
+          "#4d4845",
+          "#807874",
+          "#b2a8a2",
+          "#e0d3cb",
+          "#fff3ec",
+          "#fff7f2",
+          "#fffaf8",
+          "#fffefd"
+        ]
+      },
+      "orange-ink": {
+        "role": "primary",
+        "displayName": "Burnt Ink",
+        "canonical": "#b8400a",
+        "tonalRamp": [
+          "#371303",
+          "#5c2005",
+          "#812d07",
+          "#a23809",
+          "#c6663b",
+          "#d89678",
+          "#eac6b6",
+          "#f8ece6"
+        ]
+      },
+      "violet-2": {
+        "role": "secondary",
+        "displayName": "Time Violet",
+        "canonical": "#564cc9",
+        "tonalRamp": [
+          "#1a173c",
+          "#2b2664",
+          "#3c358d",
+          "#4c43b1",
+          "#7870d4",
+          "#a29de1",
+          "#ccc9ef",
+          "#eeedfa"
+        ]
+      },
+      "green": {
+        "role": "tertiary",
+        "displayName": "Done Green",
+        "canonical": "#15803d",
+        "tonalRamp": [
+          "#062612",
+          "#0a401e",
+          "#0f5a2b",
+          "#127136",
+          "#449964",
+          "#7eb994",
+          "#b9d9c5",
+          "#e8f2ec"
+        ]
+      },
+      "red": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#d42a39",
+        "tonalRamp": [
+          "#400d11",
+          "#6a151c",
+          "#941d28",
+          "#bb2532",
+          "#dd5561",
+          "#e78a92",
+          "#f2bfc4",
+          "#fbeaeb"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Stone Canvas",
+        "canonical": "#f5f3f0",
+        "tonalRamp": [
+          "#4a4948",
+          "#7a7a78",
+          "#acaaa8",
+          "#d8d6d3",
+          "#f7f5f3",
+          "#faf8f7",
+          "#fcfbfa",
+          "#fefefe"
+        ]
+      },
+      "canvas-2": {
+        "role": "neutral",
+        "displayName": "Deeper Stone (sidebar)",
+        "canonical": "#efece8",
+        "tonalRamp": [
+          "#484746",
+          "#787674",
+          "#a7a5a2",
+          "#d2d0cc",
+          "#f2f0ed",
+          "#f6f5f2",
+          "#faf9f8",
+          "#fdfdfd"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#4d4d4d",
+          "#808080",
+          "#b2b2b2",
+          "#e0e0e0",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Sunken Stone",
+        "canonical": "#f1eeea",
+        "tonalRamp": [
+          "#484746",
+          "#787775",
+          "#a9a7a4",
+          "#d4d1ce",
+          "#f4f1ee",
+          "#f7f6f3",
+          "#fbfaf9",
+          "#fefdfd"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e8e3dd",
+        "tonalRamp": [
+          "#464442",
+          "#74726e",
+          "#a29f9b",
+          "#ccc8c2",
+          "#ede9e4",
+          "#f2f0ec",
+          "#f8f7f5",
+          "#fdfcfc"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Warm Ink",
+        "canonical": "#1c1a17",
+        "tonalRamp": [
+          "#080807",
+          "#0e0d0c",
+          "#141210",
+          "#191714",
+          "#494845",
+          "#82817f",
+          "#bbbab9",
+          "#e8e8e8"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Stone",
+        "canonical": "#6f6962",
+        "tonalRamp": [
+          "#21201d",
+          "#383431",
+          "#4e4a45",
+          "#625c56",
+          "#8c8781",
+          "#b0aca9",
+          "#d4d2d0",
+          "#f1f0ef"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint (placeholders only)",
+        "canonical": "#7d766e",
+        "tonalRamp": [
+          "#262321",
+          "#3e3b37",
+          "#58534d",
+          "#6e6861",
+          "#97918b",
+          "#b8b4af",
+          "#d8d6d4",
+          "#f2f1f0"
+        ]
+      },
+      "player-ground": {
+        "role": "neutral",
+        "displayName": "Player Ground",
+        "canonical": "#12110f",
+        "tonalRamp": [
+          "#050505",
+          "#090808",
+          "#0d0c0a",
+          "#100f0d",
+          "#41413f",
+          "#7d7c7b",
+          "#b8b8b7",
+          "#e7e7e7"
+        ]
+      },
+      "field-sky": {
+        "role": "art",
+        "displayName": "Course Field Sky",
+        "canonical": "#d6ebf8",
+        "tonalRamp": [
+          "#40474a",
+          "#6b767c",
+          "#96a4ae",
+          "#bccfda",
+          "#deeff9",
+          "#e8f4fb",
+          "#f3f9fd",
+          "#fbfdfe"
+        ]
+      },
+      "field-sand": {
+        "role": "art",
+        "displayName": "Course Field Sand",
+        "canonical": "#ffe6b3",
+        "tonalRamp": [
+          "#4d4536",
+          "#80735a",
+          "#b2a17d",
+          "#e0ca9e",
+          "#ffebc2",
+          "#fff1d5",
+          "#fff8e8",
+          "#fffcf7"
+        ]
+      },
+      "field-meadow": {
+        "role": "art",
+        "displayName": "Course Field Meadow",
+        "canonical": "#d9eed0",
+        "tonalRamp": [
+          "#41473e",
+          "#6c7768",
+          "#98a792",
+          "#bfd1b7",
+          "#e1f1d9",
+          "#eaf6e5",
+          "#f4faf1",
+          "#fbfdfa"
+        ]
+      },
+      "field-blush": {
+        "role": "art",
+        "displayName": "Course Field Blush",
+        "canonical": "#f8d5cf",
+        "tonalRamp": [
+          "#4a403e",
+          "#7c6a68",
+          "#ae9591",
+          "#dabbb6",
+          "#f9ddd9",
+          "#fbe8e5",
+          "#fdf2f1",
+          "#fefbfa"
+        ]
+      },
+      "field-lagoon": {
+        "role": "art",
+        "displayName": "Course Field Lagoon",
+        "canonical": "#cbedee",
+        "tonalRamp": [
+          "#3d4747",
+          "#667677",
+          "#8ea6a7",
+          "#b3d1d1",
+          "#d5f1f1",
+          "#e2f5f6",
+          "#effafa",
+          "#fafdfd"
+        ]
+      },
+      "field-lavender": {
+        "role": "art",
+        "displayName": "Course Field Lavender",
+        "canonical": "#e8e2fb",
+        "tonalRamp": [
+          "#46444b",
+          "#74717e",
+          "#a29eb0",
+          "#ccc7dd",
+          "#ede8fc",
+          "#f2effd",
+          "#f8f6fe",
+          "#fdfcff"
+        ]
+      },
+      "field-wheat": {
+        "role": "art",
+        "displayName": "Course Field Wheat",
+        "canonical": "#f3e0c3",
+        "tonalRamp": [
+          "#49433b",
+          "#7a7062",
+          "#aa9d88",
+          "#d6c5ac",
+          "#f5e6cf",
+          "#f8eede",
+          "#fbf6ed",
+          "#fefcf9"
+        ]
+      },
+      "field-apricot": {
+        "role": "art",
+        "displayName": "Course Field Apricot",
+        "canonical": "#fde0c6",
+        "tonalRamp": [
+          "#4c433b",
+          "#7e7063",
+          "#b19d8b",
+          "#dfc5ae",
+          "#fde6d1",
+          "#feeee0",
+          "#fef6ee",
+          "#fffcf9"
+        ]
+      },
+      "dark-theme": {
+        "role": "neutral",
+        "displayName": "Dark theme mapping",
+        "canonical": "#141311",
+        "mapping": {
+          "canvas": "#141311",
+          "canvas-2": "#1a1816",
+          "surface": "#1e1c19",
+          "surface-2": "#1b1917",
+          "sunken": "#26231f",
+          "line": "#2f2b27",
+          "line-strong": "#3d3833",
+          "ink": "#f4f0ea",
+          "ink-2": "#ddd6cd",
+          "muted": "#aaa298",
+          "faint": "#7f786f",
+          "orange-soft": "#3a2216",
+          "orange-ink": "#ffab7c",
+          "green-soft": "#15301f",
+          "green-ink": "#6fdc98",
+          "red-soft": "#3a1a1d",
+          "red-ink": "#ff8f98",
+          "amber-soft": "#352a12",
+          "amber-ink": "#f5c865",
+          "violet-soft": "#25234a",
+          "violet-ink": "#b3adff",
+          "blue-soft": "#16283a",
+          "blue-ink": "#8cc4f5",
+          "card-bg": "linear-gradient(180deg,#211f1c 0%,#1c1a17 100%)",
+          "field-sky": "#23384a",
+          "field-sand": "#4a3d22",
+          "field-meadow": "#2a3f28",
+          "field-blush": "#4a2c29",
+          "field-lagoon": "#1f4244",
+          "field-lavender": "#353052",
+          "field-wheat": "#453a2a",
+          "field-apricot": "#4a3426",
+          "art-ink": "#f4f0ea"
+        },
+        "tonalRamp": []
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page greetings and page titles."
+      },
+      "display-hero": {
+        "displayName": "Display Hero",
+        "purpose": "Course hero title and login brand headline."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "KPI values, tabular; 30px under 640px."
+      },
+      "cover-initials": {
+        "displayName": "Cover Initials",
+        "purpose": "Course initials on a pastel field when no cover image exists."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Continuar card, dialogs, drawers."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Section titles with a right-aligned Ver todos link."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, course and module titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text; leads in muted capped at 56-64ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, segmented controls, small buttons."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Hints, timestamps, table sub-lines."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-1",
+        "value": "0 1px 2px rgba(28,22,16,.05), 0 6px 18px -8px rgba(28,22,16,.10)",
+        "purpose": "Rest: cards, login card, active nav item."
+      },
+      {
+        "name": "shadow-2",
+        "value": "0 2px 6px rgba(28,22,16,.06), 0 18px 40px -16px rgba(28,22,16,.22)",
+        "purpose": "Lift: hovered course/continue/certificate cards, video player."
+      },
+      {
+        "name": "shadow-pop",
+        "value": "0 12px 32px -8px rgba(28,22,16,.28), 0 2px 8px rgba(28,22,16,.08)",
+        "purpose": "Dialogs, drawers, toasts, menus, notification panel."
+      },
+      {
+        "name": "cta-shadow",
+        "value": "0 1px 0 rgba(255,255,255,.35) inset, 0 6px 16px -4px rgba(226,78,12,.55)",
+        "purpose": "Primary buttons, play disc, XP badge; follows a custom accent."
+      },
+      {
+        "name": "violet-glow",
+        "value": "0 10px 20px -12px rgba(86,76,201,.8), inset 0 1px 0 rgba(255,255,255,.25)",
+        "purpose": "Upcoming event date tile only."
+      },
+      {
+        "name": "tabbar",
+        "value": "0 -8px 24px -18px rgba(28,22,16,.35)",
+        "purpose": "Mobile bottom tab bar."
+      },
+      {
+        "name": "ring",
+        "value": "0 0 0 3px rgba(244,98,29,.28)",
+        "purpose": "Focus ring; follows a custom accent."
+      },
+      {
+        "name": "dark shadow-1",
+        "value": "0 1px 2px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6)",
+        "purpose": "Rest in dark theme."
+      },
+      {
+        "name": "dark shadow-2",
+        "value": "0 2px 6px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.7)",
+        "purpose": "Lift in dark theme."
+      },
+      {
+        "name": "dark shadow-pop",
+        "value": "0 12px 32px -8px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.4)",
+        "purpose": "Pop in dark theme."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.22,1,.36,1)",
+        "purpose": "The single easing for everything."
+      },
+      {
+        "name": "control",
+        "value": "0.15-0.2s",
+        "purpose": "Hover, colour and border transitions on controls."
+      },
+      {
+        "name": "lift",
+        "value": "0.25s",
+        "purpose": "Card hover lift (translateY(-3px))."
+      },
+      {
+        "name": "rise",
+        "value": "0.2-0.3s",
+        "purpose": "Dialogs, menus, toasts rise 14px with scale .98."
+      },
+      {
+        "name": "drawer",
+        "value": "0.3s",
+        "purpose": "Drawer and sidebar slide."
+      },
+      {
+        "name": "view",
+        "value": "0.35s",
+        "purpose": "View change fades up 6px."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-table",
+        "value": "1560px"
+      },
+      {
+        "name": "table",
+        "value": "1240px"
+      },
+      {
+        "name": "lg",
+        "value": "1180px"
+      },
+      {
+        "name": "form",
+        "value": "1000px"
+      },
+      {
+        "name": "md (tab bar)",
+        "value": "980px"
+      },
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "xs",
+        "value": "420px"
+      }
+    ],
+    "gradients": [
+      {
+        "name": "cta",
+        "value": "linear-gradient(180deg,#ff7f37 0%,#f2570f 100%)",
+        "purpose": "Primary button, progress fills, play disc."
+      },
+      {
+        "name": "cta-hover",
+        "value": "linear-gradient(180deg,#ff8b47 0%,#f4621d 100%)",
+        "purpose": "Primary hover."
+      },
+      {
+        "name": "brand-panel",
+        "value": "linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)",
+        "purpose": "Login brand side, avatar, login preview."
+      },
+      {
+        "name": "card-bg",
+        "value": "linear-gradient(180deg,#ffffff 0%,#fbfaf8 100%)",
+        "purpose": "Every card."
+      },
+      {
+        "name": "violet",
+        "value": "linear-gradient(160deg,#7b72e8,#564cc9)",
+        "purpose": "Upcoming event date tile."
+      },
+      {
+        "name": "email-band",
+        "value": "linear-gradient(160deg,#ff8a45 0%,#ee5410 100%)",
+        "purpose": "Email header band (fixed light)."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single sunrise-gradient pill per view.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Continuar <svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m12 16 4-4-4-4M8 12h8\"/></svg></button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:999px;border:1px solid transparent;font-family:var(--font);font-size:14.5px;font-weight:500;line-height:1.2;cursor:pointer;transition:background .18s cubic-bezier(.22,1,.36,1),box-shadow .18s,transform .18s,border-color .18s;} .ds-btn:active{transform:translateY(1px);} .ds-btn:focus-visible{outline:none;box-shadow:var(--ring,0 0 0 3px rgba(244,98,29,.28));} .ds-btn-primary{background:var(--cta,linear-gradient(180deg,#ff7f37 0%,#f2570f 100%));color:#fff;box-shadow:var(--cta-shadow,0 1px 0 rgba(255,255,255,.35) inset,0 6px 16px -4px rgba(226,78,12,.55));} .ds-btn-primary:hover{background:var(--cta-hover,linear-gradient(180deg,#ff8b47 0%,#f4621d 100%));}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet white pill for every other action.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Ver calendário</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:999px;border:1px solid transparent;font-family:var(--font);font-size:14.5px;font-weight:500;line-height:1.2;cursor:pointer;transition:background .18s cubic-bezier(.22,1,.36,1),box-shadow .18s,transform .18s,border-color .18s;} .ds-btn:active{transform:translateY(1px);} .ds-btn:focus-visible{outline:none;box-shadow:var(--ring,0 0 0 3px rgba(244,98,29,.28));} .ds-btn-secondary{background:var(--surface,#fff);border-color:var(--line,#e8e3dd);color:var(--ink,#1c1a17);box-shadow:0 1px 2px rgba(28,22,16,.04);} .ds-btn-secondary:hover{background:var(--surface-2,#fbfaf8);border-color:var(--line-strong,#d9d3cb);}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "48px field with 14px radius and accent focus ring.",
+      "html": "<label class=\"ds-field\"><span>Email</span><input type=\"email\" placeholder=\"o-teu@email.com\"></label>",
+      "css": ".ds-field{display:block;font-family:var(--font);} .ds-field span{display:block;font-size:13.5px;font-weight:500;color:var(--ink-2,#3b3732);margin-bottom:7px;} .ds-field input{width:100%;min-height:48px;background:var(--surface,#fff);border:1px solid var(--line-strong,#d9d3cb);border-radius:14px;padding:0 16px;font:inherit;font-size:15px;color:var(--ink,#1c1a17);transition:border-color .15s,box-shadow .15s;} .ds-field input::placeholder{color:var(--faint,#7d766e);} .ds-field input:hover{border-color:var(--faint,#7d766e);} .ds-field input:focus{outline:none;border-color:var(--accent,#f4621d);box-shadow:var(--ring,0 0 0 3px rgba(244,98,29,.28));}"
+    },
+    {
+      "name": "Filter Chips",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "38px white pills; selected inverts to ink.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-on\">Todos <span class=\"ds-n\">6</span></button><button class=\"ds-chip\"><i style=\"background:#2bb5a8\"></i>Inteligência Artificial</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px;font-family:var(--font);} .ds-chip{height:38px;padding:0 14px;border-radius:999px;background:var(--surface,#fff);border:1px solid var(--line,#e8e3dd);font:inherit;font-size:14px;font-weight:500;color:var(--ink-2,#3b3732);display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s;} .ds-chip:hover{background:var(--surface-2,#fbfaf8);border-color:var(--line-strong,#d9d3cb);} .ds-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(244,98,29,.28);} .ds-chip i{width:8px;height:8px;border-radius:99px;} .ds-chip.ds-on{background:var(--ink,#1c1a17);border-color:var(--ink,#1c1a17);color:var(--canvas,#f5f3f0);} .ds-n{min-width:22px;height:22px;padding:0 6px;display:inline-grid;place-items:center;border-radius:999px;background:rgba(255,255,255,.16);font-size:12px;font-variant-numeric:tabular-nums;}"
+    },
+    {
+      "name": "Sidebar Nav",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Stone sidebar; active item is a raised white tile with an accent icon.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-active\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z\"/></svg>Início</a><a class=\"ds-nav-item\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"17\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18\"/></svg>Calendário<i></i></a></nav>",
+      "css": ".ds-nav{width:240px;padding:14px;background:var(--canvas-2,#efece8);font-family:var(--font);} .ds-nav-item{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;color:var(--ink-2,#3b3732);font-size:15px;font-weight:500;cursor:pointer;transition:background .15s;} .ds-nav-item svg{color:var(--muted,#6f6962);} .ds-nav-item:hover{background:var(--sunken,#f1eeea);} .ds-nav-item.ds-active{background:var(--surface,#fff);color:var(--ink,#1c1a17);box-shadow:0 1px 2px rgba(28,22,16,.05),0 6px 18px -8px rgba(28,22,16,.10);} .ds-nav-item.ds-active svg{color:var(--accent,#f4621d);} .ds-nav-item i{margin-left:auto;width:8px;height:8px;border-radius:99px;background:var(--accent,#f4621d);box-shadow:0 0 0 3px var(--accent-soft,#fff0e7);}"
+    },
+    {
+      "name": "Course Card",
+      "kind": "card",
+      "refersTo": "course-card",
+      "description": "Pastel field cover with initials fallback, category badge, progress foot.",
+      "html": "<article class=\"ds-course\"><div class=\"ds-cover\"><span class=\"ds-badge\">Negócios</span><span class=\"ds-sigla\">KT</span></div><div class=\"ds-cbody\"><h3>Kingdom Tracktion</h3><p>Mastermind de empresários para decisões de alto impacto.</p><div class=\"ds-crow\"><span>2 de 12 aulas</span><b>17%</b></div><div class=\"ds-track\"><div style=\"width:17%\"></div></div></div></article>",
+      "css": ".ds-course{width:260px;font-family:var(--font);background:linear-gradient(180deg,#fff 0%,#fbfaf8 100%);border:1px solid var(--line,#e8e3dd);border-radius:22px;box-shadow:0 1px 2px rgba(28,22,16,.05),0 6px 18px -8px rgba(28,22,16,.10);overflow:hidden;cursor:pointer;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;} .ds-course:hover{transform:translateY(-3px);box-shadow:0 2px 6px rgba(28,22,16,.06),0 18px 40px -16px rgba(28,22,16,.22);} .ds-cover{position:relative;aspect-ratio:16/10;margin:10px 10px 0;border-radius:16px;background:var(--field-sky,#d6ebf8);display:grid;place-items:center;} .ds-sigla{font-size:44px;font-weight:500;letter-spacing:-.03em;color:var(--art-ink,#1d1b18);opacity:.88;} .ds-badge{position:absolute;top:10px;left:10px;height:28px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,.92);color:#3b3732;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;} .ds-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:#f4621d;} .ds-cbody{padding:14px 16px 16px;} .ds-cbody h3{margin:0 0 4px;font-size:16.5px;font-weight:500;letter-spacing:-.015em;color:var(--ink,#1c1a17);} .ds-cbody p{margin:0 0 14px;font-size:14px;color:var(--muted,#6f6962);} .ds-crow{display:flex;justify-content:space-between;font-size:13px;color:var(--muted,#6f6962);margin-bottom:8px;} .ds-crow b{font-weight:500;color:var(--ink,#1c1a17);font-variant-numeric:tabular-nums;} .ds-track{height:6px;border-radius:999px;background:var(--sunken,#f1eeea);overflow:hidden;} .ds-track div{height:100%;border-radius:inherit;background:var(--cta,linear-gradient(180deg,#ff7f37 0%,#f2570f 100%));}"
+    },
+    {
+      "name": "KPI Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "Label over a 38px tabular numeral with a muted unit.",
+      "html": "<div class=\"ds-stat\"><p>Aulas concluídas</p><div>11<span>/ 42</span></div></div>",
+      "css": ".ds-stat{width:220px;padding:18px 20px 20px;font-family:var(--font);background:linear-gradient(180deg,#fff 0%,#fbfaf8 100%);border:1px solid var(--line,#e8e3dd);border-radius:22px;box-shadow:0 1px 2px rgba(28,22,16,.05),0 6px 18px -8px rgba(28,22,16,.10);display:grid;gap:14px;} .ds-stat p{margin:0;font-size:14px;color:var(--ink-2,#3b3732);} .ds-stat div{font-size:38px;font-weight:500;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink,#1c1a17);} .ds-stat span{margin-left:6px;font-size:15px;letter-spacing:0;font-weight:400;color:var(--muted,#6f6962);}"
+    },
+    {
+      "name": "Event Date Tiles",
+      "kind": "custom",
+      "refersTo": "event-date-tile",
+      "description": "Violet for an upcoming session, sunken grey once it has passed.",
+      "html": "<div class=\"ds-dates\"><div class=\"ds-date\"><b>24</b><span>SET</span></div><div class=\"ds-date ds-past\"><b>02</b><span>SET</span></div></div>",
+      "css": ".ds-dates{display:flex;gap:12px;font-family:var(--font);} .ds-date{width:52px;height:56px;border-radius:16px;background:linear-gradient(160deg,#7b72e8,#564cc9);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 20px -12px rgba(86,76,201,.8),inset 0 1px 0 rgba(255,255,255,.25);font-variant-numeric:tabular-nums;} .ds-date b{font-size:19px;font-weight:500;line-height:1;letter-spacing:-.02em;} .ds-date span{font-size:11px;font-weight:500;margin-top:3px;opacity:.85;letter-spacing:.04em;} .ds-date.ds-past{background:var(--sunken,#f1eeea);color:var(--ink-2,#3b3732);box-shadow:none;}"
+    },
+    {
+      "name": "Admin Table Row",
+      "kind": "custom",
+      "refersTo": "admin-table",
+      "description": "Row state as a leading dot, never a row tint.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Aluno</th><th>Progresso</th><th>Estado</th></tr></thead><tbody><tr class=\"ds-done\"><td>Ana Macuácua</td><td class=\"ds-num\">100%</td><td><span class=\"ds-pill ds-ok\">Concluído</span></td></tr><tr class=\"ds-risk\"><td>João Sitoe</td><td class=\"ds-num\">8%</td><td><span class=\"ds-pill ds-warn\">Em risco</span></td></tr></tbody></table>",
+      "css": ".ds-table{width:420px;border-collapse:collapse;font-family:var(--font);font-size:14px;background:#fff;border:1px solid var(--line,#e8e3dd);} .ds-table th{text-align:left;font-size:12.5px;font-weight:500;color:var(--muted,#6f6962);padding:12px 18px;background:var(--surface-2,#fbfaf8);border-bottom:1px solid var(--line,#e8e3dd);} .ds-table td{padding:13px 18px;border-bottom:1px solid var(--line,#e8e3dd);color:var(--ink,#1c1a17);} .ds-table tbody tr:hover td{background:var(--surface-2,#fbfaf8);} .ds-table td:first-child{position:relative;font-weight:500;} .ds-table tr td:first-child::before{content:'';position:absolute;left:6px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;} .ds-done td:first-child::before{background:#15803d;box-shadow:0 0 0 3px #e3f6ea;} .ds-risk td:first-child::before{background:#d99a00;box-shadow:0 0 0 3px #fff4d9;} .ds-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;} .ds-pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;} .ds-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;} .ds-ok{background:#15803d;color:#fff;} .ds-warn{background:#fff4d9;color:#8a5b00;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Warm Dashboard, Loud Progress",
+    "overview": "Kingdom Academy adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on generous 22px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.\n\nDensity is moderate and dashboard-like. A 264px sidebar sits on a deeper stone. The main column opens with a greeting headline and a muted date lead, then the Continuar card, a KPI row and grids of course cards. Every pressable shape is a full pill, and every container is a large rounded card lifted by warm, diffuse shadows. Type is Google Sans only: weight 500 for everything that names something, 400 for running text, and 700 only in the wordmark.\n\nThe Academy is also white-label within the Kingdom family. In Aparência the admin can change the accent colour, the name, the logo, the default theme and the login copy. The system is built so any accent recolours the single orange voice without touching the stone neutrals, the pastel fields or the status colours. The world rejects the dark \"creator-course\" LMS template: black ground, neon accent and uppercase eyebrows over every heading.",
+    "keyCharacteristics": [
+      "Warm grey-white canvas (`canvas`) with white, barely graded cards (`surface` to `surface-2`).",
+      "One accent voice. The sunrise gradient (`cta-glow` to `cta-deep`) is used for the single primary action per view, progress fills, the play disc and brand panels.",
+      "Full-pill buttons, chips, pills, search, segmented controls and toggles. Containers use 22px corners.",
+      "Soft, negative-spread, warm-tinted shadows. There are no hard edges or offset blocks.",
+      "Course covers on eight pastel fields, with initials in `art-ink` when no image is set. This is the only multi-hue area of a screen.",
+      "Google Sans at weights 400/500. Weight 700 is reserved for the wordmark and the email band.",
+      "Full light and dark themes from the same custom properties. The theme can be auto, light or dark.",
+      "The certificate and the email letter are fixed-light paper objects that ignore the theme."
+    ],
+    "rules": [
+      {
+        "name": "The Loud Covers Rule",
+        "body": "Course covers on their pastel field are the only multi-hue area on a screen. Chrome stays in stone neutrals plus the one accent, and status colour appears only inside pills, dots, date tiles and notices.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Accent Rule",
+        "body": "Every accent use goes through `--accent`, `--accent-soft`, `--accent-ink`, `--cta` or `--brand-panel`, so an Aparência colour recolours it. The certificate and email are the only places with literal orange.",
+        "section": "colors"
+      },
+      {
+        "name": "The Violet Means Time Rule",
+        "body": "Violet is spent only on upcoming live sessions. A session that has passed loses its violet and goes to `sunken`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Medium Weight Rule",
+        "body": "Headings, labels, buttons and numerals are 500. Weight 700 appears only in the wordmark (17px, -0.02em) and the email band title.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "Page, card, hero and dialog headings stand alone, with no small label line above them. The greeting's context goes into the lead underneath (\"Quinta-feira, 24 de setembro.\" in `ink-2` 500, then `muted`). Sidebar group labels (\"Geral\", \"Progresso\", \"Conta\"), KPI labels and table headers are navigation and data labels, not kickers.",
+        "section": "typography"
+      },
+      {
+        "name": "The Soft Lift Rule",
+        "body": "Shadows are diffuse and warm with negative spread. A hover lift is `translateY(-3px)` plus Rest → Lift over 0.25s. Locked cards do not lift. There are no zero-blur offset shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep one primary gradient CTA per view. On Início it is \"Continuar\".",
+      "**Do** route every accent use through `--accent`, `--accent-soft`, `--accent-ink`, `--cta`, `--brand-panel` or `--ring` so the Aparência colour carries through. Only `#f4621d` and `#ff5a1f` keep the full Library palette.",
+      "**Do** give every course cover its hashed pastel field, and fall back to initials in `art-ink` when there is no image.",
+      "**Do** show locked content as locked (desaturated cover, padlock disc, price pill or path to it), never hidden and never painted as open.",
+      "**Do** make every pressable control a full pill and every container a 22px card with the Rest shadow.",
+      "**Do** mark admin row state with a leading 7px dot in the first cell.",
+      "**Do** set headings at 500 with negative tracking (-0.015em to -0.03em) and use tabular numerals for money, counts, percentages, durations and dates.",
+      "**Do** keep the certificate and emails fixed light with literal values. Everything else follows the auto/light/dark theme through the root custom properties."
+    ],
+    "donts": [
+      "**Don't** put an eyebrow or kicker line above page, card, hero or dialog headings. Context goes in the lead below.",
+      "**Don't** tint whole table rows for state.",
+      "**Don't** use violet for anything but upcoming live sessions, and don't leave a past session violet.",
+      "**Don't** use weight 700 outside the wordmark and email band, and don't introduce a second typeface.",
+      "**Don't** use zero-blur offset shadows or cool grey shadows.",
+      "**Don't** use `faint` for readable text. Use `muted`.",
+      "**Don't** drift toward the dark creator-course template (black ground, neon accent, uppercase labels)."
+    ]
+  }
+}

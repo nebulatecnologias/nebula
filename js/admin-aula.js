@@ -35,8 +35,8 @@ function renderFormAula(){
   document.getElementById("content-admin").innerHTML = `
     <div class="form-page">
       <div class="form-topo">
-        <span class="eyebrow">${curso.titulo.toUpperCase()}</span>
-        <h1>${aula ? "Editar Aula" : "Nova Aula"}</h1>
+        <h1>${aula ? "Editar aula" : "Nova aula"}</h1>
+        <p class="desc" style="margin:4px 0 0;color:var(--muted);">${curso.titulo}${modulo ? " · " + modulo.titulo : ""}</p>
       </div>
 
       <div class="aula-form-grid">

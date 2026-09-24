@@ -3,7 +3,8 @@ function renderDashboard(){
   const geral = progressoGeral();
   const cursosCompletos = cursosVisiveis().filter(c=>progressoCurso(c).pct===100).length;
   const emAndamento = cursosVisiveis().filter(c=>{ const p=progressoCurso(c); return p.pct>0 && p.pct<100; });
-  const hoje = new Date().toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long" }).toUpperCase();
+  const hojeTexto = new Date().toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long" });
+  const hoje = hojeTexto.charAt(0).toUpperCase() + hojeTexto.slice(1);
 
   /* O último curso visto pode já não existir, ter passado a rascunho ou
      saído do plano do aluno. Nesse caso continuamos com o primeiro curso
@@ -29,32 +30,22 @@ function renderDashboard(){
 
   document.getElementById("content-dashboard").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">${hoje}</span>
       <h1>Olá, ${estado.nome.split(" ")[0]}.</h1>
-      <p class="desc">Continua a construir. Aqui está o ponto em que ficaste no teu percurso.</p>
-    </div>
-    ${carrosselBannersHTML("carrossel-inicio")}
-    ${trilhaHTML()}
-    <div class="stat-row">
-      <div class="card stat-card"><div class="stat-label">Progresso geral</div><div class="stat-value">${geral.pct}<span>%</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Aulas concluídas</div><div class="stat-value">${geral.concluidas}<span>/ ${geral.total}</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Cursos concluídos</div><div class="stat-value">${cursosCompletos}<span>/ ${cursosVisiveis().length}</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Sequência atual</div><div class="stat-value">${estado.streakDias}<span>dias 🔥</span></div></div>
+      <p class="desc"><span class="data-hoje">${hoje}.</span> Continua a construir: aqui está o ponto em que ficaste no teu percurso.</p>
     </div>
 
-    <div class="section-title"><h2>Continuar de onde parei</h2></div>
     ${locPrincipal ? `
     <div class="card continue-card" id="btn-continuar">
-      <div class="continue-thumb"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
+      <div class="continue-thumb" style="--field:${campoDoCurso(cursoPrincipal.id)};${(locPrincipal.aula.capa||cursoPrincipal.capa)?`background-image:url(${locPrincipal.aula.capa||cursoPrincipal.capa})`:""}"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
       <div class="continue-body">
-        <div class="tag">${locPrincipal.modulo.titulo.toUpperCase()}</div>
         <h3>${locPrincipal.aula.titulo}</h3>
+        <p class="continue-onde">${locPrincipal.modulo.titulo} · ${cursoPrincipal.titulo}</p>
         <div class="continue-meta">
           <div class="progress-track"><div class="progress-fill" style="width:${pPrincipal.pct}%"></div></div>
-          <span class="pct">${pPrincipal.pct}% de ${cursoPrincipal.titulo}</span>
+          <span class="pct">${pPrincipal.pct}% do curso</span>
         </div>
       </div>
-      <div class="btn btn-secondary">Continuar</div>
+      <button class="btn btn-primary" type="button">Continuar ${setaCirculo()}</button>
     </div>` : `
     <div class="card" style="padding:26px;margin-bottom:16px;">
       <p style="margin:0;">Ainda não tens nenhum curso disponível. Assim que a tua mentoria libertar o acesso, ele aparece aqui.</p>
@@ -72,9 +63,17 @@ function renderDashboard(){
       }).join("")}
     </div>` : ""}
 
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-label">Progresso geral</div><div class="stat-value">${geral.pct}<span>%</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Aulas concluídas</div><div class="stat-value">${geral.concluidas}<span>/ ${geral.total}</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Cursos concluídos</div><div class="stat-value">${cursosCompletos}<span>/ ${cursosVisiveis().length}</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Sequência atual</div><div class="stat-value">${estado.streakDias}<span>dia${estado.streakDias===1?"":"s"}</span></div></div>
+    </div>
+    ${trilhaHTML()}
+    ${carrosselBannersHTML("carrossel-inicio")}
     <div class="widget-row">
       <div class="card widget-card">
-        <div class="widget-label"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>PRÓXIMO ENCONTRO AO VIVO</div>
+        <div class="widget-label"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>Próximo encontro ao vivo</div>
         ${proximoEvento ? `
         <div class="widget-body">
           <div class="event-date-badge"><span class="day">${formatarDataEvento(proximoEvento.data).dia}</span><span class="mon">${formatarDataEvento(proximoEvento.data).mes}</span></div>
@@ -87,7 +86,7 @@ function renderDashboard(){
         ` : `<p style="margin:0;">Sem eventos agendados de momento.</p>`}
       </div>
       <div class="card widget-card">
-        <div class="widget-label"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/></svg>CONQUISTA EM DESTAQUE</div>
+        <div class="widget-label"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/></svg>Conquista em destaque</div>
         ${conquistaDestaque ? `
         <div class="widget-body">
           <div class="badge-icon-sm">${ICONS_BADGE[idxDestaque % ICONS_BADGE.length]}</div>
@@ -100,7 +99,7 @@ function renderDashboard(){
       </div>
     </div>
 
-    <div class="section-title"><h2>Os teus cursos</h2><span class="see-all" id="btn-ver-todos-cursos">Ver todos →</span></div>
+    <div class="section-title"><h2>Os teus cursos</h2><span class="see-all" id="btn-ver-todos-cursos" role="link" tabindex="0">Ver todos ${setaCirculo()}</span></div>
     <div class="course-grid">
       ${destaques.map(c=>renderCourseCardHTML(c)).join("")}
     </div>
@@ -133,16 +132,17 @@ function renderCourseCardHTML(c, opcoes){
     : `${p.concluidas} de ${p.total} aulas`;
 
   return `<div class="card course-card ${admin?"admin":""}" data-curso="${c.id}">
-    <div class="course-cover ${c.capa?"com-capa":""}" style="${c.capa?`background-image:url(${c.capa})`:""}">
-      <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${cat.nome}</span>
+    <div class="course-cover ${c.capa?"com-capa":""}" style="--field:${campoDoCurso(c.id)};${c.capa?`background-image:url(${c.capa})`:""}">
+      ${c.capa ? "" : `<span class="cover-sigla" aria-hidden="true">${c.sigla || ""}</span>`}
+      <span class="cover-badge" style="--c:${cat.cor}">${cat.nome}</span>
       ${admin ? `
-        ${c.publicado===false ? '<span class="cover-badge estado">RASCUNHO</span>' : ""}
-        ${c.publicado!==false && c.vitrine===false ? '<span class="cover-badge estado">FORA DA VITRINE</span>' : ""}
+        ${c.publicado===false ? '<span class="cover-badge estado">Rascunho</span>' : ""}
+        ${c.publicado!==false && c.vitrine===false ? '<span class="cover-badge estado">Fora da vitrine</span>' : ""}
         <div class="course-card-acoes" data-parar>
           <button class="btn-icone" data-editar="${c.id}" title="Editar curso">${ICONS.lapis}</button>
           <button class="btn-icone perigo" data-apagar="${c.id}" title="Apagar curso"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
         </div>`
-      : (p.pct===100 ? '<span class="cover-badge done">CONCLUÍDO</span>' : "")}
+      : (p.pct===100 ? '<span class="cover-badge done">Concluído</span>' : "")}
     </div>
     <div class="course-body">
       <h3>${c.titulo}</h3>
@@ -158,7 +158,6 @@ function renderCatalogo(){
   const geral = progressoGeral();
   const html = `
     <div class="page-head">
-      <span class="eyebrow">BIBLIOTECA</span>
       <h1>Meus cursos</h1>
       <p class="desc">Todos os teus programas, mentorias e mastermind num só lugar — ${geral.pct}% de progresso geral.</p>
     </div>
@@ -210,7 +209,6 @@ function renderVitrine(){
   const montra = DB.vitrine || [];
   document.getElementById("content-vitrine").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">VITRINE</span>
       <h1>Disponível para desbloquear</h1>
       <p class="desc">O que ainda não faz parte do teu acesso. Toca num para veres como entrar.</p>
     </div>
@@ -234,18 +232,21 @@ function cartaoDaVitrine(o){
     : `${primeiro.modulos || 0} módulo${primeiro.modulos === 1 ? "" : "s"} · ${o.aulas} aula${o.aulas === 1 ? "" : "s"}`;
 
   return `<div class="card course-card bloqueado vitrine" data-oferta="${o.ofertaId}">
-    <div class="course-cover ${primeiro.capa?"com-capa":""}" style="${primeiro.capa?`background-image:url(${primeiro.capa})`:""}">
-      <span class="cover-badge" style="color:${cat.cor};border-color:${cat.cor}66;">${varios ? "PLANO" : cat.nome}</span>
-      <span class="cadeado">${ICONS.cadeado}</span>
+    <div class="course-cover ${primeiro.capa?"com-capa":""}" style="--field:${campoDoCurso(primeiro.id || o.ofertaId)};${primeiro.capa?`background-image:url(${primeiro.capa})`:""}">
+      ${primeiro.capa ? "" : `<span class="cover-sigla" aria-hidden="true">${primeiro.sigla || (primeiro.titulo||o.nome||"").split(/\s+/).filter(Boolean).map(x=>x[0]).join("").slice(0,3).toUpperCase()}</span>`}
+      <span class="cover-badge" style="--c:${cat.cor}">${varios ? "Plano" : cat.nome}</span>
+      <span class="cadeado" aria-label="Por desbloquear">${ICONS.cadeado}</span>
     </div>
     <div class="course-body">
       <h3>${varios ? o.nome : primeiro.titulo}</h3>
       <p class="course-desc">${o.chamada || (varios ? o.cursos.map(c=>c.titulo).join(" · ") : (primeiro.subtitulo||""))}</p>
       <div class="course-progress-row">
         <span class="course-legenda">${legenda}</span>
-        <span class="pct">${formatarPreco(o.preco)}${o.mensal ? "<small>/mês</small>" : ""}</span>
       </div>
-      <button class="btn btn-primary btn-block btn-sm" data-desbloquear="${o.ofertaId}">
+      <div class="oferta-linha">
+        <span class="oferta-preco">${ICONS.cadeado}${formatarPreco(o.preco, o.moeda)}${o.mensal ? "<span>/mês</span>" : ""}</span>
+      </div>
+      <button class="btn btn-secondary btn-block btn-sm" data-desbloquear="${o.ofertaId}">
         ${o.checkout ? "Quero este acesso" : "Saber como entrar"} ${setaCirculo()}</button>
     </div>
   </div>`;
@@ -308,7 +309,7 @@ function renderCurso(cursoId){
         </p>
         ${oferta && oferta.destino
           ? `<a class="btn btn-primary" href="${oferta.destino}" target="_blank" rel="noopener">
-               ${oferta.checkout ? "Quero este acesso" : "Ver como ter acesso"} · ${formatarPreco(oferta.preco)}${oferta.mensal ? "/mês" : ""}</a>`
+               ${oferta.checkout ? "Quero este acesso" : "Ver como ter acesso"} · ${formatarPreco(oferta.preco, oferta.moeda)}${oferta.mensal ? "/mês" : ""}</a>`
           : `<button class="btn btn-secondary" id="btn-ir-vitrine">Ver o que está disponível</button>`}
       </div>`;
     const voltar = document.getElementById("btn-voltar-catalogo");
@@ -326,9 +327,10 @@ function renderCurso(cursoId){
   const assinatura = DB.config.certificado.assinaturaNome;
   const html = `
     <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
-    <div class="card curso-hero ${curso.capa?"com-capa":""}" style="${curso.capa?`background-image:url(${curso.capa})`:""}">
+    <div class="card curso-hero ${curso.capa?"com-capa":""}" style="--field:${campoDoCurso(curso.id)};">
+      <div class="curso-hero-arte" aria-hidden="true" style="${curso.capa?`background-image:url(${curso.capa})`:""}">${curso.capa ? "" : `<span class="cover-sigla">${curso.sigla || ""}</span>`}</div>
       <div class="curso-hero-conteudo">
-        <span class="eyebrow" style="--c:${cat.cor}">${cat.nome.toUpperCase()}${turmaDoCurso ? " · " + turmaDoCurso.nome.toUpperCase() : ""}</span>
+        <span class="eyebrow" style="--c:${cat.cor}">${cat.nome}${turmaDoCurso ? " · " + turmaDoCurso.nome : ""}</span>
         <h1>${curso.titulo}</h1>
         <p class="curso-hero-desc">${curso.subtitulo||""}</p>
         <div class="curso-hero-meta">
@@ -342,7 +344,7 @@ function renderCurso(cursoId){
           <span>${p.pct}%</span>
         </div>
         <div class="curso-hero-acoes">
-          ${loc ? `<button class="btn btn-primary" id="btn-continuar-curso">${p.concluidas ? "continuar de onde parei" : "começar agora"}</button>` : ""}
+          ${loc ? `<button class="btn btn-primary" id="btn-continuar-curso">${p.concluidas ? "Continuar de onde parei" : "Começar agora"} ${setaCirculo()}</button>` : ""}
           ${certificadoDesbloqueado(curso) ? `<button class="btn btn-secondary" id="btn-ver-certificado-curso">Ver certificado</button>` : ""}
         </div>
       </div>
@@ -415,11 +417,11 @@ function renderAula(cursoId, aulaId){
         <div class="player-wrap">${playerHTML(aula, aula.titulo)}</div>
         <div class="aula-header-row">
           <div>
-            <div class="aula-breadcrumb">${curso.titulo.toUpperCase()} · ${modulo.titulo.toUpperCase()}</div>
             <h1>${aula.titulo}</h1>
+            <div class="aula-breadcrumb">${curso.titulo} · ${modulo.titulo}</div>
           </div>
           <div class="aula-actions">
-            <span id="aula-duracao" style="align-self:center;font-size:13px;color:var(--text-faint);font-weight:600;margin-right:4px;">${aula.duracao && aula.duracao !== "00:00" ? aula.duracao : ""}</span>
+            <span id="aula-duracao" class="aula-duracao" style="align-self:center;margin-right:4px;">${aula.duracao && aula.duracao !== "00:00" ? aula.duracao : ""}</span>
             <button class="btn btn-secondary" id="btn-concluir" data-done="${concluida}">
               <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
               <span id="btn-concluir-label">${concluida ? "Aula concluída" : "Marcar como concluída"}</span>
@@ -442,16 +444,16 @@ function renderAula(cursoId, aulaId){
         <div class="nav-pager">
           <div class="pager-btn prev ${anterior ? "" : "disabled"}" id="pager-anterior">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            <span><span class="pager-label">AULA ANTERIOR</span><span class="pager-title">${anterior ? anterior.titulo : "—"}</span></span>
+            <span><span class="pager-label">Aula anterior</span><span class="pager-title">${anterior ? anterior.titulo : "—"}</span></span>
           </div>
           <div class="pager-btn next ${proxima ? "" : "disabled"}" id="pager-proxima">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            <span><span class="pager-label">PRÓXIMA AULA</span><span class="pager-title">${proxima ? proxima.titulo : "—"}</span></span>
+            <span><span class="pager-label">Próxima aula</span><span class="pager-title">${proxima ? proxima.titulo : "—"}</span></span>
           </div>
         </div>
       </div>
       <aside class="card sidebar-lessons">
-        <h4>${modulo.titulo.toUpperCase()}</h4>
+        <h4>${modulo.titulo}</h4>
         <div id="sidebar-lessons-lista"></div>
       </aside>
     </div>
@@ -628,7 +630,6 @@ function renderComunidade(){
 
   document.getElementById("content-comunidade").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">ESPAÇO DOS ALUNOS</span>
       <h1>Comunidade</h1>
       <p class="desc">${atual ? atual.descricao : "Partilha vitórias, faz perguntas e aprende com quem está a percorrer o mesmo caminho."}</p>
     </div>
@@ -886,17 +887,17 @@ function renderConquistas(){
   const noNivel = xpNoNivelAtual();
   document.getElementById("content-conquistas").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">GAMIFICAÇÃO</span>
       <h1>Conquistas</h1>
       <p class="desc">Cada aula concluída soma pontos de experiência e aproxima-te da próxima conquista.</p>
     </div>
     <div class="card xp-card">
       <div class="xp-badge">Nv.${nivel}</div>
       <div class="xp-info">
-        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;"><span>${xp} XP acumulados</span><span>${noNivel}/${DB.config.gamificacao.xpPorNivel} para o Nível ${nivel+1}</span></div>
+        <h3>Nível ${nivel}</h3>
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;"><span>${xp} XP acumulados</span><span>${noNivel}/${DB.config.gamificacao.xpPorNivel} para o nível ${nivel+1}</span></div>
         <div class="progress-track"><div class="progress-fill" style="width:${(noNivel/DB.config.gamificacao.xpPorNivel*100)}%"></div></div>
       </div>
-      <span class="streak-pill">🔥 ${estado.streakDias} dias seguidos</span>
+      <span class="streak-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>${estado.streakDias} dia${estado.streakDias===1?"":"s"} seguido${estado.streakDias===1?"":"s"}</span>
     </div>
     <div class="section-title"><h2>Emblemas</h2></div>
     <div class="badge-grid">
@@ -952,7 +953,7 @@ function carrosselBannersHTML(id){
     <div class="banner-carousel" id="${id}">
       <div class="banner-track">
         ${banners.map(b => `<a class="banner-slide" href="${linkExterno(b.link) || "#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
-          <span class="banner-eyebrow">${b.eyebrow}</span>
+          ${b.eyebrow ? `<span class="banner-etiqueta">${b.eyebrow}</span>` : ""}
           <span class="banner-title">${b.titulo}</span>
           <span class="banner-cta">${b.cta} ${setaCirculo()}</span>
         </a>`).join("")}
@@ -993,7 +994,7 @@ function renderCalendario(){
     const confirmado = !!estado.presencasConfirmadas[e.id];
     const aberto = estado.eventoAberto === e.id;
     const dataLonga = e.dt.toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
-    return `<div class="event-row ${aberto?"aberto":""}" data-evento="${e.id}">
+    return `<div class="event-row ${aberto?"aberto":""} ${passado?"passado":""}" data-evento="${e.id}">
       <div class="event-linha">
         <div class="event-date-badge"><span class="day">${dia}</span><span class="mon">${mes}</span></div>
         <div class="event-info">
@@ -1003,7 +1004,7 @@ function renderCalendario(){
             <span class="etiqueta-acesso ${e.acesso||"gratuito"}">${ROTULO_ACESSO[e.acesso] || "Gratuito"}</span>
             <span>${e.tipo}</span>
             <span>${e.hora}</span>
-            ${!passado ? `<span>· em ${dias===0?"hoje":dias+" dia"+(dias===1?"":"s")}</span>` : ""}
+            ${!passado ? `<span>· ${dias===0?"hoje":dias===1?"amanhã":"daqui a "+dias+" dias"}</span>` : ""}
           </div>
         </div>
         <span class="event-status-pill ${passado?"past":"upcoming"}">${passado?"Realizado":"Em breve"}</span>
@@ -1026,7 +1027,7 @@ function renderCalendario(){
               : `${e.link ? `<a class="btn btn-primary btn-sm" href="${linkExterno(e.link)}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : ""}
                  ${e.local ? `<a class="btn btn-secondary btn-sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.local)}" target="_blank" rel="noopener">Ver no mapa ${setaCirculo()}</a>` : ""}
                  <button class="btn btn-secondary btn-sm" data-lembrete="${e.id}">Guardar lembrete</button>
-                 <button class="btn btn-secondary btn-sm" data-confirmar="${e.id}" data-done="${confirmado}">${confirmado?"✓ Presença confirmada":"Confirmar presença"}</button>`
+                 <button class="btn btn-secondary btn-sm" data-confirmar="${e.id}" data-done="${confirmado}">${confirmado?iconeCheck()+" Presença confirmada":"Confirmar presença"}</button>`
             }
           </div>
         </div>
@@ -1036,7 +1037,6 @@ function renderCalendario(){
 
   document.getElementById("content-calendario").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">AO VIVO</span>
       <h1>Calendário</h1>
       <p class="desc">Mentorias em grupo, masterclasses e encontros ao vivo com a Kingdom Academy.</p>
     </div>
@@ -1088,7 +1088,6 @@ function fecharCertificado(){ document.getElementById("modal-certificado").class
 function renderCertificados(){
   document.getElementById("content-certificados").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">RECONHECIMENTO</span>
       <h1>Certificados</h1>
       <p class="desc">Um certificado é desbloqueado automaticamente quando concluis ${regraCertificado()}% de um curso.</p>
     </div>
@@ -1101,7 +1100,7 @@ function renderCertificados(){
     return `<div class="card cert-card ${concluido?"":"locked"}" data-curso="${c.id}">
       <div class="cert-preview">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>
-        <span>${concluido?"CERTIFICADO DISPONÍVEL":"POR DESBLOQUEAR"}</span>
+        <span>${concluido?"Certificado disponível":"Por desbloquear"}</span>
       </div>
       <div class="cert-body">
         <h4>${c.titulo}</h4>
@@ -1122,7 +1121,6 @@ function renderCertificados(){
 function renderDefinicoes(){
   document.getElementById("content-definicoes").innerHTML = `
     <div class="page-head">
-      <span class="eyebrow">CONTA</span>
       <h1>Definições</h1>
       <p class="desc">Gere o teu perfil e as tuas preferências de notificação.</p>
     </div>

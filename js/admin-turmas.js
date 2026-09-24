@@ -49,7 +49,7 @@ function renderAdminTurmas(){
             ${turmas.length ? turmas.map(t => {
               const curso = cursoPorId(t.cursoId);
               return `<tr>
-                <td><div class="nome" style="font-weight:600;">${t.nome}</div></td>
+                <td><div class="nome" style="font-weight:500;">${t.nome}</div></td>
                 <td>${curso ? curso.titulo : "<span class='sub-celula'>Curso removido</span>"}</td>
                 <td>${t.inicio||"—"} <span class="sub-celula">até</span> ${t.fim||"—"}</td>
                 <td class="num">${(t.membros||[]).length}</td>
@@ -172,7 +172,7 @@ function modeloCertificadoHTML(){
             ${DB.cursos.map(curso => {
               const cat = categoriaDe(curso.categoria);
               return `<tr>
-                <td><div class="nome" style="font-weight:600;">${curso.titulo}</div></td>
+                <td><div class="nome" style="font-weight:500;">${curso.titulo}</div></td>
                 <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
                 <td><div class="toggle ${cursoEmiteCertificado(curso)?"on":""}" data-curso-cert="${curso.id}" style="cursor:pointer;"><div class="knob"></div></div></td>
               </tr>`;
