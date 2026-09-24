@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emails da Academia</title>
+<meta name="description" content="Pré-visualização dos emails da Kingdom Academy no desenho da Kingdom Library.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --canvas:#f5f3f0; --surface:#fff; --sunken:#f1eeea; --line:#e8e3dd;
+    --ink:#1c1a17; --ink-2:#3b3732; --muted:#6f6962;
+    --orange-soft:#fff0e7; --orange-ink:#b8400a;
+    --shadow-1:0 1px 2px rgba(28,22,16,.05), 0 6px 18px -8px rgba(28,22,16,.10);
+    --font:"Google Sans","Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ color-scheme:dark; --canvas:#141311; --surface:#1e1c19; --sunken:#26231f; --line:#2f2b27; --ink:#f4f0ea; --ink-2:#ddd6cd; --muted:#aaa298; --orange-soft:#3a2216; --orange-ink:#ffab7c; --shadow-1:0 1px 2px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6); }
+  }
+  :root[data-theme="dark"]{ color-scheme:dark; --canvas:#141311; --surface:#1e1c19; --sunken:#26231f; --line:#2f2b27; --ink:#f4f0ea; --ink-2:#ddd6cd; --muted:#aaa298; --orange-soft:#3a2216; --orange-ink:#ffab7c; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--canvas); color:var(--ink); font-family:var(--font); font-size:15px; line-height:1.5; }
+  main{ max-width:1180px; margin:0 auto; padding:28px 16px 64px; }
+  h1{ font-size:clamp(26px,3.2vw,34px); font-weight:500; letter-spacing:-.025em; margin:0 0 6px; }
+  .lead{ color:var(--muted); margin:0 0 24px; max-width:64ch; }
+  .shell{ display:grid; grid-template-columns:300px minmax(0,1fr); gap:18px; align-items:start; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow-1); }
+  .lista{ padding:8px; display:grid; gap:4px; }
+  .lista button{ text-align:left; border:0; background:transparent; border-radius:14px; padding:12px 14px; display:grid; gap:3px; font:inherit; color:inherit; cursor:pointer; }
+  .lista button:hover{ background:var(--sunken); }
+  .lista button b{ font-weight:500; font-size:14.5px; }
+  .lista button span{ font-size:13px; color:var(--muted); }
+  .lista button[aria-current="true"]{ background:var(--orange-soft); }
+  .lista button[aria-current="true"] b{ color:var(--orange-ink); }
+  .lista button:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(244,98,29,.28); }
+  .vista{ overflow:hidden; }
+  .meta{ padding:18px 22px; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; justify-content:space-between; }
+  .meta h2{ font-size:19px; font-weight:500; letter-spacing:-.015em; margin:0; }
+  .meta p{ margin:0; font-size:13.5px; color:var(--muted); }
+  .seg{ display:inline-flex; padding:4px; gap:4px; background:var(--sunken); border-radius:999px; }
+  .seg button{ border:0; background:transparent; border-radius:999px; padding:6px 13px; font:inherit; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; }
+  .seg button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(28,22,16,.12); }
+  iframe{ display:block; width:100%; height:760px; border:0; background:#f3f1ee; }
+  @media (max-width:860px){
+    .shell{ grid-template-columns:minmax(0,1fr); }
+    .lista{ grid-auto-flow:column; grid-auto-columns:minmax(210px,1fr); overflow-x:auto; }
+    iframe{ height:700px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Emails da Academia</h1>
+  <p class="lead">Os emails que a Kingdom Academy envia, redesenhados com o papel da Kingdom Library. O conteúdo é o que as Edge Functions já escrevem hoje; só muda o desenho.</p>
+  <div class="shell">
+    <div class="card lista" id="lista" role="tablist" aria-label="Emails"></div>
+    <section class="card vista">
+      <div class="meta">
+        <div><h2 id="assunto"></h2><p id="origem"></p></div>
+        <div class="seg" role="group" aria-label="Língua">
+          <button type="button" data-lang="pt" aria-pressed="true">Português</button>
+          <button type="button" data-lang="en" aria-pressed="false">English</button>
+        </div>
+      </div>
+      <iframe id="quadro" title="Pré-visualização do email"></iframe>
+    </section>
+  </div>
+</main>
+<script type="module">
+  import { carta } from "./carta.js";
+  import { CARTAS } from "./cartas.js";
+
+  /* Antes de a Academia nova estar em produção, a coroa vem da cópia ao lado. */
+  const LOGO_LOCAL = new URL("coroa-email.png", location.href).href;
+  let atual = 0, lingua = "pt";
+  const lista = document.getElementById("lista");
+  lista.innerHTML = CARTAS.map((c, i) => `<button type="button" role="tab" data-i="${i}"><b>${c.nome}</b><span>${c.quando}</span></button>`).join("");
+
+  function mostrar(){
+    const c = CARTAS[atual];
+    const d = c.dados(lingua);
+    document.getElementById("assunto").textContent = d.assunto;
+    document.getElementById("origem").textContent = c.origem;
+    document.getElementById("quadro").srcdoc = carta(lingua, d.titulo, d.tratamento, d.corpo, d.botao, "#", d.pe, { logo: LOGO_LOCAL });
+    lista.querySelectorAll("button").forEach((b, i) => {
+      b.setAttribute("aria-current", i === atual ? "true" : "false");
+      b.setAttribute("aria-selected", i === atual ? "true" : "false");
+    });
+    document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lingua ? "true" : "false"));
+  }
+  lista.addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; atual = Number(b.dataset.i); mostrar(); });
+  document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => { lingua = b.dataset.lang; mostrar(); }));
+  mostrar();
+</script>
+</body>
+</html>

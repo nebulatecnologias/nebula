@@ -117,7 +117,7 @@ function campoHTML(c, valor){
   }
   if(c.tipo==="cor"){
     return `<div class="field"><label>${c.rotulo}</label>
-      <div class="campo-cor"><input type="color" id="valor-${c.nome}" value="${v||"#ff5a1f"}"><span>${c.dica||"Cor da categoria"}</span></div></div>`;
+      <div class="campo-cor"><input type="color" id="valor-${c.nome}" value="${v||"#f4621d"}"><span>${c.dica||"Cor da categoria"}</span></div></div>`;
   }
   if(c.tipo==="imagem"){
     return `<div class="field"><label>${c.rotulo}</label>
@@ -174,11 +174,10 @@ function cabecalhoAdmin({ titulo, descricao, acaoRotulo, acaoId }){
   return `
     <div class="page-head-flex">
       <div class="page-head">
-        <span class="eyebrow">PAINEL DE ADMINISTRAÇÃO</span>
         <h1>${titulo}</h1>
         ${descricao ? `<p class="desc">${descricao}</p>` : ""}
       </div>
-      ${acaoRotulo ? `<button class="btn btn-primary" id="${acaoId}">+ ${acaoRotulo}</button>` : ""}
+      ${acaoRotulo ? `<button class="btn btn-primary" id="${acaoId}"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> ${acaoRotulo}</button>` : ""}
     </div>
   `;
 }

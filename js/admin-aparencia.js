@@ -3,8 +3,13 @@
    A identidade da escola e os interruptores gerais da área do aluno.
    ============================================================ */
 
+const NOME_TEMA = { auto:"Automático", light:"Claro", dark:"Escuro" };
+const PROXIMO_TEMA = { auto:"light", light:"dark", dark:"auto" };
+
 function renderAdminAparencia(){
   const a = DB.aparencia;
+  const tema = NOME_TEMA[a.temaPadrao] ? a.temaPadrao : "auto";
+  const daCasa = corEhDaKingdom(a.corAccent);
 
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
@@ -14,47 +19,50 @@ function renderAdminAparencia(){
       acaoId: "btn-editar-marca"
     })}
     <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon accent">${ICONS.palette}</div><div class="stat-label">Cor de destaque</div><div class="stat-value" style="font-size:17px;display:flex;align-items:center;gap:8px;"><span class="amostra-cor" style="background:${a.corAccent}"></span>${a.corAccent}</div></div>
+      <div class="card stat-card"><div class="stat-icon accent">${ICONS.palette}</div><div class="stat-label">Cor de destaque</div><div class="stat-value" style="font-size:17px;display:flex;align-items:center;gap:8px;"><span class="amostra-cor" style="background:${daCasa ? COR_KINGDOM : a.corAccent}"></span>${daCasa ? "Laranja Kingdom" : a.corAccent}</div></div>
       <div class="card stat-card"><div class="stat-icon">${ICONS.image}</div><div class="stat-label">Logótipo</div><div class="stat-value" style="font-size:17px;">${a.logoUrl ? "Imagem própria" : "Símbolo Kingdom"}</div></div>
       <div class="card stat-card" style="cursor:pointer;" id="card-tema">
         <div class="stat-icon">${ICONS.gear}</div>
         <div class="stat-label">Tema por omissão</div>
-        <div class="stat-value" style="font-size:17px;">${a.temaPadrao==="light" ? "Claro" : "Escuro"}</div>
+        <div class="stat-value" style="font-size:17px;">${NOME_TEMA[tema]}</div>
       </div>
     </div>
 
     <div class="section-title"><h2>Como os alunos veem a entrada</h2></div>
     <div class="card previa-login">
-      <div class="brand-mark previa-marca">${marcaHTML(false)}</div>
-      <span class="kicker" style="color:var(--accent);">${a.nomeEscola.toUpperCase()}</span>
-      <h3>${a.loginTitulo}</h3>
-      <p>${a.loginTexto}</p>
-      <div class="previa-botoes">
-        <button class="btn btn-primary" type="button" disabled>Entrar</button>
-        <button class="btn btn-secondary" type="button" disabled>Esqueceste a senha?</button>
+      <div class="previa-painel">
+        <div class="brand-mark previa-marca">${marcaHTML(false)}</div>
+        <h3>${a.loginTitulo}</h3>
+        <p>${a.loginTexto}</p>
+        <p class="previa-rodape">${a.rodape || ""}</p>
       </div>
-      <p class="hint" style="margin-top:14px;">${a.rodape || ""}</p>
+      <div class="previa-form">
+        <strong>Entrar na tua conta</strong>
+        <span class="previa-campo">Email</span>
+        <span class="previa-campo">Password</span>
+        <span class="btn btn-primary btn-block" aria-hidden="true">Entrar</span>
+      </div>
     </div>
 
     <div class="card table-card">
-      <div class="table-card-head"><h3>Paleta em uso</h3><span class="count">Derivada da cor de destaque</span></div>
+      <div class="table-card-head"><h3>Paleta em uso</h3><span class="count">${daCasa ? "A da Kingdom Library" : "Derivada da cor de destaque"}</span></div>
       <div class="paleta-grid">
-        <div><span class="amostra-cor grande" style="background:${a.corAccent}"></span><strong>Destaque</strong><span class="sub-celula">Botões e realces</span></div>
-        <div><span class="amostra-cor grande" style="background:${clarearHex(a.corAccent,0.18)}"></span><strong>Sobre o rato</strong><span class="sub-celula">Estado hover</span></div>
-        <div><span class="amostra-cor grande" style="background:${hexParaRgba(a.corAccent,0.14)}"></span><strong>Fundo suave</strong><span class="sub-celula">Etiquetas e avatares</span></div>
-        <div><span class="amostra-cor grande" style="background:${hexParaRgba(a.corAccent,0.35)}"></span><strong>Contorno</strong><span class="sub-celula">Bordas realçadas</span></div>
+        <div><span class="amostra-cor grande" style="background:var(--cta)"></span><strong>Botão principal</strong><span class="sub-celula">Um por ecrã</span></div>
+        <div><span class="amostra-cor grande" style="background:var(--accent)"></span><strong>Destaque</strong><span class="sub-celula">Ícone ativo, foco, progresso</span></div>
+        <div><span class="amostra-cor grande" style="background:var(--accent-soft)"></span><strong>Fundo suave</strong><span class="sub-celula">Etiquetas e seleção</span></div>
+        <div><span class="amostra-cor grande" style="background:var(--canvas);"></span><strong>Chão</strong><span class="sub-celula">Pedra quente, cartões brancos</span></div>
       </div>
     </div>
   `;
 
   document.getElementById("btn-editar-marca").addEventListener("click", editarMarca);
   document.getElementById("card-tema").addEventListener("click", () => {
-    DB.aparencia.temaPadrao = a.temaPadrao==="light" ? "dark" : "light";
+    DB.aparencia.temaPadrao = PROXIMO_TEMA[tema];
     estado.tema = null;                      // volta a seguir o tema por omissão
     salvarAparencia(); salvarPerfil();
     aplicarAparencia();
     renderAdminAparencia();
-    mostrarToast("Tema por omissão: " + (DB.aparencia.temaPadrao==="light" ? "claro" : "escuro"));
+    mostrarToast("Tema por omissão: " + NOME_TEMA[DB.aparencia.temaPadrao].toLowerCase());
   });
 }
 
@@ -66,8 +74,8 @@ function editarMarca(){
       { nome:"nomeEscola", rotulo:"Nome da escola", tipo:"texto", obrigatorio:true },
       { nome:"sublinha", rotulo:"Sublinha", tipo:"texto", placeholder:"ex: Formação & Mentoria" },
       { nome:"logoUrl", rotulo:"Logótipo", tipo:"imagem", pasta:"marca", dica:"Quadrado, de preferência com fundo transparente. Sem imagem, fica o símbolo." },
-      { nome:"corAccent", rotulo:"Cor de destaque", tipo:"cor", dica:"Botões, realces e o símbolo da marca." },
-      { nome:"temaPadrao", rotulo:"Tema por omissão", tipo:"select", opcoes:[{valor:"dark",rotulo:"Escuro"},{valor:"light",rotulo:"Claro"}] },
+      { nome:"corAccent", rotulo:"Cor de destaque", tipo:"cor", dica:"Botões, realces e o símbolo da marca. O laranja Kingdom (#f4621d) mantém a paleta da Kingdom Library." },
+      { nome:"temaPadrao", rotulo:"Tema por omissão", tipo:"select", opcoes:[{valor:"auto",rotulo:"Automático (segue o sistema)"},{valor:"light",rotulo:"Claro"},{valor:"dark",rotulo:"Escuro"}] },
       { nome:"loginTitulo", rotulo:"Frase de entrada", tipo:"textarea" },
       { nome:"loginTexto", rotulo:"Texto de apoio", tipo:"textarea" },
       { nome:"rodape", rotulo:"Rodapé", tipo:"texto", placeholder:"© 2026 Kingdom Company" }

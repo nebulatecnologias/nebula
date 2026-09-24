@@ -1,3 +1,8 @@
 # Ferramentas de desenvolvimento — não fazem parte do site da Academia.
 .claude
 CLAUDE.md
+PRODUCT.md
+DESIGN.md
+.impeccable
+# Os modelos de email são para rever e aplicar nas Edge Functions, não fazem parte do site.
+emails

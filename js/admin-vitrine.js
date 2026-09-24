@@ -130,7 +130,7 @@ function linhaDaVitrine(o){
 
   return `<tr class="${o.mostrar && motivo ? "tint-risco" : ""}">
     <td>
-      <div class="nome" style="font-weight:600;">${o.nome}</div>
+      <div class="nome" style="font-weight:500;">${o.nome}</div>
       ${aviso}${semCaminho}
     </td>
     <td>${entrega}</td>

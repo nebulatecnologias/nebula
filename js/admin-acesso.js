@@ -190,7 +190,7 @@ function renderAdminConvites(){
             ${convites.length ? convites.map(c => `
               <tr class="${c.estado==="aceite"?"tint-concluido":""}">
                 <td>
-                  <div class="nome" style="font-weight:600;">${c.email}</div>
+                  <div class="nome" style="font-weight:500;">${c.email}</div>
                   <div class="sub-celula">${c.nome || "Sem nome"}</div>
                 </td>
                 <td>${resumoDoConvite(c)}</td>
@@ -435,7 +435,7 @@ function tabelaPlanosHTML(){
                 return c && !(c.modulos || []).some(m => (m.aulas || []).length);
               }).length;
               return `<tr>
-                <td><div class="nome" style="font-weight:600;">${p.nome}</div>
+                <td><div class="nome" style="font-weight:500;">${p.nome}</div>
                     <div class="sub-celula">${dentro.join(" · ") || "sem cursos"}</div></td>
                 <td class="num">${(p.cursos || []).length}${vazios ? `<div class="sub-celula">${vazios} sem aulas</div>` : ""}</td>
                 <td>${oferta ? oferta.nome : `<span class="sub-celula">ninguém — não entrega nada</span>`}</td>

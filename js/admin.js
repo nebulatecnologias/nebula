@@ -5,7 +5,6 @@ function renderAdminVisaoGeral(){
   document.getElementById("content-admin").innerHTML = `
     <div class="page-head-flex">
       <div class="page-head">
-        <span class="eyebrow">PAINEL DE ADMINISTRAÇÃO</span>
         <h1>Visão geral</h1>
         <p class="desc">Todos os teus alunos, cursos e resultados num só lugar.</p>
       </div>
@@ -133,7 +132,7 @@ function renderAdminPlaceholder(view){
   let label = view, icon = ICONS.gear;
   for(const grupo of NAV_ADMIN){ const item = grupo.itens.find(i=>i.view===view); if(item){ label = item.label; icon = item.icon; break; } }
   document.getElementById("content-admin").innerHTML = `
-    <div class="page-head"><span class="eyebrow">PAINEL DE ADMINISTRAÇÃO</span><h1>${label}</h1></div>
+    <div class="page-head"><h1>${label}</h1></div>
     <div class="card admin-placeholder">
       <div class="ph-icon">${icon}</div>
       <h2>Esta aba vai ser construída na próxima etapa</h2>

@@ -80,7 +80,7 @@ function renderAdminRelatorios(){
               const nota = mediaAvaliacoesDoCurso(c.id);
               const aulas = c.modulos.reduce((n,m)=>n+m.aulas.length,0);
               return `<tr class="${st.conclusao < 25 ? "tint-risco" : ""}">
-                <td><div class="nome" style="font-weight:600;">${c.titulo}</div>${c.publicado===false?'<div class="sub-celula">Rascunho</div>':""}</td>
+                <td><div class="nome" style="font-weight:500;">${c.titulo}</div>${c.publicado===false?'<div class="sub-celula">Rascunho</div>':""}</td>
                 <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
                 <td class="num">${st.inscritos}</td>
                 <td class="num">${st.conclusao}%</td>

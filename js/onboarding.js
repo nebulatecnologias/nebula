@@ -79,8 +79,7 @@ function renderPassoOnboarding(){
   const podeAvancar = passos.multipla ? passos.valor.length > 0 : !!passos.valor;
 
   corpo.innerHTML = `
-    <div class="onb-passos">${[0,1,2].map(i=>`<span class="${i<=passo?"feito":""}"></span>`).join("")}</div>
-    <span class="eyebrow">PASSO ${passo+1} DE 3</span>
+    <div class="onb-passos" role="img" aria-label="Passo ${passo+1} de 3">${[0,1,2].map(i=>`<span class="${i<=passo?"feito":""}"></span>`).join("")}</div>
     <h2>${passos.titulo}</h2>
     <p class="onb-sub">${passos.sub}</p>
     <div class="onb-opcoes">
@@ -154,8 +153,7 @@ function renderResultadoOnboarding(corpo){
   const nomes = (estado.onboarding.objetivos||[]).map(id => categoriaDe(id).nome);
 
   corpo.innerHTML = `
-    <div class="onb-passos">${[0,1,2].map(()=>'<span class="feito"></span>').join("")}</div>
-    <span class="eyebrow">A TUA TRILHA</span>
+    <div class="onb-passos" role="img" aria-label="Passo 3 de 3, concluído">${[0,1,2].map(()=>'<span class="feito"></span>').join("")}</div>
     <h2>Por aqui, ${estado.nome.split(" ")[0]}.</h2>
     <p class="onb-sub">${nomes.length ? `Focámos em ${nomes.join(", ")}` : "Montámos um percurso com o que tens disponível"}${ritmo ? `, a ${ritmo.aulasSemana} aulas por semana` : ""}.</p>
     ${trilha.length ? `<ol class="onb-trilha">
@@ -163,7 +161,7 @@ function renderResultadoOnboarding(corpo){
         const cat = categoriaDe(c.categoria);
         const aulas = contarAulas(c);
         return `<li>
-          <span class="onb-trilha-capa" style="${c.capa?`background-image:url(${c.capa})`:""}">${c.capa?"":(c.sigla||"")}</span>
+          <span class="onb-trilha-capa" style="--field:${campoDoCurso(c.id)};${c.capa?`background-image:url(${c.capa})`:""}">${c.capa?"":(c.sigla||"")}</span>
           <span class="onb-trilha-txt"><strong>${c.titulo}</strong><span>${cat.nome} · ${aulas} aula${aulas===1?"":"s"}</span></span>
         </li>`;
       }).join("")}
@@ -199,9 +197,8 @@ function trilhaHTML(){
     <div class="card trilha-card">
       <div class="trilha-head">
         <div>
-          <span class="eyebrow">A TUA TRILHA</span>
-          <h3>${onb.saltado ? "Sugerido para ti" : "Montada a partir do que disseste"}</h3>
-          ${ritmo ? `<p class="sub-celula">Ritmo: ${ritmo.rotulo.toLowerCase()}.</p>` : ""}
+          <h3>A tua trilha</h3>
+          <p class="sub-celula" style="margin:0;">${onb.saltado ? "Sugerida para ti" : "Montada a partir do que disseste"}${ritmo ? ` · ritmo ${ritmo.rotulo.toLowerCase()}` : ""}.</p>
         </div>
         <button class="btn btn-secondary btn-sm" id="btn-refazer-trilha">${onb.saltado ? "Responder ao questionário" : "Rever respostas"}</button>
       </div>

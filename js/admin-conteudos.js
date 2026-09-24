@@ -313,7 +313,7 @@ function editarCategoria(id){
     subtitulo: "As categorias filtram os cursos na área do aluno.",
     campos: [
       { nome:"nome", rotulo:"Nome", tipo:"texto", obrigatorio:true, placeholder:"ex: Inteligência Artificial" },
-      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#ff5a1f", dica:"Usada nas etiquetas e nos filtros." }
+      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#f4621d", dica:"Usada nas etiquetas e nos filtros." }
     ],
     valores: cat ? { nome:cat.nome, cor:cat.cor } : {},
     aoGuardar: v => {
@@ -372,9 +372,9 @@ function renderAdminCursoEditor(cursoId){
 
     <div class="gestao-grid">
       <div class="curso-resumo">
-        <div class="curso-resumo-capa" style="${curso.capa?`background-image:url(${curso.capa})`:""}">
+        <div class="curso-resumo-capa" style="--field:${campoDoCurso(curso.id)};${curso.capa?`background-image:url(${curso.capa})`:""}">
           ${curso.capa ? "" : `<span class="sigla-grande">${curso.sigla||siglaSugerida(curso.titulo)}</span>`}
-          ${cursoPublicado(curso) ? "" : '<span class="cover-badge">RASCUNHO</span>'}
+          ${cursoPublicado(curso) ? "" : '<span class="cover-badge">Rascunho</span>'}
         </div>
         <h3>${curso.titulo}</h3>
         <p class="curso-resumo-sub">${curso.subtitulo||"Sem descrição"}</p>

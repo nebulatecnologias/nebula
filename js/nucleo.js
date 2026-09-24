@@ -60,15 +60,41 @@ function clarearHex(hex, quanto){
   return "#" + [r,g,b].map(c=>c.toString(16).padStart(2,"0")).join("");
 }
 
+/* A coroa da Kingdom: quadrado laranja com a coroa branca, o mesmo sinal da
+   Kingdom Library. Com uma cor de destaque própria, a coroa veste essa cor. */
+const COR_KINGDOM = "#f4621d";
+let contadorCoroas = 0;
 function crestSVG(cor, pequeno){
-  const tam = pequeno ? ' width="30" height="30"' : "";
-  return `<svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"${tam}><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="${cor}" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="${cor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const tam = pequeno ? ' width="34" height="34"' : "";
+  const id = "kc-" + (++contadorCoroas);
+  const propria = cor && !corEhDaKingdom(cor);
+  const fundo = propria
+    ? `<rect width="64" height="64" rx="15" fill="${cor}"/>`
+    : `<defs><linearGradient id="${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#${id})"/>`;
+  return `<svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"${tam}>${fundo}<path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>`;
+}
+
+/* O laranja antigo da Academia e o da Library contam como "a cor da casa":
+   ficam com a paleta completa da Library em vez de uma cor avulsa. */
+function corEhDaKingdom(cor){
+  const c = String(cor || "").trim().toLowerCase();
+  return !c || c === COR_KINGDOM || c === "#ff5a1f";
+}
+
+/* Um campo pastel por curso, sempre o mesmo para o mesmo curso — as capas sem
+   imagem ficam com cor própria em vez de um cinzento igual para todas. */
+const CAMPOS_PASTEL = ["apricot","sky","meadow","lavender","sand","lagoon","blush","wheat"];
+function campoDoCurso(id){
+  const t = String(id || "");
+  let h = 0;
+  for(let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+  return `var(--field-${CAMPOS_PASTEL[h % CAMPOS_PASTEL.length]})`;
 }
 
 function marcaHTML(pequeno){
   const a = DB.aparencia;
   const marca = a.logoUrl
-    ? `<img class="crest logo-imagem" src="${a.logoUrl}" alt="${a.nomeEscola}"${pequeno?' style="width:30px;height:30px;"':""}>`
+    ? `<img class="crest logo-imagem" src="${a.logoUrl}" alt="${a.nomeEscola}"${pequeno?' style="width:34px;height:34px;"':""}>`
     : crestSVG(a.corAccent, pequeno);
   return `${marca}<span class="wordmark">${a.nomeEscola}<small>${a.sublinha||""}</small></span>`;
 }
@@ -76,29 +102,62 @@ function marcaHTML(pequeno){
 function aplicarAparencia(){
   const a = DB.aparencia;
   const raiz = document.documentElement.style;
-  raiz.setProperty("--accent", a.corAccent);
-  raiz.setProperty("--accent-hover", clarearHex(a.corAccent, 0.18));
-  raiz.setProperty("--accent-soft", hexParaRgba(a.corAccent, 0.14));
-  raiz.setProperty("--accent-line", hexParaRgba(a.corAccent, 0.35));
+  const propriedades = ["--accent","--accent-soft","--accent-ink","--accent-line","--cta","--cta-hover","--cta-shadow","--brand-panel","--ring"];
+  if(corEhDaKingdom(a.corAccent)){
+    propriedades.forEach(p => raiz.removeProperty(p));
+  } else {
+    const c = a.corAccent;
+    raiz.setProperty("--accent", c);
+    raiz.setProperty("--accent-soft", `color-mix(in srgb, ${c} 14%, var(--surface))`);
+    raiz.setProperty("--accent-ink", `color-mix(in srgb, ${c} 72%, var(--ink))`);
+    raiz.setProperty("--accent-line", hexParaRgba(c, 0.35));
+    raiz.setProperty("--cta", `linear-gradient(180deg, ${clarearHex(c, 0.14)} 0%, ${c} 100%)`);
+    raiz.setProperty("--cta-hover", `linear-gradient(180deg, ${clarearHex(c, 0.22)} 0%, ${clarearHex(c, 0.06)} 100%)`);
+    raiz.setProperty("--cta-shadow", `0 1px 0 rgba(255,255,255,.35) inset, 0 6px 16px -4px ${hexParaRgba(c, 0.55)}`);
+    raiz.setProperty("--brand-panel", `linear-gradient(160deg, ${clarearHex(c, 0.16)} 0%, ${c} 100%)`);
+    raiz.setProperty("--ring", `0 0 0 3px ${hexParaRgba(c, 0.28)}`);
+  }
 
   document.title = a.nomeEscola + " — Área de Membros";
   document.querySelectorAll(".brand-mark").forEach(el => {
-    el.innerHTML = marcaHTML(!!el.closest(".sidebar-head"));
+    el.innerHTML = marcaHTML(!!el.closest(".sidebar-head, .topbar"));
   });
 
-  const kicker = document.querySelector("#login-quote .kicker");
   const titulo = document.querySelector("#login-quote h2");
   const texto  = document.querySelector("#login-quote p");
-  if(kicker) kicker.textContent = a.nomeEscola.toUpperCase();
   if(titulo) titulo.textContent = a.loginTitulo;
   if(texto)  texto.textContent = a.loginTexto;
   const rodape = document.getElementById("login-rodape");
   if(rodape) rodape.textContent = a.rodape || "";
 
-  /* O tema que a pessoa escolheu no botão manda sobre o tema por omissão. */
-  const tema = estado.tema || a.temaPadrao;
-  document.body.classList.toggle("light", tema === "light");
+  aplicarTema();
 }
+
+/* ============================================================
+   Tema
+   Três valores: "light", "dark" e "auto". Por omissão segue o sistema,
+   como a Kingdom Library. O botão do topo guarda a escolha da pessoa,
+   que passa a mandar sobre o tema definido em Aparência.
+   ============================================================ */
+function temaEscolhido(){
+  return estado.tema || DB.aparencia.temaPadrao || "auto";
+}
+function temaEfetivo(){
+  const t = temaEscolhido();
+  if(t === "light" || t === "dark") return t;
+  try { return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+  catch(e){ return "light"; }
+}
+function aplicarTema(){
+  const t = temaEscolhido();
+  const raiz = document.documentElement;
+  if(t === "light" || t === "dark") raiz.setAttribute("data-theme", t);
+  else raiz.removeAttribute("data-theme");
+  document.body.classList.toggle("light", temaEfetivo() === "light");
+}
+try {
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(typeof DB !== "undefined") aplicarTema(); });
+} catch(e){ /* browsers antigos: fica o tema do arranque */ }
 
 /* Só as abas ligadas em Configurações chegam ao aluno. */
 function navDoAluno(){
@@ -180,7 +239,7 @@ function playerHTML(aula, titulo){
   return `
     <div class="placeholder-inner">
       <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
-      <div class="placeholder-label">${temCodigo ? "CÓDIGO DE INCORPORAÇÃO NÃO RECONHECIDO" : "AULA SEM VÍDEO"}</div>
+      <div class="placeholder-label">${temCodigo ? "Código de incorporação não reconhecido" : "Esta aula ainda não tem vídeo"}</div>
       <div class="placeholder-sub">${temCodigo
         ? "O código colado não traz um endereço de vídeo."
         : "Cola o código de incorporação em Conteúdos › aula › Vídeo."}</div>
@@ -279,7 +338,7 @@ function bannersAtivos(){ return DB.banners.filter(b => b.ativo !== false); }
 function fundoBanner(b){
   return b.imagem
     ? `background-image:url(${b.imagem});background-size:cover;background-position:center;`
-    : `background:${b.gradiente || "linear-gradient(120deg,#ff5a1f,#c23f13)"};`;
+    : `background:${b.gradiente || "var(--brand-panel)"};`;
 }
 /* Primeira aula de um curso, no formato de localizarAula(). Serve de recurso
    quando a última aula vista já não existe. */
@@ -326,12 +385,12 @@ function certificadoHTML({ nome, curso, data, comFechar }){
   const c = DB.config.certificado;
   return `
     ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
-    <svg class="crest" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2L35 8V19C35 28.5 28.8 35.6 20 38C11.2 35.6 5 28.5 5 19V8L20 2Z" stroke="${DB.aparencia.corAccent}" stroke-width="2"/><path d="M13 19L18 24L27 14" stroke="${DB.aparencia.corAccent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    ${crestSVG(DB.aparencia.corAccent)}
     <span class="kicker">${c.titulo}</span>
     <h2>${nome}</h2>
-    <p style="color:var(--text-dim);">${c.frase}</p>
+    <p>${c.frase}</p>
     <div class="cert-course">${curso}</div>
-    <p style="color:var(--text-dim);font-size:13px;">${c.rodape}</p>
+    <p style="font-size:14px;">${c.rodape}</p>
     ${c.assinaturaNome ? `<div class="cert-assinatura"><span class="linha"></span><strong>${c.assinaturaNome}</strong><span class="cargo">${c.assinaturaCargo||""}</span></div>` : ""}
     <div class="cert-date">Emitido em ${data}</div>
   `;
@@ -567,7 +626,37 @@ function renderSidebarNav(activeView){
       </div>
     `).join("")}
   `).join("");
-  el.querySelectorAll(".nav-item[data-view]").forEach(n => n.addEventListener("click", () => irPara(n.getAttribute("data-view"))));
+  el.querySelectorAll(".nav-item[data-view]").forEach(n => {
+    n.setAttribute("role", "link");
+    n.setAttribute("tabindex", "0");
+    n.addEventListener("click", () => irPara(n.getAttribute("data-view")));
+    n.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); irPara(n.getAttribute("data-view")); } });
+  });
+  renderTabbar(lista, navView);
+}
+
+/* No telemóvel, os quatro destinos mais usados ficam numa barra em baixo;
+   o resto está em "Mais", que abre a gaveta com a navegação toda. */
+const TABBAR_ALUNO = ["dashboard","catalogo","calendario","comunidade","vitrine","conquistas"];
+const TABBAR_ADMIN = ["admin-visao","admin-conteudos","admin-membros","admin-relatorios"];
+const ROTULO_CURTO = { catalogo:"Cursos", "admin-visao":"Visão", "admin-conteudos":"Conteúdos", "admin-relatorios":"Relatórios" };
+function renderTabbar(lista, navView){
+  const barra = document.getElementById("tabbar");
+  if(!barra) return;
+  const itens = lista.flatMap(g => g.itens);
+  const ordem = papelEfetivo()==="administrador" ? TABBAR_ADMIN : TABBAR_ALUNO;
+  const escolhidos = ordem.map(v => itens.find(i => i.view === v)).filter(Boolean).slice(0, 4);
+  const iconeMais = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  barra.innerHTML = escolhidos.map(it => `
+    <button type="button" class="${it.view===navView?"active":""}" data-tab="${it.view}" ${it.view===navView?'aria-current="page"':""}>
+      ${it.icon}<span>${ROTULO_CURTO[it.view] || it.label}</span>
+    </button>`).join("") + `
+    <button type="button" data-tab-mais>${iconeMais}<span>Mais</span></button>`;
+  barra.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => irPara(b.getAttribute("data-tab"))));
+  barra.querySelector("[data-tab-mais]").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("backdrop").classList.add("show");
+  });
 }
 
 function renderSidebarFoot(){
