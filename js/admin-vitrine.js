@@ -134,7 +134,7 @@ function linhaDaVitrine(o){
       ${aviso}${semCaminho}
     </td>
     <td>${entrega}</td>
-    <td class="num">${formatarPreco(Number(o.preco)||0)}${o.cobranca === "Recorrente mensal" ? "<div class=\"sub-celula\">por mês</div>" : ""}</td>
+    <td class="num">${formatarPreco(Number(o.preco)||0, o.moeda)}${o.cobranca === "Recorrente mensal" ? "<div class=\"sub-celula\">por mês</div>" : ""}</td>
     <td><span class="pill ${o.estado === "Ativa" ? "pill-ativo" : "pill-inativo"}">${o.estado}</span></td>
     <td>
       <div class="toggle ${o.mostrar ? "on" : ""}" data-vitrine="${o.ofertaId}" title="${o.mostrar ? "Esconder do aluno" : "Mostrar ao aluno"}"><div class="knob"></div></div>

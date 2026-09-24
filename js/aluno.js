@@ -243,7 +243,7 @@ function cartaoDaVitrine(o){
       <p class="course-desc">${o.chamada || (varios ? o.cursos.map(c=>c.titulo).join(" · ") : (primeiro.subtitulo||""))}</p>
       <div class="course-progress-row">
         <span class="course-legenda">${legenda}</span>
-        <span class="pct">${formatarPreco(o.preco)}${o.mensal ? "<small>/mês</small>" : ""}</span>
+        <span class="pct">${formatarPreco(o.preco, o.moeda)}${o.mensal ? "<small>/mês</small>" : ""}</span>
       </div>
       <button class="btn btn-primary btn-block btn-sm" data-desbloquear="${o.ofertaId}">
         ${o.checkout ? "Quero este acesso" : "Saber como entrar"} ${setaCirculo()}</button>
@@ -308,7 +308,7 @@ function renderCurso(cursoId){
         </p>
         ${oferta && oferta.destino
           ? `<a class="btn btn-primary" href="${oferta.destino}" target="_blank" rel="noopener">
-               ${oferta.checkout ? "Quero este acesso" : "Ver como ter acesso"} · ${formatarPreco(oferta.preco)}${oferta.mensal ? "/mês" : ""}</a>`
+               ${oferta.checkout ? "Quero este acesso" : "Ver como ter acesso"} · ${formatarPreco(oferta.preco, oferta.moeda)}${oferta.mensal ? "/mês" : ""}</a>`
           : `<button class="btn btn-secondary" id="btn-ir-vitrine">Ver o que está disponível</button>`}
       </div>`;
     const voltar = document.getElementById("btn-voltar-catalogo");
