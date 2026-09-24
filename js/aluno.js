@@ -33,16 +33,7 @@ function renderDashboard(){
       <h1>Olá, ${estado.nome.split(" ")[0]}.</h1>
       <p class="desc"><span class="data-hoje">${hoje}.</span> Continua a construir: aqui está o ponto em que ficaste no teu percurso.</p>
     </div>
-    ${carrosselBannersHTML("carrossel-inicio")}
-    ${trilhaHTML()}
-    <div class="stat-row">
-      <div class="card stat-card"><div class="stat-label">Progresso geral</div><div class="stat-value">${geral.pct}<span>%</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Aulas concluídas</div><div class="stat-value">${geral.concluidas}<span>/ ${geral.total}</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Cursos concluídos</div><div class="stat-value">${cursosCompletos}<span>/ ${cursosVisiveis().length}</span></div></div>
-      <div class="card stat-card"><div class="stat-label">Sequência atual</div><div class="stat-value">${estado.streakDias}<span>dia${estado.streakDias===1?"":"s"}</span></div></div>
-    </div>
 
-    <div class="section-title"><h2>Continuar de onde parei</h2></div>
     ${locPrincipal ? `
     <div class="card continue-card" id="btn-continuar">
       <div class="continue-thumb" style="--field:${campoDoCurso(cursoPrincipal.id)};${(locPrincipal.aula.capa||cursoPrincipal.capa)?`background-image:url(${locPrincipal.aula.capa||cursoPrincipal.capa})`:""}"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
@@ -72,6 +63,14 @@ function renderDashboard(){
       }).join("")}
     </div>` : ""}
 
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-label">Progresso geral</div><div class="stat-value">${geral.pct}<span>%</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Aulas concluídas</div><div class="stat-value">${geral.concluidas}<span>/ ${geral.total}</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Cursos concluídos</div><div class="stat-value">${cursosCompletos}<span>/ ${cursosVisiveis().length}</span></div></div>
+      <div class="card stat-card"><div class="stat-label">Sequência atual</div><div class="stat-value">${estado.streakDias}<span>dia${estado.streakDias===1?"":"s"}</span></div></div>
+    </div>
+    ${trilhaHTML()}
+    ${carrosselBannersHTML("carrossel-inicio")}
     <div class="widget-row">
       <div class="card widget-card">
         <div class="widget-label"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>Próximo encontro ao vivo</div>
@@ -418,8 +417,8 @@ function renderAula(cursoId, aulaId){
         <div class="player-wrap">${playerHTML(aula, aula.titulo)}</div>
         <div class="aula-header-row">
           <div>
-            <div class="aula-breadcrumb">${curso.titulo} · ${modulo.titulo}</div>
             <h1>${aula.titulo}</h1>
+            <div class="aula-breadcrumb">${curso.titulo} · ${modulo.titulo}</div>
           </div>
           <div class="aula-actions">
             <span id="aula-duracao" class="aula-duracao" style="align-self:center;margin-right:4px;">${aula.duracao && aula.duracao !== "00:00" ? aula.duracao : ""}</span>
@@ -954,7 +953,7 @@ function carrosselBannersHTML(id){
     <div class="banner-carousel" id="${id}">
       <div class="banner-track">
         ${banners.map(b => `<a class="banner-slide" href="${linkExterno(b.link) || "#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
-          <span class="banner-eyebrow">${b.eyebrow}</span>
+          ${b.eyebrow ? `<span class="banner-etiqueta">${b.eyebrow}</span>` : ""}
           <span class="banner-title">${b.titulo}</span>
           <span class="banner-cta">${b.cta} ${setaCirculo()}</span>
         </a>`).join("")}

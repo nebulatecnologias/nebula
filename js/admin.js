@@ -63,22 +63,22 @@ function tabelaAdminAlunosHTML(){
         <span class="count">${lista.length} de ${DB.membros.length} registos</span>
       </div>
       <div class="table-wrap">
-        <table class="admin-table">
+        <table class="admin-table tabela-visao">
           <thead><tr>
-            <th>Aluno</th><th>Curso</th><th>Categoria</th><th>Último acesso</th><th>Engajamento</th><th>Progresso</th><th>Estágio</th><th>Responsável</th>
+            <th>Aluno</th><th>Curso</th><th class="col-b">Categoria</th><th class="col-a">Último acesso</th><th class="col-a">Engajamento</th><th>Progresso</th><th>Estágio</th><th class="col-b">Responsável</th>
           </tr></thead>
           <tbody>
             ${lista.length ? lista.map(a => {
               const cat = categoriaDe(a.categoria);
               return `<tr class="${TINT_EST[a.estagio]||""}">
                 <td><div class="cell-user"><div class="avatar">${iniciais(a.nome)}</div><div class="meta"><div class="nome">${a.nome}</div><div class="sub">${a.email}</div></div></div></td>
-                <td>${a.curso}</td>
-                <td><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
-                <td>${a.ultimoAcesso}</td>
-                <td><span class="pill ${PILL_ENG[a.engajamento]}">${LABEL_ENG[a.engajamento]}</span></td>
+                <td>${a.curso}<div class="sub-celula sub-categoria"><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></div></td>
+                <td class="col-b"><span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span></td>
+                <td class="col-a">${a.ultimoAcesso}</td>
+                <td class="col-a"><span class="pill ${PILL_ENG[a.engajamento]}">${LABEL_ENG[a.engajamento]}</span></td>
                 <td><div class="mini-progress"><div class="progress-track thin"><div class="progress-fill mini" style="width:${a.progresso}%"></div></div><span>${a.progresso}%</span></div></td>
                 <td><span class="pill ${PILL_EST[a.estagio]}">${LABEL_EST[a.estagio]}</span></td>
-                <td>${a.responsavel}</td>
+                <td class="col-b">${a.responsavel}</td>
               </tr>`;
             }).join("") : `<tr><td colspan="8"><div class="empty-note">Nenhum aluno encontrado com estes filtros.</div></td></tr>`}
           </tbody>

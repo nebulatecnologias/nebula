@@ -239,10 +239,10 @@ function playerHTML(aula, titulo){
   return `
     <div class="placeholder-inner">
       <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
-      <div class="placeholder-label">${temCodigo ? "Código de incorporação não reconhecido" : "Esta aula ainda não tem vídeo"}</div>
-      <div class="placeholder-sub">${temCodigo
-        ? "O código colado não traz um endereço de vídeo."
-        : "Cola o código de incorporação em Conteúdos › aula › Vídeo."}</div>
+      <div class="placeholder-label">${papelEfetivo() === "administrador" && temCodigo ? "Código de incorporação não reconhecido" : "Esta aula não tem vídeo"}</div>
+      <div class="placeholder-sub">${papelEfetivo() === "administrador"
+        ? (temCodigo ? "O código colado não traz um endereço de vídeo." : "Cola o código de incorporação em Conteúdos › aula › Vídeo.")
+        : "O conteúdo desta aula está no texto e nos materiais abaixo. Podes marcá-la como concluída ou seguir para a próxima."}</div>
     </div>`;
 }
 /* ============================================================
@@ -386,7 +386,7 @@ function certificadoHTML({ nome, curso, data, comFechar }){
   return `
     ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
     ${crestSVG(DB.aparencia.corAccent)}
-    <span class="kicker">${c.titulo}</span>
+    <p class="cert-titulo">${c.titulo.charAt(0) + c.titulo.slice(1).toLowerCase()}</p>
     <h2>${nome}</h2>
     <p>${c.frase}</p>
     <div class="cert-course">${curso}</div>
@@ -633,6 +633,8 @@ function renderSidebarNav(activeView){
     n.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); irPara(n.getAttribute("data-view")); } });
   });
   renderTabbar(lista, navView);
+  const ativo = el.querySelector(".nav-item.active");
+  if(ativo) ativo.scrollIntoView({ block:"nearest" });
 }
 
 /* No telemóvel, os quatro destinos mais usados ficam numa barra em baixo;
@@ -680,7 +682,7 @@ function renderSidebarFoot(){
 function atualizarTopbarCTA(view){
   const el = document.getElementById("topbar-cta");
   if(estado.papel==="administrador" && !estado.prevendoComoAluno && view.indexOf("admin-")===0){
-    el.innerHTML = `<button class="btn btn-secondary btn-sm" id="btn-ver-como-aluno">Ver como aluno</button>`;
+    el.innerHTML = `<button class="btn btn-secondary btn-sm" id="btn-ver-como-aluno" title="Ver como aluno"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="rotulo-cta">Ver como aluno</span></button>`;
     document.getElementById("btn-ver-como-aluno").addEventListener("click", entrarPreviaAluno);
   } else {
     el.innerHTML = "";
