@@ -74,7 +74,6 @@
     --shadow-2:0 2px 6px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.7);
     --shadow-pop:0 12px 32px -8px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.4);
     --scrim:rgba(0,0,0,.6);
-  --cta-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 6px 16px -6px rgba(0,0,0,.7);
     --cta-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 6px 16px -6px rgba(0,0,0,.7);
     --field-sky:#23384a; --field-sand:#4a3d22; --field-meadow:#2a3f28; --field-blush:#4a2c29;
     --field-lagoon:#1f4244; --field-lavender:#353052; --field-wheat:#453a2a; --field-apricot:#4a3426;
@@ -99,6 +98,7 @@
   --shadow-2:0 2px 6px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.7);
   --shadow-pop:0 12px 32px -8px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.4);
   --scrim:rgba(0,0,0,.6);
+  --cta-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 6px 16px -6px rgba(0,0,0,.7);
   --field-sky:#23384a; --field-sand:#4a3d22; --field-meadow:#2a3f28; --field-blush:#4a2c29;
   --field-lagoon:#1f4244; --field-lavender:#353052; --field-wheat:#453a2a; --field-apricot:#4a3426;
   --art-ink:#f4f0ea;
@@ -248,7 +248,6 @@ input,textarea{ caret-color:var(--accent); }
 .login-brandside .brand-mark .wordmark small{ color:rgba(255,255,255,.82); }
 .login-brandside .brand-mark .crest{ filter:drop-shadow(0 6px 14px rgba(0,0,0,.18)); }
 .login-quote{ position:relative; z-index:1; max-width:520px; }
-.login-quote .kicker{ display:none; }
 .login-quote h2{ font-size:clamp(28px,3vw,40px); letter-spacing:-.03em; line-height:1.1; color:#fff; margin:0 0 14px; max-width:18ch; }
 .login-quote p{ color:rgba(255,255,255,.9); font-size:16px; max-width:44ch; margin:0; line-height:1.55; }
 #login-rodape{ position:relative; z-index:1; margin:0; font-size:13px; color:rgba(255,255,255,.82) !important; }
@@ -391,8 +390,6 @@ input,textarea{ caret-color:var(--accent); }
 .admin-table tbody tr:hover td{ background:var(--surface-2); }
 .admin-table tr:last-child td{ border-bottom:0; }
 .admin-table td.num{ text-align:right; font-variant-numeric:tabular-nums; font-weight:500; }
-.admin-table tr.tint-risco td{ background:color-mix(in srgb, var(--amber-soft) 70%, transparent); }
-.admin-table tr.tint-concluido td{ background:color-mix(in srgb, var(--green-soft) 70%, transparent); }
 .cell-user{ display:flex; align-items:center; gap:11px; }
 .cell-user .avatar{ width:34px; height:34px; font-size:12px; box-shadow:none; }
 .cell-user .meta{ min-width:0; }
@@ -476,8 +473,6 @@ input,textarea{ caret-color:var(--accent); }
 .banner-track::-webkit-scrollbar{ display:none; }
 .banner-slide{ flex:0 0 100%; scroll-snap-align:start; min-height:200px; aspect-ratio:4/1; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; padding:clamp(22px,4vw,44px); color:#fff; position:relative; overflow:hidden; isolation:isolate; }
 .banner-slide::after{ content:""; position:absolute; z-index:-1; right:-90px; top:-90px; width:340px; height:340px; border-radius:50%; border:1.5px solid rgba(255,255,255,.22); box-shadow:0 0 0 56px rgba(255,255,255,.05); pointer-events:none; }
-.banner-eyebrow{ display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:999px; background:rgba(255,255,255,.2); font-size:12.5px; font-weight:500; }
-.banner-eyebrow:empty{ display:none; }
 .banner-title{ font-size:clamp(20px,2.6vw,30px); font-weight:500; letter-spacing:-.025em; line-height:1.15; max-width:24ch; text-wrap:balance; margin:0; }
 .banner-cta{ display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 18px; border-radius:999px; background:#fff; color:#1c1a17; font-size:14px; font-weight:500; margin-top:4px; box-shadow:0 8px 18px -10px rgba(0,0,0,.45); }
 .banner-dots{ display:flex; justify-content:center; gap:6px; margin-top:12px; }
@@ -778,7 +773,6 @@ input,textarea{ caret-color:var(--accent); }
 .modal-cert::before{ content:""; position:absolute; inset:12px; border:1px solid #eee8e1; border-radius:18px; pointer-events:none; }
 .modal-cert::after{ content:""; position:absolute; inset:18px; border:1px solid rgba(244,98,29,.35); border-radius:14px; pointer-events:none; }
 .modal-cert .crest{ width:52px; height:52px; margin:0 auto 18px; filter:drop-shadow(0 6px 12px rgba(226,78,12,.3)); }
-.modal-cert .kicker{ display:block; color:#6f6962; font-weight:500; font-size:14px; letter-spacing:.02em; margin-bottom:18px; }
 .modal-cert h2{ color:#1c1a17; font-size:32px; letter-spacing:-.03em; margin-bottom:8px; }
 .modal-cert p{ color:#6f6962 !important; }
 .modal-cert .cert-course{ color:#b8400a; font-size:21px; font-weight:500; letter-spacing:-.02em; margin:12px 0; }
@@ -1018,7 +1012,6 @@ input,textarea{ caret-color:var(--accent); }
 .amostra-cor.grande{ width:48px; height:48px; border-radius:14px; display:block; margin-bottom:10px; }
 .previa-login{ padding:26px; margin-bottom:22px; }
 .previa-marca{ display:flex; align-items:center; gap:10px; margin-bottom:20px; }
-.previa-login .kicker{ display:none; }
 .previa-login h3{ font-size:24px; letter-spacing:-.025em; line-height:1.2; margin:0 0 10px; max-width:30ch; }
 .previa-login p{ color:var(--muted); font-size:15px; max-width:52ch; }
 .previa-botoes{ display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
@@ -1281,7 +1274,6 @@ input,textarea{ caret-color:var(--accent); }
 .banner-etiqueta{ position:absolute; top:16px; right:16px; display:inline-flex; align-items:center; height:28px; padding:0 12px; border-radius:999px; background:rgba(255,255,255,.22); color:#fff; font-size:12.5px; font-weight:500; max-width:calc(100% - 32px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* Estado de uma linha: um ponto no início, e não a linha toda pintada. */
-.admin-table tr.tint-risco td, .admin-table tr.tint-concluido td{ background:transparent; }
 .admin-table tr.tint-risco td:first-child, .admin-table tr.tint-concluido td:first-child{ position:relative; }
 .admin-table tr.tint-risco td:first-child::before, .admin-table tr.tint-concluido td:first-child::before{ content:""; position:absolute; left:6px; top:50%; width:7px; height:7px; margin-top:-3.5px; border-radius:50%; }
 .admin-table tr.tint-risco td:first-child::before{ background:#d99a00; box-shadow:0 0 0 3px var(--amber-soft); }
@@ -1311,3 +1303,4 @@ input,textarea{ caret-color:var(--accent); }
 /* O título do certificado: uma linha de texto normal, sem maiúsculas espaçadas. */
 .cert-titulo{ color:#6f6962 !important; font-size:15px; margin:0 0 10px; }
 .aula-breadcrumb{ margin:4px 0 0; }
+.evento-passado .event-date-badge{ background:var(--sunken); color:var(--ink-2); box-shadow:none; }

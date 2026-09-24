@@ -61,7 +61,7 @@ function renderAdminEventos(){
               const cat = categoriaDe(e.categoria);
               const { dia, mes } = formatarDataEvento(e.data);
               const passado = eventoRealizado(e);
-              return `<tr class="${passado?"":"tint-concluido"}">
+              return `<tr class="${passado?"evento-passado":"tint-concluido"}">
                 <td><div class="cell-user"><div class="event-date-badge"><span class="day">${dia}</span><span class="mon">${mes}</span></div><div class="meta"><div class="sub-celula">${e.hora}</div></div></div></td>
                 <td>
                   <div class="nome" style="font-weight:500;">${e.titulo}</div>
