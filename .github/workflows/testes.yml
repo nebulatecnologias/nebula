@@ -1,0 +1,41 @@
+# Os testes da Academia correm a cada push e em cada pull request.
+#
+# Até 27/09/2026 não havia nada: as suites viviam numa pasta temporária e
+# morreram com o contentor. Um commit que parta um ecrã fica VERMELHO aqui,
+# antes de o Vercel o pôr no ar. No molde do kingdom-dashboard.
+name: testes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  correr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # O site não é compilado; isto instala só o que os testes precisam.
+      - run: npm ci
+
+      - name: Guardar o Chromium entre corridas
+        id: cache-browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - if: steps.cache-browser.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - if: steps.cache-browser.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - run: npm test

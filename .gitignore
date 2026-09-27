@@ -1,2 +1,6 @@
 # Capturas de revisão do impeccable: ficam na máquina, não no repositório.
 .impeccable/review/
+
+# Os testes: dependências e capturas ficam na máquina.
+node_modules/
+testes/.capturas/

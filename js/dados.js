@@ -213,14 +213,14 @@ const PLANOS_PADRAO = [
 ];
 
 const MEMBROS_PADRAO = [
-  { id:"m1", nome:"Marta Macomo",        email:"marta@studiomacomo.co",  telefone:"+258 84 221 4408", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-01-12", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Instagram",      ultimoAcesso:"há 2 dias",  engajamento:"quente", progresso:82,  estagio:"ativo",     responsavel:"Maria M." },
-  { id:"m2", nome:"Airson Zunguze",      email:"airson@worldofpunch.co", telefone:"+258 87 445 2210", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-03", curso:"IA Aplicada aos Negócios", categoria:"ia",            origem:"Instagram",      ultimoAcesso:"há 5 dias",  engajamento:"morno",  progresso:45,  estagio:"ativo",     responsavel:"Shelton D." },
-  { id:"m3", nome:"Leatricia Vilanculos", email:"leatricia@tongasbbq.co", telefone:"+258 85 118 6640", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-01-20", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Indicação",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
-  { id:"m4", nome:"Renato Alfredo",      email:"renato@mtanation.co",    telefone:"+258 84 002 9931", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-03-14", curso:"Vendas de Alto Impacto",  categoria:"marketing",      origem:"Instagram",      ultimoAcesso:"há 12 dias", engajamento:"frio",   progresso:8,   estagio:"risco",     responsavel:"Shelton D." },
-  { id:"m5", nome:"Hostina Daia",        email:"hostina@daiaenergias.co", telefone:"+258 86 330 7781", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-28", curso:"Propósito em Movimento",  categoria:"espiritualidade", origem:"Facebook",      ultimoAcesso:"há 1 dia",   engajamento:"morno",  progresso:60,  estagio:"ativo",     responsavel:"Maria M." },
-  { id:"m6", nome:"Clarisse Jamnadas",   email:"clarisse@visador.co",    telefone:"+258 82 900 1177", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-04-02", curso:"Hábitos de Elite",        categoria:"pessoal",        origem:"Perfil pessoal", ultimoAcesso:"há 3 dias",  engajamento:"morno",  progresso:30,  estagio:"ativo",     responsavel:"Shelton D." },
-  { id:"m7", nome:"Mendes Alfazema",     email:"mendes@cafridjah.co",    telefone:"+258 84 776 3092", papel:"aluno", planoId:"essencial",  acesso:"bloqueado", membroDesde:"2026-01-08", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Indicação",      ultimoAcesso:"há 20 dias", engajamento:"frio",   progresso:15,  estagio:"inativo",   responsavel:"Maria M." },
-  { id:"m8", nome:"Ana Chissano",        email:"ana@chissanoco.co",      telefone:"+258 84 550 1120", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-02-10", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Instagram",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." },
+  { id:"m1", nome:"Marta Lopes",        email:"marta.lopes@exemplo.co.mz",  telefone:"+258 84 000 0001", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-01-12", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Instagram",      ultimoAcesso:"há 2 dias",  engajamento:"quente", progresso:82,  estagio:"ativo",     responsavel:"Maria M." },
+  { id:"m2", nome:"Paulo Mabunda",      email:"paulo.mabunda@exemplo.co.mz", telefone:"+258 84 000 0002", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-03", curso:"IA Aplicada aos Negócios", categoria:"ia",            origem:"Instagram",      ultimoAcesso:"há 5 dias",  engajamento:"morno",  progresso:45,  estagio:"ativo",     responsavel:"Shelton D." },
+  { id:"m3", nome:"Leonor Matsinhe", email:"leonor.matsinhe@exemplo.co.mz", telefone:"+258 84 000 0003", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-01-20", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Indicação",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
+  { id:"m4", nome:"Renato Cossa",      email:"renato.cossa@exemplo.co.mz",    telefone:"+258 84 000 0004", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-03-14", curso:"Vendas de Alto Impacto",  categoria:"marketing",      origem:"Instagram",      ultimoAcesso:"há 12 dias", engajamento:"frio",   progresso:8,   estagio:"risco",     responsavel:"Shelton D." },
+  { id:"m5", nome:"Helena Nhantumbo",        email:"helena.nhantumbo@exemplo.co.mz", telefone:"+258 84 000 0005", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-28", curso:"Propósito em Movimento",  categoria:"espiritualidade", origem:"Facebook",      ultimoAcesso:"há 1 dia",   engajamento:"morno",  progresso:60,  estagio:"ativo",     responsavel:"Maria M." },
+  { id:"m6", nome:"Clara Muianga",   email:"clara.muianga@exemplo.co.mz",    telefone:"+258 84 000 0006", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-04-02", curso:"Hábitos de Elite",        categoria:"pessoal",        origem:"Perfil pessoal", ultimoAcesso:"há 3 dias",  engajamento:"morno",  progresso:30,  estagio:"ativo",     responsavel:"Shelton D." },
+  { id:"m7", nome:"Mário Tembe",     email:"mario.tembe@exemplo.co.mz",    telefone:"+258 84 000 0007", papel:"aluno", planoId:"essencial",  acesso:"bloqueado", membroDesde:"2026-01-08", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Indicação",      ultimoAcesso:"há 20 dias", engajamento:"frio",   progresso:15,  estagio:"inativo",   responsavel:"Maria M." },
+  { id:"m8", nome:"Ana Machava",        email:"ana.machava@exemplo.co.mz",      telefone:"+258 84 000 0008", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-02-10", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Instagram",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." },
   { id:"m9", nome:"Shelton Douglas",     email:"admin@kingdomacademy.com", telefone:"+258 84 000 0000", papel:"administrador", planoId:"vitalicio", acesso:"ativo", membroDesde:"2026-01-01", curso:"—", categoria:"negocios", origem:"Equipa", ultimoAcesso:"hoje", engajamento:"quente", progresso:0, estagio:"ativo", responsavel:"—" }
 ];
 
@@ -249,19 +249,19 @@ const ESPACOS_PADRAO = [
 
 const POSTS_PADRAO = [
   { id:"p4", autor:"Kingdom Academy", iniciais:"KA", tempo:"há 2h", categoria:"negocios", espacoId:"avisos", fixado:true, oculto:false, texto:"Lembrete: a Mentoria em Grupo do Plano de 90 Dias é já esta semana. Traz a tua pergunta mais difícil.", likes:24, curtido:false },
-  { id:"p3", autor:"Marcos Vilanculos", iniciais:"MV", tempo:"há 5h", categoria:"ia", espacoId:"vitorias", fixado:false, oculto:false, texto:"Apliquei o prompt da aula 3 no meu atendimento e poupei 2h por dia. Quem mais já testou?", likes:18, curtido:false },
-  { id:"p2", autor:"Ana Chissano", iniciais:"AC", tempo:"há 1 dia", categoria:"mentalidade", espacoId:"vitorias", fixado:false, oculto:false, texto:"A técnica dos 90 segundos mudou a forma como lido com clientes difíceis. Recomendo sem dúvida.", likes:31, curtido:true },
-  { id:"p1", autor:"Rui Macuácua", iniciais:"RM", tempo:"há 2 dias", categoria:"espiritualidade", espacoId:"geral", fixado:false, oculto:false, texto:"\"Negócio como instrumento, não como ídolo\" — aula que precisava de ouvir hoje.", likes:12, curtido:false }
+  { id:"p3", autor:"Marcos Sitoe", iniciais:"MS", tempo:"há 5h", categoria:"ia", espacoId:"vitorias", fixado:false, oculto:false, texto:"Apliquei o prompt da aula 3 no meu atendimento e poupei 2h por dia. Quem mais já testou?", likes:18, curtido:false },
+  { id:"p2", autor:"Ana Machava", iniciais:"AM", tempo:"há 1 dia", categoria:"mentalidade", espacoId:"vitorias", fixado:false, oculto:false, texto:"A técnica dos 90 segundos mudou a forma como lido com clientes difíceis. Recomendo sem dúvida.", likes:31, curtido:true },
+  { id:"p1", autor:"Rui Langa", iniciais:"RL", tempo:"há 2 dias", categoria:"espiritualidade", espacoId:"geral", fixado:false, oculto:false, texto:"\"Negócio como instrumento, não como ídolo\" — aula que precisava de ouvir hoje.", likes:12, curtido:false }
 ];
 
 /* Avaliações das aulas: são conteúdo que o administrador modera, por isso
    vivem no DB e não na sessão de cada aluno. */
 const AVALIACOES_PADRAO = [
-  { id:"av1", cursoId:"kt", aulaId:"kt-m1a1", membroId:"m1", nome:"Marta Macomo",        estrelas:5, comentario:"A parte da identidade do fundador arrumou-me a cabeça.", data:"2026-09-02", oculto:false },
-  { id:"av2", cursoId:"mi", aulaId:"mi-m2a1", membroId:"m8", nome:"Ana Chissano",        estrelas:5, comentario:"A técnica dos 90 segundos vale o curso inteiro.",        data:"2026-09-05", oculto:false },
-  { id:"av3", cursoId:"ia", aulaId:"ia-m1a3", membroId:"m2", nome:"Airson Zunguze",      estrelas:4, comentario:"Bom, mas gostava de mais exemplos práticos de prompts.", data:"2026-09-06", oculto:false },
-  { id:"av4", cursoId:"vv", aulaId:"vv-m1a1", membroId:"m4", nome:"Renato Alfredo",      estrelas:2, comentario:"Achei o áudio baixo nesta aula.",                        data:"2026-09-08", oculto:false },
-  { id:"av5", cursoId:"he", aulaId:"he-m1a2", membroId:"m6", nome:"Clarisse Jamnadas",   estrelas:5, comentario:"", data:"2026-09-09", oculto:false }
+  { id:"av1", cursoId:"kt", aulaId:"kt-m1a1", membroId:"m1", nome:"Marta Lopes",        estrelas:5, comentario:"A parte da identidade do fundador arrumou-me a cabeça.", data:"2026-09-02", oculto:false },
+  { id:"av2", cursoId:"mi", aulaId:"mi-m2a1", membroId:"m8", nome:"Ana Machava",        estrelas:5, comentario:"A técnica dos 90 segundos vale o curso inteiro.",        data:"2026-09-05", oculto:false },
+  { id:"av3", cursoId:"ia", aulaId:"ia-m1a3", membroId:"m2", nome:"Paulo Mabunda",      estrelas:4, comentario:"Bom, mas gostava de mais exemplos práticos de prompts.", data:"2026-09-06", oculto:false },
+  { id:"av4", cursoId:"vv", aulaId:"vv-m1a1", membroId:"m4", nome:"Renato Cossa",      estrelas:2, comentario:"Achei o áudio baixo nesta aula.",                        data:"2026-09-08", oculto:false },
+  { id:"av5", cursoId:"he", aulaId:"he-m1a2", membroId:"m6", nome:"Clara Muianga",   estrelas:5, comentario:"", data:"2026-09-09", oculto:false }
 ];
 
 const ICONS_BADGE = [
@@ -277,7 +277,7 @@ const NOTIFICACOES_PADRAO = [
   { titulo:"Nova conquista desbloqueada", desc:"Mente Multidisciplinar — continua assim!", tempo:"há 2h", lida:false },
   { titulo:"Lembrete: Mentoria em Grupo", desc:"Plano de 90 Dias começa esta semana.", tempo:"há 5h", lida:false },
   { titulo:"Certificado disponível", desc:"O teu certificado de Mentalidade Inquebrável já pode ser descarregado.", tempo:"há 1 dia", lida:true },
-  { titulo:"Nova publicação na comunidade", desc:"Marcos Vilanculos respondeu à tua pergunta.", tempo:"há 2 dias", lida:true }
+  { titulo:"Nova publicação na comunidade", desc:"Marcos Sitoe respondeu à tua pergunta.", tempo:"há 2 dias", lida:true }
 ];
 
 const BANNERS_PADRAO = [

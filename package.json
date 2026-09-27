@@ -1,0 +1,12 @@
+{
+  "name": "kingdom-academia",
+  "private": true,
+  "type": "module",
+  "description": "A área de membros da Kingdom. O site não é compilado -- isto existe só para os testes.",
+  "scripts": {
+    "test": "node testes/correr.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

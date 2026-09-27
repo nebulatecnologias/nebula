@@ -6,3 +6,10 @@ DESIGN.md
 .impeccable
 # Os modelos de email são para rever e aplicar nas Edge Functions, não fazem parte do site.
 emails
+# Os testes e o que eles instalam não vão para o site.
+testes
+node_modules
+package.json
+package-lock.json
+.github
+supabase
