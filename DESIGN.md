@@ -109,12 +109,12 @@ typography:
     lineHeight: 1.4
 rounded:
   pill: "999px"
-  panel: "30px"
-  xl: "26px"
-  lg: "22px"
-  md: "16px"
-  field: "14px"
-  sm: "12px"
+  panel: "20px"
+  xl: "20px"
+  lg: "16px"
+  md: "12px"
+  field: "10px"
+  sm: "8px"
 spacing:
   xxs: "4px"
   xs: "8px"
@@ -287,7 +287,7 @@ components:
 
 **Creative North Star: "The Warm Dashboard, Loud Progress"**
 
-Kingdom Academy adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on generous 22px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.
+Kingdom Academy adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on 16px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.
 
 Density is moderate and dashboard-like. A 264px sidebar sits on a deeper stone. The main column opens with a greeting headline and a muted date lead, then the Continuar card, a KPI row and grids of course cards. Every pressable shape is a full pill, and every container is a large rounded card lifted by warm, diffuse shadows. Type is Google Sans only: weight 500 for everything that names something, 400 for running text, and 700 only in the wordmark.
 
@@ -296,7 +296,7 @@ The Academy is also white-label within the Kingdom family. In Aparência the adm
 **Key Characteristics:**
 - Warm grey-white canvas (`canvas`) with white, barely graded cards (`surface` to `surface-2`).
 - One accent voice. The sunrise gradient (`cta-glow` to `cta-deep`) is used for the single primary action per view, progress fills, the play disc and brand panels.
-- Full-pill buttons, chips, pills, search, segmented controls and toggles. Containers use 22px corners.
+- Full-pill buttons, chips, pills, search, segmented controls and toggles. Containers use 16px corners, the Payflow scale.
 - Soft, negative-spread, warm-tinted shadows. There are no hard edges or offset blocks.
 - Course covers on eight pastel fields, with initials in `art-ink` when no image is set. This is the only multi-hue area of a screen.
 - Google Sans at weights 400/500. Weight 700 is reserved for the wordmark and the email band.
@@ -384,7 +384,7 @@ Tabular numerals are used on every percentage, count, duration, date tile, price
 
 The app shell has two columns. A fixed 264px sidebar sits on `canvas-2` with a right hairline. The main column holds a top bar (pill search up to 420px, theme and notification icon buttons, initials avatar) and content with padding `26px clamp(16px, 3vw, 40px) 64px`, capped at 1260px. The page head aligns title and lead left and any action right, with 24px below.
 
-- **Student Início:** greeting, Continuar card, a horizontal row of 250px mini continue cards, the KPI row (four columns, 16px gap), the banner carousel (4:1, 22px corners), a two-up widget row (next live session, featured achievement), then the course grid.
+- **Student Início:** greeting, Continuar card, a horizontal row of 250px mini continue cards, the KPI row (four columns, 16px gap), the banner carousel (4:1, 16px corners), a two-up widget row (next live session, featured achievement), then the course grid.
 - **Course grid:** auto-fill `minmax(250px, 1fr)`, 18px gaps. It becomes two columns with 12px gaps under 640px.
 - **Course page:** a hero card with text left and a 380px field art panel right, then accordion module cards.
 - **Lesson:** a 16:9 player plus a sticky 320px lesson list. It stacks under 1180px.
@@ -394,7 +394,7 @@ The app shell has two columns. A fixed 264px sidebar sits on `canvas-2` with a r
 Breakpoints:
 - 1180px: the lesson layout and settings stack, and the course hero art narrows to 300px.
 - 1000px: admin form sections stack.
-- 980px: the sidebar becomes a drawer (max 300px, 26px right corners, pop shadow). A sticky blurred top bar holds the brand (canvas at 88%, 12px blur, hairline below). A fixed white bottom tab bar with safe-area insets appears. KPIs go two-up, the widgets stack, the login split stacks and the course hero art moves on top.
+- 980px: the sidebar becomes a drawer (max 300px, 20px right corners, pop shadow). A sticky blurred top bar holds the brand (canvas at 88%, 12px blur, hairline below). A fixed white bottom tab bar with safe-area insets appears. KPIs go two-up, the widgets stack, the login split stacks and the course hero art moves on top.
 - 640px: tighter cards and a two-up course grid with descriptions hidden. Filter chips scroll horizontally. The Continuar card compresses to a 72px square thumbnail and drops its button (the whole card is the tap target).
 
 ## Elevation & Depth
@@ -416,8 +416,8 @@ Depth is lifted, not flat. Cards rest on a soft, warm-tinted shadow and interact
 ## Shapes
 
 - **Pills:** every pressable or filterable control is a full pill (999px): buttons, icon buttons, chips, status pills, the price pill, search, selects in the toolbar, segmented controls, toggles, progress bars and the preview notice.
-- **Cards:** containers use 22px (`lg`). Dialogs, the certificate and drawers step up to 26px (`xl`). The login brand panel uses 30px.
-- **Nested shapes:** inner shapes step down. A course cover (16px, `md`) is inset 10px inside its 22px card, and the hero art is inset 14px. Date tiles and thumbnails are 16px, fields and nav items 14px, small thumbnails 10-12px and checkboxes 6px.
+- **Cards:** containers use 16px (`lg`). Dialogs, the certificate and drawers step up to 20px (`xl`). The login brand panel uses 20px (`panel`). This is the Payflow scale (dialog 20, card 16, inner 12, field 10, mini 8, chip 6), adopted at Shelton's request on 27/09/2026 so the Kingdom platforms share one set of corners.
+- **Nested shapes:** inner shapes step down. A course cover (12px, `md`) is inset 10px inside its 16px card, and the hero art is inset 14px. Date tiles and thumbnails are 12px, fields and nav items 10px, small thumbnails 8px and checkboxes 6px.
 - **Circles:** avatars, the play disc, module and step numbers, lesson status rings and the padlock disc.
 - **Dashed borders:** a 1.5px dashed `line-strong` border marks only empty or drop targets (upload boxes, image previews, "Nova aula", the login demo note).
 
@@ -443,26 +443,26 @@ Buttons are tactile, rounded and confident. There is one hot button per view, an
 - **Segmented control:** a Sunken pill track with 4px padding. The pressed option becomes a white pill with a small shadow.
 
 ### Cards / Containers
-- **Corner Style:** 22px.
+- **Corner Style:** 16px.
 - **Background:** a 180deg gradient from `surface` to `surface-2` (dark: `#211f1c` to `#1c1a17`).
 - **Shadow Strategy:** Rest, plus Lift on hover for interactive cards (see Elevation).
 - **Border:** 1px `line`.
 - **Internal Padding:** 22px. Table and widget heads use `18px 22px` with a 17px title.
 
 ### Inputs / Fields
-- **Style:** 48px tall, 14px radius, 1px `line-strong` stroke, white fill and 16px side padding. Labels are 13.5px/500 `ink-2` with a 7px gap, and hints are 12.5px `muted`.
+- **Style:** 48px tall, 10px radius, 1px `line-strong` stroke, white fill and 16px side padding. Labels are 13.5px/500 `ink-2` with a 7px gap, and hints are 12.5px `muted`.
 - **Focus:** the border turns `accent` and the focus ring appears. Hover darkens the border to `faint`.
 - **Error / Read-only:** errors are a `red-soft` / `red-ink` notice block. Read-only fields sit on Sunken with `ink-2` text.
 - **Search:** a 46px pill in the top bar and a 40px pill in admin filter bars, with a leading 18px icon.
-- **Chat composer:** a 24px-radius auto-growing textarea beside the send button.
+- **Chat composer:** a 16px-radius auto-growing textarea beside the send button.
 
 ### Navigation
-- **Sidebar:** 15px/500 `ink-2` items with 18px 1.8-stroke icons, `8px 12px` padding and a 14px radius. Hover fills Sunken. The active item is a white raised tile (Rest shadow) with an accent icon. New-activity dots are 8px accent circles with an `accent-soft` halo. Group labels are 12px/500 `muted`. The student sidebar foot shows overall progress with a gradient bar.
+- **Sidebar:** 15px/500 `ink-2` items with 18px 1.8-stroke icons, `8px 12px` padding and a 10px radius. Hover fills Sunken. The active item is a white raised tile (Rest shadow) with an accent icon. New-activity dots are 8px accent circles with an `accent-soft` halo. Group labels are 12px/500 `muted`. The student sidebar foot shows overall progress with a gradient bar.
 - **Mobile (below 980px):** a sticky blurred top bar with the crown and wordmark, and a fixed white bottom tab bar. Tabs have 22px icons and 11.5px/500 labels. The active tab has `accent-ink` text and an accent icon. The "Mais" tab opens the sidebar as a drawer.
 - **Editor tabs (admin):** 14.5px/500 `muted` labels with a 2px accent underline and accent icon when selected.
 
 ### Course Card (signature)
-A card with a 16:10 cover inset 10px (16px radius). The cover is either the course image (cover-fit) or the course's pastel field with its initials in Cover Initials type. A white 92% category badge with a colour dot sits top-left. The body has a 16.5px title, a two-line `muted` description and a foot row with "2 de 12 aulas" and a tabular percentage over a gradient progress bar.
+A card with a 16:10 cover inset 10px (12px radius). The cover is either the course image (cover-fit) or the course's pastel field with its initials in Cover Initials type. A white 92% category badge with a colour dot sits top-left. The body has a 16.5px title, a two-line `muted` description and a foot row with "2 de 12 aulas" and a tabular percentage over a gradient progress bar.
 - **Concluded:** a solid green badge top-right.
 - **Locked:** the cover is at 50% saturation with a 38px dark translucent padlock disc top-right, and there is no hover lift.
 - **Vitrine:** a hairline-separated offer row with the price pill and a full-width primary button that goes to Payflow.
@@ -475,16 +475,16 @@ The first thing on Início. A 168px 16:10 thumbnail on the course field (or the 
 A 14px `ink-2` label above a 38px tabular numeral with a 15px `muted` unit. An optional 36px round icon tile top-right is hidden under 640px. The cards come in rows of four (or three), and two-up under 980px. There is no chart inside the card.
 
 ### Event Date Tile
-A 52×56px tile with 16px corners: a 19px tabular day over an 11px month abbreviation ("SET"). An upcoming session gets the violet gradient with violet glow. A past session drops to `sunken` with `ink-2` text and no glow. In the calendar a row expands in place into a `surface-2` detail block with session facts and actions. Admin tables use a 42px version.
+A 52×56px tile with 12px corners: a 19px tabular day over an 11px month abbreviation ("SET"). An upcoming session gets the violet gradient with violet glow. A past session drops to `sunken` with `ink-2` text and no glow. In the calendar a row expands in place into a `surface-2` detail block with session facts and actions. Admin tables use a 42px version.
 
 ### Admin Tables
 These are table cards with no padding and a hairline-separated head (17px title, tabular count, action right). Headers are 12.5px/500 `muted` on `surface-2`. Cells are 14px with `13px 18px` padding, `line` row dividers and `surface-2` on hover. The first cell is usually a user cell (34px initials avatar, 500 name, 12.5px sub-line). Numbers are right-aligned and tabular. Row state is a **7px leading dot** in the first cell with a 3px soft halo: green for completed or active, amber (`#d99a00`) for at-risk or blocked. Rows are never tinted. Secondary columns collapse into sub-lines below 1560px and 1240px.
 
 ### Login Split
-Two columns (1.05fr / 1fr) on canvas. On the left is a brand panel inset 14px with 30px corners, filled with `--brand-panel`, soft radial highlights and concentric white rings bottom-right. It carries the crown and wordmark top-left, the admin-editable headline (Display Hero, white, max 18ch) and text, and a footer line. On the right is a **white form card** (max 440px, 22px corners, Rest shadow, `30px 28px` padding) with a 30px title, a `muted` sub, 48px fields and a 52px full-width gradient pill. Below 980px the panel stacks on top and its footer hides. Aparência shows a live miniature of the same split.
+Two columns (1.05fr / 1fr) on canvas. On the left is a brand panel inset 14px with 20px corners, filled with `--brand-panel`, soft radial highlights and concentric white rings bottom-right. It carries the crown and wordmark top-left, the admin-editable headline (Display Hero, white, max 18ch) and text, and a footer line. On the right is a **white form card** (max 440px, 22px corners, Rest shadow, `30px 28px` padding) with a 30px title, a `muted` sub, 48px fields and a 52px full-width gradient pill. Below 980px the panel stacks on top and its footer hides. Aparência shows a live miniature of the same split.
 
 ### Certificate (fixed light paper)
-The certificate is paper, so it is white with `#1c1a17` text in any theme. It is a 640px max card with 26px corners and two inset frames: a 1px `#eee8e1` hairline at 12px and a 35% orange line at 18px. From top to bottom it holds the crown (accent-coloured), a sentence-case title line in `#6f6962`, the student's name at 32px/500, the phrase, the course name in `#b8400a` 21px/500, a signature line and a tabular issue date. The certificate grid previews use the same white paper with a double inset border on a 1.6:1 tile. A locked preview goes grayscale at 60%.
+The certificate is paper, so it is white with `#1c1a17` text in any theme. It is a 640px max card with 20px corners and two inset frames: a 1px `#eee8e1` hairline at 12px and a 35% orange line at 18px. From top to bottom it holds the crown (accent-coloured), a sentence-case title line in `#6f6962`, the student's name at 32px/500, the phrase, the course name in `#b8400a` 21px/500, a signature line and a tabular issue date. The certificate grid previews use the same white paper with a double inset border on a 1.6:1 tile. A locked preview goes grayscale at 60%.
 
 ### Email Letter (fixed light)
 Emails ignore the app theme (`color-scheme: light only`) and use literal values in inline table layout. The layout is a 560px white card (18px radius, `#ebe6e0` border) on `#f3f1ee`. It opens with one orange band (160deg `#ff8a45` → `#ee5410`, `#f25a12` fallback) holding a 40px logo and the 18px/700 white wordmark. The 30px body has a 25px/500 headline and 15.5px/1.6 text in `#3b3732`. The one CTA is the Sunrise gradient pill (14px 26px padding) with the CTA glow. A 13.5px `muted` note sits above a `#efe9e2` rule, and the footer is 12px on `#faf8f5` with an `#b8400a` link.
@@ -499,7 +499,7 @@ One easing, `cubic-bezier(.22,1,.36,1)`, is used everywhere. Controls transition
 - **Do** route every accent use through `--accent`, `--accent-soft`, `--accent-ink`, `--cta`, `--brand-panel` or `--ring` so the Aparência colour carries through. Only `#f4621d` and `#ff5a1f` keep the full Library palette.
 - **Do** give every course cover its hashed pastel field, and fall back to initials in `art-ink` when there is no image.
 - **Do** show locked content as locked (desaturated cover, padlock disc, price pill or path to it), never hidden and never painted as open.
-- **Do** make every pressable control a full pill and every container a 22px card with the Rest shadow.
+- **Do** make every pressable control a full pill and every container a 16px card with the Rest shadow.
 - **Do** mark admin row state with a leading 7px dot in the first cell.
 - **Do** set headings at 500 with negative tracking (-0.015em to -0.03em) and use tabular numerals for money, counts, percentages, durations and dates.
 - **Do** keep the certificate and emails fixed light with literal values. Everything else follows the auto/light/dark theme through the root custom properties.
