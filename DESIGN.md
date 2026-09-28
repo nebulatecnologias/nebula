@@ -461,10 +461,10 @@ Buttons are tactile, rounded and confident. There is one hot button per view, an
 - **Editor tabs (admin):** 14.5px/500 `muted` labels with a 2px accent underline and accent icon when selected.
 
 ### Course Card (signature)
-A card with a 16:10 cover inset 10px (12px radius). The cover is either the course image (cover-fit) or the course's pastel field with its initials in Cover Initials type. A white 92% category badge with a colour dot sits top-left. The body has a 16.5px title, a two-line `muted` description and a foot row with "2 de 12 aulas" and a tabular percentage over a gradient progress bar.
+Modelled on the Payflow offer card (28/09/2026): no border, only the warm `shadow-1` (Lift on hover), 16px corners, and a full-bleed 16:10 cover that the card clips at the top. The cover is either the course image (cover-fit) or the course's pastel field with its initials in Cover Initials type. A white 92% category badge with a colour dot sits top-left. The body (16px 17px) has a 16px/500 title, a two-line `muted` description, duration and rating as 26px `sunken` pills, the facilitator above a hairline, and — once started — "2 de 12 aulas" with a tabular percentage over a gradient progress bar. Under 640px the grid is one card per row.
 - **Concluded:** a solid green badge top-right.
 - **Locked:** the cover is at 50% saturation with a 38px dark translucent padlock disc top-right, and there is no hover lift.
-- **Vitrine:** the same card with the course meta (duration, rating, facilitator), then a hairline-separated offer row with the price pill and a full-width secondary button. The card opens the offer page inside the Academy; only that page's primary button goes to Payflow. A pre-sale offer adds a violet-soft «Em breve» badge bottom-left on the cover and a violet «Pré-venda: as aulas abrem a …» caption instead of the lesson count.
+- **Vitrine:** the same card, then a hairline-separated price in 22px/500 `ink` ("/mês" in `muted`) and a full-width soft button (`accent-soft` / `accent-ink`). The card opens the offer page inside the Academy; only that page's primary button goes to Payflow. A pre-sale offer adds a violet-soft «Em breve» badge bottom-left on the cover and a violet «Pré-venda: as aulas abrem a …» caption instead of the lesson count.
 - **Admin:** hover reveals white icon-button actions bottom-right. They are always visible on touch.
 
 ### Community List

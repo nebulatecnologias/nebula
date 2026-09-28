@@ -1358,3 +1358,48 @@ button.back-link:hover{ color:var(--ink); }
 .campo-linha.facilitador{ display:grid; grid-template-columns:1fr 200px; gap:14px; align-items:start; }
 @media (max-width:640px){ .campo-linha.facilitador{ grid-template-columns:1fr; } }
 .course-facilitador.no-hero{ border:0; padding:0; margin:0; display:inline-flex; }
+
+/* ============================================================
+   Cartão de curso no molde do cartão de oferta do Payflow
+   (pedido do Shelton, 28/09/2026): sem contorno, só a sombra quente;
+   a capa de ponta a ponta; o preço grande em tinta; a duração e a
+   avaliação em pílulas cinzentas; o botão suave a toda a largura.
+   Vale para Meus cursos, Vitrine e o painel, que usam o mesmo cartão.
+   ============================================================ */
+.course-card{ border:0; box-shadow:var(--shadow-1); }
+.course-card:hover, .course-card.vitrine:hover{ box-shadow:var(--shadow-2); }
+.course-card.bloqueado:hover{ box-shadow:var(--shadow-1); }
+.course-cover{ margin:0; border-radius:0; }
+.course-body{ padding:16px 17px 17px; }
+.course-body h3{ font-size:16px; font-weight:500; letter-spacing:-.022em; line-height:1.3; margin-bottom:4px; }
+.course-body .course-desc{ font-size:13.5px; line-height:1.5; margin-bottom:12px; }
+.course-meta{ gap:6px; margin:0 0 12px; }
+.course-meta-item{ height:26px; padding:0 10px; border-radius:999px; background:var(--sunken); color:var(--ink-2); font-size:12.5px; font-weight:500; }
+.course-meta-item svg{ width:14px; height:14px; }
+.course-facilitador, .oferta-linha{ border-top-color:var(--line); }
+.oferta-linha{ margin-top:12px; padding-top:12px; }
+.oferta-preco{ height:auto; padding:0; background:none; color:var(--ink); font-size:22px; font-weight:500; letter-spacing:-.03em; line-height:1.1; }
+.oferta-preco .icon{ display:none; }
+.oferta-preco span{ font-size:12.5px; color:var(--muted); opacity:1; letter-spacing:0; }
+.course-card.vitrine .btn{ background:var(--accent-soft); color:var(--accent-ink); border-color:transparent; box-shadow:none; font-weight:500; }
+.course-card.vitrine .btn:hover{ background:color-mix(in srgb, var(--accent-soft) 80%, var(--accent) 20%); }
+
+/* No telemóvel, um cartão por linha, como no Payflow: dois lado a lado não
+   tinham largura para o preço nem para as pílulas. */
+@media (max-width:640px){
+  .course-grid{ grid-template-columns:1fr; gap:14px; }
+  .course-cover{ margin:0; border-radius:0; }
+  .course-cover .cover-badge{ top:10px; left:10px; height:28px; padding:0 11px; font-size:12.5px; line-height:28px; }
+  .course-cover .cover-badge.done, .cover-badge.estado{ top:auto; bottom:10px; right:10px; left:auto; }
+  .course-cover .cover-badge.em-breve{ right:auto; left:10px; }
+  .course-cover .cadeado{ width:36px; height:36px; top:10px; right:10px; }
+  .cover-sigla{ font-size:42px; }
+  .course-body{ padding:15px 16px 16px; }
+  .course-body h3{ font-size:16px; }
+  .course-body .course-desc{ display:-webkit-box; font-size:13.5px; }
+  .course-meta{ font-size:12.5px; gap:6px; }
+  .oferta-linha{ flex-direction:row; align-items:center; }
+  .oferta-preco{ font-size:21px; height:auto; padding:0; }
+  .course-card.vitrine .btn{ padding:10px 14px; font-size:14px; }
+  .course-card.vitrine .btn .seta-circulo{ display:inline-grid; }
+}
