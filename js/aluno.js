@@ -147,10 +147,44 @@ function renderCourseCardHTML(c, opcoes){
     <div class="course-body">
       <h3>${c.titulo}</h3>
       <p class="course-desc">${c.subtitulo||""}</p>
-      <div class="course-progress-row"><span class="course-legenda">${legenda}</span><span class="pct">${pct}%</span></div>
-      <div class="progress-track thin"><div class="progress-fill mini" style="width:${pct}%"></div></div>
+      ${admin ? `
+        <div class="course-progress-row"><span class="course-legenda">${legenda}</span><span class="pct">${pct}%</span></div>
+        <div class="progress-track thin"><div class="progress-fill mini" style="width:${pct}%"></div></div>`
+      : detalhesDoCartaoHTML(c, p)}
     </div>
   </div>`;
+}
+
+/* O que o aluno precisa de saber num cartão, pedido pelo Shelton a 27/09/2026:
+   duração, avaliação e quem dá o curso. O progresso só aparece depois de
+   começar -- uma barra a 0% num curso novo não diz nada. */
+function detalhesDoCartaoHTML(c, p){
+  const duracao = duracaoDoCurso(c);
+  const nota = avaliacaoDoCurso(c.id);
+  const meta = [
+    duracao ? `<span class="course-meta-item">${ICONE_RELOGIO}${duracao}</span>` : "",
+    nota ? `<span class="course-meta-item nota" title="${nota.n} avaliaç${nota.n === 1 ? "ão" : "ões"}">${ICONS.star}${nota.texto}<span class="nota-n">(${nota.n})</span></span>` : ""
+  ].filter(Boolean).join("");
+  const facilitador = c.facilitador ? `
+    <div class="course-facilitador">
+      <span class="facilitador-foto" ${c.facilitadorFoto ? `style="background-image:url(${c.facilitadorFoto})"` : ""}>${c.facilitadorFoto ? "" : iniciais(c.facilitador)}</span>
+      <span class="facilitador-nome">${textoSeguro(c.facilitador)}</span>
+    </div>` : "";
+  const progresso = p.concluidas > 0 ? `
+    <div class="course-progress-row"><span class="course-legenda">${p.concluidas} de ${p.total} aulas</span><span class="pct">${p.pct}%</span></div>
+    <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>` : "";
+  return `${meta ? `<div class="course-meta">${meta}</div>` : ""}${facilitador}${progresso ? `<div class="course-progresso">${progresso}</div>` : ""}`;
+}
+
+const ICONE_RELOGIO = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
+
+/* A média das avaliações visíveis do curso, em pt-PT (4,5). Sem nenhuma,
+   não se mostra nada: um "0,0" leria-se como um curso mal avaliado. */
+function avaliacaoDoCurso(cursoId){
+  const notas = (DB.avaliacoes || []).filter(a => a.cursoId === cursoId && !a.oculto && a.estrelas > 0).map(a => Number(a.estrelas));
+  if(!notas.length) return null;
+  const media = notas.reduce((x, y) => x + y, 0) / notas.length;
+  return { media, n: notas.length, texto: media.toLocaleString("pt-PT", { minimumFractionDigits:1, maximumFractionDigits:1 }) };
 }
 
 /* ---------------- Catálogo (Meus Cursos) ---------------- */
@@ -332,7 +366,10 @@ function renderCurso(cursoId){
         <div class="curso-hero-meta">
           ${duracao ? `<span>${duracao}</span>` : ""}
           <span>${total} conteúdo${total===1?"":"s"}</span>
-          ${assinatura ? `<strong>Originais · ${assinatura}</strong>` : ""}
+          ${(() => { const nota = avaliacaoDoCurso(curso.id); return nota ? `<span class="course-meta-item nota">${ICONS.star}${nota.texto} <span class="nota-n">(${nota.n})</span></span>` : ""; })()}
+          ${curso.facilitador
+            ? `<span class="course-facilitador no-hero"><span class="facilitador-foto" ${curso.facilitadorFoto ? `style="background-image:url(${curso.facilitadorFoto})"` : ""}>${curso.facilitadorFoto ? "" : iniciais(curso.facilitador)}</span><strong>Com ${textoSeguro(curso.facilitador)}</strong></span>`
+            : (assinatura ? `<strong>Originais · ${assinatura}</strong>` : "")}
         </div>
         ${turmaDoCurso ? `<p class="curso-hero-turma">Turma de ${dataCurta(turmaDoCurso.inicio)} a ${dataCurta(turmaDoCurso.fim)}.</p>` : ""}
         <div class="curso-hero-progresso">

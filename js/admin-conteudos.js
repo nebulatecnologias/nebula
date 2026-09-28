@@ -181,6 +181,17 @@ function renderFormCurso(){
             <label>URL da página de vendas</label>
             <input type="url" id="f-urlVendas" value="${v.urlVendas||""}" placeholder="https://meusite.co.mz/pagina-de-vendas">
           </div>
+          <div class="campo-linha facilitador">
+            <div class="field">
+              <label>Facilitador</label>
+              <input type="text" id="f-facilitador" value="${(v.facilitador||"").replace(/"/g,"&quot;")}" placeholder="Quem dá o curso">
+              <p class="hint">Aparece no cartão e na página do curso.</p>
+            </div>
+            <div class="field">
+              <label>Fotografia</label>
+              ${uploadHTML("facilitadorFoto", v.facilitadorFoto, "Quadrada, 200 × 200 px.", "pequena", "facilitadores")}
+            </div>
+          </div>
           <div class="field">
             <label>Descreve a promessa do teu curso</label>
             <textarea id="f-subtitulo" rows="3" placeholder="Explica o produto e os benefícios de forma clara e breve.">${v.subtitulo||""}</textarea>
@@ -270,6 +281,8 @@ function guardarFormCurso(){
     categoria: document.getElementById("f-categoria").value,
     capa: document.getElementById("valor-capa").value,
     abertoATodos: document.getElementById("f-abertoATodos").classList.contains("marcado"),
+    facilitador: document.getElementById("f-facilitador").value.trim(),
+    facilitadorFoto: document.getElementById("valor-facilitadorFoto").value,
     vitrine: document.getElementById("f-vitrine").classList.contains("marcado"),
     moderacao: document.getElementById("f-moderacao").classList.contains("marcado"),
     publicado: document.getElementById("f-publicado").classList.contains("on"),

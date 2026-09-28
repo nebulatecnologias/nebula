@@ -90,7 +90,7 @@ const CATEGORIAS_PADRAO = {
 };
 
 const CURSOS_PADRAO = [
-  { id:"kt", categoria:"negocios", titulo:"Kingdom Tracktion", subtitulo:"Mastermind de empresários para decisões de alto impacto entre pares.",
+  { id:"kt", facilitador:"Carla Mendes", categoria:"negocios", titulo:"Kingdom Tracktion", subtitulo:"Mastermind de empresários para decisões de alto impacto entre pares.",
     modulos:[
       { id:"kt-m1", titulo:"Módulo 1: Fundamentos da Autoridade", descricao:"Antes de escalar um negócio, escala-se a si mesmo.", aulas:[
         { id:"kt-m1a1", titulo:"A identidade do fundador", duracao:"12:34", descricao:"Como a forma como te vês a ti mesmo determina o teto do teu negócio, muito antes de qualquer estratégia entrar em jogo." },
@@ -111,7 +111,7 @@ const CURSOS_PADRAO = [
         { id:"kt-m3a4", titulo:"Sair da sala com decisões", duracao:"09:40", descricao:"Porque reuniões sem decisão são o maior custo escondido de uma equipa." }
       ]}
     ]},
-  { id:"mi", categoria:"mentalidade", titulo:"Mentalidade Inquebrável", subtitulo:"Reprograma crenças limitantes e constrói uma mente antifrágil.",
+  { id:"mi", facilitador:"João Sitoe", categoria:"mentalidade", titulo:"Mentalidade Inquebrável", subtitulo:"Reprograma crenças limitantes e constrói uma mente antifrágil.",
     modulos:[
       { id:"mi-m1", titulo:"Módulo 1: A Origem das Crenças", descricao:"O que molda a tua forma de pensar sem que percebas.", aulas:[
         { id:"mi-m1a1", titulo:"Como se formam as crenças limitantes", duracao:"08:12", descricao:"A raiz emocional por trás de quase toda a autossabotagem." },
@@ -124,7 +124,7 @@ const CURSOS_PADRAO = [
         { id:"mi-m2a3", titulo:"Rotina matinal de mentalidade vencedora", duracao:"06:55", descricao:"Os primeiros 20 minutos do dia que decidem os outros 23 horas." }
       ]}
     ]},
-  { id:"ia", categoria:"ia", titulo:"IA Aplicada aos Negócios", subtitulo:"Usa inteligência artificial para vender mais e trabalhar menos.",
+  { id:"ia", facilitador:"Rita Langa", categoria:"ia", titulo:"IA Aplicada aos Negócios", subtitulo:"Usa inteligência artificial para vender mais e trabalhar menos.",
     modulos:[
       { id:"ia-m1", titulo:"Módulo 1: Fundamentos de IA para Empresários", descricao:"O essencial sem jargão técnico.", aulas:[
         { id:"ia-m1a1", titulo:"O que a IA já pode fazer pelo teu negócio", duracao:"10:20", descricao:"Um mapa realista de onde a IA já poupa tempo e dinheiro hoje." },
@@ -137,7 +137,7 @@ const CURSOS_PADRAO = [
         { id:"ia-m2a3", titulo:"Montar o teu primeiro fluxo automatizado", duracao:"13:40", descricao:"Passo a passo para ligar as tuas primeiras ferramentas entre si." }
       ]}
     ]},
-  { id:"vv", categoria:"marketing", titulo:"Vendas de Alto Impacto", subtitulo:"Sistemas e psicologia de venda para fechar mais, com mais dignidade.",
+  { id:"vv", facilitador:"Paulo Nhaca", categoria:"marketing", titulo:"Vendas de Alto Impacto", subtitulo:"Sistemas e psicologia de venda para fechar mais, com mais dignidade.",
     modulos:[
       { id:"vv-m1", titulo:"Módulo 1: Psicologia da Venda", descricao:"Entender antes de convencer.", aulas:[
         { id:"vv-m1a1", titulo:"Porque as pessoas realmente compram", duracao:"09:12", descricao:"A diferença entre a razão que dizem e o motivo que sentem." },
@@ -163,7 +163,7 @@ const CURSOS_PADRAO = [
         { id:"pf-m2a3", titulo:"Descansar sem culpa", duracao:"07:20", descricao:"Porque parar também é uma decisão de liderança." }
       ]}
     ]},
-  { id:"he", categoria:"pessoal", titulo:"Hábitos de Elite", subtitulo:"A rotina diária que separa quem sonha de quem executa.",
+  { id:"he", facilitador:"Sara Muchanga", categoria:"pessoal", titulo:"Hábitos de Elite", subtitulo:"A rotina diária que separa quem sonha de quem executa.",
     modulos:[
       { id:"he-m1", titulo:"Módulo 1: Fundamentos dos Hábitos", descricao:"A ciência simples por trás de mudanças duradouras.", aulas:[
         { id:"he-m1a1", titulo:"A ciência por trás dos hábitos", duracao:"09:40", descricao:"O loop de hábito e porque a força de vontade não é suficiente." },

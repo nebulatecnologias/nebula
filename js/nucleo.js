@@ -359,6 +359,10 @@ function progressoModulo(m){ const concluidas = m.aulas.filter(a=>estado.progres
 function progressoCurso(curso){ const aulas = todasAsAulasDoCurso(curso); const concluidas = aulas.filter(a=>estado.progresso[a.id]).length; const total = aulas.length; return { concluidas, total, pct: total?Math.round(concluidas/total*100):0 }; }
 function progressoGeral(){ let concluidas=0, total=0; cursosVisiveis().forEach(c=>{ const p=progressoCurso(c); concluidas+=p.concluidas; total+=p.total; }); return { concluidas, total, pct: total?Math.round(concluidas/total*100):0 }; }
 function aulaAnteriorProxima(curso, aulaId){ const l = todasAsAulasDoCurso(curso); const i = l.findIndex(a=>a.id===aulaId); return { anterior: i>0?l[i-1]:null, proxima:(i!==-1 && i<l.length-1)?l[i+1]:null }; }
+/* Texto escrito por pessoas (títulos, nomes, resumos) antes de ir para HTML. */
+function textoSeguro(t){
+  return String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 function iniciais(nome){ return nome.trim().split(/\s+/).slice(0,2).map(p=>p[0].toUpperCase()).join(""); }
 function avatarConteudo(){ return estado.fotoUrl ? `<img src="${estado.fotoUrl}" alt="">` : iniciais(estado.nome); }
 function calcularXP(){ return progressoGeral().concluidas * DB.config.gamificacao.xpPorAula; }

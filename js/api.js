@@ -451,6 +451,7 @@ function deCurso(r){
     categoria:r.categoria_id, capa:r.capa_url||"", urlVendas:r.url_vendas||"",
     vitrine:r.vitrine, moderacao:r.moderacao, publicado:r.publicado,
     abertoATodos: r.aberto_a_todos === true,
+    facilitador: r.facilitador || "", facilitadorFoto: r.facilitador_foto_url || "",
     certificado:r.certificado, ordem:r.ordem,
     modulos: (r.modulos||[])
       .filter(m => !m.removido_em)
@@ -655,6 +656,7 @@ const MAPAS = {
                   subtitulo:c.subtitulo, categoria_id:c.categoria, capa_url:c.capa||null,
                   url_vendas:linkExterno(c.urlVendas) || null, vitrine:c.vitrine, moderacao:c.moderacao,
                   aberto_a_todos: c.abertoATodos === true,
+                  facilitador: (c.facilitador || "").trim() || null, facilitador_foto_url: c.facilitadorFoto || null,
                   publicado:c.publicado, certificado:c.certificado, ordem:c.ordem||0 })
   },
   modulo: {

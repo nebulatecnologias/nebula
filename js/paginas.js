@@ -29,10 +29,6 @@ function voltarDaPagina(){
   else irPara(papelEfetivo() === "administrador" ? "admin-visao" : "dashboard");
 }
 
-function textoSeguro(t){
-  return String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 /* O esqueleto comum. `arte` é o HTML da coluna da imagem; `acoes` o dos
    botões. O resto é texto. */
 function paginaHTML({ arte, etiquetas = [], titulo, texto, detalhes = [], acoes = "", nota = "" }){

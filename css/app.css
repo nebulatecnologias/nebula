@@ -1355,3 +1355,25 @@ button.back-link:hover{ color:var(--ink); }
   .banner-saber{ position:absolute; left:14px; bottom:14px; display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 12px; border-radius:999px; background:rgba(255,255,255,.92); color:#1c1a17; font-size:12.5px; font-weight:500; box-shadow:0 6px 14px -8px rgba(0,0,0,.5); }
   .banner-saber .icon{ width:14px; height:14px; }
 }
+
+/* O cartão do curso, como o de uma oferta mas sem preço: duração, avaliação
+   e quem o dá. O progresso só depois de começar (pedido de 27/09/2026). */
+.course-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin:0 0 12px; font-size:13px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.course-meta-item{ display:inline-flex; align-items:center; gap:5px; }
+.course-meta-item svg{ width:15px; height:15px; flex-shrink:0; color:var(--muted); }
+.course-meta-item.nota svg{ color:var(--accent); }
+.course-meta-item .nota-n{ color:var(--muted); }
+.course-facilitador{ display:flex; align-items:center; gap:8px; margin:auto 0 0; padding-top:10px; border-top:1px solid var(--line); }
+.facilitador-foto{ width:26px; height:26px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; background:var(--sunken) center/cover no-repeat; color:var(--ink-2); font-size:11px; font-weight:500; }
+.facilitador-nome{ font-size:13px; color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.course-progresso{ margin-top:12px; }
+.course-progresso .course-progress-row{ margin:0 0 8px; }
+@media (max-width:640px){
+  .course-body .course-desc{ display:-webkit-box; font-size:12.5px; margin-bottom:10px; }
+  .course-meta{ font-size:12px; gap:4px 10px; margin-bottom:10px; }
+  .facilitador-foto{ width:22px; height:22px; font-size:10px; }
+  .facilitador-nome{ font-size:12px; }
+}
+.campo-linha.facilitador{ display:grid; grid-template-columns:1fr 200px; gap:14px; align-items:start; }
+@media (max-width:640px){ .campo-linha.facilitador{ grid-template-columns:1fr; } }
+.course-facilitador.no-hero{ border:0; padding:0; margin:0; display:inline-flex; }
