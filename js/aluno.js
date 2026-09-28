@@ -217,8 +217,10 @@ function renderVitrine(){
         : `<div class="empty-note">Já tens acesso a tudo o que está disponível. Bom trabalho.</div>`}
     </div>
   `;
+  /* O cartão abre a página da oferta, cá dentro. O checkout é o botão dela:
+     ninguém é mandado para fora sem antes ver o que está a comprar. */
   document.querySelectorAll("#vitrine-grid .course-card").forEach(el =>
-    el.addEventListener("click", () => abrirOferta(el.getAttribute("data-oferta"))));
+    el.addEventListener("click", () => irPara("oferta", el.getAttribute("data-oferta"))));
 }
 
 function cartaoDaVitrine(o){
@@ -252,15 +254,6 @@ function cartaoDaVitrine(o){
   </div>`;
 }
 
-/* O destino é o checkout da oferta. Só na falta de atalho é que se cai para a
-   página de vendas — e se não houver nenhuma das duas, diz-se em vez de abrir
-   uma janela em branco. */
-function abrirOferta(ofertaId){
-  const o = (DB.vitrine || []).find(x => String(x.ofertaId) === String(ofertaId));
-  if(!o) return;
-  if(!o.destino){ mostrarToast("Fala com a tua mentoria para desbloqueares isto."); return; }
-  abrirLink(o.destino);
-}
 
 /* "2026-09-01" → "1 de setembro". */
 function dataCurta(iso){
@@ -299,6 +292,9 @@ function renderCurso(cursoId){
        Escrever aqui uma segunda maneira de encontrar a oferta era arranjar um
        sítio onde as guardas do servidor não se aplicam. */
     const oferta = ofertaNaVitrinePara(curso.id);
+    /* Com uma oferta à venda, a página do curso é a página da oferta: a mesma
+       que a Vitrine e os banners abrem, para haver um só sítio onde se compra. */
+    if(oferta){ irPara("oferta", oferta.ofertaId); return; }
     document.getElementById("content-curso").innerHTML = `
       <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
       <div class="card" style="padding:32px; text-align:center">
@@ -952,10 +948,11 @@ function carrosselBannersHTML(id){
   return `
     <div class="banner-carousel" id="${id}">
       <div class="banner-track">
-        ${banners.map(b => `<a class="banner-slide" href="${linkExterno(b.link) || "#"}" target="_blank" rel="noopener" style="${fundoBanner(b)}">
+        ${banners.map(b => `<a class="banner-slide" href="${destinoDoBanner(b)}" style="${fundoBanner(b)}" aria-label="${textoSeguro(b.titulo)}">
           ${b.eyebrow ? `<span class="banner-etiqueta">${b.eyebrow}</span>` : ""}
           <span class="banner-title">${b.titulo}</span>
-          <span class="banner-cta">${b.cta} ${setaCirculo()}</span>
+          ${b.cta ? `<span class="banner-cta">${b.cta} ${setaCirculo()}</span>` : ""}
+          <span class="banner-saber">Saber mais ${setaCirculo()}</span>
         </a>`).join("")}
       </div>
       <div class="banner-dots">
@@ -1023,7 +1020,11 @@ function renderCalendario(){
           </div>
           <div class="event-acoes">
             ${passado
-              ? `<button class="btn btn-secondary btn-sm" data-toast="Resumo disponível na comunidade">Ver resumo</button>`
+              ? `<a class="btn btn-secondary btn-sm" href="#/evento/${encodeURIComponent(e.id)}">Ver página</a>`
+              : (e.acesso === "pago" && !e.link)
+              /* O link da sala só chega a quem comprou: sem ele, falta o lugar.
+                 Compra-se na página do evento, que é o único sítio de compra. */
+              ? `<a class="btn btn-primary btn-sm" href="#/evento/${encodeURIComponent(e.id)}">Garantir lugar ${setaCirculo()}</a>`
               : `${e.link ? `<a class="btn btn-primary btn-sm" href="${linkExterno(e.link)}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : ""}
                  ${e.local ? `<a class="btn btn-secondary btn-sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.local)}" target="_blank" rel="noopener">Ver no mapa ${setaCirculo()}</a>` : ""}
                  <button class="btn btn-secondary btn-sm" data-lembrete="${e.id}">Guardar lembrete</button>

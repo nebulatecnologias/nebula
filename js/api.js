@@ -92,7 +92,7 @@ const API = {
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
-      ofertas, turmas, planos
+      ofertas, turmas, planos, salas
     ] = await Promise.all([
       lista(c.from("categorias").select("*").order("ordem")),
       lista(c.from("cursos").select(`
@@ -115,7 +115,10 @@ const API = {
       lista(c.from("certificados").select("*").eq("utilizador_id", eu)),
       lista(this.pub().from("ofertas").select("id, nome, preco, moeda, cobranca, link_vendas, estado, atalho").is("removido_em", null)),
       lista(this.pub().from("turmas").select("id, oferta_id, nome, estado, inicio, fim").is("removido_em", null)),
-      lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem"))
+      lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem")),
+      /* Só voltam as salas em que esta pessoa pode entrar: num evento pago,
+         o link é o que se compra, e o servidor não o dá a quem não pagou. */
+      lista(c.from("salas").select("evento_id, link"))
     ]);
 
     /* Quem decide a que cursos esta pessoa tem acesso é o servidor.
@@ -134,7 +137,8 @@ const API = {
     DB.espacos     = espacos.map(deEspaco);
     DB.posts       = mensagens.map(deMensagem);
     aplicarReacoes(DB.posts, reacoes, eu);
-    DB.eventos     = eventos.map(deEvento);
+    const linkDaSala = Object.fromEntries(salas.map(s => [s.evento_id, s.link]));
+    DB.eventos     = eventos.map(r => deEvento(r, linkDaSala[r.id]));
     DB.banners     = banners.map(deBanner);
     DB.conquistas  = conquistas.map(deConquista);
     DB.avaliacoes  = avaliacoes.map(deAvaliacao);
@@ -282,6 +286,16 @@ const API = {
       this.cliente.removeChannel(this.canalAcessos);
       this.canalAcessos = null;
     }
+  },
+
+  /* O link da sala vive à parte do evento: num evento pago é o que se compra,
+     e tem a sua própria regra de leitura. Sem link, a linha sai. */
+  async guardarSala(eventoId, link){
+    const limpo = linkExterno(link);
+    const { error } = limpo
+      ? await this.cliente.from("salas").upsert({ evento_id:eventoId, link:limpo })
+      : await this.cliente.from("salas").delete().eq("evento_id", eventoId);
+    if(error) throw new Error(traduzirErroDados(error));
   },
 
   /* ---------------- Escrita ---------------- */
@@ -476,17 +490,18 @@ function deMensagem(r){
   };
 }
 
-function deEvento(r){
+function deEvento(r, linkDaSala){
   return { id:r.id, titulo:r.titulo, descricao:r.descricao||"", data:r.data,
            hora:(r.hora||"19:00").slice(0,5), tipo:r.tipo,
-           categoria:r.categoria_id, link:r.link||"",
+           categoria:r.categoria_id, link:linkDaSala||"",
            local:r.local||"", acesso:r.acesso||"gratuito",
            ofertaId:r.oferta_id, cursos:r.cursos||[], confirmados:0 };
 }
 
 function deBanner(r){
   return { id:r.id, eyebrow:r.eyebrow||"", titulo:r.titulo, cta:r.cta,
-           link:r.link||"", imagem:r.imagem_url||"", gradiente:r.gradiente||"", ativo:r.ativo, ordem:r.ordem };
+           link:r.link||"", imagem:r.imagem_url||"", gradiente:r.gradiente||"", ativo:r.ativo, ordem:r.ordem,
+           destinoTipo:r.destino_tipo||"pagina", destinoId:r.destino_id||"", resumo:r.resumo||"" };
 }
 
 function deConquista(r){
@@ -501,7 +516,7 @@ function deAvaliacao(r){
 
 /* A oferta do CRM é a oferta que a Vitrine mostra. */
 function deOferta(r){
-  return { id:String(r.id), nome:r.nome, preco:Number(r.preco)||0,
+  return { id:String(r.id), nome:r.nome, preco:Number(r.preco)||0, moeda:r.moeda||"MZN",
            periodo: r.cobranca === "Recorrente mensal" ? "mês" : "único",
            link:r.link_vendas||"", atalho:r.atalho||"",
            ativa:r.estado === "Ativa", descricao:"" };
@@ -660,10 +675,12 @@ const MAPAS = {
                   texto:m.texto||null, resposta_a:m.respostaA||null, ficheiro:m.ficheiro||null,
                   categoria_id:m.categoria||null, fixado:!!m.fixado, oculto:!!m.oculto }) },
   evento:   { tabela:"eventos", para: e => ({ id:e.id, titulo:e.titulo, descricao:e.descricao||null, data:e.data,
-                  hora:e.hora, tipo:e.tipo, categoria_id:e.categoria, link:linkExterno(e.link) || null,
+                  hora:e.hora, tipo:e.tipo, categoria_id:e.categoria,
                   local:e.local||null, acesso:e.acesso||"gratuito",
                   oferta_id:e.ofertaId ? Number(e.ofertaId) : null, cursos:e.cursos||[] }) },
-  banner:   { tabela:"banners", para: b => ({ id:b.id, eyebrow:b.eyebrow, titulo:b.titulo, cta:b.cta, link:linkExterno(b.link) || null, imagem_url:b.imagem||null, gradiente:b.gradiente||null, ativo:b.ativo, ordem:b.ordem||0 }) },
+  banner:   { tabela:"banners", para: b => ({ id:b.id, eyebrow:b.eyebrow, titulo:b.titulo, cta:b.cta, link:linkExterno(b.link) || null, imagem_url:b.imagem||null, gradiente:b.gradiente||null, ativo:b.ativo, ordem:b.ordem||0,
+                  destino_tipo:b.destinoTipo||"pagina", destino_id:b.destinoTipo && b.destinoTipo !== "pagina" ? String(b.destinoId||"") || null : null,
+                  resumo:b.resumo||null }) },
   conquista:{ tabela:"conquistas", para: c => ({ id:c.id, titulo:c.titulo, descricao:c.desc, regra:c.regra, ordem:c.ordem||0 }) },
   avaliacao:{ tabela:"avaliacoes", para: a => ({ id:a.id, utilizador_id:a.membroId || API.utilizador.id, aula_id:a.aulaId, curso_id:a.cursoId, estrelas:a.estrelas, comentario:a.comentario, oculto:!!a.oculto }) },
   acesso:   { tabela:"acessos", para: a => ({ id:a.id, utilizador_id:a.utilizadorId, curso_id:a.cursoId, origem:a.origem||"manual", expira_em:a.expiraEm||null, nota:a.nota||null }) },
@@ -849,6 +866,16 @@ function salvarProgresso(aulaId, concluida){
   if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
   return API.marcarAula(aulaId, concluida).catch(erro => avisarQueNaoGuardou(erro));
 }
+/* O evento e a sua sala guardam-se juntos, pela ordem: a sala aponta para o
+   evento, e um evento novo ainda não existe na base quando a sala chega. */
+async function salvarEvento(evento){
+  if(modoDemonstracao()){ guardarDB(); return; }
+  try {
+    await API.guardar("evento", evento);
+    await API.guardarSala(evento.id, evento.link);
+  } catch(erro){ avisarQueNaoGuardou(erro); }
+}
+
 function salvarPresenca(eventoId, confirmada){
   if(modoDemonstracao()){ guardarEstado(); return Promise.resolve(); }
   return API.marcarPresenca(eventoId, confirmada).catch(erro => avisarQueNaoGuardou(erro));

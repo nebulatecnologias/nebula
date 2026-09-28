@@ -104,21 +104,27 @@ function editarEvento(id){
       { nome:"categoria", rotulo:"Categoria", tipo:"select", opcoes:opcoesCategorias() },
       { nome:"data", rotulo:"Data", tipo:"data", obrigatorio:true },
       { nome:"hora", rotulo:"Hora", tipo:"hora", obrigatorio:true },
-      { nome:"link", rotulo:"Link de acesso", tipo:"url", placeholder:"https://zoom.us/j/...", dica:"Para os encontros online. Fica no lembrete que o aluno adiciona à agenda." },
+      { nome:"link", rotulo:"Link da sala", tipo:"url", placeholder:"https://zoom.us/j/...", dica:"Para os encontros online. Num evento pago, só quem comprou o lugar o vê." },
       { nome:"local", rotulo:"Local", tipo:"texto", placeholder:"ex: Av. 24 de Julho 123, Maputo", dica:"Para os encontros presenciais. Podes ter os dois." },
-      { nome:"ofertaId", rotulo:"Só para quem tem esta oferta", tipo:"select",
-        opcoes:[{ valor:"", rotulo:"— toda a academia —" }].concat((DB.ofertas||[]).map(o => ({ valor:String(o.id), rotulo:o.nome }))),
-        dica:"Limita o evento a quem tem uma inscrição viva nesta oferta." },
+      { nome:"ofertaId", rotulo:"Oferta", tipo:"select",
+        opcoes:[{ valor:"", rotulo:"— nenhuma —" }].concat((DB.ofertas||[]).map(o => ({ valor:String(o.id), rotulo:o.nome }))),
+        dica:"Num evento pago, é a oferta que vende o lugar: o aluno vê o evento e o botão para comprar. Nos outros, limita o evento a quem já a tem." },
       { nome:"cursos", rotulo:"Só para quem tem estes cursos", tipo:"checklist",
         opcoes:(DB.cursos||[]).map(c => ({ valor:c.id, rotulo:c.titulo })),
         dica:"Deixa tudo por marcar para o evento ser de toda a academia." }
     ],
     valores: evento || { hora:"19:00", acesso:"gratuito", ofertaId:"", cursos:[] },
     aoGuardar: v => {
+      /* Um evento pago sem oferta não se vende a ninguém: seria uma etiqueta
+         "Pago" sem botão -- a porta fechada pintada de porta aberta. */
+      if(v.acesso === "pago" && !v.ofertaId){
+        mostrarToast("Um evento pago precisa da oferta que vende o lugar.");
+        return false;
+      }
       const alvo = evento || { id:novoId("evento") };
       Object.assign(alvo, v);
       if(!evento) DB.eventos.push(alvo);
-      salvar("evento", alvo);
+      salvarEvento(alvo);
       renderAdminEventos();
       mostrarToast(evento ? "Evento atualizado" : "Evento criado");
     }

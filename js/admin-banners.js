@@ -59,7 +59,7 @@ function renderAdminBanners(){
                   <div class="mini-banner" style="${fundoBanner(b)}"></div>
                   <div class="meta"><div class="nome">${b.titulo||"(sem título)"}</div><div class="sub-celula">${b.eyebrow||""}</div></div>
                 </div></td>
-                <td>${b.link && b.link!=="#" ? `<span class="sub-celula">${b.link}</span>` : `<span class="sub-celula">Sem link</span>`}</td>
+                <td><div>${destinoDoBannerEmTexto(b)}</div>${b.destinoTipo === "pagina" && b.link ? `<div class="sub-celula">botão: ${b.link}</div>` : ""}</td>
                 <td><span class="pill ${b.ativo!==false?"pill-ativo":"pill-inativo"}">${b.ativo!==false?"Ativo":"Escondido"}</span></td>
                 <td>
                   <div class="acoes-linha">
@@ -91,22 +91,59 @@ function renderAdminBanners(){
     }));
 }
 
+/* Para onde um banner pode levar: uma página própria, ou um evento, curso ou
+   oferta que já existem. Decidido pelo Shelton a 27/09/2026. */
+function opcoesDestinoDoBanner(){
+  const hoje = new Date().toISOString().slice(0, 10);
+  return [{ valor:"pagina", rotulo:"Página própria (resumo e link abaixo)" }]
+    .concat((DB.eventos || []).filter(e => e.data >= hoje)
+      .map(e => ({ valor:"evento:" + e.id, rotulo:"Evento · " + e.titulo })))
+    .concat((DB.cursos || []).filter(c => c.publicado !== false)
+      .map(c => ({ valor:"curso:" + c.id, rotulo:"Curso · " + c.titulo })))
+    .concat((DB.ofertas || []).filter(o => o.ativa !== false)
+      .map(o => ({ valor:"oferta:" + o.id, rotulo:"Oferta · " + o.nome })));
+}
+
+/* O que se diz na tabela sobre para onde o banner leva. */
+function destinoDoBannerEmTexto(b){
+  const achar = (lista, id) => (lista || []).find(x => String(x.id) === String(id));
+  if(b.destinoTipo === "evento"){ const e = achar(DB.eventos, b.destinoId); return e ? "Evento · " + e.titulo : "Evento que já não existe"; }
+  if(b.destinoTipo === "curso"){ const c = achar(DB.cursos, b.destinoId); return c ? "Curso · " + c.titulo : "Curso que já não existe"; }
+  if(b.destinoTipo === "oferta"){ const o = achar(DB.ofertas, b.destinoId); return o ? "Oferta · " + o.nome : "Oferta que já não existe"; }
+  return "Página própria";
+}
+
 function editarBanner(id){
   const banner = id ? DB.banners.find(b=>b.id===id) : null;
   abrirDrawer({
     titulo: banner ? "Editar banner" : "Novo banner",
-    subtitulo: "Aparece no topo do Calendário do aluno.",
+    subtitulo: "Aparece no Início e no Calendário do aluno, e abre uma página dentro da Academia.",
     campos: [
-      { nome:"eyebrow", rotulo:"Etiqueta", tipo:"texto", placeholder:"ex: Oferta por tempo limitado" },
+      { nome:"destino", rotulo:"Leva a", tipo:"select", opcoes:opcoesDestinoDoBanner(),
+        dica:"O banner abre sempre uma página dentro da Academia. Só o botão dessa página leva para fora." },
+      { nome:"eyebrow", rotulo:"Etiqueta", tipo:"texto", placeholder:"ex: Evento" },
       { nome:"titulo", rotulo:"Título", tipo:"texto", obrigatorio:true, placeholder:"A mensagem principal do banner." },
-      { nome:"cta", rotulo:"Texto do botão", tipo:"texto", placeholder:"ex: Garantir vaga" },
-      { nome:"link", rotulo:"Link de destino", tipo:"url", placeholder:"https://...", dica:"Para onde o aluno vai ao clicar no banner." },
-      { nome:"imagem", rotulo:"Imagem de fundo", tipo:"imagem", pasta:"banners", dica:"1600×400 px. Se não puseres imagem, é usada a cor abaixo." },
+      { nome:"cta", rotulo:"Texto do botão", tipo:"texto", placeholder:"ex: Garantir vaga", dica:"No computador aparece no banner. No telemóvel o banner mostra só «Saber mais»." },
+      { nome:"resumo", rotulo:"Resumo (página própria)", tipo:"textarea", placeholder:"O que o aluno lê antes de carregar no botão.", dica:"Só para «Página própria»: um evento, curso ou oferta já têm a sua página." },
+      { nome:"link", rotulo:"Link do botão (página própria)", tipo:"url", placeholder:"https://...", dica:"Só para «Página própria»: para onde vai o botão da página." },
+      { nome:"imagem", rotulo:"Imagem de fundo", tipo:"imagem", pasta:"banners", dica:"1600×400 px. No telemóvel é cortada dos lados; não ponhas texto importante nas pontas." },
       { nome:"gradiente", rotulo:"Cor de fundo", tipo:"select", opcoes:GRADIENTES },
       { nome:"ativo", rotulo:"Ativo", tipo:"toggle", padrao:true, dica:"Se desligares, o banner deixa de entrar no carrossel." }
     ],
-    valores: banner || { ativo:true, gradiente:GRADIENTES[0].valor },
+    valores: banner
+      ? Object.assign({}, banner, { destino: banner.destinoTipo && banner.destinoTipo !== "pagina" ? banner.destinoTipo + ":" + banner.destinoId : "pagina" })
+      : { ativo:true, gradiente:GRADIENTES[0].valor, destino:"pagina" },
     aoGuardar: v => {
+      /* "tipo:id" num só campo: o motor de formulários não tem campos que
+         dependem uns dos outros, e assim a escolha fica numa lista só. */
+      const [tipo, ...resto] = String(v.destino || "pagina").split(":");
+      v.destinoTipo = tipo || "pagina";
+      v.destinoId = v.destinoTipo === "pagina" ? "" : resto.join(":");
+      delete v.destino;
+      if(v.destinoTipo === "pagina" && !v.resumo && !v.link){
+        mostrarToast("Numa página própria, escreve o resumo ou o link do botão — senão a página fica vazia.");
+        return false;
+      }
       const alvo = banner || { id:novoId("banner"), ordem:DB.banners.length + 1 };
       Object.assign(alvo, v);
       if(!banner) DB.banners.push(alvo);

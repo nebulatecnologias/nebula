@@ -233,11 +233,18 @@ const CURSO_STATS_PADRAO = {
   he:{ inscritos:41,  avaliacao:4.5, conclusao:19 }
 };
 
+/* As datas contam a partir de hoje: com datas fixas, a demonstração ficava
+   sem nenhum encontro futuro poucos dias depois de escrita. */
+const diaDaqui = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+
 const EVENTOS_PADRAO = [
-  { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:"2026-09-16", hora:"19:00", tipo:"Mentoria ao vivo", link:"" },
-  { id:"e2", titulo:"Q&A: Vender com Ajuda da IA", categoria:"ia", data:"2026-09-19", hora:"20:00", tipo:"Perguntas e respostas", link:"" },
-  { id:"e3", titulo:"Roda de Espiritualidade e Propósito", categoria:"espiritualidade", data:"2026-09-24", hora:"19:30", tipo:"Encontro em grupo", link:"" },
-  { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:"2026-08-28", hora:"19:00", tipo:"Masterclass", link:"" }
+  { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:diaDaqui(3), hora:"19:00", tipo:"Mentoria ao vivo", link:"https://exemplo.com/sala", acesso:"gratuito",
+    descricao:"Uma hora a trabalhar o teu plano dos próximos 90 dias, com perguntas no fim." },
+  { id:"e2", titulo:"Q&A: Vender com Ajuda da IA", categoria:"ia", data:diaDaqui(6), hora:"20:00", tipo:"Perguntas e respostas", link:"", acesso:"exclusivo" },
+  { id:"e3", titulo:"Roda de Espiritualidade e Propósito", categoria:"espiritualidade", data:diaDaqui(11), hora:"19:30", tipo:"Encontro em grupo", link:"", acesso:"gratuito", local:"Rua Inventada 100, Maputo" },
+  { id:"e5", titulo:"Imersão Presencial: Escala Previsível", categoria:"negocios", data:diaDaqui(20), hora:"09:00", tipo:"Imersão de um dia", link:"", acesso:"pago", ofertaId:"of1", local:"Rua Inventada 200, Maputo",
+    descricao:"Um dia inteiro, presencial, para montar o teu sistema de vendas. Lugares limitados." },
+  { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:diaDaqui(-12), hora:"19:00", tipo:"Masterclass", link:"", acesso:"gratuito" }
 ];
 
 const ESPACOS_PADRAO = [
@@ -281,9 +288,12 @@ const NOTIFICACOES_PADRAO = [
 ];
 
 const BANNERS_PADRAO = [
-  { id:"b1", ativo:true, eyebrow:"MENTORIA EM GRUPO", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"#", imagem:"", gradiente:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)" },
-  { id:"b2", ativo:true, eyebrow:"OFERTA POR TEMPO LIMITADO", titulo:"IA Aplicada aos Negócios com 20% de desconto", cta:"Ver oferta", link:"#", imagem:"", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)" },
-  { id:"b3", ativo:true, eyebrow:"NOVO EVENTO", titulo:"Roda de Espiritualidade e Propósito — 24 de Setembro", cta:"Confirmar presença", link:"#", imagem:"", gradiente:"linear-gradient(160deg,#7b72e8,#564cc9)" }
+  { id:"b1", ativo:true, eyebrow:"Mentoria em grupo", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"", imagem:"", gradiente:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)",
+    destinoTipo:"evento", destinoId:"e1" },
+  { id:"b2", ativo:true, eyebrow:"Oferta", titulo:"Kingdom All Access: todos os cursos num só acesso", cta:"Ver oferta", link:"", imagem:"", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)",
+    destinoTipo:"oferta", destinoId:"of1" },
+  { id:"b3", ativo:true, eyebrow:"Novidade", titulo:"A comunidade da Kingdom mudou de casa", cta:"Saber mais", link:"https://exemplo.com", imagem:"", gradiente:"linear-gradient(160deg,#7b72e8,#564cc9)",
+    destinoTipo:"pagina", destinoId:"", resumo:"As conversas da academia passam a viver nos grupos de cada programa. Na aba Comunidade encontras os teus." }
 ];
 
 /* Regras declarativas (guardáveis): avaliadas por conquistaDesbloqueada() em nucleo.js */

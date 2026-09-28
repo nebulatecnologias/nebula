@@ -535,9 +535,15 @@ function registarViews(mapa){ Object.assign(VIEWS, mapa); }
    esta funcao faz e dizer-lhe isso por palavras, em vez de lhe mostrar um curso
    vazio -- uma porta fechada pintada de porta aberta. */
 
+/* As páginas internas (evento, oferta e a página própria de um banner) também
+   têm morada: é para lá que um banner leva, e um link delas pode ser mandado a
+   alguém. */
+const PAGINAS_COM_MORADA = ["evento", "oferta", "destaque"];
+
 function enderecoDe(view, a, b){
   if(view === "curso" && a) return "#/curso/" + encodeURIComponent(a);
   if(view === "aula"  && a && b) return "#/curso/" + encodeURIComponent(a) + "/aula/" + encodeURIComponent(b);
+  if(PAGINAS_COM_MORADA.includes(view) && a) return "#/" + view + "/" + encodeURIComponent(a);
   return "";
 }
 
@@ -547,6 +553,7 @@ function lerEndereco(){
   const bruto = location.hash || "";
   if(!bruto.startsWith("#/")) return null;
   const partes = bruto.slice(2).split("/").filter(Boolean).map(decodeURIComponent);
+  if(PAGINAS_COM_MORADA.includes(partes[0]) && partes[1]) return { view:partes[0], a:partes[1] };
   if(partes[0] !== "curso" || !partes[1]) return null;
   if(partes[2] === "aula" && partes[3]) return { view:"aula", a:partes[1], b:partes[3] };
   return { view:"curso", a:partes[1] };
@@ -587,6 +594,11 @@ function arrancarNoEndereco(porOmissao){
 }
 
 function irPara(view, a, b){
+  /* As páginas internas têm um "Voltar": lembra-se aqui de onde se veio. */
+  /* Só ecrãs: o curso e a aula precisam de um id para voltar a abrir. */
+  if(PAGINAS_COM_MORADA.includes(view) && estado.viewAtual
+     && !PAGINAS_COM_MORADA.includes(estado.viewAtual) && !["curso","aula"].includes(estado.viewAtual))
+    estado.voltarPara = estado.viewAtual;
   estado.viewAtual = view;
   if(view!=="calendario" && view!=="dashboard" && view!=="admin-banners" && bannerTimer){ clearInterval(bannerTimer); bannerTimer=null; }
   const ehAdmin = view.indexOf("admin-")===0;
