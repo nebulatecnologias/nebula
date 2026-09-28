@@ -263,6 +263,20 @@ const EVENTOS_PADRAO = [
   { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:diaDaqui(-12), hora:"19:00", tipo:"Masterclass", link:"", acesso:"gratuito" }
 ];
 
+/* Os grupos de cada programa (fase 5). Com servidor, a base só devolve os
+   das ofertas de quem está a ver; aqui são inventados, com links que não
+   levam a lado nenhum. */
+const COMUNIDADES_PADRAO = [
+  { id:"com1", nome:"Kingdom All Access · Membros", descricao:"Avisos da equipa e conversa entre membros.", canal:"whatsapp",
+    link:"https://chat.whatsapp.com/exemplo-all-access", imagem:"", ofertas:["of1"], todos:false, ativa:true, ordem:1 },
+  { id:"com2", nome:"Hábitos de Elite · Turma 4", descricao:"A turma que está a fazer o desafio dos 30 dias.", canal:"telegram",
+    link:"https://t.me/exemplo-habitos", imagem:"", ofertas:["of2"], todos:false, ativa:true, ordem:2 },
+  { id:"com3", nome:"Kingdom · Geral", descricao:"", canal:"whatsapp",
+    link:"https://chat.whatsapp.com/exemplo-geral", imagem:"", ofertas:[], todos:true, ativa:true, ordem:3 },
+  { id:"com4", nome:"Grupo antigo", descricao:"Já não se usa.", canal:"outro",
+    link:"https://exemplo.com/grupo", imagem:"", ofertas:[], todos:false, ativa:false, ordem:4 }
+];
+
 const ESPACOS_PADRAO = [
   { id:"geral",    nome:"Geral",              descricao:"Conversa aberta a toda a academia.",            cor:"#ff5a1f", ativo:true, soAdminPublica:false },
   { id:"vitorias", nome:"Vitórias",           descricao:"Partilha resultados e conquistas.",             cor:"#3ddc84", ativo:true, soAdminPublica:false },
@@ -388,6 +402,7 @@ function dbPadrao(){
     cursoStats: CURSO_STATS_PADRAO,
     posts: POSTS_PADRAO,
     espacos: ESPACOS_PADRAO,
+    comunidades: COMUNIDADES_PADRAO,
     avaliacoes: AVALIACOES_PADRAO,
     notificacoes: NOTIFICACOES_PADRAO,
     conquistas: CONQUISTAS_PADRAO,

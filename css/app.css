@@ -353,8 +353,6 @@ input,textarea{ caret-color:var(--accent); }
 .pill-concluido{ background:var(--green); color:#fff; }
 .pill-risco{ background:var(--amber-soft); color:var(--amber-ink); }
 .pill-inativo{ background:var(--sunken); color:var(--muted); }
-.msg-pin.pill{ height:22px; padding:0 9px; font-size:11.5px; }
-.msg-pin.pill::before{ display:none; }
 
 .cat-tag{ display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:500; color:var(--ink-2); }
 .cat-tag::before{ content:""; width:8px; height:8px; border-radius:99px; background:var(--c,var(--accent)); flex-shrink:0; }
@@ -708,52 +706,19 @@ button.chip{ font:inherit; font-size:14px; }
 .post-action:hover{ background:var(--sunken); color:var(--ink); }
 .post-action.liked{ color:var(--accent-ink); background:var(--accent-soft); }
 
-.chat{ display:flex; flex-direction:column; overflow:hidden; }
-.chat-mensagens{ min-height:320px; max-height:min(62vh,600px); overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:2px; }
-.msg{ display:flex; gap:12px; padding:6px 10px; border-radius:var(--r-md); transition:background .15s; }
-.msg:hover{ background:var(--surface-2); }
-.msg:not(.agrupada){ margin-top:12px; }
-.msg.fixada{ background:var(--accent-soft); margin-bottom:10px; }
-.msg.realcada{ background:var(--amber-soft); }
-.msg-avatar{ width:38px; flex-shrink:0; }
-.msg-avatar .avatar{ width:38px; height:38px; font-size:12.5px; box-shadow:none; }
-.msg-corpo{ flex:1; min-width:0; }
-.msg-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
-.msg-autor{ font-size:14.5px; font-weight:500; }
-.msg.minha .msg-autor{ color:var(--accent-ink); }
-.msg-tempo{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
-.msg-texto{ font-size:15px; color:var(--ink-2); margin:0; white-space:pre-wrap; word-break:break-word; line-height:1.6; }
-.msg-citada{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; font-size:13px; color:var(--muted); padding:3px 0 5px; }
-.msg-citada::before{ content:""; width:18px; height:10px; border-left:2px solid var(--line-strong); border-top:2px solid var(--line-strong); border-top-left-radius:6px; flex-shrink:0; margin-left:4px; }
-.msg-citada-autor{ font-weight:500; color:var(--ink-2); }
-.msg-citada span:last-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.msg-citada:hover{ color:var(--orange-ink); }
-.msg-imagem{ display:block; margin-top:8px; border-radius:var(--r-md); overflow:hidden; border:1px solid var(--line); max-width:340px; }
-.msg-imagem img{ display:block; width:100%; }
-.msg-ficheiro{ display:flex; align-items:center; gap:12px; margin-top:8px; padding:11px 14px; border:1px solid var(--line); border-radius:var(--r-md); color:var(--ink); background:var(--surface); max-width:340px; text-align:left; }
-.msg-ficheiro:hover{ border-color:var(--line-strong); }
-.msg-ficheiro .icon{ color:var(--accent); }
-.anexo-info{ flex:1; min-width:0; }
-.anexo-info strong{ display:block; font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.msg-acoes{ display:flex; gap:4px; margin-top:6px; opacity:0; transition:opacity .2s var(--ease); }
-.msg:hover .msg-acoes, .msg.fixada .msg-acoes, .msg:focus-within .msg-acoes{ opacity:1; }
-.msg-accao{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 11px; border-radius:999px; font-size:12.5px; font-weight:500; color:var(--muted); }
-.msg-accao:hover{ background:var(--sunken); color:var(--ink); }
-.msg-accao.liked{ color:var(--accent-ink); }
-@media (hover:none){ .msg-acoes{ opacity:1; } }
-.chat-composer{ border-top:1px solid var(--line); padding:14px 18px 16px; background:var(--surface-2); }
-.chat-resposta-a{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 14px; margin-bottom:10px; border-radius:var(--r-md); background:var(--sunken); font-size:13px; color:var(--muted); }
-.chat-resposta-a span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.chat-caixa{ display:flex; align-items:flex-end; gap:10px; }
-.chat-caixa textarea{ flex:1; resize:none; min-height:46px; max-height:160px; padding:12px 18px; background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--r-lg); color:var(--ink); font-size:15px; line-height:1.45; }
-.chat-caixa textarea:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
-.chat-caixa .avatar{ width:36px; height:36px; font-size:12px; margin-bottom:5px; box-shadow:none; }
-.chat-caixa .btn-icone{ margin-bottom:6px; }
-.chat-caixa .btn{ margin-bottom:2px; }
-.chat-fechado{ border-top:1px solid var(--line); padding:16px 20px; font-size:14px; color:var(--muted); }
-.anexo-chip{ display:flex; align-items:center; gap:12px; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); }
-.anexo-chip img{ width:44px; height:44px; object-fit:cover; border-radius:8px; }
-.anexo-chip .icon{ color:var(--muted); }
+/* Comunidade (fase 5): a lista de grupos, como a do WhatsApp — fotografia
+   redonda, nome, uma linha de descrição, o canal, e o botão à direita. */
+.lista-comunidades{ padding:6px 0; }
+.comunidade{ display:flex; align-items:center; gap:14px; padding:14px 20px; }
+.comunidade + .comunidade{ border-top:1px solid var(--line); }
+.comunidade-foto{ width:52px; height:52px; border-radius:50%; flex:none; background:var(--sunken) center/cover no-repeat; display:grid; place-items:center; }
+.comunidade-foto.sem-foto{ background:color-mix(in srgb, var(--c) 16%, var(--surface)); color:color-mix(in srgb, var(--c) 70%, var(--ink)); font-size:16px; font-weight:600; }
+.comunidade-info{ flex:1; min-width:0; }
+.comunidade-nome{ font-size:15.5px; font-weight:500; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.comunidade-desc{ font-size:14px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; }
+.comunidade-canal{ display:inline-flex; align-items:center; gap:5px; margin-top:6px; font-size:12.5px; font-weight:500; color:color-mix(in srgb, var(--c) 72%, var(--ink)); }
+.comunidade-canal .icon{ width:14px; height:14px; color:var(--c); }
+.comunidade-entrar{ flex:none; }
 
 /* ============================================================
    Conquistas e certificados
@@ -1214,7 +1179,8 @@ button.chip{ font:inherit; font-size:14px; }
   .editor-abas button{ padding:10px 10px; }
   .event-detalhe{ padding:0 16px 18px; }
   .event-linha{ padding:14px 16px; }
-  .chat-mensagens{ padding:12px 8px; }
+  .comunidade{ padding:12px 14px; gap:12px; }
+  .comunidade-foto{ width:46px; height:46px; }
   .onboarding-card{ padding:22px 18px; }
   .drawer{ border-radius:0; }
   .drawer-head{ padding:20px 20px 12px; }

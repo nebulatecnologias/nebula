@@ -127,7 +127,6 @@ async function entrarNaArea(){
   mostrarEcra("app");
   estado.prevendoComoAluno = false;
   arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
-  ligarComunidadeEmDireto();
   ligarAcessoEmDireto();
   if(onboardingPendente()) abrirOnboarding(false);
 }

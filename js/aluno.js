@@ -710,265 +710,55 @@ function guardarAvaliacao(curso, aula, campos){
   salvar("avaliacao", registo);
 }
 
-/* ---------------- Comunidade ---------------- */
-function renderComunidade(){
-  const espacos = espacosAtivos();
-  const atual = espacos.find(e => e.id === estado.espacoComunidade) || espacos[0];
-  const equipa = papelEfetivo()==="administrador";
-  const podePublicar = atual
-    && (!atual.soAdminPublica || equipa)
-    && (DB.config.alunosPublicam !== false || equipa);
-  const aResponder = estado.respondendoA ? DB.posts.find(p => String(p.id) === String(estado.respondendoA)) : null;
+/* ---------------- Comunidade ----------------
+   Os grupos de cada programa, como a lista de grupos do WhatsApp (decisão do
+   Shelton, 27/09/2026: o chat interno saiu). Cada linha é um grupo com o seu
+   botão; o link abre fora da Academia.
 
+   Quem vê o quê é a base que decide: a linha, e com ela o link, só chega a
+   quem tem inscrição numa das ofertas da comunidade. Este ecrã desenha o que
+   recebe e não filtra nada por conta própria. */
+const CANAIS = {
+  whatsapp: { nome:"WhatsApp", cor:"#25d366",
+    icone:`<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.6-1.3.1-.2 0-.3 0-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.4-.2Z"/></svg>` },
+  telegram: { nome:"Telegram", cor:"#2aabee",
+    icone:`<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13.2 1.8 11.7c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3Z"/></svg>` },
+  outro:    { nome:"Comunidade", cor:"#7b72e8", icone:ICONS.people }
+};
+
+function renderComunidade(){
+  const lista = (DB.comunidades || []).filter(c => c.ativa !== false);
   document.getElementById("content-comunidade").innerHTML = `
     <div class="page-head">
       <h1>Comunidade</h1>
-      <p class="desc">${atual ? atual.descricao : "Partilha vitórias, faz perguntas e aprende com quem está a percorrer o mesmo caminho."}</p>
+      <p class="desc">Os grupos dos teus programas. Entra para conversares com a tua turma e com a equipa.</p>
     </div>
-    <div class="chip-row" id="espacos-row">
-      ${espacos.map(e => `<div class="chip ${atual && e.id===atual.id?"active":""}" data-espaco="${e.id}"><span class="dot" style="--c:${e.cor}"></span>${e.nome}</div>`).join("")}
-    </div>
-    <div class="card chat">
-      <div class="chat-mensagens" id="feed-posts"></div>
-      ${podePublicar ? `
-      <div class="chat-composer">
-        ${aResponder ? `
-          <div class="chat-resposta-a">
-            <span>A responder a <strong>${aResponder.autor}</strong>: ${resumoTexto(aResponder.texto, 60)}</span>
-            <button class="btn-icone" id="btn-cancelar-resposta" title="Cancelar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-          </div>` : ""}
-        <div id="anexo-previa"></div>
-        <div class="chat-caixa">
-          <div class="avatar">${avatarConteudo()}</div>
-          <textarea id="novo-post" rows="1" placeholder="Escreve em ${atual.nome}..."></textarea>
-          <button class="btn-icone" id="btn-anexar" title="Anexar ficheiro (até 3 MB)">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21.4 11.05 12.2 20.3a5 5 0 0 1-7.07-7.07l9.19-9.2a3.33 3.33 0 0 1 4.72 4.72l-9.2 9.19a1.67 1.67 0 0 1-2.35-2.36l8.49-8.48"/></svg>
-          </button>
-          <input type="file" class="hidden" id="ficheiro-post">
-          <button class="btn btn-primary btn-sm" id="btn-publicar">Enviar</button>
-        </div>
-      </div>` : `
-      <div class="chat-fechado">
-        ${DB.config.alunosPublicam === false
-          ? "O mural está em modo de leitura. Por agora, só a equipa da academia publica."
-          : `Só a equipa da academia publica em ${atual ? atual.nome : "este espaço"}.`}
-      </div>`}
-    </div>
+    ${lista.length ? `<div class="card lista-comunidades" role="list">
+      ${lista.map(comunidadeHTML).join("")}
+    </div>` : `<div class="card empty-note">Ainda não há grupos para os teus programas. Quando houver, aparecem aqui.</div>`}
   `;
-
-  document.querySelectorAll("#espacos-row .chip").forEach(c => c.addEventListener("click", () => {
-    estado.espacoComunidade = c.getAttribute("data-espaco");
-    renderComunidade();
-  }));
-
-  const btnPublicar = document.getElementById("btn-publicar");
-  if(btnPublicar){
-    const textarea = document.getElementById("novo-post");
-    /* A caixa cresce com o texto, como num chat. */
-    const crescer = () => { textarea.style.height = "auto"; textarea.style.height = Math.min(textarea.scrollHeight, 160) + "px"; };
-    textarea.addEventListener("input", crescer);
-    textarea.addEventListener("keydown", e => {
-      if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); enviarMensagem(atual); }
-    });
-    btnPublicar.addEventListener("click", () => enviarMensagem(atual));
-
-    const input = document.getElementById("ficheiro-post");
-    document.getElementById("btn-anexar").addEventListener("click", () => input.click());
-    input.addEventListener("change", e => escolherAnexo(e.target.files[0]));
-    renderPreviaAnexo();
-
-    const cancelar = document.getElementById("btn-cancelar-resposta");
-    if(cancelar) cancelar.addEventListener("click", () => { estado.respondendoA = null; renderComunidade(); });
-  }
-
-  renderFeedPosts();
 }
 
-const LIMITE_ANEXO = 3 * 1024 * 1024;   // 3 MB
-
-function resumoTexto(t, n){
-  const limpo = String(t||"").replace(/\s+/g," ").trim();
-  return limpo.length > n ? limpo.slice(0,n) + "…" : limpo;
+/* «Kingdom · Geral» → «KG»: só contam as palavras que começam por letra. */
+function iniciaisDoGrupo(nome){
+  return String(nome || "").split(/\s+/).filter(w => /^[\p{L}\p{N}]/u.test(w))
+    .slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
 }
 
-/* ---------------- Anexos ---------------- */
-async function escolherAnexo(ficheiro){
-  if(!ficheiro) return;
-  if(ficheiro.size > LIMITE_ANEXO){
-    mostrarToast(`"${ficheiro.name}" tem ${formatarTamanho(ficheiro.size)}. O limite é 3 MB.`);
-    return;
-  }
-  const botao = document.getElementById("btn-anexar");
-  if(botao) botao.disabled = true;
-  try {
-    const eu = API.utilizador ? API.utilizador.id : "demo";
-    const url = await enviarAnexo(ficheiro, "comunidade/" + eu);
-    estado.anexoPendente = {
-      nome: ficheiro.name,
-      tipo: ficheiro.type || "",
-      tamanho: formatarTamanho(ficheiro.size),
-      url
-    };
-    renderPreviaAnexo();
-  } catch(erro){
-    mostrarToast(erro.message || "Não foi possível enviar o ficheiro.");
-  } finally {
-    if(botao) botao.disabled = false;
-  }
-}
-
-function renderPreviaAnexo(){
-  const wrap = document.getElementById("anexo-previa");
-  if(!wrap) return;
-  const a = estado.anexoPendente;
-  if(!a){ wrap.innerHTML = ""; return; }
-  const imagem = a.tipo.startsWith("image/") && !String(a.url).startsWith("storage:");
-  wrap.innerHTML = `
-    <div class="anexo-chip">
-      ${imagem ? `<img src="${a.url}" alt="">` : ICONS.ficheiro}
-      <span class="anexo-info"><strong>${a.nome}</strong><span class="sub-celula">${a.tamanho}</span></span>
-      <button class="btn-icone" id="btn-tirar-anexo" title="Remover"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-    </div>`;
-  document.getElementById("btn-tirar-anexo").addEventListener("click", () => {
-    estado.anexoPendente = null;
-    renderPreviaAnexo();
-  });
-}
-
-/* ---------------- Enviar ---------------- */
-async function enviarMensagem(espaco){
-  const textarea = document.getElementById("novo-post");
-  const texto = textarea.value.trim();
-  const anexo = estado.anexoPendente;
-  if(!texto && !anexo) return;
-
-  const mensagem = {
-    id: novoId("post"), autor: estado.nome, iniciais: iniciais(estado.nome),
-    autorId: API.utilizador ? API.utilizador.id : null,
-    tempo: "agora", categoria: null, espacoId: espaco.id, fixado: false, oculto: false,
-    texto, likes: 0, curtido: false,
-    respostaA: estado.respondendoA || null,
-    ficheiro: anexo || null,
-    criadoEm: new Date().toISOString()
-  };
-  /* O DB guarda as publicações da mais recente para a mais antiga; a
-     conversa inverte-as para a última ficar em baixo. */
-  DB.posts.unshift(mensagem);
-
-  /* Em demonstração, um anexo grande pode não caber no armazenamento
-     do browser. Se a gravação falhar, desfazemos em vez de deixar a
-     mensagem a mentir. */
-  if(modoDemonstracao() && !escreverArmazenado(DB_CHAVE, DB)){
-    DB.posts = DB.posts.filter(p => p.id !== mensagem.id);
-    mostrarToast("Não há espaço neste browser para este ficheiro. Tenta um mais pequeno.");
-    return;
-  }
-
-  estado.anexoPendente = null;
-  estado.respondendoA = null;
-  textarea.value = "";
-  renderComunidade();
-  const lista = document.getElementById("feed-posts");
-  if(lista) lista.scrollTop = lista.scrollHeight;
-
-  /* A mensagem aparece já no ecrã, mas quem a lê é o servidor. Se não
-     chegar lá, sai do ecrã: mais vale perdê-la do que fingir que os
-     outros a receberam. */
-  if(modoDemonstracao()) return;
-  try {
-    await API.guardar("mensagem", mensagem);
-  } catch(erro){
-    DB.posts = DB.posts.filter(p => p.id !== mensagem.id);
-    renderComunidade();
-    const caixa = document.getElementById("novo-post");
-    if(caixa) caixa.value = texto;          // o que escreveu não se perde
-    mostrarToast(erro.message || "A mensagem não chegou a sair. Tenta outra vez.");
-  }
-}
-
-/* ---------------- O mural, em formato de conversa ---------------- */
-function renderFeedPosts(){
-  const feed = document.getElementById("feed-posts");
-  if(!feed) return;
-  const espacoAtual = estado.espacoComunidade || (espacosAtivos()[0]||{}).id;
-  const doEspaco = postsVisiveis().filter(p => (p.espacoId||"geral") === espacoAtual);
-  const fixadas = doEspaco.filter(p => p.fixado);
-  /* postsVisiveis() põe as fixadas à frente; na conversa a ordem é a da
-     chegada, com as fixadas destacadas por cima. */
-  const conversa = doEspaco.filter(p => !p.fixado).slice().reverse();
-
-  if(!doEspaco.length){
-    feed.innerHTML = `<div class="empty-note">Ainda não há mensagens neste espaço. Começa tu.</div>`;
-    return;
-  }
-
-  const eu = estado.nome;
-  let autorAnterior = null;
-
-  feed.innerHTML = `
-    ${fixadas.map(p => mensagemHTML(p, false, true)).join("")}
-    ${conversa.map(p => {
-      const agrupada = p.autor === autorAnterior;
-      autorAnterior = p.autor;
-      return mensagemHTML(p, agrupada, false, p.autor === eu);
-    }).join("")}
-  `;
-
-  feed.querySelectorAll("[data-like]").forEach(el => el.addEventListener("click", () => {
-    const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-like"));
-    post.curtido = !post.curtido;
-    post.likes += post.curtido ? 1 : -1;
-    salvarReacao(post.id, post.curtido);
-    renderFeedPosts();
-  }));
-  feed.querySelectorAll("[data-responder]").forEach(el => el.addEventListener("click", () => {
-    estado.respondendoA = el.getAttribute("data-responder");
-    renderComunidade();
-    const caixa = document.getElementById("novo-post");
-    if(caixa) caixa.focus();
-  }));
-  feed.querySelectorAll("[data-abrir-anexo]").forEach(el => el.addEventListener("click", () => {
-    const post = DB.posts.find(p=>String(p.id)===el.getAttribute("data-abrir-anexo"));
-    if(post && post.ficheiro) abrirFicheiroPrivado(post.ficheiro.url, post.ficheiro.nome);
-  }));
-  feed.querySelectorAll("[data-ir-mensagem]").forEach(el => el.addEventListener("click", () => {
-    const alvo = feed.querySelector(`[data-mensagem="${el.getAttribute("data-ir-mensagem")}"]`);
-    if(!alvo) return;
-    alvo.scrollIntoView({ behavior:"smooth", block:"center" });
-    alvo.classList.add("realcada");
-    setTimeout(() => alvo.classList.remove("realcada"), 1200);
-  }));
-}
-
-function mensagemHTML(post, agrupada, fixada, minha){
-  const cat = post.categoria ? categoriaDe(post.categoria) : null;
-  const citada = post.respostaA ? DB.posts.find(p => String(p.id) === String(post.respostaA)) : null;
-  const f = post.ficheiro;
-  const imagem = f && (f.tipo||"").startsWith("image/") && !String(f.url).startsWith("storage:");
-
-  return `<div class="msg ${agrupada?"agrupada":""} ${fixada?"fixada":""} ${minha?"minha":""}" data-mensagem="${post.id}">
-    <div class="msg-avatar">${agrupada ? "" : `<div class="avatar">${post.iniciais}</div>`}</div>
-    <div class="msg-corpo">
-      ${citada ? `<button class="msg-citada" data-ir-mensagem="${citada.id}"><span class="msg-citada-autor">${citada.autor}</span><span>${resumoTexto(citada.texto, 70) || (citada.ficheiro ? citada.ficheiro.nome : "")}</span></button>` : ""}
-      ${agrupada ? "" : `<div class="msg-head">
-        <span class="msg-autor">${post.autor}</span>
-        <span class="msg-tempo">${post.tempo}</span>
-        ${fixada ? '<span class="pill pill-morno msg-pin">Fixado</span>' : ""}
-        ${cat ? `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>` : ""}
-      </div>`}
-      ${post.texto ? `<p class="msg-texto">${post.texto}</p>` : ""}
-      ${f ? (imagem
-        ? `<button class="msg-imagem" data-abrir-anexo="${post.id}"><img src="${f.url}" alt="${f.nome}"></button>`
-        : `<button class="msg-ficheiro" data-abrir-anexo="${post.id}">${ICONS.ficheiro}<span class="anexo-info"><strong>${f.nome}</strong><span class="sub-celula">${f.tamanho||""}</span></span></button>`) : ""}
-      <div class="msg-acoes">
-        <button class="msg-accao ${post.curtido?"liked":""}" data-like="${post.id}">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="${post.curtido?"currentColor":"none"}" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 0 0-3-3l-1 9v10h8.28a2 2 0 0 0 2-1.7l1.35-9A2 2 0 0 0 19.65 8H14ZM7 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h3v12Z"/></svg>${post.likes||0}
-        </button>
-        <button class="msg-accao" data-responder="${post.id}">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>Responder
-        </button>
-      </div>
+function comunidadeHTML(c){
+  const canal = CANAIS[c.canal] || CANAIS.outro;
+  const foto = c.imagem
+    ? `<span class="comunidade-foto" style="background-image:url(${c.imagem})" aria-hidden="true"></span>`
+    : `<span class="comunidade-foto sem-foto" style="--c:${canal.cor}" aria-hidden="true">${iniciaisDoGrupo(c.nome)}</span>`;
+  return `<div class="comunidade" role="listitem">
+    ${foto}
+    <div class="comunidade-info">
+      <div class="comunidade-nome">${textoSeguro(c.nome)}</div>
+      ${c.descricao ? `<div class="comunidade-desc">${textoSeguro(c.descricao)}</div>` : ""}
+      <span class="comunidade-canal" style="--c:${canal.cor}">${canal.icone}${canal.nome}</span>
     </div>
+    <a class="btn btn-secondary btn-sm comunidade-entrar" href="${linkExterno(c.link)}" target="_blank" rel="noopener"
+       aria-label="Entrar em ${textoSeguro(c.nome)} (${canal.nome}, abre fora da Academia)">Entrar ${setaCirculo()}</a>
   </div>`;
 }
 

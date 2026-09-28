@@ -1,6 +1,7 @@
 /* ============================================================
    Administração › Comentários e Comunidades
-   Modera o que os alunos escrevem e organiza os espaços do feed.
+   Modera o que os alunos escrevem nas aulas, e gere os grupos de cada
+   programa (WhatsApp, Telegram) que o aluno vê na aba Comunidade.
    ============================================================ */
 
 function tituloAula(aulaId){
@@ -88,7 +89,7 @@ function tabelaPublicacoesHTML(){
   const lista = DB.posts || [];
   return `
     <div class="card table-card">
-      <div class="table-card-head"><h3>Publicações da comunidade</h3><span class="count">${lista.length} registos</span></div>
+      <div class="table-card-head"><h3>Publicações do chat antigo</h3><span class="count">${lista.length} registos</span></div>
       <div class="table-wrap">
         <table class="admin-table">
           <thead><tr><th>Autor</th><th>Espaço</th><th>Publicação</th><th>Reações</th><th>Estado</th><th></th></tr></thead>
@@ -161,114 +162,124 @@ function ligarAcoesModeracao(){
 /* ============================================================
    Comunidades (espaços do feed)
    ============================================================ */
+/* ============================================================
+   Comunidades (fase 5, pedido do Shelton a 27/09/2026)
+   Os grupos de cada programa, fora da Academia: WhatsApp, Telegram ou
+   outro. O chat interno saiu; as mensagens antigas ficam guardadas.
+
+   Cada grupo pertence a uma ou mais ofertas, e só quem tem inscrição numa
+   delas o vê — a base é que o garante, porque o link de um grupo deixa
+   entrar quem o tiver. «Todos os alunos» abre-o a quem tem conta activa.
+   ============================================================ */
+const CANAIS_ADMIN = [
+  { valor:"whatsapp", rotulo:"WhatsApp" },
+  { valor:"telegram", rotulo:"Telegram" },
+  { valor:"outro",    rotulo:"Outro" }
+];
+
+function nomesDasOfertas(ids){
+  return (ids || []).map(id => (DB.ofertas || []).find(o => String(o.id) === String(id)))
+    .filter(Boolean).map(o => o.nome);
+}
+
 function renderAdminComunidades(){
-  const espacos = DB.espacos || [];
+  const lista = (DB.comunidades || []).slice().sort((x, y) => (x.ordem || 0) - (y.ordem || 0));
+  const ativas = lista.filter(c => c.ativa !== false).length;
+  const semPublico = lista.filter(c => c.ativa !== false && !c.todos && !(c.ofertas || []).length).length;
 
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Comunidades",
-      descricao: "Os espaços que o aluno encontra na aba Comunidade. Podes reservar um deles só para avisos da equipa.",
-      acaoRotulo: "Novo espaço",
-      acaoId: "btn-novo-espaco"
+      descricao: "Os grupos que o aluno encontra na aba Comunidade. Cada um pertence a uma ou mais ofertas: só quem está inscrito nelas o vê, e só essa pessoa recebe o link.",
+      acaoRotulo: "Nova comunidade",
+      acaoId: "btn-nova-comunidade"
     })}
     <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon accent">${ICONS.globe}</div><div class="stat-label">Espaços ativos</div><div class="stat-value">${espacos.filter(e=>e.ativo!==false).length}<span>/ ${espacos.length}</span></div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.chat}</div><div class="stat-label">Publicações visíveis</div><div class="stat-value">${postsVisiveis().length}</div></div>
-      <div class="card stat-card" style="cursor:pointer;" id="card-publicar"><div class="stat-icon">${ICONS.spark}</div><div class="stat-label">Comunicar</div><div class="stat-value" style="font-size:17px;">Publicar como Academia</div></div>
+      <div class="card stat-card"><div class="stat-icon accent">${ICONS.globe}</div><div class="stat-label">Comunidades ativas</div><div class="stat-value">${ativas}<span>/ ${lista.length}</span></div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.people}</div><div class="stat-label">Abertas a todos os alunos</div><div class="stat-value">${lista.filter(c => c.todos && c.ativa !== false).length}</div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.gear}</div><div class="stat-label">Sem ninguém que as veja</div><div class="stat-value">${semPublico}</div></div>
     </div>
     <div class="card table-card">
-      <div class="table-card-head"><h3>Espaços</h3><span class="count">${espacos.length} registos</span></div>
+      <div class="table-card-head"><h3>Grupos</h3><span class="count">${lista.length} ${lista.length === 1 ? "grupo" : "grupos"}</span></div>
       <div class="table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Espaço</th><th>Publicações</th><th>Quem publica</th><th>Estado</th><th></th></tr></thead>
+          <thead><tr><th>Comunidade</th><th>Canal</th><th>Quem vê</th><th>Estado</th><th></th></tr></thead>
           <tbody>
-            ${espacos.length ? espacos.map(e => `
-              <tr>
-                <td><span class="cat-tag" style="--c:${e.cor}">${e.nome}</span><div class="sub-celula">${e.descricao||""}</div></td>
-                <td class="num">${(DB.posts||[]).filter(p=>(p.espacoId||"geral")===e.id).length}</td>
-                <td>${e.soAdminPublica ? "Só a equipa" : "Todos os alunos"}</td>
-                <td><span class="pill ${e.ativo!==false?"pill-ativo":"pill-inativo"}">${e.ativo!==false?"Ativo":"Escondido"}</span></td>
-                <td>${acoesLinha(e.id)}</td>
-              </tr>
-            `).join("") : `<tr><td colspan="5"><div class="empty-note">Ainda não há espaços.</div></td></tr>`}
+            ${lista.length ? lista.map(linhaDaComunidade).join("")
+              : `<tr><td colspan="5"><div class="empty-note">Ainda não há comunidades. Cria uma para cada grupo de WhatsApp ou Telegram dos teus programas.</div></td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
   `;
 
-  document.getElementById("btn-novo-espaco").addEventListener("click", () => editarEspaco(null));
-  document.getElementById("card-publicar").addEventListener("click", publicarComoAcademia);
+  document.getElementById("btn-nova-comunidade").addEventListener("click", () => editarComunidade(null));
   document.querySelectorAll("#content-admin [data-editar]").forEach(b =>
-    b.addEventListener("click", () => editarEspaco(b.getAttribute("data-editar"))));
+    b.addEventListener("click", () => editarComunidade(b.getAttribute("data-editar"))));
   document.querySelectorAll("#content-admin [data-apagar]").forEach(b =>
-    b.addEventListener("click", () => apagarEspaco(b.getAttribute("data-apagar"))));
+    b.addEventListener("click", () => apagarComunidade(b.getAttribute("data-apagar"))));
 }
 
-function editarEspaco(id){
-  const espaco = id ? DB.espacos.find(e=>e.id===id) : null;
+function linhaDaComunidade(c){
+  const ofertas = nomesDasOfertas(c.ofertas);
+  const quem = c.todos ? "Todos os alunos"
+    : ofertas.length ? ofertas.map(textoSeguro).join(", ")
+    : `<span class="erro">Ninguém: escolhe uma oferta ou abre a todos</span>`;
+  const canal = (CANAIS_ADMIN.find(x => x.valor === c.canal) || CANAIS_ADMIN[2]).rotulo;
+  return `<tr class="${c.ativa !== false && !c.todos && !ofertas.length ? "tint-risco" : ""}">
+    <td><div style="font-weight:500">${textoSeguro(c.nome)}</div><div class="sub-celula">${textoSeguro(c.descricao || "")}</div></td>
+    <td>${canal}</td>
+    <td>${quem}</td>
+    <td><span class="pill ${c.ativa !== false ? "pill-ativo" : "pill-inativo"}">${c.ativa !== false ? "Ativa" : "Escondida"}</span></td>
+    <td>${acoesLinha(c.id)}</td>
+  </tr>`;
+}
+
+function editarComunidade(id){
+  const c = id ? DB.comunidades.find(x => x.id === id) : null;
+  const ofertas = (DB.ofertas || []).map(o => ({ valor:String(o.id), rotulo:o.nome }));
   abrirDrawer({
-    titulo: espaco ? "Editar espaço" : "Novo espaço",
-    subtitulo: "Aparece como filtro na aba Comunidade do aluno.",
+    titulo: c ? "Editar comunidade" : "Nova comunidade",
+    subtitulo: "Aparece na aba Comunidade de quem está inscrito nas ofertas escolhidas.",
     campos: [
-      { nome:"nome", rotulo:"Nome do espaço", tipo:"texto", obrigatorio:true, placeholder:"ex: Vitórias" },
-      { nome:"descricao", rotulo:"Descrição", tipo:"textarea", placeholder:"Aparece por baixo do título, a explicar o espaço." },
-      { nome:"cor", rotulo:"Cor", tipo:"cor", padrao:"#f4621d" },
-      { nome:"soAdminPublica", rotulo:"Só a equipa publica", tipo:"toggle", dica:"Os alunos leem, mas não escrevem neste espaço." },
-      { nome:"ativo", rotulo:"Espaço ativo", tipo:"toggle", padrao:true }
+      { nome:"nome", rotulo:"Nome do grupo", tipo:"texto", obrigatorio:true, placeholder:"ex: Kingdom Founders · Turma 3" },
+      { nome:"descricao", rotulo:"Descrição", tipo:"textarea", placeholder:"Uma linha a dizer para que serve o grupo." },
+      { nome:"canal", rotulo:"Canal", tipo:"select", opcoes:CANAIS_ADMIN },
+      { nome:"link", rotulo:"Link de convite", tipo:"url", obrigatorio:true, placeholder:"https://chat.whatsapp.com/…",
+        dica:"Só chega a quem tem inscrição numa das ofertas abaixo." },
+      { nome:"imagem", rotulo:"Fotografia do grupo", tipo:"imagem", pasta:"comunidades", dica:"Quadrada. Sem ela, aparecem as iniciais." },
+      { nome:"ofertas", rotulo:"Ofertas", tipo:"checklist", opcoes:ofertas,
+        dica: ofertas.length ? "Quem está inscrito numa delas vê este grupo." : "Não há ofertas para escolher." },
+      { nome:"todos", rotulo:"Aberta a todos os alunos", tipo:"toggle", dica:"Qualquer aluno com conta activa, com ou sem oferta." },
+      { nome:"ativa", rotulo:"Comunidade ativa", tipo:"toggle", padrao:true }
     ],
-    valores: espaco || { ativo:true, soAdminPublica:false, cor:"#f4621d" },
+    valores: c || { canal:"whatsapp", ativa:true, todos:false, ofertas:[] },
     aoGuardar: v => {
-      const alvo = espaco || { id:novoId("esp"), ordem:DB.espacos.length + 1 };
-      Object.assign(alvo, v);
-      if(!espaco) DB.espacos.push(alvo);
-      salvar("espaco", alvo);
+      const link = linkExterno(v.link);
+      if(!/^https:\/\//i.test(link)){ mostrarToast("O link tem de começar por https://"); return false; }
+      const alvo = c || { id:novoId("com"), ordem:(DB.comunidades || []).length + 1 };
+      Object.assign(alvo, v, { link });
+      if(!c){ DB.comunidades = DB.comunidades || []; DB.comunidades.push(alvo); }
+      salvar("comunidade", alvo);
       renderAdminComunidades();
-      mostrarToast(espaco ? "Espaço atualizado" : "Espaço criado");
+      mostrarToast(!v.todos && !(v.ofertas || []).length
+        ? "Guardada, mas nenhum aluno a vê: falta escolher uma oferta"
+        : (c ? "Comunidade atualizada" : "Comunidade criada"));
     }
   });
 }
 
-function apagarEspaco(id){
-  const espaco = DB.espacos.find(e=>e.id===id);
-  const posts = (DB.posts||[]).filter(p=>(p.espacoId||"geral")===id).length;
-  if(posts){ mostrarToast(`Move ou apaga primeiro as ${posts} publicações deste espaço`); return; }
+function apagarComunidade(id){
+  const c = DB.comunidades.find(x => x.id === id);
+  if(!c) return;
   confirmarAcao({
-    titulo: "Apagar espaço",
-    mensagem: `"${espaco.nome}" deixa de aparecer na Comunidade.`,
+    titulo: "Apagar comunidade",
+    mensagem: `"${textoSeguro(c.nome)}" deixa de aparecer aos alunos. O grupo em si continua a existir no ${(CANAIS_ADMIN.find(x => x.valor === c.canal) || CANAIS_ADMIN[2]).rotulo}.`,
     aoConfirmar: () => {
-      DB.espacos = DB.espacos.filter(e=>e.id!==id);
-      remover("espaco", id);
+      DB.comunidades = DB.comunidades.filter(x => x.id !== id);
+      remover("comunidade", id);
       renderAdminComunidades();
-      mostrarToast("Espaço apagado");
-    }
-  });
-}
-
-function publicarComoAcademia(){
-  abrirDrawer({
-    titulo: "Publicar como Academia",
-    subtitulo: "A publicação aparece assinada pela academia, e pode ficar fixada no topo.",
-    campos: [
-      { nome:"texto", rotulo:"Mensagem", tipo:"textarea", obrigatorio:true, placeholder:"O que queres comunicar aos alunos?" },
-      { nome:"espacoId", rotulo:"Espaço", tipo:"select", opcoes:(DB.espacos||[]).map(e=>({valor:e.id, rotulo:e.nome})) },
-      { nome:"fixado", rotulo:"Fixar no topo", tipo:"toggle", padrao:true }
-    ],
-    valores: { espacoId:"avisos", fixado:true },
-    textoGuardar: "Publicar",
-    aoGuardar: v => {
-      const mensagem = {
-        id: novoId("post"),
-        autor: DB.aparencia.nomeEscola,
-        iniciais: iniciais(DB.aparencia.nomeEscola),
-        tempo: "agora", categoria: null,
-        espacoId: v.espacoId, fixado: v.fixado, oculto: false,
-        texto: v.texto, likes: 0, curtido: false
-      };
-      DB.posts.unshift(mensagem);
-      salvar("mensagem", mensagem);
-      renderAdminComunidades();
-      mostrarToast("Publicado na comunidade");
+      mostrarToast("Comunidade apagada");
     }
   });
 }

@@ -92,7 +92,7 @@ const API = {
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
-      ofertas, turmas, planos, salas
+      ofertas, turmas, planos, salas, comunidades
     ] = await Promise.all([
       lista(c.from("categorias").select("*").order("ordem")),
       lista(c.from("cursos").select(`
@@ -118,7 +118,10 @@ const API = {
       lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem")),
       /* Só voltam as salas em que esta pessoa pode entrar: num evento pago,
          o link é o que se compra, e o servidor não o dá a quem não pagou. */
-      lista(c.from("salas").select("evento_id, link"))
+      lista(c.from("salas").select("evento_id, link")),
+      /* Os grupos: a base só devolve os das ofertas desta pessoa, e só a
+         eles o link. */
+      lista(c.from("comunidades").select("*").is("removido_em", null).order("ordem"))
     ]);
 
     /* Quem decide a que cursos esta pessoa tem acesso é o servidor.
@@ -140,6 +143,7 @@ const API = {
     DB.categorias  = Object.fromEntries(categorias.map(r => [r.id, { nome:r.nome, cor:r.cor }]));
     DB.cursos      = cursos.map(deCurso);
     DB.espacos     = espacos.map(deEspaco);
+    DB.comunidades = comunidades.map(deComunidade);
     DB.posts       = mensagens.map(deMensagem);
     aplicarReacoes(DB.posts, reacoes, eu);
     const linkDaSala = Object.fromEntries(salas.map(s => [s.evento_id, s.link]));
@@ -204,21 +208,6 @@ const API = {
     return data;
   },
 
-  /* ---------------- Tempo real ----------------
-     A conversa da comunidade chega sozinha. O Realtime usa as mesmas
-     políticas de leitura da tabela, por isso ninguém recebe o que não
-     podia ler numa consulta normal. */
-  canalComunidade: null,
-
-  ouvirComunidade(aoMudar){
-    if(this.canalComunidade) return this.canalComunidade;
-    this.canalComunidade = this.cliente
-      .channel("comunidade")
-      .on("postgres_changes", { event:"*", schema:ESQUEMA, table:"mensagens" }, c => aoMudar("mensagem", c))
-      .on("postgres_changes", { event:"*", schema:ESQUEMA, table:"reacoes" },   c => aoMudar("reacao", c))
-      .subscribe();
-    return this.canalComunidade;
-  },
 
   /* Os acessos da própria pessoa. Quem paga faz isso NOUTRO separador -- o
      checkout abre-se ao lado -- e por isso a Academia fica parada num ecrã
@@ -295,10 +284,6 @@ const API = {
   },
 
   pararDeOuvir(){
-    if(this.canalComunidade){
-      this.cliente.removeChannel(this.canalComunidade);
-      this.canalComunidade = null;
-    }
     if(this.canalAcessos){
       this.cliente.removeChannel(this.canalAcessos);
       this.canalAcessos = null;
@@ -532,6 +517,12 @@ function deAvaliacao(r){
            oculto:r.oculto, data:(r.criado_em||"").slice(0,10) };
 }
 
+function deComunidade(r){
+  return { id:r.id, nome:r.nome, descricao:r.descricao||"", canal:r.canal||"whatsapp", link:r.link||"",
+           imagem:r.imagem_url||"", ofertas:(r.ofertas||[]).map(String), todos:!!r.todos,
+           ativa:r.ativa!==false, ordem:r.ordem||0 };
+}
+
 /* A oferta do CRM é a oferta que a Vitrine mostra. */
 function deOferta(r){
   return { id:String(r.id), nome:r.nome, preco:Number(r.preco)||0, moeda:r.moeda||"MZN",
@@ -692,6 +683,11 @@ const MAPAS = {
   },
   ficheiro: { tabela:"aula_ficheiros", para: f => ({ id:f.id, aula_id:f.aulaId, nome:f.nome, url:f.url, tipo:f.tipo, tamanho:f.tamanho, ordem:f.ordem||0 }) },
   pergunta: { tabela:"aula_quiz", para: q => ({ id:q.id, aula_id:q.aulaId, pergunta:q.pergunta, opcoes:q.opcoes, certa:q.certa, ordem:q.ordem||0 }) },
+  comunidade: { tabela:"comunidades", suave:true,
+                para: c => ({ id:c.id, nome:c.nome, descricao:c.descricao||null, canal:c.canal||"whatsapp",
+                              link:linkExterno(c.link)||c.link, imagem_url:c.imagem||null,
+                              ofertas:(c.ofertas||[]).map(Number).filter(Boolean), todos:!!c.todos,
+                              ativa:c.ativa!==false, ordem:c.ordem||0 }) },
   espaco:   { tabela:"espacos", para: e => ({ id:e.id, nome:e.nome, descricao:e.descricao, cor:e.cor, ativo:e.ativo, so_admin_publica:e.soAdminPublica, ordem:e.ordem||0 }) },
   mensagem: { tabela:"mensagens", para: m => ({ id:m.id, espaco_id:m.espacoId, autor_id:m.autorId || API.utilizador.id,
                   texto:m.texto||null, resposta_a:m.respostaA||null, ficheiro:m.ficheiro||null,
@@ -771,7 +767,8 @@ function traduzirErroDados(erro){
 const IMAGENS_DA_ENTIDADE = {
   curso:  [["capa",   "capas/cursos"]],
   aula:   [["capa",   "capas/aulas"]],
-  banner: [["imagem", "banners"]]
+  banner: [["imagem", "banners"]],
+  comunidade: [["imagem", "comunidades"]]
 };
 
 async function curarImagens(entidade, registo){
@@ -995,61 +992,6 @@ function ligarAcessoEmDireto(){
   document.addEventListener("visibilitychange", () => {
     if(document.visibilityState === "visible") setTimeout(reverAcesso, 1200);
   });
-}
-
-function ligarComunidadeEmDireto(){
-  if(modoDemonstracao()) return;
-  API.ouvirComunidade((tipo, carga) => {
-    const mudou = tipo === "mensagem"
-      ? aplicarMensagemEmDireto(carga)
-      : aplicarReacaoEmDireto(carga);
-    if(mudou && estado.viewAtual === "comunidade") renderComunidade();
-  });
-}
-
-function aplicarMensagemEmDireto(carga){
-  const eu = API.utilizador ? API.utilizador.id : null;
-
-  if(carga.eventType === "DELETE"){
-    const id = (carga.old || {}).id;
-    if(!id) return false;
-    const antes = DB.posts.length;
-    DB.posts = DB.posts.filter(p => String(p.id) !== String(id));
-    return DB.posts.length !== antes;
-  }
-
-  const nova = deMensagem(carga.new);
-  const existente = DB.posts.find(p => String(p.id) === String(nova.id));
-
-  if(existente){
-    /* Os gostos vivem noutra tabela: não os deitamos fora ao atualizar. */
-    Object.assign(existente, nova, { likes:existente.likes, curtido:existente.curtido });
-    return true;
-  }
-  if(carga.eventType !== "INSERT") return false;
-
-  DB.posts.unshift(nova);
-  if(nova.autorId !== eu) notificarMensagemNova(nova);
-  return true;
-}
-
-function aplicarReacaoEmDireto(carga){
-  const eu = API.utilizador ? API.utilizador.id : null;
-  const linha = carga.new && carga.new.mensagem_id ? carga.new : carga.old;
-  if(!linha) return false;
-  if(linha.utilizador_id === eu) return false;   // o nosso gosto já está contado
-
-  const post = DB.posts.find(p => String(p.id) === String(linha.mensagem_id));
-  if(!post) return false;
-  post.likes = Math.max(0, post.likes + (carga.eventType === "INSERT" ? 1 : -1));
-  return true;
-}
-
-/* Uma mensagem nova noutro espaço não deve passar despercebida. */
-function notificarMensagemNova(mensagem){
-  if(estado.viewAtual === "comunidade" && (estado.espacoComunidade || "geral") === (mensagem.espacoId || "geral")) return;
-  const espaco = (DB.espacos || []).find(e => e.id === mensagem.espacoId);
-  mostrarToast(`${mensagem.autor} escreveu em ${espaco ? espaco.nome : "Comunidade"}`);
 }
 
 /* ============================================================

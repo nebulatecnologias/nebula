@@ -743,8 +743,10 @@ function atualizarSidebarGlobal(){
   if(dotCert){ const temCertificado = DB.cursos.some(c=>progressoCurso(c).pct===100); dotCert.classList.toggle("hidden", !temCertificado); }
   const dotCal = document.getElementById("dot-calendario");
   if(dotCal){ const proximoEm7Dias = DB.eventos.some(e=>{ const d=diasAte(new Date(e.data+"T"+e.hora+":00")); return d>=0 && d<=7; }); dotCal.classList.toggle("hidden", !proximoEm7Dias); }
+  /* A Comunidade deixou de ter conversa própria (fase 5): não há nada de
+     novo para assinalar lá dentro. */
   const dotCom = document.getElementById("dot-comunidade");
-  if(dotCom) dotCom.classList.remove("hidden");
+  if(dotCom) dotCom.classList.add("hidden");
   const naoLidas = DB.notificacoes.filter(n=>!n.lida).length;
   const notifBadge = document.getElementById("notif-badge");
   if(notifBadge){ notifBadge.textContent = naoLidas; notifBadge.classList.toggle("hidden", naoLidas===0); }
