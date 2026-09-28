@@ -515,6 +515,22 @@ input,textarea{ caret-color:var(--accent); }
 .oferta-linha{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
 .oferta-preco{ display:inline-flex; align-items:center; height:30px; padding:0 13px; border-radius:999px; background:var(--orange-soft); color:var(--orange-ink); font-size:15px; font-weight:500; font-variant-numeric:tabular-nums; }
 .oferta-preco span{ font-size:12.5px; color:inherit; opacity:.8; font-weight:400; margin-left:4px; }
+/* Pré-venda (fase 4): a etiqueta vai em baixo, à esquerda, para não tapar a
+   categoria nem o cadeado; a data vai na legenda, em violeta, como as datas
+   dos encontros. */
+.course-cover .cover-badge.em-breve{ top:auto; bottom:10px; left:10px; right:auto; background:var(--violet-soft) !important; color:var(--violet-ink) !important; }
+.pre-venda{ color:var(--violet-ink); font-weight:500; }
+.aviso-pre-venda{ display:flex; gap:14px; align-items:flex-start; padding:22px 24px; border-radius:var(--r-lg); background:var(--violet-soft); color:var(--violet-ink); }
+.aviso-pre-venda .icon{ width:22px; height:22px; flex:none; margin-top:2px; }
+.aviso-pre-venda h2{ margin:0 0 4px; font-size:17px; color:inherit; }
+.aviso-pre-venda p{ margin:0; color:inherit; opacity:.9; }
+button.chip{ font:inherit; font-size:14px; }
+/* Painel › Vitrine: as retidas à vista, e a data da pré-venda. */
+.aviso-retidas{ padding:18px 22px; margin-bottom:18px; background:var(--amber-soft); border-color:transparent; color:var(--amber-ink); }
+.aviso-retidas h3{ margin:0 0 8px; font-size:15px; color:inherit; }
+.aviso-retidas ul{ margin:0; padding-left:18px; display:grid; gap:4px; font-size:14px; }
+.abre-em{ display:flex; align-items:center; gap:8px; margin-top:8px; font-size:13px; color:var(--muted); }
+.abre-em input{ height:32px; padding:0 8px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px; }
 
 .course-card-acoes{ position:absolute; bottom:10px; right:10px; display:flex; gap:6px; opacity:0; transition:opacity .2s var(--ease); z-index:2; }
 .course-card:hover .course-card-acoes, .course-card-acoes:focus-within{ opacity:1; }
@@ -927,8 +943,6 @@ input,textarea{ caret-color:var(--accent); }
 .curso-resumo-meta .cat-ligacao{ font-weight:500; margin-left:8px; color:var(--orange-ink); }
 .curso-resumo-pct{ display:block; text-align:right; font-size:13px; font-weight:500; color:var(--muted); margin:6px 0 16px; font-variant-numeric:tabular-nums; }
 .curso-resumo .btn-block{ width:100%; }
-.ligacao-vendas{ display:block; text-align:center; margin-top:12px; font-size:13.5px; color:var(--orange-ink); font-weight:500; }
-.ligacao-vendas:hover{ text-decoration:underline; }
 
 .modulo-admin{ margin-bottom:14px; overflow:hidden; }
 .modulo-admin-head{ display:flex; align-items:center; gap:16px; padding:16px 20px; flex-wrap:wrap; }
@@ -1171,6 +1185,7 @@ input,textarea{ caret-color:var(--accent); }
   .course-cover{ margin:6px 6px 0; border-radius:13px; }
   .course-cover .cover-badge{ top:6px; left:6px; height:24px; padding:0 8px; font-size:11.5px; max-width:calc(100% - 12px); overflow:hidden; text-overflow:ellipsis; }
   .course-cover .cover-badge.done, .cover-badge.estado{ top:auto; bottom:6px; right:6px; left:auto; }
+  .course-cover .cover-badge.em-breve{ right:auto; left:6px; }
   .course-cover .cadeado{ width:30px; height:30px; top:6px; right:6px; }
   .cover-sigla{ font-size:30px; }
   .course-body{ padding:10px 12px 12px; }

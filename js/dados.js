@@ -80,6 +80,10 @@ const NAV_ADMIN = [
   ]}
 ];
 
+/* As datas contam a partir de hoje: com datas fixas, a demonstração ficava
+   sem nenhum encontro futuro (nem pré-venda por abrir) poucos dias depois de escrita. */
+const diaDaqui = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+
 const CATEGORIAS_PADRAO = {
   negocios:      { nome:"Negócios",                  cor:"#ff5a1f" },
   mentalidade:   { nome:"Mentalidade",                cor:"#7c9eff" },
@@ -175,7 +179,10 @@ const CURSOS_PADRAO = [
         { id:"he-m2a2", titulo:"Energia antes de tempo", duracao:"08:47", descricao:"Porque geris energia, não apenas minutos." },
         { id:"he-m2a3", titulo:"Revisão semanal de elite", duracao:"06:58", descricao:"O ritual de 20 minutos que mantém tudo o resto no rumo." }
       ]}
-    ]}
+    ]},
+  /* Comprado em pré-venda: ainda sem aulas (ver PRE_VENDA_PADRAO). */
+  { id:"lp", facilitador:"Inês Cumbe", categoria:"espiritualidade", titulo:"Liderança com Propósito", subtitulo:"Liderar a partir do que se é, e não do cargo.",
+    modulos:[] }
 ];
 
 const OFERTAS_PADRAO = [
@@ -189,15 +196,27 @@ const OFERTAS_PADRAO = [
 const VITRINE_PADRAO = [
   { ofertaId:"of1", nome:"Kingdom All Access", preco:2500, moeda:"MZN", mensal:true,
     entrega:"Plano", destaque:true, chamada:"Todos os cursos, mentorias ao vivo e comunidade.",
-    ordem:1, aulas:24, checkout:true, destino:"https://payflow.kingdomcompny.com/all-access",
+    ordem:1, aulas:24, segundos:52200, checkout:true, destino:"https://payflow.kingdomcompny.com/all-access",
     cursos:[{ id:"kt", titulo:"Kingdom Tracktion", subtitulo:"", capa:"", categoria:"negocios", aulas:12, modulos:3 },
             { id:"mi", titulo:"Mentalidade Inquebrável", subtitulo:"", capa:"", categoria:"mentalidade", aulas:12, modulos:3 }] },
   { ofertaId:"of2", nome:"Hábitos de Elite", preco:1200, moeda:"MZN", mensal:false,
-    entrega:"Academia", destaque:false, chamada:"", ordem:2, aulas:8,
+    entrega:"Academia", destaque:false, chamada:"", ordem:2, aulas:8, segundos:10440,
     checkout:true, destino:"https://payflow.kingdomcompny.com/habitos-de-elite",
     cursos:[{ id:"he", titulo:"Hábitos de Elite", subtitulo:"O que se faz todos os dias.",
-              capa:"", categoria:"pessoal", aulas:8, modulos:2 }] }
+              capa:"", categoria:"pessoal", facilitador:"Sara Muchanga", nota:4.5, avaliacoes:12,
+              aulas:8, segundos:10440, modulos:2 }] },
+  /* Pré-venda: ainda sem aulas, posta à venda pela equipa com data. */
+  { ofertaId:"of3", nome:"Oratória para Líderes", preco:1800, moeda:"MZN", mensal:false,
+    entrega:"Academia", destaque:false, chamada:"", ordem:3, aulas:0, segundos:0,
+    emBreve:true, abreEm:diaDaqui(30),
+    checkout:true, destino:"https://payflow.kingdomcompny.com/oratoria",
+    cursos:[{ id:"ol", titulo:"Oratória para Líderes", subtitulo:"Falar em público sem perder a voz nem o fio.",
+              capa:"", categoria:"negocios", facilitador:"Inês Cumbe", aulas:0, modulos:0 }] }
 ];
+
+/* Um curso comprado em pré-venda, ainda sem aulas. Com servidor vem de
+   pre_venda_dos_meus_cursos(). */
+const PRE_VENDA_PADRAO = [{ cursoId:"lp", abreEm:diaDaqui(45) }];
 
 const TURMAS_PADRAO = [
   { id:"t1", nome:"Kingdom Tracktion · Turma 2", cursoId:"kt", inicio:"2026-09-01", fim:"2026-12-15", membros:["m1","m7"], ativa:true },
@@ -208,7 +227,7 @@ const TURMAS_PADRAO = [
    está na oferta que o vende, no Payflow. Enquanto estiveram nos dois sítios,
    os dois números discordavam. */
 const PLANOS_PADRAO = [
-  { id:"all-access", nome:"Kingdom All Access", descricao:"Tudo o que há na academia.", ofertaId:null, cursos:["kt","mi","he"], ordem:1 },
+  { id:"all-access", nome:"Kingdom All Access", descricao:"Tudo o que há na academia.", ofertaId:null, cursos:["kt","mi","he","lp"], ordem:1 },
   { id:"essencial",  nome:"Essencial",          descricao:"Os dois cursos de base.",    ofertaId:null, cursos:["mi","he"],      ordem:2 }
 ];
 
@@ -233,9 +252,6 @@ const CURSO_STATS_PADRAO = {
   he:{ inscritos:41,  avaliacao:4.5, conclusao:19 }
 };
 
-/* As datas contam a partir de hoje: com datas fixas, a demonstração ficava
-   sem nenhum encontro futuro poucos dias depois de escrita. */
-const diaDaqui = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 
 const EVENTOS_PADRAO = [
   { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:diaDaqui(3), hora:"19:00", tipo:"Mentoria ao vivo", link:"https://exemplo.com/sala", acesso:"gratuito",
@@ -368,6 +384,7 @@ function dbPadrao(){
     planos: PLANOS_PADRAO,
     ofertas: OFERTAS_PADRAO,
     vitrine: VITRINE_PADRAO,
+    preVenda: PRE_VENDA_PADRAO,
     cursoStats: CURSO_STATS_PADRAO,
     posts: POSTS_PADRAO,
     espacos: ESPACOS_PADRAO,
@@ -492,6 +509,7 @@ const estado = {
   tema: null,
   onboarding: null,
   filtroCategoria: "todos",
+  filtroVitrine: "todos",
   abaAdmin: "alunos",
   filtroCategoriaAdmin: "todos",
   buscaAdmin: "",

@@ -137,7 +137,6 @@ function renderCourseCardHTML(c, opcoes){
       <span class="cover-badge" style="--c:${cat.cor}">${cat.nome}</span>
       ${admin ? `
         ${c.publicado===false ? '<span class="cover-badge estado">Rascunho</span>' : ""}
-        ${c.publicado!==false && c.vitrine===false ? '<span class="cover-badge estado">Fora da vitrine</span>' : ""}
         <div class="course-card-acoes" data-parar>
           <button class="btn-icone" data-editar="${c.id}" title="Editar curso">${ICONS.lapis}</button>
           <button class="btn-icone perigo" data-apagar="${c.id}" title="Apagar curso"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
@@ -159,21 +158,27 @@ function renderCourseCardHTML(c, opcoes){
    duração, avaliação e quem dá o curso. O progresso só aparece depois de
    começar -- uma barra a 0% num curso novo não diz nada. */
 function detalhesDoCartaoHTML(c, p){
-  const duracao = duracaoDoCurso(c);
-  const nota = avaliacaoDoCurso(c.id);
+  const progresso = p.concluidas > 0 ? `
+    <div class="course-progress-row"><span class="course-legenda">${p.concluidas} de ${p.total} aulas</span><span class="pct">${p.pct}%</span></div>
+    <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>` : "";
+  return metaDoCartaoHTML({ duracao: duracaoDoCurso(c), nota: avaliacaoDoCurso(c.id),
+                            facilitador: c.facilitador, facilitadorFoto: c.facilitadorFoto })
+    + (progresso ? `<div class="course-progresso">${progresso}</div>` : "");
+}
+
+/* Duração, avaliação e facilitador: o mesmo bloco no cartão do curso e no da
+   Vitrine, para os dois se lerem da mesma maneira. */
+function metaDoCartaoHTML({ duracao, nota, facilitador, facilitadorFoto }){
   const meta = [
     duracao ? `<span class="course-meta-item">${ICONE_RELOGIO}${duracao}</span>` : "",
     nota ? `<span class="course-meta-item nota" title="${nota.n} avaliaç${nota.n === 1 ? "ão" : "ões"}">${ICONS.star}${nota.texto}<span class="nota-n">(${nota.n})</span></span>` : ""
   ].filter(Boolean).join("");
-  const facilitador = c.facilitador ? `
+  const quem = facilitador ? `
     <div class="course-facilitador">
-      <span class="facilitador-foto" ${c.facilitadorFoto ? `style="background-image:url(${c.facilitadorFoto})"` : ""}>${c.facilitadorFoto ? "" : iniciais(c.facilitador)}</span>
-      <span class="facilitador-nome">${textoSeguro(c.facilitador)}</span>
+      <span class="facilitador-foto" ${facilitadorFoto ? `style="background-image:url(${facilitadorFoto})"` : ""}>${facilitadorFoto ? "" : iniciais(facilitador)}</span>
+      <span class="facilitador-nome">${textoSeguro(facilitador)}</span>
     </div>` : "";
-  const progresso = p.concluidas > 0 ? `
-    <div class="course-progress-row"><span class="course-legenda">${p.concluidas} de ${p.total} aulas</span><span class="pct">${p.pct}%</span></div>
-    <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>` : "";
-  return `${meta ? `<div class="course-meta">${meta}</div>` : ""}${facilitador}${progresso ? `<div class="course-progresso">${progresso}</div>` : ""}`;
+  return `${meta ? `<div class="course-meta">${meta}</div>` : ""}${quem}`;
 }
 
 const ICONE_RELOGIO = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
@@ -183,8 +188,11 @@ const ICONE_RELOGIO = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke=
 function avaliacaoDoCurso(cursoId){
   const notas = (DB.avaliacoes || []).filter(a => a.cursoId === cursoId && !a.oculto && a.estrelas > 0).map(a => Number(a.estrelas));
   if(!notas.length) return null;
-  const media = notas.reduce((x, y) => x + y, 0) / notas.length;
-  return { media, n: notas.length, texto: media.toLocaleString("pt-PT", { minimumFractionDigits:1, maximumFractionDigits:1 }) };
+  return notaEmTexto(notas.reduce((x, y) => x + y, 0) / notas.length, notas.length);
+}
+function notaEmTexto(media, n){
+  if(!n || !(media > 0)) return null;
+  return { media, n, texto: Number(media).toLocaleString("pt-PT", { minimumFractionDigits:1, maximumFractionDigits:1 }) };
 }
 
 /* ---------------- Catálogo (Meus Cursos) ---------------- */
@@ -231,59 +239,98 @@ function renderCatalogo(){
 
 /* ---------------- Vitrine ----------------
    O que está à venda, e não os cursos soltos. Um cartão é uma OFERTA: pode
-   trazer um curso ou um plano inteiro, e leva ao checkout onde se paga.
+   trazer um curso ou um plano inteiro, e abre a página da oferta, onde está o
+   botão que leva ao checkout.
 
    Quem decide o que aparece aqui é a base de dados — a função
    vitrine_do_aluno() só devolve ofertas activas, mandadas mostrar, com
-   conteúdo publicado e com pelo menos uma aula lá dentro. Este ecrã desenha
-   o que recebe; não tem critério nenhum próprio, de propósito. Um botão de
-   947 MT em cima de um curso vazio é uma coisa que já aconteceu a uma pessoa
-   a sério, e não é decisão para ficar no browser. */
+   conteúdo publicado e com pelo menos uma aula lá dentro, ou postas em
+   pré-venda pela equipa. Este ecrã desenha o que recebe; não tem critério
+   nenhum próprio, de propósito. Um botão de 947 MT em cima de um curso vazio
+   é uma coisa que já aconteceu a uma pessoa a sério, e não é decisão para
+   ficar no browser.
+
+   As categorias são as dos cursos (decisão do Shelton, 27/09/2026); um pacote
+   de vários cursos fica em «Planos». Só aparecem as que têm alguma coisa. */
+function categoriaDaOferta(o){
+  return (o.entrega === "Plano" || o.cursos.length > 1) ? "planos" : ((o.cursos[0] || {}).categoria || "");
+}
+
 function renderVitrine(){
   const montra = DB.vitrine || [];
+  const presentes = new Set(montra.map(categoriaDaOferta));
+  const chips = [{ id:"todos", nome:"Todas" },
+    ...Object.entries(DB.categorias).filter(([id]) => presentes.has(id)).map(([id, c]) => ({ id, nome:c.nome, cor:c.cor })),
+    ...(presentes.has("planos") ? [{ id:"planos", nome:"Planos" }] : [])];
+  if(!chips.some(c => c.id === estado.filtroVitrine)) estado.filtroVitrine = "todos";
+  const lista = estado.filtroVitrine === "todos" ? montra : montra.filter(o => categoriaDaOferta(o) === estado.filtroVitrine);
+
   document.getElementById("content-vitrine").innerHTML = `
     <div class="page-head">
       <h1>Disponível para desbloquear</h1>
       <p class="desc">O que ainda não faz parte do teu acesso. Toca num para veres como entrar.</p>
     </div>
+    ${chips.length > 2 ? `<div class="chip-row" id="vitrine-chips" role="group" aria-label="Categorias">
+      ${chips.map(ch => `<button type="button" class="chip ${estado.filtroVitrine === ch.id ? "active" : ""}" data-cat="${ch.id}" aria-pressed="${estado.filtroVitrine === ch.id}">${ch.cor ? `<span class="dot" style="--c:${ch.cor}"></span>` : ""}${ch.nome}</button>`).join("")}
+    </div>` : ""}
     <div class="course-grid" id="vitrine-grid">
-      ${montra.length ? montra.map(cartaoDaVitrine).join("")
+      ${lista.length ? lista.map(cartaoDaVitrine).join("")
+        : montra.length ? `<div class="empty-note">Nada nesta categoria de momento.</div>`
         : `<div class="empty-note">Já tens acesso a tudo o que está disponível. Bom trabalho.</div>`}
     </div>
   `;
+  document.querySelectorAll("#vitrine-chips .chip").forEach(el => el.addEventListener("click", () => {
+    estado.filtroVitrine = el.getAttribute("data-cat");
+    renderVitrine();
+  }));
   /* O cartão abre a página da oferta, cá dentro. O checkout é o botão dela:
      ninguém é mandado para fora sem antes ver o que está a comprar. */
-  document.querySelectorAll("#vitrine-grid .course-card").forEach(el =>
-    el.addEventListener("click", () => irPara("oferta", el.getAttribute("data-oferta"))));
+  document.querySelectorAll("#vitrine-grid .course-card").forEach(el => {
+    const abrir = () => irPara("oferta", el.getAttribute("data-oferta"));
+    el.addEventListener("click", abrir);
+    el.addEventListener("keydown", ev => { if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); abrir(); } });
+  });
+}
+
+/* «Pré-venda: as aulas abrem a 1 de novembro». Sem data, «em breve». */
+function textoDaPreVenda(abreEm){
+  return abreEm ? `Pré-venda: as aulas abrem a ${dataCurta(abreEm)}` : "Pré-venda: as aulas abrem em breve";
 }
 
 function cartaoDaVitrine(o){
   /* A capa e a categoria são do primeiro curso; num plano, é a cara do
-     pacote. O resto vai na legenda, que é onde cabe dizer quantos são. */
+     pacote. O cartão é o do curso (duração, avaliação, facilitador), com o
+     preço por baixo. */
   const primeiro = o.cursos[0] || {};
   const cat = categoriaDe(primeiro.categoria);
   const varios = o.cursos.length > 1;
-  const legenda = varios
-    ? `${o.cursos.length} cursos · ${o.aulas} aula${o.aulas === 1 ? "" : "s"}`
+  const titulo = varios ? o.nome : (primeiro.titulo || o.nome);
+  const meta = varios
+    ? metaDoCartaoHTML({ duracao: duracaoEmTexto(o.segundos) })
+    : metaDoCartaoHTML({ duracao: duracaoEmTexto(primeiro.segundos), nota: notaEmTexto(primeiro.nota, primeiro.avaliacoes),
+                         facilitador: primeiro.facilitador, facilitadorFoto: primeiro.facilitadorFoto });
+  const legenda = o.emBreve && !o.aulas
+    ? `<span class="pre-venda">${textoDaPreVenda(o.abreEm)}</span>`
+    : varios ? `${o.cursos.length} cursos · ${o.aulas} aula${o.aulas === 1 ? "" : "s"}`
     : `${primeiro.modulos || 0} módulo${primeiro.modulos === 1 ? "" : "s"} · ${o.aulas} aula${o.aulas === 1 ? "" : "s"}`;
 
-  return `<div class="card course-card bloqueado vitrine" data-oferta="${o.ofertaId}">
+  return `<div class="card course-card bloqueado vitrine" data-oferta="${o.ofertaId}" role="link" tabindex="0" aria-label="${textoSeguro(titulo)}">
     <div class="course-cover ${primeiro.capa?"com-capa":""}" style="--field:${campoDoCurso(primeiro.id || o.ofertaId)};${primeiro.capa?`background-image:url(${primeiro.capa})`:""}">
       ${primeiro.capa ? "" : `<span class="cover-sigla" aria-hidden="true">${primeiro.sigla || (primeiro.titulo||o.nome||"").split(/\s+/).filter(Boolean).map(x=>x[0]).join("").slice(0,3).toUpperCase()}</span>`}
       <span class="cover-badge" style="--c:${cat.cor}">${varios ? "Plano" : cat.nome}</span>
+      ${o.emBreve ? '<span class="cover-badge estado em-breve">Em breve</span>' : ""}
       <span class="cadeado" aria-label="Por desbloquear">${ICONS.cadeado}</span>
     </div>
     <div class="course-body">
-      <h3>${varios ? o.nome : primeiro.titulo}</h3>
-      <p class="course-desc">${o.chamada || (varios ? o.cursos.map(c=>c.titulo).join(" · ") : (primeiro.subtitulo||""))}</p>
-      <div class="course-progress-row">
-        <span class="course-legenda">${legenda}</span>
-      </div>
+      <h3>${textoSeguro(titulo)}</h3>
+      <p class="course-desc">${textoSeguro(o.chamada || (varios ? o.cursos.map(c=>c.titulo).join(" · ") : (primeiro.subtitulo||"")))}</p>
+      ${meta}
+      <div class="course-progress-row"><span class="course-legenda">${legenda}</span></div>
       <div class="oferta-linha">
         <span class="oferta-preco">${ICONS.cadeado}${formatarPreco(o.preco, o.moeda)}${o.mensal ? "<span>/mês</span>" : ""}</span>
       </div>
-      <button class="btn btn-secondary btn-block btn-sm" data-desbloquear="${o.ofertaId}">
-        ${o.checkout ? "Quero este acesso" : "Saber como entrar"} ${setaCirculo()}</button>
+      <button class="btn btn-secondary btn-block btn-sm" data-desbloquear="${o.ofertaId}" tabindex="-1">
+        ${o.emBreve ? "Garantir na pré-venda" : "Ver como desbloquear"} ${setaCirculo()}</button>
     </div>
   </div>`;
 }
@@ -306,7 +353,10 @@ function duracaoDoCurso(curso){
     if(partes.length===3 && !partes.some(isNaN)) segundos += partes[0]*3600 + partes[1]*60 + partes[2];
     else if(partes.length===2 && !partes.some(isNaN)) segundos += partes[0]*60 + partes[1];
   }));
-  if(!segundos) return null;
+  return duracaoEmTexto(segundos);
+}
+function duracaoEmTexto(segundos){
+  if(!(segundos > 0)) return null;
   const h = Math.floor(segundos/3600), min = Math.round((segundos%3600)/60);
   return h ? `${h}h ${String(min).padStart(2,"0")}m` : `${min}m`;
 }
@@ -355,6 +405,10 @@ function renderCurso(cursoId){
   const duracao = duracaoDoCurso(curso);
   const loc = localizarAula(curso.id, estado.ultimaAulaPorCurso[curso.id]) || primeiraAulaDoCurso(curso);
   const assinatura = DB.config.certificado.assinaturaNome;
+  /* Quem comprou em pré-venda entra aqui antes de haver aulas: em vez de um
+     curso vazio, diz-se quando abrem (decisão do Shelton, 27/09/2026). O
+     servidor é que sabe se o curso está em pré-venda. */
+  const preVenda = !total && (DB.preVenda || []).find(x => x.cursoId === curso.id);
   const html = `
     <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
     <div class="card curso-hero ${curso.capa?"com-capa":""}" style="--field:${campoDoCurso(curso.id)};">
@@ -365,24 +419,29 @@ function renderCurso(cursoId){
         <p class="curso-hero-desc">${curso.subtitulo||""}</p>
         <div class="curso-hero-meta">
           ${duracao ? `<span>${duracao}</span>` : ""}
-          <span>${total} conteúdo${total===1?"":"s"}</span>
+          ${preVenda ? '<span class="pre-venda">Pré-venda</span>' : `<span>${total} conteúdo${total===1?"":"s"}</span>`}
           ${(() => { const nota = avaliacaoDoCurso(curso.id); return nota ? `<span class="course-meta-item nota">${ICONS.star}${nota.texto} <span class="nota-n">(${nota.n})</span></span>` : ""; })()}
           ${curso.facilitador
             ? `<span class="course-facilitador no-hero"><span class="facilitador-foto" ${curso.facilitadorFoto ? `style="background-image:url(${curso.facilitadorFoto})"` : ""}>${curso.facilitadorFoto ? "" : iniciais(curso.facilitador)}</span><strong>Com ${textoSeguro(curso.facilitador)}</strong></span>`
             : (assinatura ? `<strong>Originais · ${assinatura}</strong>` : "")}
         </div>
         ${turmaDoCurso ? `<p class="curso-hero-turma">Turma de ${dataCurta(turmaDoCurso.inicio)} a ${dataCurta(turmaDoCurso.fim)}.</p>` : ""}
-        <div class="curso-hero-progresso">
+        ${preVenda ? "" : `<div class="curso-hero-progresso">
           <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
           <span>${p.pct}%</span>
         </div>
         <div class="curso-hero-acoes">
           ${loc ? `<button class="btn btn-primary" id="btn-continuar-curso">${p.concluidas ? "Continuar de onde parei" : "Começar agora"} ${setaCirculo()}</button>` : ""}
           ${certificadoDesbloqueado(curso) ? `<button class="btn btn-secondary" id="btn-ver-certificado-curso">Ver certificado</button>` : ""}
-        </div>
+        </div>`}
       </div>
     </div>
-    <div class="section-title"><h2>Conteúdo do curso</h2><span class="sub-celula">${curso.modulos.length} módulo${curso.modulos.length===1?"":"s"} · ${p.concluidas} de ${p.total} aulas concluídas</span></div>
+    ${preVenda
+      ? `<div class="aviso-pre-venda" role="status">${ICONE_RELOGIO}<div>
+           <h2>${textoDaPreVenda(preVenda.abreEm)}</h2>
+           <p>Compraste na pré-venda. O curso já é teu; as aulas aparecem aqui assim que abrirem.</p>
+         </div></div>`
+      : `<div class="section-title"><h2>Conteúdo do curso</h2><span class="sub-celula">${curso.modulos.length} módulo${curso.modulos.length===1?"":"s"} · ${p.concluidas} de ${p.total} aulas concluídas</span></div>`}
     <div id="lista-modulos"></div>
   `;
   document.getElementById("content-curso").innerHTML = html;

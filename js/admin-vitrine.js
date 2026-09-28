@@ -26,8 +26,9 @@ async function renderAdminVitrine(){
       cobranca: v.mensal ? "Recorrente mensal" : "Cobrança única",
       entrega: v.entrega, estado: "Ativa", atalho: "demo", mostrar: true,
       temLinha: true, destaque: v.destaque, chamada: v.chamada, ordem: v.ordem,
+      emBreve: !!v.emBreve, abreEm: v.abreEm || null,
       plano: v.entrega === "Plano" ? v.nome : null,
-      cursos: v.cursos.map(c => ({ id:c.id, titulo:c.titulo, naVitrine:true, aulas:c.aulas }))
+      cursos: v.cursos.map(c => ({ id:c.id, titulo:c.titulo, categoria:c.categoria, aulas:c.aulas }))
     }));
   }
 
@@ -61,6 +62,8 @@ async function renderAdminVitrine(){
         <div class="stat-label">Retidas por algo em falta</div><div class="stat-value">${marcadas - visiveis}</div></div>
     </div>
 
+    ${retidasHTML(lista)}
+
     <div class="card table-card">
       <div class="table-card-head">
         <h3>Ofertas que entregam conteúdo</h3>
@@ -68,10 +71,10 @@ async function renderAdminVitrine(){
       </div>
       <div class="table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Oferta</th><th>Entrega</th><th>Preço</th><th>Estado</th><th>Na Vitrine</th></tr></thead>
+          <thead><tr><th>Oferta</th><th>Entrega</th><th>Preço</th><th>Estado</th><th>Pré-venda</th><th>Na Vitrine</th></tr></thead>
           <tbody>
             ${lista.length ? lista.map(linhaDaVitrine).join("")
-              : `<tr><td colspan="5"><div class="empty-note">Ainda não há ofertas que entreguem conteúdo da Academia. Cria-as no Payflow e liga-as a um curso ou a um plano.</div></td></tr>`}
+              : `<tr><td colspan="6"><div class="empty-note">Ainda não há ofertas que entreguem conteúdo da Academia. Cria-as no Payflow e liga-as a um curso ou a um plano.</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -80,6 +83,23 @@ async function renderAdminVitrine(){
 
   document.querySelectorAll("#content-admin [data-vitrine]").forEach(el =>
     el.addEventListener("click", () => alternarNaVitrine(el.getAttribute("data-vitrine"))));
+  document.querySelectorAll("#content-admin [data-pre-venda]").forEach(el => {
+    el.addEventListener("click", () => alternarPreVenda(el.getAttribute("data-pre-venda")));
+    el.addEventListener("keydown", ev => { if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); alternarPreVenda(el.getAttribute("data-pre-venda")); } });
+  });
+  document.querySelectorAll("#content-admin [data-abre-em]").forEach(el =>
+    el.addEventListener("change", () => guardarPreVenda(el.getAttribute("data-abre-em"), true, el.value || null)));
+}
+
+/* As retidas à vista, em cima: uma oferta marcada que não chega ao aluno é
+   uma venda que a equipa julga que está a fazer e não está. */
+function retidasHTML(lista){
+  const retidas = lista.filter(o => o.mostrar).map(o => ({ o, motivo: motivoDeNaoAparecer(o) })).filter(x => x.motivo);
+  if(!retidas.length) return "";
+  return `<div class="card aviso-retidas" role="status">
+    <h3>${retidas.length === 1 ? "Uma oferta marcada não aparece" : `${retidas.length} ofertas marcadas não aparecem`}</h3>
+    <ul>${retidas.map(({ o, motivo }) => `<li><strong>${textoSeguro(o.nome)}</strong> — ${motivo}.</li>`).join("")}</ul>
+  </div>`;
 }
 
 /* Porque é que esta oferta não chega ao aluno, mesmo estando marcada.
@@ -95,11 +115,10 @@ function motivoDeNaoAparecer(o){
       : "não tem curso ligado";
   }
 
-  const naVitrine = cursos.filter(c => c.naVitrine !== false);
-  if(!naVitrine.length) return "o conteúdo está escondido da vitrine em Conteúdos";
-
-  const aulas = naVitrine.reduce((s,c) => s + (c.aulas || 0), 0);
-  if(!aulas) return "o que entrega ainda não tem nenhuma aula";
+  /* Sem aulas só entra em pré-venda, e a pré-venda liga-se à mão: nunca
+     sozinha (decisão do Shelton, 27/09/2026). */
+  const aulas = cursos.reduce((s,c) => s + (c.aulas || 0), 0);
+  if(!aulas && !o.emBreve) return "o que entrega ainda não tem nenhuma aula (liga a pré-venda para a vender antes)";
 
   return null;
 }
@@ -128,14 +147,21 @@ function linhaDaVitrine(o){
     ? `<div class="sub-celula" style="margin-top:6px">Sem atalho no Payflow — o botão leva à página de vendas em vez do checkout.</div>`
     : "";
 
+  const categoria = (o.entrega === "Plano" || cursos.length > 1) ? "Planos" : (cursos[0] ? categoriaDe(cursos[0].categoria).nome : "");
+  const preVenda = `
+      <div class="toggle ${o.emBreve ? "on" : ""}" data-pre-venda="${o.ofertaId}" role="switch" aria-checked="${!!o.emBreve}" aria-label="Pré-venda de ${textoSeguro(o.nome)}" tabindex="0"><div class="knob"></div></div>
+      ${o.emBreve ? `<label class="abre-em"><span>Abre a</span><input type="date" value="${o.abreEm || ""}" data-abre-em="${o.ofertaId}" aria-label="Data em que as aulas abrem"></label>
+        ${aulas ? `<div class="sub-celula">Já tem aulas: a pré-venda pode ser desligada.</div>` : ""}` : ""}`;
+
   return `<tr class="${o.mostrar && motivo ? "tint-risco" : ""}">
     <td>
       <div class="nome" style="font-weight:500;">${o.nome}</div>
       ${aviso}${semCaminho}
     </td>
-    <td>${entrega}</td>
+    <td>${entrega}${categoria ? `<div class="sub-celula">Categoria: ${categoria}</div>` : ""}</td>
     <td class="num">${formatarPreco(Number(o.preco)||0, o.moeda)}${o.cobranca === "Recorrente mensal" ? "<div class=\"sub-celula\">por mês</div>" : ""}</td>
     <td><span class="pill ${o.estado === "Ativa" ? "pill-ativo" : "pill-inativo"}">${o.estado}</span></td>
+    <td>${preVenda}</td>
     <td>
       <div class="toggle ${o.mostrar ? "on" : ""}" data-vitrine="${o.ofertaId}" title="${o.mostrar ? "Esconder do aluno" : "Mostrar ao aluno"}"><div class="knob"></div></div>
     </td>
@@ -161,6 +187,31 @@ async function alternarNaVitrine(ofertaId){
       : `"${o.nome}" passa a aparecer na Vitrine`);
   } catch(e){
     o.mostrar = !passaA;
+    renderAdminVitrine();
+    avisarQueNaoGuardou(e);
+  }
+}
+
+function alternarPreVenda(ofertaId){
+  const o = ofertasDaVitrine.find(x => String(x.ofertaId) === String(ofertaId));
+  if(o) guardarPreVenda(ofertaId, !o.emBreve, o.abreEm);
+}
+
+/* Ligar a pré-venda não põe a oferta à vista (é o outro interruptor), e
+   quem comprar recebe o acesso logo -- o curso diz-lhe quando as aulas abrem. */
+async function guardarPreVenda(ofertaId, emBreve, abreEm){
+  const o = ofertasDaVitrine.find(x => String(x.ofertaId) === String(ofertaId));
+  if(!o) return;
+  const antes = { emBreve: o.emBreve, abreEm: o.abreEm };
+  o.emBreve = emBreve; o.abreEm = emBreve ? abreEm : null;
+  renderAdminVitrine();
+  try {
+    if(!modoDemonstracao()) await API.preVendaNaVitrine(ofertaId, emBreve, o.abreEm);
+    mostrarToast(!emBreve ? `"${o.nome}" deixa de estar em pré-venda`
+      : o.abreEm ? `Pré-venda: as aulas de "${o.nome}" abrem a ${dataCurta(o.abreEm)}`
+      : `"${o.nome}" em pré-venda, sem data`);
+  } catch(e){
+    Object.assign(o, antes);
     renderAdminVitrine();
     avisarQueNaoGuardou(e);
   }

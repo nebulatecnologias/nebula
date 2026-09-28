@@ -132,6 +132,11 @@ const API = {
     const { data: montra } = await c.rpc("vitrine_do_aluno");
     DB.vitrine = (montra || []).map(deVitrine);
 
+    /* Os cursos que esta pessoa comprou em pré-venda: entra e vê quando as
+       aulas abrem, em vez de um curso vazio. */
+    const { data: preVenda } = await c.rpc("pre_venda_dos_meus_cursos");
+    DB.preVenda = preVenda || [];
+
     DB.categorias  = Object.fromEntries(categorias.map(r => [r.id, { nome:r.nome, cor:r.cor }]));
     DB.cursos      = cursos.map(deCurso);
     DB.espacos     = espacos.map(deEspaco);
@@ -237,10 +242,12 @@ const API = {
      para o ecrã só se redesenhar quando há razão. */
   async relerAcesso(){
     const c = this.cliente;
-    const [{ data: meus }, { data: montra }] = await Promise.all([
+    const [{ data: meus }, { data: montra }, { data: preVenda }] = await Promise.all([
       c.rpc("meus_cursos"),
-      c.rpc("vitrine_do_aluno")
+      c.rpc("vitrine_do_aluno"),
+      c.rpc("pre_venda_dos_meus_cursos")
     ]);
+    DB.preVenda = preVenda || [];
     const cursos = (meus || []).map(r => (typeof r === "string" ? r : r.meus_cursos));
     const vitrine = (montra || []).map(deVitrine);
 
@@ -272,6 +279,16 @@ const API = {
       p_mostrar: !!mostrar,
       p_destaque: extra && "destaque" in extra ? !!extra.destaque : null,
       p_chamada: extra && "chamada" in extra ? (extra.chamada || null) : null
+    });
+    if(error) throw new Error(traduzirErroDados(error));
+    return data;
+  },
+
+  /* Pré-venda de uma oferta: só a equipa. Ligá-la não a põe à vista -- isso
+     é o interruptor «Na Vitrine». */
+  async preVendaNaVitrine(ofertaId, emBreve, abreEm){
+    const { data, error } = await this.cliente.rpc("vitrine_pre_venda", {
+      p_oferta: Number(ofertaId), p_em_breve: !!emBreve, p_abre_em: emBreve && abreEm ? abreEm : null
     });
     if(error) throw new Error(traduzirErroDados(error));
     return data;
@@ -533,12 +550,15 @@ function deVitrine(r){
     preco: Number(r.preco) || 0, moeda: r.moeda || "MZN",
     mensal: r.cobranca === "Recorrente mensal",
     entrega: r.entrega, destaque: !!r.destaque, chamada: r.chamada || "",
-    ordem: r.ordem || 0, aulas: Number(r.aulas) || 0,
+    ordem: r.ordem || 0, aulas: Number(r.aulas) || 0, segundos: Number(r.segundos) || 0,
+    emBreve: !!r.emBreve, abreEm: r.abreEm || null,
     checkout: !!linkCheckout(r.atalho), destino,
     cursos: (r.cursos || []).map(c => ({
-      id: c.id, titulo: c.titulo, subtitulo: c.subtitulo || "",
+      id: c.id, titulo: c.titulo, subtitulo: c.subtitulo || "", sigla: c.sigla || "",
       capa: c.capa || "", categoria: c.categoria,
-      aulas: Number(c.aulas) || 0, modulos: Number(c.modulos) || 0
+      facilitador: c.facilitador || "", facilitadorFoto: c.facilitadorFoto || "",
+      nota: Number(c.nota) || 0, avaliacoes: Number(c.avaliacoes) || 0,
+      aulas: Number(c.aulas) || 0, segundos: Number(c.segundos) || 0, modulos: Number(c.modulos) || 0
     }))
   };
 }

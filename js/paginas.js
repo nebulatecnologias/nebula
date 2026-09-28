@@ -160,25 +160,37 @@ function renderOferta(id){
   const varios = o.cursos.length > 1;
   const cat = categoriaDe(primeiro.categoria);
   const aulas = `${o.aulas} aula${o.aulas === 1 ? "" : "s"}`;
+  const duracao = duracaoEmTexto(varios ? o.segundos : primeiro.segundos);
+  const nota = varios ? null : notaEmTexto(primeiro.nota, primeiro.avaliacoes);
+  /* Em pré-venda o conteúdo ainda não existe: diz-se quando abre, em vez de
+     «0 aulas», que se leria como um curso vazio. */
+  const preVenda = o.emBreve && !o.aulas;
+  const conteudo = preVenda ? (o.abreEm ? dataCurta(o.abreEm) : "Em breve")
+    : varios ? `${o.cursos.length} cursos · ${aulas}`
+    : `${primeiro.modulos || 0} módulo${primeiro.modulos === 1 ? "" : "s"} · ${aulas}`;
 
   raiz.innerHTML = paginaHTML({
     arte: arteDoCurso(primeiro),
     etiquetas: [
       etiqueta(`${ICONS.cadeado} Por desbloquear`, "bloqueado"),
+      o.emBreve ? etiqueta("Pré-venda", "em-breve") : "",
       varios ? etiqueta("Plano", "") : `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>`
-    ],
+    ].filter(Boolean),
     titulo: varios ? o.nome : (primeiro.titulo || o.nome),
     texto: o.chamada || (varios ? "" : primeiro.subtitulo),
-    detalhes: varios
-      ? [`<span class="rotulo">Inclui</span><strong>${o.cursos.map(c => textoSeguro(c.titulo)).join(" · ")}</strong>`,
-         `<span class="rotulo">Conteúdo</span><strong>${o.cursos.length} cursos · ${aulas}</strong>`]
-      : [`<span class="rotulo">Conteúdo</span><strong>${primeiro.modulos || 0} módulo${primeiro.modulos === 1 ? "" : "s"} · ${aulas}</strong>`],
+    detalhes: [
+      varios ? `<span class="rotulo">Inclui</span><strong>${o.cursos.map(c => textoSeguro(c.titulo)).join(" · ")}</strong>` : "",
+      `<span class="rotulo">${preVenda ? "As aulas abrem" : "Conteúdo"}</span><strong>${conteudo}</strong>`,
+      duracao ? `<span class="rotulo">Duração</span><strong>${duracao}</strong>` : "",
+      nota ? `<span class="rotulo">Avaliação</span><strong>${nota.texto} de 5 · ${nota.n} avaliaç${nota.n === 1 ? "ão" : "ões"}</strong>` : "",
+      !varios && primeiro.facilitador ? `<span class="rotulo">Com</span><strong>${textoSeguro(primeiro.facilitador)}</strong>` : ""
+    ].filter(Boolean),
     acoes: o.destino
-      ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} Desbloquear · ${formatarPreco(o.preco, o.moeda)}${o.mensal ? "/mês" : ""}</a>`
+      ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} ${o.emBreve ? "Garantir na pré-venda" : "Desbloquear"} · ${formatarPreco(o.preco, o.moeda)}${o.mensal ? "/mês" : ""}</a>`
       : "",
-    nota: o.destino
-      ? "O pagamento abre numa página segura do Payflow. Assim que for confirmado, o acesso abre-se aqui."
-      : "Fala com a tua mentoria para desbloqueares isto."
+    nota: !o.destino ? "Fala com a tua mentoria para desbloqueares isto."
+      : preVenda ? `${textoDaPreVenda(o.abreEm)}. O pagamento abre numa página segura do Payflow; assim que for confirmado, o curso aparece em Meus cursos e as aulas vão aparecendo lá.`
+      : "O pagamento abre numa página segura do Payflow. Assim que for confirmado, o acesso abre-se aqui."
   });
   ligarVoltar(raiz);
 }

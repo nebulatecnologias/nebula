@@ -153,7 +153,7 @@ function abrirFormCurso(id){
 
 function renderFormCurso(){
   const curso = estado.cursoNoForm ? cursoPorId(estado.cursoNoForm) : null;
-  const v = curso || { vitrine:true, moderacao:false, publicado:true, certificado:true, abertoATodos:false };
+  const v = curso || { moderacao:false, publicado:true, certificado:true, abertoATodos:false };
 
   document.getElementById("content-admin").innerHTML = `
     <div class="form-page">
@@ -177,10 +177,6 @@ function renderFormCurso(){
               <input type="text" id="f-sigla" maxlength="4" value="${v.sigla||""}" placeholder="PRO">
             </div>
           </div>
-          <div class="field">
-            <label>URL da página de vendas</label>
-            <input type="url" id="f-urlVendas" value="${v.urlVendas||""}" placeholder="https://meusite.co.mz/pagina-de-vendas">
-          </div>
           <div class="campo-linha facilitador">
             <div class="field">
               <label>Facilitador</label>
@@ -197,7 +193,7 @@ function renderFormCurso(){
             <textarea id="f-subtitulo" rows="3" placeholder="Explica o produto e os benefícios de forma clara e breve.">${v.subtitulo||""}</textarea>
           </div>
           <div class="field">
-            <label>Categoria na vitrine</label>
+            <label>Categoria</label>
             <div class="select-wrap" style="display:block;">
               <select id="f-categoria" style="width:100%;">
                 ${opcoesCategorias().map(o=>`<option value="${o.valor}" ${o.valor===v.categoria?"selected":""}>${o.rotulo}</option>`).join("")}
@@ -205,7 +201,6 @@ function renderFormCurso(){
             </div>
           </div>
           ${checkCardHTML("f-abertoATodos", !!v.abertoATodos, "Incluir no plano geral", "Qualquer aluno da academia abre este curso, mesmo sem plano ou inscrição que o inclua.")}
-          ${checkCardHTML("f-vitrine", v.vitrine!==false, "Mostrar curso na vitrine de todos os alunos", "Incentiva a compra do teu conteúdo para alunos ainda não matriculados.")}
           ${checkCardHTML("f-moderacao", !!v.moderacao, "Ativar moderação de comentários", "Revê manualmente todos os comentários antes da publicação.")}
         </div>
       </div>
@@ -276,14 +271,12 @@ function guardarFormCurso(){
   const dados = {
     titulo,
     sigla: document.getElementById("f-sigla").value.trim().toUpperCase() || siglaSugerida(titulo),
-    urlVendas: document.getElementById("f-urlVendas").value.trim(),
     subtitulo: document.getElementById("f-subtitulo").value.trim(),
     categoria: document.getElementById("f-categoria").value,
     capa: document.getElementById("valor-capa").value,
     abertoATodos: document.getElementById("f-abertoATodos").classList.contains("marcado"),
     facilitador: document.getElementById("f-facilitador").value.trim(),
     facilitadorFoto: document.getElementById("valor-facilitadorFoto").value,
-    vitrine: document.getElementById("f-vitrine").classList.contains("marcado"),
     moderacao: document.getElementById("f-moderacao").classList.contains("marcado"),
     publicado: document.getElementById("f-publicado").classList.contains("on"),
     certificado: document.getElementById("f-certificado").classList.contains("on")
@@ -395,7 +388,6 @@ function renderAdminCursoEditor(cursoId){
         <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
         <span class="curso-resumo-pct">${p.pct}%</span>
         <button class="btn btn-contorno btn-block" id="btn-comecar-agora">${total ? "ver como aluno" : "criar primeira aula"}</button>
-        ${curso.urlVendas ? `<a class="ligacao-vendas" href="${linkExterno(curso.urlVendas)}" target="_blank" rel="noopener">Página de vendas ↗</a>` : ""}
       </div>
 
       <div id="lista-modulos-admin"></div>
