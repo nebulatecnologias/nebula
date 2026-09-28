@@ -90,3 +90,17 @@ verificado antes de se mudar.
 - Ligações que existem no esquema e ninguém preenchia: `acessos.inscricao_id`,
   `cursos.oferta_id`, `utilizadores.lead_id`. Ao tocar numa tabela, verificar se
   a coluna de ligação está a ser escrita.
+- **As tabelas da Academia têm FORCE ROW LEVEL SECURITY** (todas menos
+  `planos`, `plano_cursos` e `vitrine`). Até uma migração, que corre como
+  `postgres`, lê essas tabelas pelas regras de leitura — sem sessão, só vê o
+  que um anónimo veria. Uma migração que copie dados de uma tabela para outra
+  tem de confirmar a contagem antes e depois; um `insert … select` que não
+  copia nada não dá erro.
+- Uma versão antiga do painel gravava `""` em vez de `null` em campos de texto
+  opcionais. É a única explicação para o link do único evento que existia não
+  ter chegado a `academia.salas` a 28/09 (o evento é visível à migração, e o
+  filtro era «não nulo e não vazio»). Ao migrar uma coluna, contar vazios e
+  nulos à parte, antes de a apagar.
+- As migrações da Academia vivem em `supabase/migrations/`, com a versão e o
+  nome que ficaram no registo do Supabase. Aplicar com o nome do ficheiro e
+  renomeá-lo para a versão que o Supabase atribuir.
