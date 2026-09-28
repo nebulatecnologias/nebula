@@ -311,7 +311,7 @@ The palette is a warm stone neutral ramp with one admin-configurable accent, sem
 - **Kingdom Orange** (`accent`, default `orange-500`): the solid accent for the active nav icon, active tab-bar icon, editor-tab underline, focus-ring tint, caret, checkbox accent, star ratings, unread dots, the in-progress lesson ring and the banner-dot indicator.
 - **Sunrise CTA Gradient** (`cta-glow` to `cta-deep`, 180deg): the primary button, every progress fill, the play disc on the Continuar thumbnail and video placeholder, the XP badge and onboarding step fills. Its hover lifts to `#ff8b47` → `orange-500`. The report bar charts use a 90deg `orange-400` → `orange-500` gradient instead.
 - **Brand Panel** (160deg `#ff8a45` → `#f25a12` → `#d9470a`): the login brand side, the Aparência login preview and the initials avatar.
-- **Apricot Wash / Burnt Ink** (`accent-soft` / `accent-ink`, defaulting to `orange-soft` / `orange-ink`): selected lesson and checklist rows, pinned chat messages, liked actions, the streak pill and icon tiles. `orange-ink` is also the link colour ("Ver todos" and the login footer links) and the price-pill text.
+- **Apricot Wash / Burnt Ink** (`accent-soft` / `accent-ink`, defaulting to `orange-soft` / `orange-ink`): selected lesson and checklist rows, liked actions, the streak pill and icon tiles. `orange-ink` is also the link colour ("Ver todos" and the login footer links) and the price-pill text.
 
 ### Admin-configurable accent
 The accent lives in Aparência. The accent values `#f4621d` (Kingdom orange) and `#ff5a1f` (the Academy's legacy orange) both count as "the house colour". With either of them, no inline override is written and the full Library palette above applies unchanged. Any other colour `c` is written onto the root element and derives the whole voice from it:
@@ -328,7 +328,7 @@ Because soft and ink are mixed against `surface` and `ink`, a custom accent foll
 ### Tertiary (status)
 - **Done Green** (`green`): the solid "Concluído" pill, completed-lesson check discs, toggles in the on state and the leading row dot for completed or active rows. `green-soft` / `green-ink` are for active and published pills, correct quiz answers and the "done" button state.
 - **Alert Red** (`red`): the solid danger button. `red-soft` / `red-ink` are for errors, wrong answers, the failure bar and soft-danger actions.
-- **Amber soft/ink**: at-risk and draft states, highlighted chat messages and embed warnings. The at-risk row dot is `#d99a00` on an `amber-soft` halo.
+- **Amber soft/ink**: at-risk and draft states, the admin «retidas» notice and embed warnings. The at-risk row dot is `#d99a00` on an `amber-soft` halo.
 - **Blue soft/ink**: honest notices, the preview bar and login notes.
 
 ### Neutral
@@ -454,7 +454,6 @@ Buttons are tactile, rounded and confident. There is one hot button per view, an
 - **Focus:** the border turns `accent` and the focus ring appears. Hover darkens the border to `faint`.
 - **Error / Read-only:** errors are a `red-soft` / `red-ink` notice block. Read-only fields sit on Sunken with `ink-2` text.
 - **Search:** a 46px pill in the top bar and a 40px pill in admin filter bars, with a leading 18px icon.
-- **Chat composer:** a 16px-radius auto-growing textarea beside the send button.
 
 ### Navigation
 - **Sidebar:** 15px/500 `ink-2` items with 18px 1.8-stroke icons, `8px 12px` padding and a 10px radius. Hover fills Sunken. The active item is a white raised tile (Rest shadow) with an accent icon. New-activity dots are 8px accent circles with an `accent-soft` halo. Group labels are 12px/500 `muted`. The student sidebar foot shows overall progress with a gradient bar.
@@ -465,8 +464,14 @@ Buttons are tactile, rounded and confident. There is one hot button per view, an
 A card with a 16:10 cover inset 10px (12px radius). The cover is either the course image (cover-fit) or the course's pastel field with its initials in Cover Initials type. A white 92% category badge with a colour dot sits top-left. The body has a 16.5px title, a two-line `muted` description and a foot row with "2 de 12 aulas" and a tabular percentage over a gradient progress bar.
 - **Concluded:** a solid green badge top-right.
 - **Locked:** the cover is at 50% saturation with a 38px dark translucent padlock disc top-right, and there is no hover lift.
-- **Vitrine:** a hairline-separated offer row with the price pill and a full-width primary button that goes to Payflow.
+- **Vitrine:** the same card with the course meta (duration, rating, facilitator), then a hairline-separated offer row with the price pill and a full-width secondary button. The card opens the offer page inside the Academy; only that page's primary button goes to Payflow. A pre-sale offer adds a violet-soft «Em breve» badge bottom-left on the cover and a violet «Pré-venda: as aulas abrem a …» caption instead of the lesson count.
 - **Admin:** hover reveals white icon-button actions bottom-right. They are always visible on touch.
+
+### Community List
+The Comunidade tab is a list like WhatsApp's group list, inside one card: 52px round photo (or initials on a 16% tint of the channel colour), a 15.5px/500 name, one ellipsised `muted` description line, a 12.5px channel label with its icon in the channel colour (WhatsApp `#25d366`, Telegram `#2aabee`, other violet), and a small secondary «Entrar» button on the right that opens the group in a new tab. Rows are separated by a hairline; there is no composer and no chat.
+
+### Pre-sale Notice
+On a course bought in pre-sale and still without lessons, the module list is replaced by a `violet-soft` / `violet-ink` block (16px corners, clock icon) that says when the lessons open. The hero shows «Pré-venda» instead of the content count and hides the 0% progress bar.
 
 ### Continuar Card (signature)
 The first thing on Início. A 168px 16:10 thumbnail on the course field (or the lesson image) carries a 52px gradient play disc. Beside it are the 21px lesson title, a `muted` "Módulo · Curso" line, a gradient progress bar (max 260px) with "17% do curso", and the view's single primary button "Continuar". The whole card lifts on hover. Under 640px the thumbnail becomes a 72px square and the button hides.

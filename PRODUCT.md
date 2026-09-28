@@ -8,16 +8,18 @@ web
 
 ## Users
 
-- **Alunos:** empresários e líderes, sobretudo em Moçambique, que fazem os cursos da Kingdom (mentalidade, inteligência artificial, marketing e vendas, negócios, espiritualidade, desenvolvimento pessoal). Entram para continuar uma aula onde ficaram, ver o próximo encontro ao vivo, falar na comunidade e acompanhar o seu progresso. Usam tanto o telemóvel como o computador.
+- **Alunos:** empresários e líderes, sobretudo em Moçambique, que fazem os cursos da Kingdom (mentalidade, inteligência artificial, marketing e vendas, negócios, espiritualidade, desenvolvimento pessoal). Entram para continuar uma aula onde ficaram, ver o próximo encontro ao vivo, entrar nos grupos do seu programa e acompanhar o seu progresso. Usam tanto o telemóvel como o computador.
 - **Equipa Kingdom (administradores):** gerem conteúdos, turmas, eventos, vitrine, convites, membros, comunidade, ranking, relatórios, integrações e aparência no painel de administração da mesma aplicação.
 
 ## Product Purpose
 
-Kingdom Academy é a área de membros dos cursos da Kingdom Company, em `membros.kingdomcompny.com`. Junta num só lugar as aulas em vídeo, organizadas em módulos, os encontros ao vivo, a comunidade, as conquistas e os certificados. O sucesso é o aluno voltar e terminar os cursos, e a equipa conseguir gerir tudo sem sair da plataforma.
+Kingdom Academy é a área de membros dos cursos da Kingdom Company, em `membros.kingdomcompny.com`. Junta num só lugar as aulas em vídeo, organizadas em módulos, os encontros ao vivo, os grupos de cada programa, as conquistas e os certificados. O sucesso é o aluno voltar e terminar os cursos, e a equipa conseguir gerir tudo sem sair da plataforma.
 
 ## Positioning
 
-É uma das três plataformas que partilham uma única base de dados: o painel (`dashboard.`), o Payflow (`payflow.`, onde se paga) e a Academia (`membros.`). O acesso a um curso nasce de um pagamento ou convite real no sistema da empresa. Não há um checkout paralelo: a Vitrine da Academia envia sempre para o Payflow.
+É uma das três plataformas que partilham uma única base de dados: o painel (`dashboard.`), o Payflow (`payflow.`, onde se paga) e a Academia (`membros.`). O acesso a um curso nasce de um pagamento ou convite real no sistema da empresa. Não há um checkout paralelo: a Vitrine da Academia envia sempre para o Payflow, e só depois de mostrar a página da oferta dentro da Academia. O que aparece na Vitrine decide-se por oferta, no painel; uma oferta sem aulas só entra em pré-venda, e só quando a equipa a liga.
+
+A conversa entre alunos não vive na Academia: vive nos grupos de cada programa (WhatsApp, Telegram). A aba Comunidade lista-os, e cada aluno só vê — e só recebe o link de — os grupos das ofertas em que está inscrito.
 
 ## Operating Context
 
