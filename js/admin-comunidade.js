@@ -60,7 +60,7 @@ function tabelaAvaliacoesHTML(){
   return `
     <div class="card table-card">
       <div class="table-card-head"><h3>Avaliações das aulas</h3><span class="count">${lista.length} registos</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Aluno</th><th>Aula</th><th>Nota</th><th>Comentário</th><th>Data</th><th>Estado</th><th></th></tr></thead>
           <tbody>
@@ -90,7 +90,7 @@ function tabelaPublicacoesHTML(){
   return `
     <div class="card table-card">
       <div class="table-card-head"><h3>Publicações do chat antigo</h3><span class="count">${lista.length} registos</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Autor</th><th>Espaço</th><th>Publicação</th><th>Reações</th><th>Estado</th><th></th></tr></thead>
           <tbody>
@@ -201,7 +201,7 @@ function renderAdminComunidades(){
     </div>
     <div class="card table-card">
       <div class="table-card-head"><h3>Grupos</h3><span class="count">${lista.length} ${lista.length === 1 ? "grupo" : "grupos"}</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Comunidade</th><th>Canal</th><th>Quem vê</th><th>Estado</th><th></th></tr></thead>
           <tbody>

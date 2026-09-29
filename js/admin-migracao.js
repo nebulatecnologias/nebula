@@ -97,7 +97,7 @@ async function renderAdminMigracao(){
         <h3>O que cada oferta daria</h3>
         <span class="count">${porOferta.length} ofertas com pagamentos confirmados · ${resumo.comConta} ${resumo.comConta === 1 ? "pessoa já tem" : "pessoas já têm"} conta</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Oferta</th><th>Pessoas</th><th>O que entregaria</th><th>Estado</th></tr></thead>
           <tbody>

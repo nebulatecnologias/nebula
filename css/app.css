@@ -712,7 +712,7 @@ button.chip{ font:inherit; font-size:14px; }
 .comunidade{ display:flex; align-items:center; gap:14px; padding:14px 20px; }
 .comunidade + .comunidade{ border-top:1px solid var(--line); }
 .comunidade-foto{ width:52px; height:52px; border-radius:50%; flex:none; background:var(--sunken) center/cover no-repeat; display:grid; place-items:center; }
-.comunidade-foto.sem-foto{ background:color-mix(in srgb, var(--c) 16%, var(--surface)); color:color-mix(in srgb, var(--c) 70%, var(--ink)); font-size:16px; font-weight:600; }
+.comunidade-foto.sem-foto{ background:color-mix(in srgb, var(--c) 16%, var(--surface)); color:color-mix(in srgb, var(--c) 50%, var(--ink)); font-size:16px; font-weight:600; }
 .comunidade-info{ flex:1; min-width:0; }
 .comunidade-nome{ font-size:15.5px; font-weight:500; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .comunidade-desc{ font-size:14px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; }

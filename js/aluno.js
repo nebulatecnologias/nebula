@@ -1026,8 +1026,8 @@ function renderDefinicoes(){
               <p class="hint" style="margin:8px 0 0;">PNG ou JPG. Sem foto, ficam as tuas iniciais.</p>
             </div>
           </div>
-          <div class="field"><label>Nome completo</label><input type="text" id="input-nome" value="${estado.nome}"></div>
-          <div class="field" style="margin-bottom:0;"><label>Email</label><input type="email" value="${estado.email}" disabled></div>
+          <div class="field"><label for="input-nome">Nome completo</label><input type="text" id="input-nome" autocomplete="name" value="${textoSeguro(estado.nome).replace(/"/g,"&quot;")}"></div>
+          <div class="field" style="margin-bottom:0;"><label for="input-email-conta">Email</label><input type="email" id="input-email-conta" value="${textoSeguro(estado.email).replace(/"/g,"&quot;")}" disabled></div>
           <p class="hint" style="margin:8px 0 0;">O email só pode ser alterado por um administrador.</p>
         </div>
         <div class="card settings-card">

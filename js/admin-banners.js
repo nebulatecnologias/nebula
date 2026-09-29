@@ -49,7 +49,7 @@ function renderAdminBanners(){
         <h3>Todos os banners</h3>
         <span class="count">${DB.banners.length} registos · a ordem define a do carrossel</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Banner</th><th>Destino</th><th>Estado</th><th>Ordem</th><th></th></tr></thead>
           <tbody>

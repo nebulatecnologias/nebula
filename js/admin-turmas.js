@@ -42,7 +42,7 @@ function renderAdminTurmas(){
     </div>
     <div class="card table-card">
       <div class="table-card-head"><h3>Todas as turmas</h3><span class="count">${turmas.length} registos</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Turma</th><th>Curso</th><th>Período</th><th>Alunos</th><th>Estado</th><th></th></tr></thead>
           <tbody>
@@ -165,7 +165,7 @@ function modeloCertificadoHTML(){
 
     <div class="card table-card">
       <div class="table-card-head"><h3>Que cursos emitem certificado</h3><span class="count">${DB.cursos.length} cursos</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Curso</th><th>Categoria</th><th>Emite certificado</th></tr></thead>
           <tbody>
@@ -193,7 +193,7 @@ function emitidosCertificadoHTML(){
         <h3>Certificados emitidos</h3>
         <span class="count">${emitidos.length} alunos chegaram aos ${regra}%</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Aluno</th><th>Curso</th><th>Progresso</th><th>Estado</th></tr></thead>
           <tbody>

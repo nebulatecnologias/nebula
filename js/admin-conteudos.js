@@ -109,7 +109,7 @@ function tabelaCategoriasHTML(){
         <h3>Categorias</h3>
         <span class="count">${entradas.length} de ${Object.keys(DB.categorias).length} registos</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Categoria</th><th>Cor</th><th class="num">Cursos</th><th></th></tr></thead>
           <tbody>

@@ -69,7 +69,7 @@ async function renderAdminVitrine(){
         <h3>Ofertas que entregam conteúdo</h3>
         <span class="count">${lista.length} ${lista.length === 1 ? "oferta" : "ofertas"} · as que entregam um link ou nada não entram aqui</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Oferta</th><th>Entrega</th><th>Preço</th><th>Estado</th><th>Pré-venda</th><th>Na Vitrine</th></tr></thead>
           <tbody>

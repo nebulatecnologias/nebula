@@ -70,7 +70,7 @@ function renderAdminRelatorios(){
 
     <div class="section-title"><h2>Desempenho por curso</h2></div>
     <div class="card table-card">
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Curso</th><th>Categoria</th><th class="num">Inscritos</th><th class="num">Conclusão</th><th class="num">Nota das aulas</th><th class="num">Aulas</th></tr></thead>
           <tbody>
@@ -107,7 +107,7 @@ function renderAdminRelatorios(){
     <div class="section-title"><h2>Alunos a precisar de atenção</h2></div>
     <div class="card table-card">
       <div class="table-card-head"><h3>Em risco ou parados</h3><span class="count">${emRisco.length} de ${alunos.length}</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Aluno</th><th>Curso</th><th class="num">Progresso</th><th>Último acesso</th><th>Estado</th></tr></thead>
           <tbody>
@@ -251,7 +251,7 @@ function renderAdminIA(){
 
     <div class="card ia-controlos">
       <div class="field" style="margin:0;">
-        <label>O que queres escrever</label>
+        <label for="sel-tarefa">O que queres escrever</label>
         <div class="select-wrap" style="display:block;">
           <select id="sel-tarefa" style="width:100%;">
             ${TAREFAS_IA.map(t=>`<option value="${t.id}" ${t.id===tarefa?"selected":""}>${t.rotulo}</option>`).join("")}
@@ -259,7 +259,7 @@ function renderAdminIA(){
         </div>
       </div>
       <div class="field" style="margin:0;${def.precisa==="curso"?"":"opacity:.45;pointer-events:none;"}">
-        <label>Sobre que curso</label>
+        <label for="sel-curso-ia">Sobre que curso</label>
         <div class="select-wrap" style="display:block;">
           <select id="sel-curso-ia" style="width:100%;">
             ${DB.cursos.map(c=>`<option value="${c.id}" ${c.id===cursoId?"selected":""}>${c.titulo}</option>`).join("")}
@@ -270,7 +270,7 @@ function renderAdminIA(){
 
     <div class="card ia-resultado">
       <div class="table-card-head"><h3>${def.rotulo}</h3><span class="count">${texto.trim().split(/\s+/).length} palavras</span></div>
-      <textarea id="texto-ia" rows="16">${texto}</textarea>
+      <textarea id="texto-ia" rows="16" aria-label="Texto gerado">${texto}</textarea>
       <div class="linha-acoes">
         <button class="btn btn-secondary" id="btn-copiar-ia">Copiar</button>
         <button class="btn btn-secondary" id="btn-regerar-ia">Gerar de novo</button>

@@ -70,7 +70,7 @@ function tabelaEmblemasHTML(){
   return `
     <div class="card table-card">
       <div class="table-card-head"><h3>Emblemas</h3><span class="count">${lista.length} registos · a ordem é a que o aluno vê</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Emblema</th><th>Desbloqueia com</th><th>Ordem</th><th></th></tr></thead>
           <tbody>
@@ -109,7 +109,7 @@ function tabelaLideresHTML(){
   return `
     <div class="card table-card">
       <div class="table-card-head"><h3>Tabela de líderes</h3><span class="count">${alunos.length} alunos</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>#</th><th>Aluno</th><th>Progresso</th><th>XP</th><th>Nível</th></tr></thead>
           <tbody>

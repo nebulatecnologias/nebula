@@ -53,7 +53,7 @@ function renderAdminEventos(){
         <h3>Todos os eventos</h3>
         <span class="count">${lista.length} de ${DB.eventos.length} registos</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Data</th><th>Evento</th><th>Para quem</th><th>Acesso</th><th>Confirmados</th><th>Estado</th><th></th></tr></thead>
           <tbody>

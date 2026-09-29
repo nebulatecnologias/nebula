@@ -76,7 +76,7 @@ function renderAdminMembros(){
         <h3>Todos os membros</h3>
         <span class="count">${lista.length} de ${DB.membros.length} registos</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Membro</th><th>Plano</th><th>Papel</th><th>Acesso</th><th>Membro desde</th><th>Último acesso</th><th></th></tr></thead>
           <tbody>
@@ -183,7 +183,7 @@ function renderAdminConvites(){
         <span class="count">${convites.length} registos</span>
         <button class="btn btn-secondary btn-sm" type="button" id="btn-atualizar-convites">Atualizar</button>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Quem foi convidado</th><th>Abre desde já</th><th>Enviado</th><th>Estado</th><th></th></tr></thead>
           <tbody>
@@ -423,7 +423,7 @@ function tabelaPlanosHTML(){
         <h3>Planos</h3>
         <span class="count">${planos.length} ${planos.length === 1 ? "plano" : "planos"} · o preço é o da oferta que o vende</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Plano</th><th>Cursos</th><th>Vendido por</th><th>Preço</th><th></th></tr></thead>
           <tbody>
@@ -454,7 +454,7 @@ function tabelaAssinantesHTML(){
   return `
     <div class="card table-card">
       <div class="table-card-head"><h3>Assinantes</h3><span class="count">${DB.membros.length} registos</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Membro</th><th>Plano</th><th>Valor</th><th>Desde</th><th>Estado</th><th></th></tr></thead>
           <tbody>

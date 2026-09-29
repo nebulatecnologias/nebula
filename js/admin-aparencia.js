@@ -128,7 +128,7 @@ function renderAdminConfig(){
       <div class="toggle-row">
         <div><div class="t-title">Intervalo do carrossel de banners</div><div class="t-sub">Tempo entre banners no topo do Calendário.</div></div>
         <div class="select-wrap">
-          <select id="sel-intervalo">
+          <select id="sel-intervalo" aria-label="Intervalo do carrossel de banners">
             ${[15,30,45,60,90,120].map(n=>`<option value="${n}" ${Number(c.bannerIntervalo)===n?"selected":""}>${n} segundos</option>`).join("")}
           </select>
         </div>

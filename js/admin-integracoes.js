@@ -72,7 +72,7 @@ function renderAdminIntegracoes(){
 
     <div class="card table-card">
       <div class="table-card-head"><h3>Aulas por ligar</h3><span class="count">${porLigar.length} sem vídeo</span></div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr><th>Aula</th><th>Curso</th><th>Módulo</th><th></th></tr></thead>
           <tbody>

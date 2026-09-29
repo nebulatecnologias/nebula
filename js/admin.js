@@ -21,7 +21,7 @@ function renderAdminVisaoGeral(){
         <button data-aba="cursos" class="${estado.abaAdmin==="cursos"?"active":""}">Cursos</button>
       </div>
       <div class="search-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="admin-busca" placeholder="Procurar por nome ou curso..." value="${estado.buscaAdmin}"></div>
-      <div class="select-wrap"><select id="admin-filtro-categoria">
+      <div class="select-wrap"><select id="admin-filtro-categoria" aria-label="Filtrar por categoria">
         <option value="todos">Todas as categorias</option>
         ${Object.entries(DB.categorias).map(([id,c])=>`<option value="${id}" ${estado.filtroCategoriaAdmin===id?"selected":""}>${c.nome}</option>`).join("")}
       </select></div>
@@ -62,7 +62,7 @@ function tabelaAdminAlunosHTML(){
         <h3>Atividade dos alunos</h3>
         <span class="count">${lista.length} de ${DB.membros.length} registos</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table tabela-visao">
           <thead><tr>
             <th>Aluno</th><th>Curso</th><th class="col-b">Categoria</th><th class="col-a">Último acesso</th><th class="col-a">Engajamento</th><th>Progresso</th><th>Estágio</th><th class="col-b">Responsável</th>
@@ -101,7 +101,7 @@ function tabelaAdminCursosHTML(){
         <h3>Cursos publicados</h3>
         <span class="count">${lista.length} de ${DB.cursos.length} registos</span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0">
         <table class="admin-table">
           <thead><tr>
             <th>Curso</th><th>Categoria</th><th>Módulos</th><th>Alunos inscritos</th><th>Conclusão média</th><th>Avaliação</th><th>Estado</th>
