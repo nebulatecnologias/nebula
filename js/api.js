@@ -61,11 +61,31 @@ const API = {
     this.utilizador = null;
   },
 
+  /* O email sai pelo Resend, pela função recuperar-password, e não pelo
+     Supabase: o mesmo remetente e o mesmo desenho dos outros emails. A
+     resposta é igual com ou sem conta — nunca se diz quem tem acesso. */
   async pedirNovaPassword(email){
-    const { error } = await this.cliente.auth.resetPasswordForEmail(email, {
-      redirectTo: location.origin + location.pathname + "#nova-password"
+    const { data, error } = await this.cliente.functions.invoke("recuperar-password", {
+      body:{ email, onde:"academia", volta: location.origin + location.pathname + "#nova-password" }
     });
-    if(error) throw new Error(traduzirErroAuth(error));
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || "Não foi possível enviar agora. Tenta daqui a pouco.");
+    }
+    if(data && data.error) throw new Error(data.error);
+  },
+
+  /* O link do email do convite: `?convite=<token>`. O servidor diz se o
+     convite ainda vale e, se valer, devolve o link de entrada. */
+  async abrirConvite(token){
+    const { data, error } = await this.cliente.functions.invoke("convite-entrar", { body:{ token } });
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || "Não foi possível abrir o convite agora. Tenta daqui a pouco.");
+    }
+    return data || { estado:"inexistente" };
   },
 
   async definirPassword(nova){
@@ -195,7 +215,14 @@ const API = {
     DB.convites = linhas.map(deConvite);
   },
 
-  /* Convidar cria a conta, gera o link de entrada e manda o email.
+  /* Revogar não apaga: o convite fica, parado, e deixa de dar entrada. */
+  async revogarConvite(id){
+    const { error } = await this.cliente.from("convites")
+      .update({ revogado_em: new Date().toISOString() }).eq("id", id);
+    if(error) throw new Error(error.message);
+  },
+
+  /* Convidar grava o convite com o prazo e manda o email pelo Resend.
      Corre no servidor: o browser não tem (nem pode ter) essa chave. */
   async convidar(pedido){
     const { data, error } = await this.cliente.functions.invoke("convidar-aluno", { body:pedido });
@@ -593,10 +620,22 @@ function deConvite(c){
     nome: c.nome || "",
     ofertaId: c.oferta_id,
     cursos: c.cursos || [],
-    estado: c.aceite_em ? "aceite" : (new Date(c.expira_em) < new Date() ? "expirado" : "pendente"),
-    criadoEm: (c.criado_em || "").slice(0, 10),
-    expiraEm: (c.expira_em || "").slice(0, 10)
+    idioma: c.idioma || "pt",
+    origem: c.origem || "manual",
+    estado: estadoDaLinhaDoConvite(c),
+    criadoEm: c.criado_em || "",
+    expiraEm: c.expira_em || ""
   };
+}
+
+/* Um estado só, pela ordem do que pesa mais: aceite, revogado, expirado,
+   aberto, enviado. Um convite aceite não «expira» depois. */
+function estadoDaLinhaDoConvite(c){
+  if(c.aceite_em) return "aceite";
+  if(c.revogado_em) return "revogado";
+  if(c.expira_em && new Date(c.expira_em) < new Date()) return "expirado";
+  if(c.aberto_em) return "aberto";
+  return "enviado";
 }
 
 function aplicarConfig(linhas){

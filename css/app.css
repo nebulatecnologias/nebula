@@ -1403,3 +1403,63 @@ button.back-link:hover{ color:var(--ink); }
   .course-card.vitrine .btn{ padding:10px 14px; font-size:14px; }
   .course-card.vitrine .btn .seta-circulo{ display:inline-grid; }
 }
+
+/* ============================================================
+   Convites — no molde do ecrã de convites da Library (29/09/2026):
+   separadores por estado com a contagem, procura à direita, a pessoa com
+   o avatar, o prazo à vista e o estado com um ponto.
+   ============================================================ */
+.so-leitor{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.convites-barra{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:20px 22px 18px; border-bottom:1px solid var(--line); }
+.convites-estados{ display:flex; gap:8px; flex-wrap:wrap; }
+.estado-chip{ display:inline-flex; align-items:center; gap:9px; height:44px; padding:0 8px 0 18px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; font-weight:500; transition:background .15s, border-color .15s, color .15s; }
+.estado-chip:hover{ border-color:var(--line-strong); }
+.estado-chip-conta{ min-width:28px; height:28px; padding:0 8px; border-radius:999px; background:var(--sunken); color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; display:inline-grid; place-items:center; }
+.estado-chip.active{ background:var(--ink); border-color:var(--ink); color:var(--surface); }
+.estado-chip.active .estado-chip-conta{ background:color-mix(in srgb, var(--surface) 22%, transparent); color:var(--surface); }
+.convites-busca{ max-width:300px; }
+
+/* O «Ações» só para leitores de ecrã é absoluto: sem esta âncora, escapava
+   da caixa que desliza e alargava a página inteira no telemóvel. */
+.convites-card .table-wrap{ position:relative; }
+.convites-tabela th, .convites-tabela td{ padding-left:14px; padding-right:14px; }
+.convites-tabela td{ vertical-align:middle; }
+.convites-tabela .convite-cursos{ white-space:normal; min-width:150px; max-width:240px; line-height:1.45; }
+.convites-tabela .acoes-linha{ gap:2px; }
+.pessoa-celula{ display:flex; align-items:center; gap:12px; }
+.pessoa-celula .nome{ font-weight:500; }
+.avatar-iniciais{ width:42px; height:42px; border-radius:999px; flex-shrink:0; display:grid; place-items:center; background:var(--c, var(--accent)); color:#fff; font-size:14px; font-weight:600; letter-spacing:.02em; }
+.etiqueta-idioma{ display:inline-grid; place-items:center; min-width:46px; height:32px; padding:0 10px; border-radius:999px; background:var(--sunken); color:var(--ink-2, var(--ink)); font-size:13px; font-weight:500; }
+.convite-prazo{ white-space:nowrap; }
+.prazo-perto{ color:var(--amber-ink); font-weight:500; }
+.estado-convite{ display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 14px; border-radius:999px; font-size:14px; font-weight:500; white-space:nowrap; }
+.estado-ponto{ width:7px; height:7px; border-radius:99px; background:currentColor; }
+.estado-convite.e-enviado{ background:var(--accent-soft); color:var(--accent-ink); }
+.estado-convite.e-aberto{ background:var(--blue-soft); color:var(--blue-ink); }
+.estado-convite.e-aceite{ background:var(--green-soft); color:var(--green-ink); }
+.estado-convite.e-parado{ background:var(--sunken); color:var(--muted); }
+.convites-tabela .acoes-linha{ justify-content:flex-end; }
+
+/* A gaveta do convite: idioma e prazo lado a lado, os cursos em cartões. */
+.campos-par{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.campos-par .field{ min-width:0; }
+.field-rotulo{ display:block; font-size:13.5px; font-weight:500; color:var(--ink-2); margin-bottom:7px; }
+.checklist.checklist-cartoes{ max-height:none; overflow:visible; border:0; padding:0; background:transparent; gap:10px; }
+/* `.field label` é display:block e mais específico: o cartão tem de o vencer. */
+.field label.checklist-cartao{ display:flex; margin-bottom:0; font-size:15px; font-weight:400; color:var(--ink); }
+.checklist-cartao{ gap:14px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface); font-size:15px; line-height:1.4; color:var(--ink); transition:border-color .15s, background .15s; }
+.checklist-cartao:hover{ background:var(--surface); border-color:var(--line-strong); }
+.checklist-cartao.escolhido{ background:var(--accent-soft); border-color:var(--accent-line); color:var(--ink); font-weight:400; }
+.checklist-cartao input{ flex-shrink:0; width:20px; height:20px; }
+.cartao-mini{ width:50px; height:50px; border-radius:var(--r-md); flex-shrink:0; background:var(--sunken) center/cover no-repeat; }
+.cartao-mini.sem-imagem{ display:grid; place-items:center; background:color-mix(in srgb, var(--c, var(--accent)) 18%, var(--surface)); color:color-mix(in srgb, var(--c, var(--accent)) 40%, var(--ink)); font-size:13px; font-weight:600; }
+.cartao-nome{ flex:1; min-width:0; }
+.cartao-etiqueta{ flex-shrink:0; padding:6px 12px; border-radius:999px; background:var(--sunken); color:var(--muted); font-size:13px; font-weight:500; white-space:nowrap; }
+
+@media (max-width:640px){
+  .convites-barra{ padding:16px; }
+  .convites-busca{ max-width:none; flex-basis:100%; }
+  .estado-chip{ height:38px; padding:0 6px 0 14px; font-size:14px; }
+  .estado-chip-conta{ min-width:24px; height:24px; }
+  .campos-par{ grid-template-columns:1fr; gap:0; }
+}

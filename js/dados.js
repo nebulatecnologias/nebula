@@ -263,6 +263,21 @@ const EVENTOS_PADRAO = [
   { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:diaDaqui(-12), hora:"19:00", tipo:"Masterclass", link:"", acesso:"gratuito" }
 ];
 
+/* Convites, um em cada estado, com pessoas e emails inventados. As datas
+   contam a partir de hoje, para os prazos lerem sempre como deviam. */
+function _haDias(n){ return new Date(Date.now() - n * 864e5).toISOString(); }
+function _daquiA(n){ return new Date(Date.now() + n * 864e5).toISOString(); }
+const CONVITES_PADRAO = [
+  { id:"cv1", codigo:"a1".repeat(24), email:"joana.macie@exemplo.co.mz", nome:"Joana Macie", ofertaId:null,
+    cursos:["kt"], idioma:"pt", origem:"manual", estado:"enviado", criadoEm:_haDias(1), expiraEm:_daquiA(6) },
+  { id:"cv2", codigo:"b2".repeat(24), email:"thandi.mokoena@exemplo.co.za", nome:"Thandi Mokoena", ofertaId:null,
+    cursos:["he", "kt"], idioma:"en", origem:"pagamento", estado:"aberto", criadoEm:_haDias(2), expiraEm:_daquiA(28) },
+  { id:"cv3", codigo:"c3".repeat(24), email:"rui.sitoe@exemplo.co.mz", nome:"Rui Sitoe", ofertaId:null,
+    cursos:["kt"], idioma:"pt", origem:"manual", estado:"aceite", criadoEm:_haDias(5), expiraEm:_daquiA(2) },
+  { id:"cv4", codigo:"d4".repeat(24), email:"lina.cossa@exemplo.co.mz", nome:"", ofertaId:null,
+    cursos:["he"], idioma:"pt", origem:"manual", estado:"expirado", criadoEm:_haDias(10), expiraEm:_haDias(3) }
+];
+
 /* Os grupos de cada programa (fase 5). Com servidor, a base só devolve os
    das ofertas de quem está a ver; aqui são inventados, com links que não
    levam a lado nenhum. */
@@ -406,7 +421,7 @@ function dbPadrao(){
     avaliacoes: AVALIACOES_PADRAO,
     notificacoes: NOTIFICACOES_PADRAO,
     conquistas: CONQUISTAS_PADRAO,
-    convites: [],
+    convites: CONVITES_PADRAO,
   }));
 }
 

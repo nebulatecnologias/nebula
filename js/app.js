@@ -78,6 +78,15 @@ async function arrancar(){
     return;
   }
 
+  /* O link do email do convite: `?convite=<token>`. O servidor diz se o
+     convite ainda vale; se valer, devolve o link de entrada e segue-se
+     para ele. Se não, diz-se porquê, aqui mesmo. */
+  const token = new URLSearchParams(location.search).get("convite");
+  if(token){
+    await abrirConviteDoEmail(token);
+    return;
+  }
+
   /* Link do email: o Supabase devolve a sessão no endereço e o que
      falta é escolher a password. Um convite é a primeira entrada;
      uma recuperação é quem já cá andava e se esqueceu. */
@@ -106,6 +115,35 @@ async function arrancar(){
     aplicarAparencia();
     mostrarEcra("login");
     avisoLogin(erro.message || "Não foi possível ligar à academia.");
+  }
+}
+
+async function abrirConviteDoEmail(token){
+  mostrarEcra("arranque");
+  document.getElementById("arranque-texto").textContent = "A abrir o teu convite...";
+  let r;
+  try { r = await API.abrirConvite(token); }
+  catch(erro){
+    aplicarAparencia(); mostrarEcra("login");
+    avisoLogin(erro.message || "Não foi possível abrir o convite agora. Tenta daqui a pouco.");
+    return;
+  }
+  if(r.estado === "ok" && r.link){ location.replace(r.link); return; }
+
+  /* O token sai do endereço: recarregar não deve voltar a perguntar. */
+  history.replaceState(null, "", location.pathname + location.hash);
+  aplicarAparencia();
+  mostrarEcra("login");
+  if(r.estado === "aceite"){
+    if(r.email) document.getElementById("input-email").value = r.email;
+    avisoLogin("Este convite já foi usado. Entra com o teu email e a tua password.", "nota");
+  } else if(r.estado === "revogado"){
+    avisoLogin("Este convite foi cancelado. Pede um novo a quem te convidou.");
+  } else if(r.estado === "expirado"){
+    const quando = r.expiraEm ? new Date(r.expiraEm).toLocaleDateString("pt-PT", { day:"numeric", month:"long" }) : "";
+    avisoLogin(`Este convite expirou${quando ? " a " + quando : ""}. Pede um novo a quem te convidou.`);
+  } else {
+    avisoLogin("Este link de convite não é válido. Confirma que o abriste inteiro, a partir do email.");
   }
 }
 

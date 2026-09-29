@@ -21,9 +21,9 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
           <h3>${titulo}</h3>
           ${subtitulo ? `<p class="drawer-sub">${subtitulo}</p>` : ""}
         </div>
-        <button class="modal-close" type="button" data-fechar><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <button class="modal-close" type="button" data-fechar aria-label="Fechar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
-      <div class="drawer-body">${campos.map(c=>campoHTML(c, valores[c.nome])).join("")}</div>
+      <div class="drawer-body">${camposHTML(campos, valores)}</div>
       <div class="drawer-foot">
         <button class="btn btn-secondary" type="button" data-fechar>Cancelar</button>
         <button class="btn btn-primary" type="button" id="drawer-guardar">${textoGuardar}</button>
@@ -85,6 +85,25 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
   document.addEventListener("keydown", fecharDrawerComEsc);
 }
 
+/* Dois campos `meia` seguidos ficam lado a lado (ex.: idioma e prazo). */
+function camposHTML(campos, valores){
+  let html = "";
+  for(let i = 0; i < campos.length; i++){
+    const c = campos[i], seguinte = campos[i + 1];
+    if(c.meia && seguinte && seguinte.meia){
+      html += `<div class="campos-par">${campoHTML(c, valores[c.nome])}${campoHTML(seguinte, valores[seguinte.nome])}</div>`;
+      i++;
+    } else html += campoHTML(c, valores[c.nome]);
+  }
+  return html;
+}
+
+/* A miniatura de um cartão da checklist: a capa, ou as iniciais na cor. */
+function miniaturaDoCartao(o){
+  if(o.imagem) return `<span class="cartao-mini" style="background-image:url('${String(o.imagem).replace(/'/g, "%27")}')" aria-hidden="true"></span>`;
+  return `<span class="cartao-mini sem-imagem" style="${o.cor ? `--c:${o.cor}` : ""}" aria-hidden="true">${textoSeguro(o.iniciais || "")}</span>`;
+}
+
 function campoHTML(c, valor){
   const v = valor === undefined || valor === null ? (c.padrao !== undefined ? c.padrao : "") : valor;
   const dica = c.dica ? `<p class="hint">${c.dica}</p>` : "";
@@ -99,10 +118,23 @@ function campoHTML(c, valor){
     return `<div class="field"><label>${c.rotulo}</label><textarea id="valor-${c.nome}" rows="3" placeholder="${c.placeholder||""}">${v}</textarea>${dica}</div>`;
   }
   if(c.tipo==="select"){
-    return `<div class="field"><label>${c.rotulo}</label>
+    return `<div class="field"><label for="valor-${c.nome}">${c.rotulo}</label>
       <div class="select-wrap" style="display:block;"><select id="valor-${c.nome}" style="width:100%;">
         ${c.opcoes.map(o=>`<option value="${o.valor}" ${String(o.valor)===String(v)?"selected":""}>${o.rotulo}</option>`).join("")}
       </select></div>${dica}</div>`;
+  }
+  if(c.tipo==="checklist" && c.cartoes){
+    const escolhidos = Array.isArray(v) ? v : [];
+    return `<div class="field"><span class="field-rotulo" id="rotulo-${c.nome}">${c.rotulo}</span>
+      <div class="checklist checklist-cartoes" id="valor-${c.nome}" role="group" aria-labelledby="rotulo-${c.nome}">
+        ${c.opcoes.length ? c.opcoes.map(o => `
+          <label class="checklist-item checklist-cartao ${escolhidos.includes(o.valor)?"escolhido":""}">
+            <input type="checkbox" value="${o.valor}" ${escolhidos.includes(o.valor)?"checked":""}>
+            ${miniaturaDoCartao(o)}
+            <span class="cartao-nome">${textoSeguro(o.rotulo)}</span>
+            ${o.etiqueta ? `<span class="cartao-etiqueta">${textoSeguro(o.etiqueta)}</span>` : ""}
+          </label>`).join("") : `<div class="empty-note">Ainda não há cursos.</div>`}
+      </div>${dica}</div>`;
   }
   if(c.tipo==="checklist"){
     const escolhidos = Array.isArray(v) ? v : [];
@@ -133,7 +165,7 @@ function campoHTML(c, valor){
     </div>`;
   }
   const tipoInput = c.tipo==="numero" ? "number" : c.tipo==="data" ? "date" : c.tipo==="hora" ? "time" : c.tipo==="url" ? "url" : "text";
-  return `<div class="field"><label>${c.rotulo}</label><input type="${tipoInput}" id="valor-${c.nome}" value="${v}" placeholder="${c.placeholder||""}">${dica}</div>`;
+  return `<div class="field"><label for="valor-${c.nome}">${c.rotulo}</label><input type="${tipoInput}" id="valor-${c.nome}" value="${v}" placeholder="${c.placeholder||""}">${dica}</div>`;
 }
 
 function fecharDrawerComEsc(e){ if(e.key==="Escape") fecharDrawer(); }

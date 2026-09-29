@@ -485,6 +485,17 @@ A 52×56px tile with 12px corners: a 19px tabular day over an 11px month abbrevi
 ### Admin Tables
 These are table cards with no padding and a hairline-separated head (17px title, tabular count, action right). Headers are 12.5px/500 `muted` on `surface-2`. Cells are 14px with `13px 18px` padding, `line` row dividers and `surface-2` on hover. The first cell is usually a user cell (34px initials avatar, 500 name, 12.5px sub-line). Numbers are right-aligned and tabular. Row state is a **7px leading dot** in the first cell with a 3px soft halo: green for completed or active, amber (`#d99a00`) for at-risk or blocked. Rows are never tinted. Secondary columns collapse into sub-lines below 1560px and 1240px.
 
+### Invites Screen (Library pattern)
+Status tabs sit on top of the table card: 44px pill tabs with a 1px `line` border, and a count bubble on `sunken`. The active tab is filled `ink`, with its text and count on `surface`. Search sits at the right. The person cell uses a 42px coloured initials avatar; the colour comes from the email, so each person always gets the same one. The language pill (PT/EN) is on `sunken`, the deadline reads «Expira em N dias» and turns amber when under 24 h, and the status is a 34px pill with a 7px dot:
+- `accent-soft` for Enviado
+- `blue-soft` for Aberto
+- `green-soft` for Aceite
+- `sunken` for Expirado and Revogado
+
+Action icons (resend, copy link, revoke) appear only on invites that are still live; an expired invite keeps resend only.
+
+The «Novo convite» drawer puts Idioma and «O link expira após» side by side (`meia` fields, stacked under 640px). Courses are 16px-radius cards with a 50px cover thumbnail (or initials on the category tint) and a trailing `sunken` tag: «Oculto» when unpublished, «Em breve» when the course has no lessons.
+
 ### Login Split
 Two columns (1.05fr / 1fr) on canvas. On the left is a brand panel inset 14px with 20px corners, filled with `--brand-panel`, soft radial highlights and concentric white rings bottom-right. It carries the crown and wordmark top-left, the admin-editable headline (Display Hero, white, max 18ch) and text, and a footer line. On the right is a **white form card** (max 440px, 22px corners, Rest shadow, `30px 28px` padding) with a 30px title, a `muted` sub, 48px fields and a 52px full-width gradient pill. Below 980px the panel stacks on top and its footer hides. Aparência shows a live miniature of the same split.
 

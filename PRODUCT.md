@@ -23,7 +23,8 @@ A conversa entre alunos não vive na Academia: vive nos grupos de cada programa 
 
 ## Operating Context
 
-- A entrada é por convite. O convite ou a recuperação de password chegam por email (Resend, enviado pelas Edge Functions do Supabase) e levam o aluno a escolher a password.
+- A entrada é por convite. O convite ou a recuperação de password chegam por email (Resend, enviado pelas Edge Functions do Supabase) e levam o aluno a escolher a password. Nenhum email sai pelo Supabase: o `generateLink` só gera o link.
+- Cada convite tem um prazo (1, 3, 7, 14 ou 30 dias; 30 nos convites que nascem de um pagamento). O email leva `?convite=<token>`, e a função `convite-entrar` só gera o link de entrada quando a pessoa o abre, e só enquanto o convite valer. Estados: Enviado, Aberto, Aceite, Expirado, Revogado. Revogar não apaga o convite.
 - Os vídeos das aulas vêm de um provedor externo (Panda Video, YouTube, Vimeo) e são incorporados pela aplicação.
 - A migração dos alunos da plataforma anterior acontece de uma só vez, quando a plataforma estiver pronta. Os testes nunca usam dados de alunos reais.
 

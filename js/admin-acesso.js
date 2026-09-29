@@ -157,50 +157,58 @@ function apagarMembro(id){
 
 /* ============================================================
    Convites
-   A entrada na academia é só por convite da equipa. O convite cria a
-   conta, manda o email com o link de entrada e fica registado: é ele
-   que liberta os cursos escolhidos assim que a pessoa entra.
+   A entrada na academia é por convite. Os de quem paga nascem sozinhos,
+   quando o Payflow confirma o pagamento; os outros envia-os a equipa daqui.
+   Cada convite tem um prazo: o email leva o token dele, e o servidor só
+   deixa entrar enquanto o convite valer (não aceite, não revogado, dentro
+   do prazo). O email sai sempre pelo Resend.
    ============================================================ */
+const ESTADOS_DO_CONVITE = [
+  { id:"todos",    rotulo:"Todos" },
+  { id:"enviado",  rotulo:"Enviado" },
+  { id:"aberto",   rotulo:"Aberto" },
+  { id:"aceite",   rotulo:"Aceite" },
+  { id:"expirado", rotulo:"Expirado" },
+  { id:"revogado", rotulo:"Revogado" }
+];
+const PRAZOS_DO_CONVITE = [1, 3, 7, 14, 30];
+
 function renderAdminConvites(){
   const convites = DB.convites || [];
-  const pendentes = convites.filter(c=>c.estado==="pendente").length;
+  const filtro = estado.filtroConvites || "todos";
+  const busca = (estado.buscaConvites || "").trim().toLowerCase();
+  const contagem = Object.fromEntries(ESTADOS_DO_CONVITE.map(e =>
+    [e.id, e.id === "todos" ? convites.length : convites.filter(c => c.estado === e.id).length]));
+  const visiveis = convites.filter(c =>
+    (filtro === "todos" || c.estado === filtro) &&
+    (!busca || (c.email + " " + (c.nome || "")).toLowerCase().includes(busca)));
 
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Convites",
-      descricao: "Convida alguém para a academia. Recebe um email com o link de entrada e, ao entrar, os cursos escolhidos ficam logo disponíveis.",
+      descricao: "Os convites de quem paga são criados sozinhos quando o Payflow confirma o pagamento. Também podes enviar um à mão.",
       acaoRotulo: "Novo convite",
       acaoId: "btn-novo-convite"
     })}
-    <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon accent">${ICONS.mail}</div><div class="stat-label">À espera de entrar</div><div class="stat-value">${pendentes}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.people}</div><div class="stat-label">Já entraram</div><div class="stat-value">${convites.filter(c=>c.estado==="aceite").length}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.chart}</div><div class="stat-label">Total enviados</div><div class="stat-value">${convites.length}</div></div>
-    </div>
-    <div class="card table-card">
-      <div class="table-card-head">
-        <h3>Convites</h3>
-        <span class="count">${convites.length} registos</span>
-        <button class="btn btn-secondary btn-sm" type="button" id="btn-atualizar-convites">Atualizar</button>
+    <div class="card table-card convites-card">
+      <div class="convites-barra">
+        <div class="convites-estados" role="group" aria-label="Filtrar por estado">
+          ${ESTADOS_DO_CONVITE.map(e => `
+            <button type="button" class="estado-chip ${filtro===e.id?"active":""}" data-estado-convite="${e.id}" aria-pressed="${filtro===e.id}">
+              ${e.rotulo}<span class="estado-chip-conta">${contagem[e.id]}</span>
+            </button>`).join("")}
+        </div>
+        <div class="search-pill convites-busca">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" id="convites-busca" placeholder="Procurar por nome ou email" aria-label="Procurar por nome ou email" value="${textoSeguro(estado.buscaConvites || "").replace(/"/g,"&quot;")}">
+        </div>
       </div>
       <div class="table-wrap" tabindex="0">
-        <table class="admin-table">
-          <thead><tr><th>Quem foi convidado</th><th>Abre desde já</th><th>Enviado</th><th>Estado</th><th></th></tr></thead>
+        <table class="admin-table convites-tabela">
+          <thead><tr><th>Pessoa</th><th>Cursos</th><th>Idioma</th><th>Origem</th><th>Enviado</th><th>Expira</th><th>Estado</th><th><span class="so-leitor">Ações</span></th></tr></thead>
           <tbody>
-            ${convites.length ? convites.map(c => `
-              <tr class="${c.estado==="aceite"?"tint-concluido":""}">
-                <td>
-                  <div class="nome" style="font-weight:500;">${c.email}</div>
-                  <div class="sub-celula">${c.nome || "Sem nome"}</div>
-                </td>
-                <td>${resumoDoConvite(c)}</td>
-                <td>${c.criadoEm}</td>
-                <td><span class="pill ${estadoDoConvite(c.estado).classe}">${estadoDoConvite(c.estado).rotulo}</span></td>
-                <td><div class="acoes-linha">
-                  ${c.estado==="aceite" ? "" : `<button class="btn-icone" data-reenviar="${c.id}" title="Enviar outra vez"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button>`}
-                  <button class="btn-icone perigo" data-revogar="${c.id}" title="Revogar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
-                </div></td>
-              </tr>`).join("") : `<tr><td colspan="5"><div class="empty-note">Ainda não enviaste convites.</div></td></tr>`}
+            ${visiveis.length ? visiveis.map(linhaDoConvite).join("")
+              : `<tr><td colspan="8"><div class="empty-note">${convites.length ? "Nenhum convite com este filtro." : "Ainda não enviaste convites."}</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -208,69 +216,139 @@ function renderAdminConvites(){
   `;
 
   document.getElementById("btn-novo-convite").addEventListener("click", () => criarConvite());
-  document.getElementById("btn-atualizar-convites").addEventListener("click", async e => {
-    if(modoDemonstracao()){ renderAdminConvites(); return; }
-    const botao = e.currentTarget;
-    botao.disabled = true; botao.textContent = "A ler...";
-    try { await API.recarregarConvites(); renderAdminConvites(); }
-    catch(erro){ mostrarToast(erro.message || "Não foi possível ler os convites."); botao.disabled = false; botao.textContent = "Atualizar"; }
+  document.querySelectorAll("#content-admin [data-estado-convite]").forEach(b =>
+    b.addEventListener("click", () => { estado.filtroConvites = b.getAttribute("data-estado-convite"); renderAdminConvites(); }));
+  const campoBusca = document.getElementById("convites-busca");
+  campoBusca.addEventListener("input", () => {
+    estado.buscaConvites = campoBusca.value;
+    const pos = campoBusca.selectionStart;
+    renderAdminConvites();
+    const novo = document.getElementById("convites-busca");
+    novo.focus(); novo.setSelectionRange(pos, pos);
   });
   document.querySelectorAll("#content-admin [data-reenviar]").forEach(b =>
     b.addEventListener("click", () => reenviarConvite(b.getAttribute("data-reenviar"))));
+  document.querySelectorAll("#content-admin [data-copiar]").forEach(b =>
+    b.addEventListener("click", () => copiarLinkDoConvite(b.getAttribute("data-copiar"))));
   document.querySelectorAll("#content-admin [data-revogar]").forEach(b =>
     b.addEventListener("click", () => revogarConvite(b.getAttribute("data-revogar"))));
 }
 
-function estadoDoConvite(estado){
-  if(estado === "aceite")   return { rotulo:"Já entrou", classe:"pill-ativo" };
-  if(estado === "expirado") return { rotulo:"Expirado",  classe:"pill-frio" };
-  return { rotulo:"À espera", classe:"pill-morno" };
+const ICONE_REENVIAR = `<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>`;
+const ICONE_COPIAR = `<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>`;
+const ICONE_REVOGAR = `<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+
+function linhaDoConvite(c){
+  const nome = c.nome || c.email.split("@")[0];
+  const vivo = c.estado === "enviado" || c.estado === "aberto";
+  const est = estadoDoConvite(c.estado);
+  const quem = textoSeguro(c.email);
+  return `
+    <tr data-convite="${c.id}">
+      <td>
+        <div class="pessoa-celula">
+          <span class="avatar-iniciais" style="--c:${corDaPessoa(c.email)}" aria-hidden="true">${textoSeguro(iniciais(nome))}</span>
+          <div>
+            <div class="nome">${textoSeguro(nome)}</div>
+            <div class="sub-celula">${quem}</div>
+          </div>
+        </div>
+      </td>
+      <td class="convite-cursos">${resumoDoConvite(c)}</td>
+      <td><span class="etiqueta-idioma">${(c.idioma || "pt").toUpperCase()}</span></td>
+      <td class="sub-celula">${c.origem === "pagamento" ? "Pagamento" : "Manual"}</td>
+      <td class="num">${dataCurtaDoConvite(c.criadoEm)}</td>
+      <td class="convite-prazo">${prazoDoConvite(c)}</td>
+      <td><span class="estado-convite ${est.classe}"><span class="estado-ponto" aria-hidden="true"></span>${est.rotulo}</span></td>
+      <td><div class="acoes-linha">
+        ${vivo || c.estado === "expirado" ? `<button class="btn-icone" type="button" data-reenviar="${c.id}" title="Enviar outra vez" aria-label="Enviar outra vez a ${quem}">${ICONE_REENVIAR}</button>` : ""}
+        ${vivo ? `<button class="btn-icone" type="button" data-copiar="${c.id}" title="Copiar o link" aria-label="Copiar o link do convite de ${quem}">${ICONE_COPIAR}</button>` : ""}
+        ${vivo ? `<button class="btn-icone perigo" type="button" data-revogar="${c.id}" title="Revogar" aria-label="Revogar o convite de ${quem}">${ICONE_REVOGAR}</button>` : ""}
+      </div></td>
+    </tr>`;
 }
 
-/* O que este convite abre já: os cursos escolhidos à mão, ou a oferta
-   do CRM que traz consigo os cursos todos dessa inscrição. */
+function estadoDoConvite(estadoDaLinha){
+  return ({
+    enviado:  { rotulo:"Enviado",  classe:"e-enviado" },
+    aberto:   { rotulo:"Aberto",   classe:"e-aberto" },
+    aceite:   { rotulo:"Aceite",   classe:"e-aceite" },
+    expirado: { rotulo:"Expirado", classe:"e-parado" },
+    revogado: { rotulo:"Revogado", classe:"e-parado" }
+  })[estadoDaLinha] || { rotulo:"Enviado", classe:"e-enviado" };
+}
+
+/* A cor do avatar sai do email: a mesma pessoa tem sempre a mesma cor. */
+function corDaPessoa(email){
+  const cores = ["#c2410c", "#b91c1c", "#15803d", "#1d4ed8", "#7e22ce", "#0f766e", "#a16207"];
+  let h = 0;
+  for(const ch of String(email || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return cores[h % cores.length];
+}
+
+function dataCurtaDoConvite(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  if(isNaN(d)) return "—";
+  return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+}
+
+/* «Expira em 6 dias», «Expira em 5 h», «Expirou a 28/09», ou um traço quando
+   o prazo já não conta (aceite ou revogado). */
+function prazoDoConvite(c){
+  if(c.estado === "aceite" || c.estado === "revogado" || !c.expiraEm) return `<span class="sub-celula">—</span>`;
+  if(c.estado === "expirado") return `<span class="sub-celula">Expirou a ${dataCurtaDoConvite(c.expiraEm)}</span>`;
+  const horas = (new Date(c.expiraEm) - Date.now()) / 36e5;
+  if(horas < 24) return `<span class="prazo-perto">Expira ${horas < 1 ? "dentro de minutos" : "em " + Math.ceil(horas) + " h"}</span>`;
+  const dias = Math.ceil(horas / 24);
+  return `Expira em ${dias} dia${dias > 1 ? "s" : ""}`;
+}
+
+/* Os cursos que o convite abre, pelo nome. */
 function resumoDoConvite(c){
+  const nomes = (c.cursos||[]).map(id => (DB.cursos.find(x=>x.id===id)||{}).titulo).filter(Boolean).map(textoSeguro);
   const oferta = (DB.ofertas||[]).find(o => String(o.id) === String(c.ofertaId));
-  const nomes = (c.cursos||[]).map(id => (DB.cursos.find(x=>x.id===id)||{}).titulo).filter(Boolean);
-  if(oferta && nomes.length) return `${oferta.nome} · ${nomes.length} curso${nomes.length>1?"s":""}`;
-  if(oferta) return oferta.nome;
-  if(nomes.length === 1) return nomes[0];
-  if(nomes.length) return nomes.length + " cursos";
+  if(nomes.length > 2) return `${nomes.slice(0, 2).join("<br>")}<div class="sub-celula">e mais ${nomes.length - 2}</div>`;
+  if(nomes.length) return nomes.join("<br>");
+  if(oferta) return textoSeguro(oferta.nome);
   return `<span class="sub-celula">Só o que vier das inscrições</span>`;
+}
+
+/* Os cursos, como cartões com a capa: «Oculto» se ainda não está publicado,
+   «Em breve» se ainda não tem aulas. */
+function cursosParaConvidar(){
+  return (DB.cursos||[]).map(c => {
+    const aulas = (c.modulos||[]).reduce((n, m) => n + (m.aulas||[]).length, 0);
+    return {
+      valor: c.id, rotulo: c.titulo, imagem: c.capa || "",
+      iniciais: c.sigla || iniciais(c.titulo), cor: (DB.categorias[c.categoria]||{}).cor || "",
+      etiqueta: c.publicado === false ? "Oculto" : (aulas === 0 ? "Em breve" : "")
+    };
+  });
 }
 
 function criarConvite(valores){
   abrirDrawer({
     titulo: "Novo convite",
-    subtitulo: "A pessoa recebe um email com o link para escolher a password e entrar.",
+    subtitulo: "Enviamos por email um link pessoal para criar conta com estes cursos.",
     campos: [
-      { nome:"email", rotulo:"Email a convidar", tipo:"texto", obrigatorio:true, placeholder:"nome@empresa.co" },
-      { nome:"nome", rotulo:"Nome", tipo:"texto", placeholder:"Como queres tratá-la no email." },
-      { nome:"ofertaId", rotulo:"Oferta do CRM", tipo:"select",
-        opcoes:[{ valor:"", rotulo:"— nenhuma —" }].concat((DB.ofertas||[]).map(o => ({ valor:String(o.id), rotulo:o.nome }))),
-        dica:"Se escolheres, o acesso acompanha as inscrições dessa oferta." },
-      { nome:"cursos", rotulo:"Cursos a abrir desde já", tipo:"checklist",
-        opcoes:(DB.cursos||[]).map(c => ({ valor:c.id, rotulo:c.titulo })),
-        dica:"Além do que vier das inscrições. Podes deixar tudo por marcar." }
+      { nome:"email", rotulo:"Email", tipo:"texto", obrigatorio:true, placeholder:"nome@exemplo.co.mz" },
+      { nome:"nome", rotulo:"Nome", tipo:"texto", placeholder:"ex.: Marta Lopes" },
+      { nome:"idioma", rotulo:"Idioma", tipo:"select", meia:true,
+        opcoes:[{ valor:"pt", rotulo:"Português" }, { valor:"en", rotulo:"English" }] },
+      { nome:"dias", rotulo:"O link expira após", tipo:"select", meia:true,
+        opcoes: PRAZOS_DO_CONVITE.map(n => ({ valor:String(n), rotulo: n === 1 ? "1 dia" : n + " dias" })) },
+      { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", cartoes:true,
+        opcoes: cursosParaConvidar(),
+        dica:"Se este email já tiver conta, os cursos abrem na próxima vez que a pessoa entrar." }
     ],
-    valores: valores || { ofertaId:"", cursos:[] },
+    valores: Object.assign({ idioma:"pt", dias:"7", cursos:[] }, valores || {}),
     textoGuardar: "Enviar convite",
     aoGuardar: v => {
       if(!/^\S+@\S+\.\S+$/.test(v.email)){ mostrarToast("Esse email não parece válido"); return false; }
       const membro = membroPorEmail(v.email);
       if(membro && membro.papel !== "aluno"){
         mostrarToast("Esse email é de alguém da equipa, que já entra na academia"); return false;
-      }
-      /* Já ter conta não é motivo para não convidar: pode nunca ter
-         entrado, ou precisar de um link novo. Avisa-se e segue-se. */
-      if(membro){
-        confirmarAcao({
-          titulo: "Essa pessoa já tem conta",
-          mensagem: `Já existe uma conta para "${v.email}". Podemos enviar-lhe um link de entrada novo e abrir os cursos que escolheste — o link anterior deixa de servir.`,
-          textoConfirmar: "Enviar mesmo assim",
-          aoConfirmar: () => enviarConvite(v)
-        });
-        return;
       }
       enviarConvite(v);
     }
@@ -282,20 +360,27 @@ function reenviarConvite(id){
   if(!convite) return;
   confirmarAcao({
     titulo: "Enviar o convite outra vez",
-    mensagem: `Mandamos um novo link de entrada para "${convite.email}". O link anterior deixa de servir.`,
+    mensagem: `Mandamos um link novo para "${textoSeguro(convite.email)}", válido por mais 7 dias. O link anterior deixa de servir.`,
     textoConfirmar: "Enviar",
-    aoConfirmar: () => enviarConvite({ email:convite.email, nome:convite.nome, ofertaId:convite.ofertaId, cursos:convite.cursos })
+    aoConfirmar: () => enviarConvite({ email:convite.email, nome:convite.nome, ofertaId:convite.ofertaId,
+                                       cursos:convite.cursos, idioma:convite.idioma, dias:"7", substitui:convite.id })
   });
 }
 
 /* O envio é do servidor; aqui só damos notícia do que aconteceu. */
 async function enviarConvite(v){
+  const dias = PRAZOS_DO_CONVITE.includes(Number(v.dias)) ? Number(v.dias) : 7;
   if(modoDemonstracao()){
     DB.convites = DB.convites || [];
+    if(v.substitui){
+      const antigo = DB.convites.find(c => c.id === v.substitui);
+      if(antigo && antigo.estado !== "aceite") antigo.estado = "revogado";
+    }
     DB.convites.unshift({
-      id:novoId("cv"), codigo:novoId("cv"), email:v.email, nome:v.nome||"",
-      ofertaId:v.ofertaId || null, cursos:v.cursos || [],
-      estado:"pendente", criadoEm:new Date().toISOString().slice(0,10)
+      id:novoId("cv"), codigo:novoId("cv"), email:v.email.trim().toLowerCase(), nome:v.nome||"",
+      ofertaId:v.ofertaId || null, cursos:v.cursos || [], idioma:v.idioma || "pt", origem:"manual",
+      estado:"enviado", criadoEm:new Date().toISOString(),
+      expiraEm:new Date(Date.now() + dias * 864e5).toISOString()
     });
     guardarDB();
     renderAdminConvites();
@@ -305,12 +390,11 @@ async function enviarConvite(v){
   mostrarToast("A enviar o convite...");
   try {
     const resposta = await API.convidar({
-      email: v.email, nome: v.nome || "",
-      ofertaId: v.ofertaId || null, cursos: v.cursos || []
+      email: v.email, nome: v.nome || "", idioma: v.idioma || "pt", dias,
+      ofertaId: v.ofertaId || null, cursos: v.cursos || [], substitui: v.substitui || null
     });
-    DB.convites = DB.convites || [];
-    DB.convites = DB.convites.filter(c => c.id !== (resposta.convite||{}).id);
-    if(resposta.convite) DB.convites.unshift(deConvite(resposta.convite));
+    try { await API.recarregarConvites(); }
+    catch(e){ if(resposta.convite) DB.convites = [deConvite(resposta.convite)].concat(DB.convites || []); }
     renderAdminConvites();
     if(resposta.enviado) mostrarToast("Convite enviado para " + v.email);
     else mostrarLinkDoConvite(v.email, resposta.link, resposta.aviso);
@@ -319,12 +403,27 @@ async function enviarConvite(v){
   }
 }
 
+/* O link do convite é o do email: a morada da academia com o token. */
+function linkDoConvite(c){
+  return location.origin + location.pathname.replace(/index\.html$/, "") + "?convite=" + encodeURIComponent(c.codigo);
+}
+
+function copiarLinkDoConvite(id){
+  const convite = (DB.convites||[]).find(c=>c.id===id);
+  if(!convite) return;
+  const link = linkDoConvite(convite);
+  const aMao = () => mostrarLinkDoConvite(convite.email, link, "Não foi possível copiar sozinho.");
+  if(navigator.clipboard) navigator.clipboard.writeText(link).then(
+    () => mostrarToast("Link copiado. Vale até " + dataCurtaDoConvite(convite.expiraEm)), aMao);
+  else aMao();
+}
+
 /* Se o email não saiu, o link não se perde: fica aqui para copiar. */
 function mostrarLinkDoConvite(email, link, aviso){
   const seguro = String(link || "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
   confirmarAcao({
-    titulo: "O convite ficou criado",
-    mensagem: `${aviso || "O email não chegou a sair."}<br><br>Envia este link a <strong>${email}</strong>:
+    titulo: "O link do convite",
+    mensagem: `${textoSeguro(aviso || "O email não chegou a sair.")}<br><br>Envia este link a <strong>${textoSeguro(email)}</strong>:
       <span style="display:block;margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--surface-raised);font-size:12px;word-break:break-all;">${seguro}</span>`,
     textoConfirmar: "Copiar link",
     aoConfirmar: () => {
@@ -339,11 +438,15 @@ function revogarConvite(id){
   if(!convite) return;
   confirmarAcao({
     titulo: "Revogar convite",
-    mensagem: `O convite para "${convite.email}" deixa de dar acesso aos cursos escolhidos.`,
+    mensagem: `O link enviado a "${textoSeguro(convite.email)}" deixa de servir e os cursos escolhidos não abrem. O convite fica na lista, como revogado.`,
     textoConfirmar: "Revogar",
-    aoConfirmar: () => {
-      DB.convites = DB.convites.filter(c=>c.id!==id);
-      remover("convite", id);
+    aoConfirmar: async () => {
+      if(!modoDemonstracao()){
+        try { await API.revogarConvite(id); }
+        catch(erro){ mostrarToast(erro.message || "Não foi possível revogar."); return; }
+      }
+      convite.estado = "revogado";
+      guardarDB();
       renderAdminConvites();
       mostrarToast("Convite revogado");
     }
@@ -354,7 +457,7 @@ function revogarConvite(id){
    um convite pendente numa conta. Em produção isto acontece do lado
    do Supabase, quando a pessoa entra pelo link do email. */
 function aceitarConvitePendente(email){
-  const convite = (DB.convites||[]).find(c => c.estado==="pendente" && (c.email||"").toLowerCase()===email.toLowerCase());
+  const convite = (DB.convites||[]).find(c => (c.estado==="enviado" || c.estado==="aberto") && (c.email||"").toLowerCase()===email.toLowerCase());
   if(!convite) return null;
   const membro = {
     id: novoId("membro"),
