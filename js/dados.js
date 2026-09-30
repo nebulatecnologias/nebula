@@ -97,14 +97,14 @@ const CURSOS_PADRAO = [
   { id:"kt", facilitador:"Carla Mendes", categoria:"negocios", titulo:"Kingdom Tracktion", subtitulo:"Mastermind de empresários para decisões de alto impacto entre pares.",
     modulos:[
       { id:"kt-m1", titulo:"Módulo 1: Fundamentos da Autoridade", descricao:"Antes de escalar um negócio, escala-se a si mesmo.", aulas:[
-        { id:"kt-m1a1", titulo:"A identidade do fundador", duracao:"12:34", descricao:"Como a forma como te vês a ti mesmo determina o teto do teu negócio, muito antes de qualquer estratégia entrar em jogo." },
+        { id:"kt-m1a1", titulo:"A identidade do fundador", duracao:"12:34", descricao:"Como a forma como se vê a si mesmo determina o teto do seu negócio, muito antes de qualquer estratégia entrar em jogo." },
         { id:"kt-m1a2", titulo:"Visão vs. ambição", duracao:"09:15", descricao:"A diferença entre construir a partir de um chamado e construir a partir da pressa." },
         { id:"kt-m1a3", titulo:"Construir antes de escalar", duracao:"15:02", descricao:"Os alicerces que a maioria ignora sob pressão de crescer depressa." },
         { id:"kt-m1a4", titulo:"O preço da liderança", duracao:"11:48", descricao:"Decisões impopulares, solidão no topo e a disciplina de manter o rumo." }
       ]},
-      { id:"kt-m2", titulo:"Módulo 2: Estrutura e Sistemas", descricao:"Negócios que dependem de ti não escalam — dependem de sistemas.", aulas:[
+      { id:"kt-m2", titulo:"Módulo 2: Estrutura e Sistemas", descricao:"Negócios que dependem de si não escalam — dependem de sistemas.", aulas:[
         { id:"kt-m2a1", titulo:"Modelar o negócio", duracao:"14:20", descricao:"Desenhar o modelo de receita e operação antes de contratar a próxima pessoa." },
-        { id:"kt-m2a2", titulo:"Processos que escalam", duracao:"10:33", descricao:"Documentar o que funciona para que deixe de depender só de ti." },
+        { id:"kt-m2a2", titulo:"Processos que escalam", duracao:"10:33", descricao:"Documentar o que funciona para que deixe de depender só de si." },
         { id:"kt-m2a3", titulo:"Equipas de alto nível", duracao:"13:07", descricao:"Contratar por carácter e treinar por competência." },
         { id:"kt-m2a4", titulo:"Cultura como vantagem competitiva", duracao:"10:58", descricao:"Como princípios claros substituem centenas de regras não escritas." }
       ]},
@@ -117,28 +117,28 @@ const CURSOS_PADRAO = [
     ]},
   { id:"mi", facilitador:"João Sitoe", categoria:"mentalidade", titulo:"Mentalidade Inquebrável", subtitulo:"Reprograma crenças limitantes e constrói uma mente antifrágil.",
     modulos:[
-      { id:"mi-m1", titulo:"Módulo 1: A Origem das Crenças", descricao:"O que molda a tua forma de pensar sem que percebas.", aulas:[
+      { id:"mi-m1", titulo:"Módulo 1: A Origem das Crenças", descricao:"O que molda a sua forma de pensar sem que perceba.", aulas:[
         { id:"mi-m1a1", titulo:"Como se formam as crenças limitantes", duracao:"08:12", descricao:"A raiz emocional por trás de quase toda a autossabotagem." },
         { id:"mi-m1a2", titulo:"O ciclo pensamento-emoção-ação", duracao:"10:05", descricao:"Como um pensamento automático se transforma num resultado real." },
-        { id:"mi-m1a3", titulo:"Identificar o teu diálogo interno", duracao:"07:40", descricao:"A voz que te acompanha o dia todo — e como a treinar." }
+        { id:"mi-m1a3", titulo:"Identificar o seu diálogo interno", duracao:"07:40", descricao:"A voz que o acompanha o dia todo — e como a treinar." }
       ]},
       { id:"mi-m2", titulo:"Módulo 2: Reprogramação Mental", descricao:"Ferramentas práticas para mudar padrões em semanas, não anos.", aulas:[
-        { id:"mi-m2a1", titulo:"A técnica dos 90 segundos", duracao:"09:30", descricao:"Como deixar uma emoção intensa passar sem te dominar." },
+        { id:"mi-m2a1", titulo:"A técnica dos 90 segundos", duracao:"09:30", descricao:"Como deixar uma emoção intensa passar sem o dominar." },
         { id:"mi-m2a2", titulo:"Ancorar novos estados emocionais", duracao:"11:15", descricao:"Criar gatilhos físicos para estados de confiança sob comando." },
         { id:"mi-m2a3", titulo:"Rotina matinal de mentalidade vencedora", duracao:"06:55", descricao:"Os primeiros 20 minutos do dia que decidem os outros 23 horas." }
       ]}
     ]},
-  { id:"ia", facilitador:"Rita Langa", categoria:"ia", titulo:"IA Aplicada aos Negócios", subtitulo:"Usa inteligência artificial para vender mais e trabalhar menos.",
+  { id:"ia", facilitador:"Rita Langa", categoria:"ia", titulo:"IA Aplicada aos Negócios", subtitulo:"Use inteligência artificial para vender mais e trabalhar menos.",
     modulos:[
       { id:"ia-m1", titulo:"Módulo 1: Fundamentos de IA para Empresários", descricao:"O essencial sem jargão técnico.", aulas:[
-        { id:"ia-m1a1", titulo:"O que a IA já pode fazer pelo teu negócio", duracao:"10:20", descricao:"Um mapa realista de onde a IA já poupa tempo e dinheiro hoje." },
-        { id:"ia-m1a2", titulo:"Escolher as ferramentas certas", duracao:"08:45", descricao:"Como não te perderes entre centenas de opções novas todas as semanas." },
+        { id:"ia-m1a1", titulo:"O que a IA já pode fazer pelo seu negócio", duracao:"10:20", descricao:"Um mapa realista de onde a IA já poupa tempo e dinheiro hoje." },
+        { id:"ia-m1a2", titulo:"Escolher as ferramentas certas", duracao:"08:45", descricao:"Como não se perder entre centenas de opções novas todas as semanas." },
         { id:"ia-m1a3", titulo:"Prompting eficaz para resultados de negócio", duracao:"12:30", descricao:"A estrutura de prompt que transforma respostas genéricas em trabalho pronto a usar." }
       ]},
-      { id:"ia-m2", titulo:"Módulo 2: Automação e Escala", descricao:"Da ferramenta isolada ao sistema que trabalha por ti.", aulas:[
+      { id:"ia-m2", titulo:"Módulo 2: Automação e Escala", descricao:"Da ferramenta isolada ao sistema que trabalha por si.", aulas:[
         { id:"ia-m2a1", titulo:"Automatizar atendimento ao cliente", duracao:"09:50", descricao:"Responder mais rápido sem contratar mais uma pessoa." },
-        { id:"ia-m2a2", titulo:"IA na criação de conteúdo", duracao:"11:05", descricao:"Produzir semanas de conteúdo em horas, mantendo a tua voz." },
-        { id:"ia-m2a3", titulo:"Montar o teu primeiro fluxo automatizado", duracao:"13:40", descricao:"Passo a passo para ligar as tuas primeiras ferramentas entre si." }
+        { id:"ia-m2a2", titulo:"IA na criação de conteúdo", duracao:"11:05", descricao:"Produzir semanas de conteúdo em horas, mantendo a sua voz." },
+        { id:"ia-m2a3", titulo:"Montar o seu primeiro fluxo automatizado", duracao:"13:40", descricao:"Passo a passo para ligar as suas primeiras ferramentas entre si." }
       ]}
     ]},
   { id:"vv", facilitador:"Paulo Nhaca", categoria:"marketing", titulo:"Vendas de Alto Impacto", subtitulo:"Sistemas e psicologia de venda para fechar mais, com mais dignidade.",
@@ -148,7 +148,7 @@ const CURSOS_PADRAO = [
         { id:"vv-m1a2", titulo:"Construir confiança em 60 segundos", duracao:"07:28", descricao:"Os sinais que fazem alguém baixar a guarda numa conversa de venda." },
         { id:"vv-m1a3", titulo:"Lidar com objeções sem parecer desesperado", duracao:"10:44", descricao:"Responder ao \"vou pensar\" sem pressionar nem desistir." }
       ]},
-      { id:"vv-m2", titulo:"Módulo 2: Sistemas de Vendas", descricao:"Processos que vendem mesmo quando não estás a olhar.", aulas:[
+      { id:"vv-m2", titulo:"Módulo 2: Sistemas de Vendas", descricao:"Processos que vendem mesmo quando não está a olhar.", aulas:[
         { id:"vv-m2a1", titulo:"O funil que nunca dorme", duracao:"12:15", descricao:"Desenhar um percurso de venda que continua a trabalhar 24 horas." },
         { id:"vv-m2a2", titulo:"Scripts que convertem", duracao:"08:50", descricao:"Estrutura de conversa que se adapta sem soar decorada." },
         { id:"vv-m2a3", titulo:"Fechar sem pressionar", duracao:"09:33", descricao:"Convidar para a decisão em vez de empurrar para ela." }
@@ -171,11 +171,11 @@ const CURSOS_PADRAO = [
     modulos:[
       { id:"he-m1", titulo:"Módulo 1: Fundamentos dos Hábitos", descricao:"A ciência simples por trás de mudanças duradouras.", aulas:[
         { id:"he-m1a1", titulo:"A ciência por trás dos hábitos", duracao:"09:40", descricao:"O loop de hábito e porque a força de vontade não é suficiente." },
-        { id:"he-m1a2", titulo:"Empilhar hábitos pequenos", duracao:"07:55", descricao:"Como usar o que já fazes para instalar o que ainda não fazes." },
+        { id:"he-m1a2", titulo:"Empilhar hábitos pequenos", duracao:"07:55", descricao:"Como usar o que já faz para instalar o que ainda não faz." },
         { id:"he-m1a3", titulo:"Eliminar o que já não serve", duracao:"08:22", descricao:"Identificar hábitos que só existem por inércia." }
       ]},
       { id:"he-m2", titulo:"Módulo 2: Rotinas de Alta Performance", descricao:"Desenhar dias que produzem resultados de anos.", aulas:[
-        { id:"he-m2a1", titulo:"Desenhar o teu dia ideal", duracao:"10:12", descricao:"Partir do resultado desejado para montar a rotina, não o contrário." },
+        { id:"he-m2a1", titulo:"Desenhar o seu dia ideal", duracao:"10:12", descricao:"Partir do resultado desejado para montar a rotina, não o contrário." },
         { id:"he-m2a2", titulo:"Energia antes de tempo", duracao:"08:47", descricao:"Porque geris energia, não apenas minutos." },
         { id:"he-m2a3", titulo:"Revisão semanal de elite", duracao:"06:58", descricao:"O ritual de 20 minutos que mantém tudo o resto no rumo." }
       ]}
@@ -255,11 +255,11 @@ const CURSO_STATS_PADRAO = {
 
 const EVENTOS_PADRAO = [
   { id:"e1", titulo:"Mentoria em Grupo: Plano de 90 Dias", categoria:"negocios", data:diaDaqui(3), hora:"19:00", tipo:"Mentoria ao vivo", link:"https://exemplo.com/sala", acesso:"gratuito",
-    descricao:"Uma hora a trabalhar o teu plano dos próximos 90 dias, com perguntas no fim." },
+    descricao:"Uma hora a trabalhar o seu plano dos próximos 90 dias, com perguntas no fim." },
   { id:"e2", titulo:"Q&A: Vender com Ajuda da IA", categoria:"ia", data:diaDaqui(6), hora:"20:00", tipo:"Perguntas e respostas", link:"", acesso:"exclusivo" },
   { id:"e3", titulo:"Roda de Espiritualidade e Propósito", categoria:"espiritualidade", data:diaDaqui(11), hora:"19:30", tipo:"Encontro em grupo", link:"", acesso:"gratuito", local:"Rua Inventada 100, Maputo" },
   { id:"e5", titulo:"Imersão Presencial: Escala Previsível", categoria:"negocios", data:diaDaqui(20), hora:"09:00", tipo:"Imersão de um dia", link:"", acesso:"pago", ofertaId:"of1", local:"Rua Inventada 200, Maputo",
-    descricao:"Um dia inteiro, presencial, para montar o teu sistema de vendas. Lugares limitados." },
+    descricao:"Um dia inteiro, presencial, para montar o seu sistema de vendas. Lugares limitados." },
   { id:"e4", titulo:"Masterclass: Como Precificar Serviços", categoria:"marketing", data:diaDaqui(-12), hora:"19:00", tipo:"Masterclass", link:"", acesso:"gratuito" }
 ];
 
@@ -294,13 +294,13 @@ const COMUNIDADES_PADRAO = [
 
 const ESPACOS_PADRAO = [
   { id:"geral",    nome:"Geral",              descricao:"Conversa aberta a toda a academia.",            cor:"#ff5a1f", ativo:true, soAdminPublica:false },
-  { id:"vitorias", nome:"Vitórias",           descricao:"Partilha resultados e conquistas.",             cor:"#3ddc84", ativo:true, soAdminPublica:false },
+  { id:"vitorias", nome:"Vitórias",           descricao:"Partilhe resultados e conquistas.",             cor:"#3ddc84", ativo:true, soAdminPublica:false },
   { id:"duvidas",  nome:"Dúvidas",            descricao:"Perguntas sobre as aulas e os exercícios.",     cor:"#7c9eff", ativo:true, soAdminPublica:false },
   { id:"avisos",   nome:"Avisos da Academia", descricao:"Comunicados oficiais. Só a equipa publica.",    cor:"#ffcf5c", ativo:true, soAdminPublica:true }
 ];
 
 const POSTS_PADRAO = [
-  { id:"p4", autor:"Kingdom Academy", iniciais:"KA", tempo:"há 2h", categoria:"negocios", espacoId:"avisos", fixado:true, oculto:false, texto:"Lembrete: a Mentoria em Grupo do Plano de 90 Dias é já esta semana. Traz a tua pergunta mais difícil.", likes:24, curtido:false },
+  { id:"p4", autor:"Kingdom Academy", iniciais:"KA", tempo:"há 2h", categoria:"negocios", espacoId:"avisos", fixado:true, oculto:false, texto:"Lembrete: a Mentoria em Grupo do Plano de 90 Dias é já esta semana. Traga a sua pergunta mais difícil.", likes:24, curtido:false },
   { id:"p3", autor:"Marcos Sitoe", iniciais:"MS", tempo:"há 5h", categoria:"ia", espacoId:"vitorias", fixado:false, oculto:false, texto:"Apliquei o prompt da aula 3 no meu atendimento e poupei 2h por dia. Quem mais já testou?", likes:18, curtido:false },
   { id:"p2", autor:"Ana Machava", iniciais:"AM", tempo:"há 1 dia", categoria:"mentalidade", espacoId:"vitorias", fixado:false, oculto:false, texto:"A técnica dos 90 segundos mudou a forma como lido com clientes difíceis. Recomendo sem dúvida.", likes:31, curtido:true },
   { id:"p1", autor:"Rui Langa", iniciais:"RL", tempo:"há 2 dias", categoria:"espiritualidade", espacoId:"geral", fixado:false, oculto:false, texto:"\"Negócio como instrumento, não como ídolo\" — aula que precisava de ouvir hoje.", likes:12, curtido:false }
@@ -326,30 +326,30 @@ const ICONS_BADGE = [
 ];
 
 const NOTIFICACOES_PADRAO = [
-  { titulo:"Nova conquista desbloqueada", desc:"Mente Multidisciplinar — continua assim!", tempo:"há 2h", lida:false },
+  { titulo:"Nova conquista desbloqueada", desc:"Mente Multidisciplinar — continue assim!", tempo:"há 2h", lida:false },
   { titulo:"Lembrete: Mentoria em Grupo", desc:"Plano de 90 Dias começa esta semana.", tempo:"há 5h", lida:false },
-  { titulo:"Certificado disponível", desc:"O teu certificado de Mentalidade Inquebrável já pode ser descarregado.", tempo:"há 1 dia", lida:true },
-  { titulo:"Nova publicação na comunidade", desc:"Marcos Sitoe respondeu à tua pergunta.", tempo:"há 2 dias", lida:true }
+  { titulo:"Certificado disponível", desc:"O seu certificado de Mentalidade Inquebrável já pode ser descarregado.", tempo:"há 1 dia", lida:true },
+  { titulo:"Nova publicação na comunidade", desc:"Marcos Sitoe respondeu à sua pergunta.", tempo:"há 2 dias", lida:true }
 ];
 
 const BANNERS_PADRAO = [
-  { id:"b1", ativo:true, eyebrow:"Mentoria em grupo", titulo:"Plano de 90 Dias — inscreve-te já", cta:"Garantir vaga", link:"", imagem:"", gradiente:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)",
+  { id:"b1", ativo:true, eyebrow:"Mentoria em grupo", titulo:"Plano de 90 Dias — inscreva-se já", cta:"Garantir vaga", link:"", imagem:"", gradiente:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)",
     destinoTipo:"evento", destinoId:"e1" },
   { id:"b2", ativo:true, eyebrow:"Oferta", titulo:"Kingdom All Access: todos os cursos num só acesso", cta:"Ver oferta", link:"", imagem:"", gradiente:"linear-gradient(120deg,#1f8f8a,#0d4d4a)",
     destinoTipo:"oferta", destinoId:"of1" },
   { id:"b3", ativo:true, eyebrow:"Novidade", titulo:"A comunidade da Kingdom mudou de casa", cta:"Saber mais", link:"https://exemplo.com", imagem:"", gradiente:"linear-gradient(160deg,#7b72e8,#564cc9)",
-    destinoTipo:"pagina", destinoId:"", resumo:"As conversas da academia passam a viver nos grupos de cada programa. Na aba Comunidade encontras os teus." }
+    destinoTipo:"pagina", destinoId:"", resumo:"As conversas da academia passam a viver nos grupos de cada programa. Na aba Comunidade encontra os seus." }
 ];
 
 /* Regras declarativas (guardáveis): avaliadas por conquistaDesbloqueada() em nucleo.js */
 const CONQUISTAS_PADRAO = [
-  { id:"b1", titulo:"Primeiro Passo", desc:"Concluíste a tua primeira aula.", regra:{ tipo:"aulas", valor:1 } },
-  { id:"b2", titulo:"Módulo Completo", desc:"Terminaste um módulo inteiro.", regra:{ tipo:"modulos", valor:1 } },
-  { id:"b3", titulo:"Primeiro Curso Concluído", desc:"Terminaste um curso do início ao fim.", regra:{ tipo:"cursos", valor:1 } },
+  { id:"b1", titulo:"Primeiro Passo", desc:"Concluiu a sua primeira aula.", regra:{ tipo:"aulas", valor:1 } },
+  { id:"b2", titulo:"Módulo Completo", desc:"Terminou um módulo inteiro.", regra:{ tipo:"modulos", valor:1 } },
+  { id:"b3", titulo:"Primeiro Curso Concluído", desc:"Terminou um curso do início ao fim.", regra:{ tipo:"cursos", valor:1 } },
   { id:"b4", titulo:"Sequência de Fogo", desc:"5 dias seguidos de estudo.", regra:{ tipo:"sequencia", valor:5 } },
   { id:"b5", titulo:"Mente Multidisciplinar", desc:"Progresso em 3 áreas de conhecimento diferentes.", regra:{ tipo:"categorias", valor:3 } },
-  { id:"b6", titulo:"Metade do Caminho", desc:"Atingiste 50% do teu progresso geral.", regra:{ tipo:"percentagem", valor:50 } },
-  { id:"b7", titulo:"Mentor da Comunidade", desc:"Em breve: ajuda outros alunos na comunidade.", regra:{ tipo:"manual", valor:0 } }
+  { id:"b6", titulo:"Metade do Caminho", desc:"Atingiu 50% do seu progresso geral.", regra:{ tipo:"percentagem", valor:50 } },
+  { id:"b7", titulo:"Mentor da Comunidade", desc:"Em breve: ajudar outros alunos na comunidade.", regra:{ tipo:"manual", valor:0 } }
 ];
 
 const APARENCIA_PADRAO = {
@@ -360,7 +360,7 @@ const APARENCIA_PADRAO = {
   temaPadrao: "auto",
   rodape: "© 2026 Kingdom Company",
   loginTitulo: "Autoridade constrói-se em privado, muito antes de aparecer em público.",
-  loginTexto: "Acede à tua área de membros para continuares os teus cursos onde ficaste — módulos, aulas, comunidade e o teu progresso, tudo num só lugar."
+  loginTexto: "Aceda à sua área de membros e continue os seus cursos onde ficou — módulos, aulas, comunidade e o seu progresso, tudo num só lugar."
 };
 
 const CONFIG_PADRAO = {

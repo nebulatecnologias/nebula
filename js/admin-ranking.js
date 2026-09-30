@@ -132,7 +132,7 @@ function tabelaLideresHTML(){
 function editarGamificacao(){
   abrirDrawer({
     titulo: "Pontuação e níveis",
-    subtitulo: "Muda o que o aluno vê na página Conquistas.",
+    subtitulo: "Mude o que o aluno vê na página Conquistas.",
     campos: [
       { nome:"xpPorAula", rotulo:"XP por aula concluída", tipo:"numero", obrigatorio:true },
       { nome:"xpPorNivel", rotulo:"XP necessário por nível", tipo:"numero", obrigatorio:true, dica:"Quanto maior, mais devagar os alunos sobem de nível." }

@@ -34,7 +34,7 @@ A conversa entre alunos não vive na Academia: vive nos grupos de cada programa 
 - O administrador pode mudar a cor de destaque, o nome, o logótipo, o tema por omissão e os textos do login em **Aparência**. O design tem de continuar a respeitar estas escolhas.
 - Dinheiro escreve-se sempre `MZ 1 500,00` / `R 129,00` (símbolo da tesouraria à frente, duas casas decimais).
 - O back-end crítico (Edge Functions de pagamentos, acessos e emails; RLS; esquema) fica fora do trabalho de interface.
-- Língua da interface: português europeu (Moçambique), tratamento por «tu».
+- Língua da interface: português europeu (Moçambique), tratamento por «você» (decidido a 30/09/2026, igual à Kingdom Library, ao Payflow e às cartas). O teste `testes/casos/13-voce.mjs` falha se um «tu» voltar.
 
 ## Brand Commitments
 

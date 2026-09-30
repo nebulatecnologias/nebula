@@ -91,7 +91,7 @@ function grelhaCursosAdminHTML(){
   if(!lista.length){
     return `<div class="card painel"><div class="empty-note">${DB.cursos.length
       ? "Nenhum curso encontrado com estes filtros."
-      : 'Ainda não há cursos. Cria o primeiro em "Novo curso".'}</div></div>`;
+      : 'Ainda não há cursos. Crie o primeiro em "Novo curso".'}</div></div>`;
   }
   return `
     <div class="contagem-grelha">${lista.length} de ${DB.cursos.length} curso${DB.cursos.length===1?"":"s"}</div>
@@ -164,13 +164,13 @@ function renderFormCurso(){
       <div class="form-secao">
         <div class="form-secao-desc">
           <h3>Detalhes do Curso</h3>
-          <p>Escolhe um nome atrativo, insere a URL da página de vendas e descreve de forma clara e impactante a promessa única do curso.</p>
+          <p>Escolha um nome atrativo, insira a URL da página de vendas e descreva de forma clara e impactante a promessa única do curso.</p>
         </div>
         <div class="card form-card">
           <div class="campo-linha nome-sigla">
             <div class="field">
               <label>Nome do curso</label>
-              <input type="text" id="f-titulo" value="${(v.titulo||"").replace(/"/g,"&quot;")}" placeholder="Escolhe um nome que atraia os teus compradores">
+              <input type="text" id="f-titulo" value="${(v.titulo||"").replace(/"/g,"&quot;")}" placeholder="Escolha um nome que atraia os seus compradores">
             </div>
             <div class="field">
               <label>Sigla</label>
@@ -189,8 +189,8 @@ function renderFormCurso(){
             </div>
           </div>
           <div class="field">
-            <label>Descreve a promessa do teu curso</label>
-            <textarea id="f-subtitulo" rows="3" placeholder="Explica o produto e os benefícios de forma clara e breve.">${v.subtitulo||""}</textarea>
+            <label>Descreva a promessa do seu curso</label>
+            <textarea id="f-subtitulo" rows="3" placeholder="Explique o produto e os benefícios de forma clara e breve.">${v.subtitulo||""}</textarea>
           </div>
           <div class="field">
             <label>Categoria</label>
@@ -208,7 +208,7 @@ function renderFormCurso(){
       <div class="form-secao">
         <div class="form-secao-desc">
           <h3>Imagem de capa</h3>
-          <p>Insere a imagem de capa conforme a dimensão de exibição na vitrine. Para ecrãs retina, usa imagens com o dobro da resolução para garantir nitidez.</p>
+          <p>Insira a imagem de capa conforme a dimensão de exibição na vitrine. Para ecrãs retina, use imagens com o dobro da resolução para garantir nitidez.</p>
         </div>
         <div class="card form-card">
           ${uploadHTML("capa", v.capa, "1280 × 720 px (16:9). É o formato do cartão em Meus cursos — a imagem aparece inteira, sem cortes.", "grande", "capas/cursos")}
@@ -367,7 +367,7 @@ function renderAdminCursoEditor(cursoId){
     <div class="gestao-head">
       <div>
         <h2>Gestão de conteúdo</h2>
-        <p>Edita os detalhes, cria módulos e organiza as aulas deste curso.</p>
+        <p>Edite os detalhes, crie módulos e organize as aulas deste curso.</p>
       </div>
       <div class="gestao-acoes">
         <button class="btn btn-secondary" id="btn-editar-curso">${ICONS.lapis} Editar curso</button>
@@ -422,7 +422,7 @@ function renderModulosAdmin(curso){
   const wrap = document.getElementById("lista-modulos-admin");
   if(!wrap) return;
   if(!curso.modulos.length){
-    wrap.innerHTML = `<div class="card painel"><div class="empty-note">Este curso ainda não tem módulos. Começa por criar o primeiro.</div></div>`;
+    wrap.innerHTML = `<div class="card painel"><div class="empty-note">Este curso ainda não tem módulos. Comece por criar o primeiro.</div></div>`;
     return;
   }
   const abertos = estado.modulosAbertos || (estado.modulosAbertos = {});

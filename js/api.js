@@ -44,8 +44,8 @@ const API = {
       .eq("id", id)
       .maybeSingle();
     if(error) throw error;
-    if(!data) throw new Error("A tua conta ainda não está ligada à academia. Fala com a mentoria.");
-    if(data.estado !== "Ativo") throw new Error("Este acesso está suspenso. Fala com a tua mentoria.");
+    if(!data) throw new Error("A sua conta ainda não está ligada à academia. Fale com a mentoria.");
+    if(data.estado !== "Ativo") throw new Error("Este acesso está suspenso. Fale com a sua mentoria.");
     this.utilizador = data;
     return data;
   },
@@ -71,7 +71,7 @@ const API = {
     if(error){
       let detalhe = "";
       try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
-      throw new Error(detalhe || "Não foi possível enviar agora. Tenta daqui a pouco.");
+      throw new Error(detalhe || "Não foi possível enviar agora. Tente daqui a pouco.");
     }
     if(data && data.error) throw new Error(data.error);
   },
@@ -82,7 +82,7 @@ const API = {
      mandavam as pessoas para localhost:3000. */
   async entrarComCodigo(tokenHash, tipo){
     const { data, error } = await this.cliente.auth.verifyOtp({ token_hash: tokenHash, type: tipo });
-    if(error || !data?.session) throw new Error("Este link já foi usado ou expirou. Pede um novo.");
+    if(error || !data?.session) throw new Error("Este link já foi usado ou expirou. Peça um novo.");
     this.precisaDePassword = true;
     return data.session;
   },
@@ -94,7 +94,7 @@ const API = {
     if(error){
       let detalhe = "";
       try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
-      throw new Error(detalhe || "Não foi possível abrir o convite agora. Tenta daqui a pouco.");
+      throw new Error(detalhe || "Não foi possível abrir o convite agora. Tente daqui a pouco.");
     }
     return data || { estado:"inexistente" };
   },
@@ -772,7 +772,7 @@ function traduzirErroFicheiro(erro){
   if(m.includes("mime type") || m.includes("invalid_mime"))
     return "Este tipo de ficheiro não é aceite aqui.";
   if(m.includes("row-level security") || m.includes("unauthorized"))
-    return "Não tens permissão para enviar este ficheiro.";
+    return "Não tem permissão para enviar este ficheiro.";
   if(m.includes("failed to fetch")) return "Perdemos a ligação ao enviar o ficheiro.";
   return erro && erro.message ? erro.message : "Não foi possível enviar o ficheiro.";
 }
@@ -780,12 +780,12 @@ function traduzirErroFicheiro(erro){
 function traduzirErroAuth(erro){
   const m = (erro && erro.message || "").toLowerCase();
   if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
-    return "Não conseguimos falar com o servidor. Verifica a tua ligação à internet e tenta de novo.";
+    return "Não conseguimos falar com o servidor. Verifique a sua ligação à internet e tente de novo.";
   if(m.includes("invalid login")) return "Email ou password errados.";
-  if(m.includes("email not confirmed")) return "Confirma o email antes de entrares. Procura a mensagem que te enviámos.";
-  if(m.includes("rate limit") || m.includes("too many")) return "Demasiadas tentativas. Espera um minuto e tenta de novo.";
+  if(m.includes("email not confirmed")) return "Confirme o email antes de entrar. Procure a mensagem que lhe enviámos.";
+  if(m.includes("rate limit") || m.includes("too many")) return "Demasiadas tentativas. Espere um minuto e tente de novo.";
   if(m.includes("easy to guess") || m.includes("weak password") || m.includes("pwned"))
-    return "Essa password aparece em fugas de dados conhecidas. Escolhe outra que não uses noutro sítio.";
+    return "Essa password aparece em fugas de dados conhecidas. Escolha outra que não use noutro sítio.";
   if(m.includes("password should be") || m.includes("password should contain"))
     return "Essa password não cumpre as regras da academia: " + (erro.message || "") + ".";
   return erro && erro.message ? erro.message : "Não foi possível entrar.";
@@ -795,11 +795,11 @@ function traduzirErroDados(erro){
   const codigo = erro && erro.code;
   const m = (erro && erro.message || "").toLowerCase();
   if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
-    return "Perdemos a ligação ao servidor. Verifica a internet e recarrega a página.";
+    return "Perdemos a ligação ao servidor. Verifique a internet e recarregue a página.";
   if(codigo === "42P01" || (erro.message||"").includes("schema must be one of"))
     return 'O schema "academia" ainda não está exposto na API do Supabase (Settings → Data API → Exposed schemas).';
   if(codigo === "42501" || codigo === "PGRST301")
-    return "Não tens permissão para esta operação.";
+    return "Não tem permissão para esta operação.";
   if(codigo === "23505") return "Já existe um registo com estes dados.";
   if(codigo === "23503") return "Este registo está ligado a outro e não pode ficar assim.";
   return erro && erro.message ? erro.message : "Não foi possível guardar.";
@@ -889,7 +889,7 @@ function mostrarBarraDeFalha(motivo){
   barra.id = "barra-falha";
   barra.className = "barra-falha";
   barra.innerHTML = `
-    <span>Uma alteração não chegou ao servidor — o que vês pode não estar gravado.
+    <span>Uma alteração não chegou ao servidor — o que vê pode não estar gravado.
     <strong>${motivo}</strong></span>
     <button class="btn btn-secondary btn-sm" id="btn-recarregar-falha">Recarregar</button>
   `;
@@ -990,7 +990,7 @@ function soNoCRM(oQue){
   if(modoDemonstracao()) return false;
   confirmarAcao({
     titulo: oQue + " vivem no Kingdom Dashboard",
-    mensagem: `Para a academia e o teu CRM não ficarem com duas listas diferentes, ${oQue.toLowerCase()} são geridos num só lugar. Cria ou altera lá, e aqui aparece no próximo carregamento.`,
+    mensagem: `Para a academia e o CRM não ficarem com duas listas diferentes, ${oQue.toLowerCase()} são geridos num só lugar. Crie ou altere lá, e aqui aparece no próximo carregamento.`,
     textoConfirmar: "Abrir o Dashboard",
     aoConfirmar: () => window.open(URL_CRM, "_blank", "noopener")
   });

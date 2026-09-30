@@ -170,7 +170,7 @@ function gerarTexto(tarefa, cursoId){
 São ${curso.modulos.length} módulos e ${aulas.length} aulas, organizados assim:
 ${temas.map((t,i)=>`${i+1}. ${t}`).join("\n")}
 
-No fim, sais com ${temas[temas.length-1] ? temas[temas.length-1].toLowerCase() : "o trabalho feito"} — não com apontamentos.`;
+No fim, sai com ${temas[temas.length-1] ? temas[temas.length-1].toLowerCase() : "o trabalho feito"} — não com apontamentos.`;
   }
 
   if(tarefa === "boasvindas" && curso){
@@ -178,11 +178,11 @@ No fim, sais com ${temas[temas.length-1] ? temas[temas.length-1].toLowerCase() :
 
 Olá {nome},
 
-A tua inscrição no ${curso.titulo} está confirmada. O curso já está aberto na tua área de membros.
+A sua inscrição no ${curso.titulo} está confirmada. O curso já está aberto na sua área de membros.
 
-Começa pela primeira aula — ${aulas[0] ? aulas[0].titulo : "a aula de abertura"} — e faz uma por dia. São ${aulas.length} aulas, ou seja, ${Math.max(1, Math.ceil(aulas.length/5))} semanas a um ritmo confortável.
+Comece pela primeira aula — ${aulas[0] ? aulas[0].titulo : "a aula de abertura"} — e faça uma por dia. São ${aulas.length} aulas, ou seja, ${Math.max(1, Math.ceil(aulas.length/5))} semanas a um ritmo confortável.
 
-Qualquer dúvida, responde a este email.
+Qualquer dúvida, responda a este email.
 
 ${DB.config.certificado.assinaturaNome}
 ${escola}`;
@@ -191,24 +191,24 @@ ${escola}`;
   if(tarefa === "post" && curso){
     return `📌 Novidade no ${curso.titulo}
 
-Se ainda não começaste, esta é a semana. O módulo "${temas[0]||"de abertura"}" responde à pergunta que mais recebemos por aqui.
+Se ainda não começou, esta é a semana. O módulo "${temas[0]||"de abertura"}" responde à pergunta que mais recebemos por aqui.
 
-Quem já fez, conta nos comentários: qual foi a ideia que te mudou a forma de trabalhar?`;
+Quem já fez, conte nos comentários: qual foi a ideia que lhe mudou a forma de trabalhar?`;
   }
 
   if(tarefa === "risco"){
     const parados = alunosDoSistema().filter(m => (m.progresso||0) < 25 && m.acesso === "ativo");
-    return `Assunto: Ficaste a meio — e isso tem solução
+    return `Assunto: Ficou a meio — e isso tem solução
 
 Olá {nome},
 
-Reparámos que ainda não avançaste no teu curso. Acontece, e não é motivo para desistires.
+Reparámos que ainda não avançou no seu curso. Acontece, e não é motivo para desistir.
 
-Propomos uma coisa simples: 20 minutos, uma aula, hoje. Só isso. Amanhã fazes outra.
+Propomos uma coisa simples: 20 minutos, uma aula, hoje. Só isso. Amanhã faz outra.
 
-${parados.length ? `Estás entre ${parados.length} alunos que vamos acompanhar de perto esta semana.` : ""}
+${parados.length ? `Está entre ${parados.length} alunos que vamos acompanhar de perto esta semana.` : ""}
 
-Se houver alguma coisa a travar-te, responde e resolvemos.
+Se houver alguma coisa a travá-lo, responda e resolvemos.
 
 ${DB.config.certificado.assinaturaNome}
 ${escola}`;
@@ -216,17 +216,17 @@ ${escola}`;
 
   if(tarefa === "evento"){
     const ev = [...DB.eventos].sort((a,b)=>a.data.localeCompare(b.data))[0];
-    if(!ev) return "Ainda não há eventos marcados. Cria um em Eventos e volta aqui para gerar o convite.";
+    if(!ev) return "Ainda não há eventos marcados. Crie um em Eventos e volte aqui para gerar o convite.";
     return `🔴 ${ev.titulo}
 
 ${ev.data.split("-").reverse().join("/")} às ${ev.hora}, ao vivo.
 
 ${ev.descricao || "Encontro ao vivo com a mentoria."}
 
-Confirma a tua presença na aba Calendário da tua área de membros — e guarda o lembrete para não te escapar.`;
+Confirme a sua presença na aba Calendário da sua área de membros — e guarde o lembrete para não lhe escapar.`;
   }
 
-  return "Escolhe um curso para gerar este texto.";
+  return "Escolha um curso para gerar este texto.";
 }
 
 function renderAdminIA(){
@@ -238,20 +238,20 @@ function renderAdminIA(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Assistente",
-      descricao: "Rascunhos escritos a partir do conteúdo da tua academia — cursos, módulos, eventos e alunos — para reveres e usares."
+      descricao: "Rascunhos escritos a partir do conteúdo da sua academia — cursos, módulos, eventos e alunos — para rever e usar."
     })}
 
     <div class="card aviso-honesto">
       ${ICONS.spark}
       <div>
         <strong>Como isto funciona nesta fase</strong>
-        <p>Os textos são montados aqui, no teu browser, a partir do que já registaste. Não há ligação a um modelo de linguagem — quando ligarmos um, este mesmo ecrã passa a servir de interface.</p>
+        <p>Os textos são montados aqui, no seu browser, a partir do que já registou. Não há ligação a um modelo de linguagem — quando ligarmos um, este mesmo ecrã passa a servir de interface.</p>
       </div>
     </div>
 
     <div class="card ia-controlos">
       <div class="field" style="margin:0;">
-        <label for="sel-tarefa">O que queres escrever</label>
+        <label for="sel-tarefa">O que quer escrever</label>
         <div class="select-wrap" style="display:block;">
           <select id="sel-tarefa" style="width:100%;">
             ${TAREFAS_IA.map(t=>`<option value="${t.id}" ${t.id===tarefa?"selected":""}>${t.rotulo}</option>`).join("")}

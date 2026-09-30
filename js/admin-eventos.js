@@ -105,13 +105,13 @@ function editarEvento(id){
       { nome:"data", rotulo:"Data", tipo:"data", obrigatorio:true },
       { nome:"hora", rotulo:"Hora", tipo:"hora", obrigatorio:true },
       { nome:"link", rotulo:"Link da sala", tipo:"url", placeholder:"https://zoom.us/j/...", dica:"Para os encontros online. Num evento pago, só quem comprou o lugar o vê." },
-      { nome:"local", rotulo:"Local", tipo:"texto", placeholder:"ex: Av. 24 de Julho 123, Maputo", dica:"Para os encontros presenciais. Podes ter os dois." },
+      { nome:"local", rotulo:"Local", tipo:"texto", placeholder:"ex: Av. 24 de Julho 123, Maputo", dica:"Para os encontros presenciais. Pode ter os dois." },
       { nome:"ofertaId", rotulo:"Oferta", tipo:"select",
         opcoes:[{ valor:"", rotulo:"— nenhuma —" }].concat((DB.ofertas||[]).map(o => ({ valor:String(o.id), rotulo:o.nome }))),
         dica:"Num evento pago, é a oferta que vende o lugar: o aluno vê o evento e o botão para comprar. Nos outros, limita o evento a quem já a tem." },
       { nome:"cursos", rotulo:"Só para quem tem estes cursos", tipo:"checklist",
         opcoes:(DB.cursos||[]).map(c => ({ valor:c.id, rotulo:c.titulo })),
-        dica:"Deixa tudo por marcar para o evento ser de toda a academia." }
+        dica:"Deixe tudo por marcar para o evento ser de toda a academia." }
     ],
     valores: evento || { hora:"19:00", acesso:"gratuito", ofertaId:"", cursos:[] },
     aoGuardar: v => {

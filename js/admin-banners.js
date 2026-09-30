@@ -19,7 +19,7 @@ function renderAdminBanners(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Banners",
-      descricao: "O carrossel no topo do Calendário do aluno. Usa-o para promover eventos e ofertas.",
+      descricao: "O carrossel no topo do Calendário do aluno. Use-o para promover eventos e ofertas.",
       acaoRotulo: "Novo banner",
       acaoId: "btn-novo-banner"
     })}
@@ -128,7 +128,7 @@ function editarBanner(id){
       { nome:"link", rotulo:"Link do botão (página própria)", tipo:"url", placeholder:"https://...", dica:"Só para «Página própria»: para onde vai o botão da página." },
       { nome:"imagem", rotulo:"Imagem de fundo", tipo:"imagem", pasta:"banners", dica:"1600×400 px. No telemóvel é cortada dos lados; não ponhas texto importante nas pontas." },
       { nome:"gradiente", rotulo:"Cor de fundo", tipo:"select", opcoes:GRADIENTES },
-      { nome:"ativo", rotulo:"Ativo", tipo:"toggle", padrao:true, dica:"Se desligares, o banner deixa de entrar no carrossel." }
+      { nome:"ativo", rotulo:"Ativo", tipo:"toggle", padrao:true, dica:"Se desligar, o banner deixa de entrar no carrossel." }
     ],
     valores: banner
       ? Object.assign({}, banner, { destino: banner.destinoTipo && banner.destinoTipo !== "pagina" ? banner.destinoTipo + ":" + banner.destinoId : "pagina" })
@@ -141,7 +141,7 @@ function editarBanner(id){
       v.destinoId = v.destinoTipo === "pagina" ? "" : resto.join(":");
       delete v.destino;
       if(v.destinoTipo === "pagina" && !v.resumo && !v.link){
-        mostrarToast("Numa página própria, escreve o resumo ou o link do botão — senão a página fica vazia.");
+        mostrarToast("Numa página própria, escreva o resumo ou o link do botão — senão a página fica vazia.");
         return false;
       }
       const alvo = banner || { id:novoId("banner"), ordem:DB.banners.length + 1 };

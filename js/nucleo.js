@@ -241,8 +241,8 @@ function playerHTML(aula, titulo){
       <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
       <div class="placeholder-label">${papelEfetivo() === "administrador" && temCodigo ? "Código de incorporação não reconhecido" : "Esta aula não tem vídeo"}</div>
       <div class="placeholder-sub">${papelEfetivo() === "administrador"
-        ? (temCodigo ? "O código colado não traz um endereço de vídeo." : "Cola o código de incorporação em Conteúdos › aula › Vídeo.")
-        : "O conteúdo desta aula está no texto e nos materiais abaixo. Podes marcá-la como concluída ou seguir para a próxima."}</div>
+        ? (temCodigo ? "O código colado não traz um endereço de vídeo." : "Cole o código de incorporação em Conteúdos › aula › Vídeo.")
+        : "O conteúdo desta aula está no texto e nos materiais abaixo. Pode marcá-la como concluída ou seguir para a próxima."}</div>
     </div>`;
 }
 /* ============================================================
@@ -727,7 +727,7 @@ function renderAvisoPrevia(){
   if(!conteudo) return;
   const aviso = document.createElement("div");
   aviso.className = "aviso-previa";
-  aviso.innerHTML = `<span>Estás a ver a área como um aluno a vê.</span><button class="btn btn-secondary btn-sm" id="btn-sair-previa">Voltar ao painel</button>`;
+  aviso.innerHTML = `<span>Está a ver a área como um aluno a vê.</span><button class="btn btn-secondary btn-sm" id="btn-sair-previa">Voltar ao painel</button>`;
   conteudo.prepend(aviso);
   document.getElementById("btn-sair-previa").addEventListener("click", sairPreviaAluno);
 }

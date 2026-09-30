@@ -229,7 +229,7 @@ function tabelaVaziaHTML(){
 /* Um primeiro parágrafo a partir do título, para não começar em branco. */
 function sugerirTextoDaAula(){
   const titulo = document.getElementById("a-titulo").value.trim();
-  if(!titulo){ mostrarToast("Escreve primeiro o título da aula."); return; }
+  if(!titulo){ mostrarToast("Escreva primeiro o título da aula."); return; }
   const ctx = contextoDaAula();
   inserirHTML(`<h3>${titulo}</h3><p>Nesta aula do ${ctx.curso.titulo} vamos ver ${titulo.toLowerCase()} — o que é, porque conta e como aplicar já a seguir.</p><ul><li>O ponto de partida</li><li>O erro mais comum</li><li>O que fazer esta semana</li></ul>`);
 }
@@ -246,13 +246,13 @@ function renderPainelVideo(painel){
     <div class="card painel">
       <div class="field">
         <label>Código de incorporação (embed)</label>
-        <textarea id="a-embed" rows="4" class="campo-codigo" placeholder="Cola aqui o código copiado do ${provedor} — algo como &lt;iframe src=&quot;...&quot;&gt;&lt;/iframe&gt;">${(r.embed||"").replace(/</g,"&lt;")}</textarea>
+        <textarea id="a-embed" rows="4" class="campo-codigo" placeholder="Cole aqui o código copiado do ${provedor} — algo como &lt;iframe src=&quot;...&quot;&gt;&lt;/iframe&gt;">${(r.embed||"").replace(/</g,"&lt;")}</textarea>
         <p class="hint">Aceita o código completo, ou só o endereço do vídeo. Aproveitamos apenas o endereço: o player é montado por nós, com o estilo da academia.</p>
       </div>
       <div class="estado-embed ${codigoDado ? (url?"bom":"mau") : ""}">
         ${codigoDado
           ? (url ? `${iconeCheck()} Endereço reconhecido: <code>${url}</code>`
-                 : `⚠ Não encontrámos um endereço neste código. Copia o bloco que traz <code>&lt;iframe&gt;</code>.`)
+                 : `⚠ Não encontrámos um endereço neste código. Copie o bloco que traz <code>&lt;iframe&gt;</code>.`)
           : `Sem código, a aula mostra o marcador ao aluno.`}
       </div>
       <div class="field" style="margin-top:18px;">
@@ -286,10 +286,10 @@ function anotarDuracao(texto){
 }
 
 function ondeCopiar(provedor){
-  if(/panda/i.test(provedor)) return "abre o vídeo na biblioteca, carrega em <strong>Compartilhar › Embed</strong> e copia o bloco inteiro.";
-  if(/youtube/i.test(provedor)) return "no vídeo, <strong>Partilhar › Incorporar</strong>, e copia o código.";
-  if(/vimeo/i.test(provedor)) return "no vídeo, <strong>Share › Embed</strong>, e copia o código.";
-  return "procura a opção de partilha ou incorporação (embed) do teu provedor e copia o bloco com <code>&lt;iframe&gt;</code>.";
+  if(/panda/i.test(provedor)) return "abra o vídeo na biblioteca, carregue em <strong>Compartilhar › Embed</strong> e copie o bloco inteiro.";
+  if(/youtube/i.test(provedor)) return "no vídeo, <strong>Partilhar › Incorporar</strong>, e copie o código.";
+  if(/vimeo/i.test(provedor)) return "no vídeo, <strong>Share › Embed</strong>, e copie o código.";
+  return "procure a opção de partilha ou incorporação (embed) do seu provedor e copie o bloco com <code>&lt;iframe&gt;</code>.";
 }
 
 /* ---------------- Ficheiros ---------------- */
@@ -308,7 +308,7 @@ function renderPainelFicheiros(painel){
             <div class="ficheiro-info"><strong>${f.nome}</strong><span class="sub-celula">${f.tamanho ? f.tamanho+" · " : ""}${f.url.startsWith("data:") ? "Guardado nesta demonstração" : f.url}</span></div>
             <button class="btn-icone perigo" data-remover-ficheiro="${i}" title="Remover"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
           </div>`).join("")}
-      </div>` : `<div class="empty-note">Sem materiais. Junta o PDF, a folha de trabalho ou o modelo que o aluno deve descarregar.</div>`}
+      </div>` : `<div class="empty-note">Sem materiais. Junte o PDF, a folha de trabalho ou o modelo que o aluno deve descarregar.</div>`}
       <input type="file" class="hidden" id="ficheiro-anexo">
     </div>
   `;
@@ -354,7 +354,7 @@ function renderPainelQuiz(painel){
         <div class="quiz-bloco">
           <div class="quiz-bloco-head">
             <span class="quiz-num">${i+1}</span>
-            <input type="text" class="quiz-pergunta" data-pergunta="${i}" value="${(q.pergunta||"").replace(/"/g,"&quot;")}" placeholder="Escreve a pergunta">
+            <input type="text" class="quiz-pergunta" data-pergunta="${i}" value="${(q.pergunta||"").replace(/"/g,"&quot;")}" placeholder="Escreva a pergunta">
             <button class="btn-icone perigo" data-remover-pergunta="${i}" title="Remover"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
           </div>
           <div class="quiz-opcoes">
@@ -368,7 +368,7 @@ function renderPainelQuiz(painel){
           <button class="btn-nova-aula" data-add-opcao="${i}">+ Adicionar opção</button>
         </div>`).join("")
       : `<div class="empty-note">Sem perguntas. Um quiz curto no fim da aula ajuda a fixar o que ficou.</div>`}
-      <p class="hint" style="margin-top:12px;">Marca o círculo da opção certa. O aluno responde no fim da aula e vê logo o resultado.</p>
+      <p class="hint" style="margin-top:12px;">Marque o círculo da opção certa. O aluno responde no fim da aula e vê logo o resultado.</p>
     </div>
   `;
 

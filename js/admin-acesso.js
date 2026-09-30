@@ -118,7 +118,7 @@ function editarMembro(id){
       { nome:"nome", rotulo:"Nome completo", tipo:"texto", obrigatorio:true },
       { nome:"email", rotulo:"Email", tipo:"texto", obrigatorio:true, dica:"O aluno não pode alterar o próprio email — só aqui." },
       { nome:"telefone", rotulo:"Telefone", tipo:"texto", placeholder:"+258 ..." },
-      { nome:"planoId", rotulo:"Plano", tipo:"select", opcoes:opcoesPlanos(), dica:"Define a que cursos este membro tem acesso." },
+      { nome:"planoId", rotulo:"Plano", tipo:"select", opcoes:opcoesPlanos(), dica:"Define os cursos a que este membro tem acesso." },
       { nome:"papel", rotulo:"Papel", tipo:"select", opcoes:[{valor:"aluno",rotulo:"Aluno"},{valor:"administrador",rotulo:"Administrador"}] },
       { nome:"acesso", rotulo:"Estado do acesso", tipo:"select", opcoes:[{valor:"ativo",rotulo:"Ativo"},{valor:"inativo",rotulo:"Inativo"},{valor:"bloqueado",rotulo:"Bloqueado"}] },
       { nome:"membroDesde", rotulo:"Membro desde", tipo:"data" },
@@ -186,7 +186,7 @@ function renderAdminConvites(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Convites",
-      descricao: "Os convites de quem paga são criados sozinhos quando o Payflow confirma o pagamento. Também podes enviar um à mão.",
+      descricao: "Os convites de quem paga são criados sozinhos quando o Payflow confirma o pagamento. Também pode enviar um à mão.",
       acaoRotulo: "Novo convite",
       acaoId: "btn-novo-convite"
     })}
@@ -208,7 +208,7 @@ function renderAdminConvites(){
           <thead><tr><th>Pessoa</th><th>Cursos</th><th>Idioma</th><th>Origem</th><th>Enviado</th><th>Expira</th><th>Estado</th><th><span class="so-leitor">Ações</span></th></tr></thead>
           <tbody>
             ${visiveis.length ? visiveis.map(linhaDoConvite).join("")
-              : `<tr><td colspan="8"><div class="empty-note">${convites.length ? "Nenhum convite com este filtro." : "Ainda não enviaste convites."}</div></td></tr>`}
+              : `<tr><td colspan="8"><div class="empty-note">${convites.length ? "Nenhum convite com este filtro." : "Ainda não enviou convites."}</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -423,7 +423,7 @@ function mostrarLinkDoConvite(email, link, aviso){
   const seguro = String(link || "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
   confirmarAcao({
     titulo: "O link do convite",
-    mensagem: `${textoSeguro(aviso || "O email não chegou a sair.")}<br><br>Envia este link a <strong>${textoSeguro(email)}</strong>:
+    mensagem: `${textoSeguro(aviso || "O email não chegou a sair.")}<br><br>Envie este link a <strong>${textoSeguro(email)}</strong>:
       <span style="display:block;margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--surface-raised);font-size:12px;word-break:break-all;">${seguro}</span>`,
     textoConfirmar: "Copiar link",
     aoConfirmar: () => {
@@ -621,7 +621,7 @@ function apagarPlano(id){
   /* Apagar um plano que uma oferta ainda vende deixa a oferta a cobrar e a não
      entregar nada. Desliga-se lá primeiro, onde a ligação foi feita. */
   if(oferta){
-    mostrarToast(`A oferta "${oferta.nome}" ainda vende este plano — desliga-a no Payflow primeiro`);
+    mostrarToast(`A oferta "${oferta.nome}" ainda vende este plano — desligue-a no Payflow primeiro`);
     return;
   }
   confirmarAcao({

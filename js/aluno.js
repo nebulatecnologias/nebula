@@ -31,7 +31,7 @@ function renderDashboard(){
   document.getElementById("content-dashboard").innerHTML = `
     <div class="page-head">
       <h1>Olá, ${estado.nome.split(" ")[0]}.</h1>
-      <p class="desc"><span class="data-hoje">${hoje}.</span> Continua a construir: aqui está o ponto em que ficaste no teu percurso.</p>
+      <p class="desc"><span class="data-hoje">${hoje}.</span> Continue a construir: aqui está o ponto em que ficou no seu percurso.</p>
     </div>
 
     ${locPrincipal ? `
@@ -48,7 +48,7 @@ function renderDashboard(){
       <button class="btn btn-primary" type="button">Continuar ${setaCirculo()}</button>
     </div>` : `
     <div class="card" style="padding:26px;margin-bottom:16px;">
-      <p style="margin:0;">Ainda não tens nenhum curso disponível. Assim que a tua mentoria libertar o acesso, ele aparece aqui.</p>
+      <p style="margin:0;">Ainda não tem nenhum curso disponível. Assim que a sua mentoria libertar o acesso, ele aparece aqui.</p>
     </div>`}
     ${outrosEmAndamento.length ? `
     <div class="continue-row">
@@ -94,12 +94,12 @@ function renderDashboard(){
             <div class="widget-title">${conquistaDestaque.titulo}</div>
             <div class="widget-sub">${conquistaDestaque.desc}</div>
           </div>
-        </div>` : `<p style="margin:0;">Conclui a tua primeira aula para desbloquear a primeira conquista.</p>`}
+        </div>` : `<p style="margin:0;">Conclua a sua primeira aula para desbloquear a primeira conquista.</p>`}
         <button class="btn btn-secondary btn-sm" id="btn-ir-conquistas">Ver todas as conquistas</button>
       </div>
     </div>
 
-    <div class="section-title"><h2>Os teus cursos</h2><span class="see-all" id="btn-ver-todos-cursos" role="link" tabindex="0">Ver todos ${setaCirculo()}</span></div>
+    <div class="section-title"><h2>Os seus cursos</h2><span class="see-all" id="btn-ver-todos-cursos" role="link" tabindex="0">Ver todos ${setaCirculo()}</span></div>
     <div class="course-grid">
       ${destaques.map(c=>renderCourseCardHTML(c)).join("")}
     </div>
@@ -201,7 +201,7 @@ function renderCatalogo(){
   const html = `
     <div class="page-head">
       <h1>Meus cursos</h1>
-      <p class="desc">Todos os teus programas, mentorias e mastermind num só lugar — ${geral.pct}% de progresso geral.</p>
+      <p class="desc">Todos os seus programas, mentorias e mastermind num só lugar — ${geral.pct}% de progresso geral.</p>
     </div>
     <div class="chip-row" id="chip-row"></div>
     <div class="course-grid" id="catalogo-grid"></div>
@@ -228,7 +228,7 @@ function renderCatalogo(){
     ? lista.map(c=>renderCourseCardHTML(c)).join("")
     : semNada
       ? `<div class="empty-note">
-           Ainda não tens nenhum curso aberto. Assim que a mentoria te der acesso, aparece aqui.
+           Ainda não tem nenhum curso aberto. Assim que a mentoria lhe der acesso, aparece aqui.
            <br><button class="btn btn-secondary btn-sm" id="btn-ir-vitrine" style="margin-top:12px;">Ver o que há na Vitrine ${setaCirculo()}</button>
          </div>`
       : `<div class="empty-note">Nenhum curso nesta categoria ainda.</div>`;
@@ -268,7 +268,7 @@ function renderVitrine(){
   document.getElementById("content-vitrine").innerHTML = `
     <div class="page-head">
       <h1>Disponível para desbloquear</h1>
-      <p class="desc">O que ainda não faz parte do teu acesso. Toca num para veres como entrar.</p>
+      <p class="desc">O que ainda não faz parte do seu acesso. Toque num para ver como entrar.</p>
     </div>
     ${chips.length > 2 ? `<div class="chip-row" id="vitrine-chips" role="group" aria-label="Categorias">
       ${chips.map(ch => `<button type="button" class="chip ${estado.filtroVitrine === ch.id ? "active" : ""}" data-cat="${ch.id}" aria-pressed="${estado.filtroVitrine === ch.id}">${ch.cor ? `<span class="dot" style="--c:${ch.cor}"></span>` : ""}${ch.nome}</button>`).join("")}
@@ -276,7 +276,7 @@ function renderVitrine(){
     <div class="course-grid" id="vitrine-grid">
       ${lista.length ? lista.map(cartaoDaVitrine).join("")
         : montra.length ? `<div class="empty-note">Nada nesta categoria de momento.</div>`
-        : `<div class="empty-note">Já tens acesso a tudo o que está disponível. Bom trabalho.</div>`}
+        : `<div class="empty-note">Já tem acesso a tudo o que está disponível. Bom trabalho.</div>`}
     </div>
   `;
   document.querySelectorAll("#vitrine-chips .chip").forEach(el => el.addEventListener("click", () => {
@@ -383,9 +383,9 @@ function renderCurso(cursoId){
       <div class="back-link" id="btn-voltar-catalogo"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Meus cursos</div>
       <div class="card" style="padding:32px; text-align:center">
         <h1 style="margin:0 0 8px">${curso.titulo}</h1>
-        <p class="sub" style="margin:0 0 20px">Ainda não tens acesso a este curso.</p>
+        <p class="sub" style="margin:0 0 20px">Ainda não tem acesso a este curso.</p>
         <p style="margin:0 0 22px; color:var(--muted)">
-          Se acabaste de pagar, o acesso abre-se assim que confirmarmos — avisamos-te por email.
+          Se acabou de pagar, o acesso abre-se assim que confirmarmos — avisamo-lo por email.
         </p>
         ${oferta && oferta.destino
           ? `<a class="btn btn-primary" href="${oferta.destino}" target="_blank" rel="noopener">
@@ -439,7 +439,7 @@ function renderCurso(cursoId){
     ${preVenda
       ? `<div class="aviso-pre-venda" role="status">${ICONE_RELOGIO}<div>
            <h2>${textoDaPreVenda(preVenda.abreEm)}</h2>
-           <p>Compraste na pré-venda. O curso já é teu; as aulas aparecem aqui assim que abrirem.</p>
+           <p>Comprou na pré-venda. O curso já é seu; as aulas aparecem aqui assim que abrirem.</p>
          </div></div>`
       : `<div class="section-title"><h2>Conteúdo do curso</h2><span class="sub-celula">${curso.modulos.length} módulo${curso.modulos.length===1?"":"s"} · ${p.concluidas} de ${p.total} aulas concluídas</span></div>`}
     <div id="lista-modulos"></div>
@@ -529,7 +529,7 @@ function renderAula(cursoId, aulaId){
           <div class="estrelas" id="estrelas-aula">
             ${[1,2,3,4,5].map(n => `<button class="estrela" type="button" data-estrela="${n}">${ICONS.star}</button>`).join("")}
           </div>
-          <textarea id="comentario-aula" placeholder="Deixa um comentário sobre esta aula (opcional)...">${(minhaAvaliacao(aula.id)||{}).comentario || ""}</textarea>
+          <textarea id="comentario-aula" placeholder="Deixe um comentário sobre esta aula (opcional)...">${(minhaAvaliacao(aula.id)||{}).comentario || ""}</textarea>
           <button class="btn btn-primary btn-sm" id="btn-enviar-avaliacao">Enviar avaliação</button>
           ${curso.moderacao ? '<p class="hint" style="margin:10px 0 0;">Os comentários deste curso são revistos antes de aparecerem.</p>' : ""}
         </div>`}
@@ -682,7 +682,7 @@ function ligarQuiz(aula){
       const certas = aula.quiz.filter((p,idx) => respostas[idx] === p.certa).length;
       const res = document.getElementById("quiz-resultado");
       res.className = "quiz-resultado " + (certas === aula.quiz.length ? "tudo-certo" : "");
-      res.textContent = `${certas} de ${aula.quiz.length} certas.` + (certas === aula.quiz.length ? " Perfeito." : " Revê a aula e tenta de novo.");
+      res.textContent = `${certas} de ${aula.quiz.length} certas.` + (certas === aula.quiz.length ? " Perfeito." : " Reveja a aula e tente de novo.");
     }
   }));
 }
@@ -731,11 +731,11 @@ function renderComunidade(){
   document.getElementById("content-comunidade").innerHTML = `
     <div class="page-head">
       <h1>Comunidade</h1>
-      <p class="desc">Os grupos dos teus programas. Entra para conversares com a tua turma e com a equipa.</p>
+      <p class="desc">Os grupos dos seus programas. Entre para conversar com a sua turma e com a equipa.</p>
     </div>
     ${lista.length ? `<div class="card lista-comunidades" role="list">
       ${lista.map(comunidadeHTML).join("")}
-    </div>` : `<div class="card empty-note">Ainda não há grupos para os teus programas. Quando houver, aparecem aqui.</div>`}
+    </div>` : `<div class="card empty-note">Ainda não há grupos para os seus programas. Quando houver, aparecem aqui.</div>`}
   `;
 }
 
@@ -770,7 +770,7 @@ function renderConquistas(){
   document.getElementById("content-conquistas").innerHTML = `
     <div class="page-head">
       <h1>Conquistas</h1>
-      <p class="desc">Cada aula concluída soma pontos de experiência e aproxima-te da próxima conquista.</p>
+      <p class="desc">Cada aula concluída soma pontos de experiência e aproxima-o da próxima conquista.</p>
     </div>
     <div class="card xp-card">
       <div class="xp-badge">Nv.${nivel}</div>
@@ -822,7 +822,7 @@ function baixarLembrete(evento){
   a.href = url; a.target = "_blank"; a.rel = "noopener";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  mostrarToast("A abrir o evento na tua agenda...");
+  mostrarToast("A abrir o evento na sua agenda...");
 }
 
 let bannerTimer = null;
@@ -902,7 +902,7 @@ function renderCalendario(){
             <div><span class="rotulo">Onde</span><strong>${e.local || (e.link ? "Online" : "A anunciar")}</strong></div>
             <div><span class="rotulo">Acesso</span><strong>${ROTULO_ACESSO[e.acesso] || "Gratuito"}</strong></div>
             <div><span class="rotulo">Área</span><strong>${cat.nome}</strong></div>
-            ${confirmado && !passado ? '<div><span class="rotulo">A tua presença</span><strong class="confirmada">Confirmada</strong></div>' : ""}
+            ${confirmado && !passado ? '<div><span class="rotulo">A sua presença</span><strong class="confirmada">Confirmada</strong></div>' : ""}
           </div>
           <div class="event-acoes">
             ${passado
@@ -976,7 +976,7 @@ function renderCertificados(){
   document.getElementById("content-certificados").innerHTML = `
     <div class="page-head">
       <h1>Certificados</h1>
-      <p class="desc">Um certificado é desbloqueado automaticamente quando concluis ${regraCertificado()}% de um curso.</p>
+      <p class="desc">Um certificado é desbloqueado automaticamente quando conclui ${regraCertificado()}% de um curso.</p>
     </div>
     <div class="cert-grid" id="cert-grid"></div>
   `;
@@ -993,7 +993,7 @@ function renderCertificados(){
         <h4>${c.titulo}</h4>
         ${concluido
           ? `<button class="btn btn-secondary btn-sm btn-block">Ver certificado</button>`
-          : `<div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div><div class="cert-locked-note">${p.pct}% de ${regraCertificado()}% — continua para desbloquear</div>`
+          : `<div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div><div class="cert-locked-note">${p.pct}% de ${regraCertificado()}% — continue para desbloquear</div>`
         }
       </div>
     </div>`;
@@ -1009,7 +1009,7 @@ function renderDefinicoes(){
   document.getElementById("content-definicoes").innerHTML = `
     <div class="page-head">
       <h1>Definições</h1>
-      <p class="desc">Gere o teu perfil e as tuas preferências de notificação.</p>
+      <p class="desc">Faça a gestão do seu perfil e das suas preferências de notificação.</p>
     </div>
     <div class="settings-grid">
       <div>
@@ -1023,7 +1023,7 @@ function renderDefinicoes(){
                 ${estado.fotoUrl ? `<button class="btn btn-secondary btn-sm" id="btn-remover-foto" type="button">Remover</button>` : ""}
               </div>
               <input type="file" accept="image/*" id="input-foto" class="hidden">
-              <p class="hint" style="margin:8px 0 0;">PNG ou JPG. Sem foto, ficam as tuas iniciais.</p>
+              <p class="hint" style="margin:8px 0 0;">PNG ou JPG. Sem foto, ficam as suas iniciais.</p>
             </div>
           </div>
           <div class="field"><label for="input-nome">Nome completo</label><input type="text" id="input-nome" autocomplete="name" value="${textoSeguro(estado.nome).replace(/"/g,"&quot;")}"></div>
@@ -1043,7 +1043,7 @@ function renderDefinicoes(){
             <div class="toggle ${estado.notificacoes.email?"on":""}" data-toggle="email"><div class="knob"></div></div>
           </div>
           <div class="toggle-row">
-            <div><div class="t-title">Lembretes de aulas</div><div class="t-sub">Continuar de onde ficaste</div></div>
+            <div><div class="t-title">Lembretes de aulas</div><div class="t-sub">Continuar de onde ficou</div></div>
             <div class="toggle ${estado.notificacoes.lembretes?"on":""}" data-toggle="lembretes"><div class="knob"></div></div>
           </div>
           <div class="toggle-row">
@@ -1055,8 +1055,8 @@ function renderDefinicoes(){
         ${DB.config.integracoes.suporteUrl ? `
         <div class="card bloco-apoio">
           <div>
-            <div class="t-title">Precisas de ajuda?</div>
-            <div class="t-sub">Fala diretamente com quem acompanha o teu percurso.</div>
+            <div class="t-title">Precisa de ajuda?</div>
+            <div class="t-sub">Fale diretamente com quem acompanha o seu percurso.</div>
           </div>
           <a class="btn btn-secondary" href="${linkExterno(DB.config.integracoes.suporteUrl)}" target="_blank" rel="noopener">${DB.config.integracoes.suporteRotulo || "Falar com a mentoria"}</a>
         </div>` : ""}

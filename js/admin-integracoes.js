@@ -58,8 +58,8 @@ function renderAdminIntegracoes(){
     <div class="card painel">
       <ol class="passos">
         <li><strong>No ${i.player}</strong>, ${ondeCopiar(i.player)}</li>
-        <li><strong>Aqui</strong>, abre Conteúdos › o curso › a aula › separador <strong>Vídeo</strong>.</li>
-        <li><strong>Cola</strong> o código no campo e confirma a pré-visualização. Guarda.</li>
+        <li><strong>Aqui</strong>, abra Conteúdos › o curso › a aula › separador <strong>Vídeo</strong>.</li>
+        <li><strong>Cole</strong> o código no campo e confirme a pré-visualização. Guarde.</li>
       </ol>
       <p class="hint">Do código colado aproveitamos só o endereço do vídeo — o player é montado por nós, com a moldura, o arredondamento e as cores da academia. Nenhum HTML de fora entra na página.</p>
       ${urlExemplo ? `
@@ -98,7 +98,7 @@ function renderAdminIntegracoes(){
 function configurarPlayer(){
   abrirDrawer({
     titulo: "Provedor de vídeo",
-    subtitulo: "Serve para a academia te dizer onde copiar o código. O vídeo entra sempre pelo código de incorporação de cada aula.",
+    subtitulo: "Serve para a academia lhe dizer onde copiar o código. O vídeo entra sempre pelo código de incorporação de cada aula.",
     campos: [
       { nome:"player", rotulo:"Onde alojas os vídeos", tipo:"select", opcoes:[
         { valor:"Panda Video", rotulo:"Panda Video" },
@@ -123,7 +123,7 @@ function configurarSuporte(){
     subtitulo: "Aparece nas Definições do aluno, como botão para pedir ajuda.",
     campos: [
       { nome:"suporteRotulo", rotulo:"Texto do botão", tipo:"texto", placeholder:"Falar com a mentoria" },
-      { nome:"suporteUrl", rotulo:"Link", tipo:"texto", placeholder:"https://wa.me/258... ou mailto:apoio@...", dica:"Deixa vazio para esconder o botão." }
+      { nome:"suporteUrl", rotulo:"Link", tipo:"texto", placeholder:"https://wa.me/258... ou mailto:apoio@...", dica:"Deixe vazio para esconder o botão." }
     ],
     valores: DB.config.integracoes,
     aoGuardar: v => {

@@ -216,13 +216,13 @@ function editarModeloCertificado(){
   const c = DB.config.certificado;
   abrirDrawer({
     titulo: "Modelo do certificado",
-    subtitulo: "Muda o texto e a regra de emissão. A pré-visualização atualiza logo.",
+    subtitulo: "Mude o texto e a regra de emissão. A pré-visualização atualiza logo.",
     campos: [
       { nome:"regraPct", rotulo:"Emitir a partir de (%)", tipo:"numero", obrigatorio:true, dica:"Percentagem do curso que o aluno tem de concluir." },
       { nome:"titulo", rotulo:"Título", tipo:"texto", obrigatorio:true },
       { nome:"frase", rotulo:"Frase de conclusão", tipo:"texto", placeholder:"concluiu com sucesso o curso" },
       { nome:"rodape", rotulo:"Rodapé", tipo:"texto", placeholder:"na Kingdom Academy" },
-      { nome:"assinaturaNome", rotulo:"Assinatura — nome", tipo:"texto", dica:"Deixa vazio para não mostrar assinatura." },
+      { nome:"assinaturaNome", rotulo:"Assinatura — nome", tipo:"texto", dica:"Deixe vazio para não mostrar assinatura." },
       { nome:"assinaturaCargo", rotulo:"Assinatura — cargo", tipo:"texto" }
     ],
     valores: c,

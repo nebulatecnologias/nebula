@@ -71,7 +71,7 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
       else if(c.tipo==="checklist") valor = [...el.querySelectorAll("input:checked")].map(i=>i.value);
       else if(c.tipo==="numero") valor = el.value==="" ? null : Number(el.value);
       else valor = el.value.trim();
-      if(c.obrigatorio && (valor===null || valor==="" || (Array.isArray(valor) && !valor.length))) erro = erro || `Preenche o campo "${c.rotulo}".`;
+      if(c.obrigatorio && (valor===null || valor==="" || (Array.isArray(valor) && !valor.length))) erro = erro || `Preencha o campo "${c.rotulo}".`;
       recolhidos[c.nome] = valor;
     });
     if(erro){ mostrarToast(erro); return; }

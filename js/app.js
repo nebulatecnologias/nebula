@@ -20,7 +20,7 @@ function mostrarEcraDeRecuperacao(detalhe){
   el.innerHTML = `
     <div class="card confirm-card">
       <h3>Algo correu mal ao abrir a área de membros</h3>
-      <p>Isto costuma acontecer quando ficam dados antigos guardados neste browser. Podes repor os dados de demonstração — o conteúdo volta ao estado original.</p>
+      <p>Isto costuma acontecer quando ficam dados antigos guardados neste browser. Pode repor os dados de demonstração — o conteúdo volta ao estado original.</p>
       <p class="hint" style="word-break:break-word;">${detalhe || ""}</p>
       <div class="confirm-acoes">
         <button class="btn btn-secondary" type="button" id="btn-recarregar">Tentar de novo</button>
@@ -74,7 +74,7 @@ async function arrancar(){
   } catch(e){
     mostrarEcra("arranque");
     document.getElementById("arranque-texto").innerHTML =
-      "Não foi possível carregar a biblioteca do Supabase.<br>Verifica a ligação à internet e recarrega a página.";
+      "Não foi possível carregar a biblioteca do Supabase.<br>Verifique a ligação à internet e recarregue a página.";
     return;
   }
 
@@ -134,12 +134,12 @@ async function arrancar(){
 
 async function abrirConviteDoEmail(token){
   mostrarEcra("arranque");
-  document.getElementById("arranque-texto").textContent = "A abrir o teu convite...";
+  document.getElementById("arranque-texto").textContent = "A abrir o seu convite...";
   let r;
   try { r = await API.abrirConvite(token); }
   catch(erro){
     aplicarAparencia(); mostrarEcra("login");
-    avisoLogin(erro.message || "Não foi possível abrir o convite agora. Tenta daqui a pouco.");
+    avisoLogin(erro.message || "Não foi possível abrir o convite agora. Tente daqui a pouco.");
     return;
   }
   /* O token sai do endereço: recarregar não deve voltar a perguntar. */
@@ -157,14 +157,14 @@ async function abrirConviteDoEmail(token){
   mostrarEcra("login");
   if(r.estado === "aceite"){
     if(r.email) document.getElementById("input-email").value = r.email;
-    avisoLogin("Este convite já foi usado. Entra com o teu email e a tua password.", "nota");
+    avisoLogin("Este convite já foi usado. Entre com o seu email e a sua password.", "nota");
   } else if(r.estado === "revogado"){
-    avisoLogin("Este convite foi cancelado. Pede um novo a quem te convidou.");
+    avisoLogin("Este convite foi cancelado. Peça um novo a quem o convidou.");
   } else if(r.estado === "expirado"){
     const quando = r.expiraEm ? new Date(r.expiraEm).toLocaleDateString("pt-PT", { day:"numeric", month:"long" }) : "";
-    avisoLogin(`Este convite expirou${quando ? " a " + quando : ""}. Pede um novo a quem te convidou.`);
+    avisoLogin(`Este convite expirou${quando ? " a " + quando : ""}. Peça um novo a quem o convidou.`);
   } else {
-    avisoLogin("Este link de convite não é válido. Confirma que o abriste inteiro, a partir do email.");
+    avisoLogin("Este link de convite não é válido. Confirme que o abriu inteiro, a partir do email.");
   }
 }
 
@@ -173,7 +173,7 @@ async function abrirConviteDoEmail(token){
    sempre no ecrã de carregamento é a pior saída possível. */
 async function entrarNaArea(){
   mostrarEcra("arranque");
-  document.getElementById("arranque-texto").textContent = "A carregar os teus cursos...";
+  document.getElementById("arranque-texto").textContent = "A carregar os seus cursos...";
   try {
     await API.carregarTudo();
   } catch(erro){
@@ -201,7 +201,7 @@ document.getElementById("form-login").addEventListener("submit", async e => {
 
   if(modoDemonstracao()) return entrarEmDemonstracao(email);
 
-  if(!email || !password){ avisoLogin("Preenche o email e a password."); return; }
+  if(!email || !password){ avisoLogin("Preencha o email e a password."); return; }
 
   botao.disabled = true;
   botao.textContent = "A entrar...";
@@ -221,7 +221,7 @@ document.getElementById("form-login").addEventListener("submit", async e => {
 function entrarEmDemonstracao(email){
   let membro = membroPorEmail(email) || aceitarConvitePendente(email);
   if(membro && membro.acesso === "bloqueado"){
-    mostrarToast("Este acesso está bloqueado. Fala com a tua mentoria.");
+    mostrarToast("Este acesso está bloqueado. Fale com a sua mentoria.");
     return;
   }
   if(membro){
@@ -244,11 +244,11 @@ function entrarEmDemonstracao(email){
 document.getElementById("btn-esqueci").addEventListener("click", async e => {
   e.preventDefault();
   const email = document.getElementById("input-email").value.trim();
-  if(!email){ avisoLogin("Escreve primeiro o teu email, e depois carrega aqui."); return; }
+  if(!email){ avisoLogin("Escreva primeiro o seu email, e depois carregue aqui."); return; }
   if(modoDemonstracao()){ avisoLogin("Em modo de demonstração não há emails.", "nota"); return; }
   try {
     await API.pedirNovaPassword(email);
-    avisoLogin("Enviámos-te um link para " + email + ". Confirma também a pasta de spam.", "nota");
+    avisoLogin("Enviámos um link para " + email + ". Confirme também a pasta de spam.", "nota");
   } catch(erro){ avisoLogin(erro.message); }
 });
 
@@ -256,17 +256,17 @@ document.getElementById("btn-pedir-acesso").addEventListener("click", e => {
   e.preventDefault();
   const apoio = (DB.config.integracoes || {}).suporteUrl;
   if(apoio) abrirLink(apoio);
-  else avisoLogin("Pede o convite a quem te acompanha na academia.", "nota");
+  else avisoLogin("Peça o convite a quem o acompanha na academia.", "nota");
 });
 
 /* Formulário de nova password, depois do link do email. */
 function pedirNovaPassword(primeiraVez){
   const cartao = document.querySelector(".login-card");
   cartao.innerHTML = `
-    <h1>${primeiraVez ? "Boas-vindas à academia" : "Escolhe uma nova password"}</h1>
-    <p class="sub">${primeiraVez ? "Escolhe a password com que passas a entrar. Pelo menos 8 caracteres." : "Tem de ter pelo menos 8 caracteres."}</p>
+    <h1>${primeiraVez ? "Boas-vindas à academia" : "Escolha uma nova password"}</h1>
+    <p class="sub">${primeiraVez ? "Escolha a password com que passa a entrar. Pelo menos 8 caracteres." : "Tem de ter pelo menos 8 caracteres."}</p>
     <div class="field"><label for="pass-nova">Nova password</label><input type="password" id="pass-nova" autocomplete="new-password" placeholder="Pelo menos 8 caracteres"></div>
-    <div class="field"><label for="pass-repete">Repete a password</label><input type="password" id="pass-repete" autocomplete="new-password"></div>
+    <div class="field"><label for="pass-repete">Repita a password</label><input type="password" id="pass-repete" autocomplete="new-password"></div>
     <button class="btn btn-primary btn-block btn-lg" id="btn-definir-pass">${primeiraVez ? "Entrar na academia" : "Guardar e entrar"}</button>
     <div class="login-aviso hidden" id="login-aviso"></div>
   `;
@@ -300,7 +300,7 @@ botaoSair.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === "
 function despedidaDeQuemSaiu(){
   let saiu = false;
   try { saiu = sessionStorage.getItem("academia-saiu") === "1"; sessionStorage.removeItem("academia-saiu"); } catch(e){}
-  if(saiu) avisoLogin("Saíste da tua conta. Até à próxima aula!", "nota");
+  if(saiu) avisoLogin("Saiu da sua conta. Até à próxima aula!", "nota");
 }
 
 document.getElementById("avatar-iniciais").addEventListener("click", () => {

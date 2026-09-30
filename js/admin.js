@@ -6,7 +6,7 @@ function renderAdminVisaoGeral(){
     <div class="page-head-flex">
       <div class="page-head">
         <h1>Visão geral</h1>
-        <p class="desc">Todos os teus alunos, cursos e resultados num só lugar.</p>
+        <p class="desc">Todos os seus alunos, cursos e resultados num só lugar.</p>
       </div>
     </div>
     <div class="stat-row">

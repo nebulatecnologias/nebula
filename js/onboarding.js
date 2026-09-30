@@ -55,20 +55,20 @@ function renderPassoOnboarding(){
 
   const passos = [
     {
-      titulo: "O que te trouxe aqui?",
-      sub: "Escolhe uma ou mais áreas. É por aí que vamos começar a tua trilha.",
+      titulo: "O que o trouxe aqui?",
+      sub: "Escolha uma ou mais áreas. É por aí que vamos começar a sua trilha.",
       opcoes: objetivosDisponiveis().map(o => ({ id:o.id, rotulo:o.nome, cor:o.cor })),
       multipla: true,
       valor: r.objetivos
     },
     {
-      titulo: "Quanto tempo tens por semana?",
-      sub: "Serve para calibrar o ritmo que te vamos sugerir.",
+      titulo: "Quanto tempo tem por semana?",
+      sub: "Serve para calibrar o ritmo que lhe vamos sugerir.",
       opcoes: RITMOS.map(x => ({ id:x.id, rotulo:x.rotulo, desc:x.desc })),
       valor: r.ritmo
     },
     {
-      titulo: "Em que ponto estás agora?",
+      titulo: "Em que ponto está agora?",
       sub: "Ajuda-nos a perceber por onde entrar.",
       opcoes: MOMENTOS.map(x => ({ id:x.id, rotulo:x.rotulo, desc:x.desc })),
       valor: r.momento
@@ -155,7 +155,7 @@ function renderResultadoOnboarding(corpo){
   corpo.innerHTML = `
     <div class="onb-passos" role="img" aria-label="Passo 3 de 3, concluído">${[0,1,2].map(()=>'<span class="feito"></span>').join("")}</div>
     <h2>Por aqui, ${estado.nome.split(" ")[0]}.</h2>
-    <p class="onb-sub">${nomes.length ? `Focámos em ${nomes.join(", ")}` : "Montámos um percurso com o que tens disponível"}${ritmo ? `, a ${ritmo.aulasSemana} aulas por semana` : ""}.</p>
+    <p class="onb-sub">${nomes.length ? `Focámos em ${nomes.join(", ")}` : "Montámos um percurso com o que tem disponível"}${ritmo ? `, a ${ritmo.aulasSemana} aulas por semana` : ""}.</p>
     ${trilha.length ? `<ol class="onb-trilha">
       ${trilha.map(c => {
         const cat = categoriaDe(c.categoria);
@@ -165,7 +165,7 @@ function renderResultadoOnboarding(corpo){
           <span class="onb-trilha-txt"><strong>${c.titulo}</strong><span>${cat.nome} · ${aulas} aula${aulas===1?"":"s"}</span></span>
         </li>`;
       }).join("")}
-    </ol>` : `<p class="onb-sub">Ainda não há cursos no teu acesso. Fala com a tua mentoria.</p>`}
+    </ol>` : `<p class="onb-sub">Ainda não há cursos no seu acesso. Fale com a sua mentoria.</p>`}
     <div class="onb-acoes">
       <button class="btn btn-texto" id="onb-refazer">Responder de novo</button>
       <button class="btn btn-primary" id="onb-comecar">${trilha.length ? "Começar" : "Entrar"}</button>
@@ -197,8 +197,8 @@ function trilhaHTML(){
     <div class="card trilha-card">
       <div class="trilha-head">
         <div>
-          <h3>A tua trilha</h3>
-          <p class="sub-celula" style="margin:0;">${onb.saltado ? "Sugerida para ti" : "Montada a partir do que disseste"}${ritmo ? ` · ritmo ${ritmo.rotulo.toLowerCase()}` : ""}.</p>
+          <h3>A sua trilha</h3>
+          <p class="sub-celula" style="margin:0;">${onb.saltado ? "Sugerida para si" : "Montada a partir do que respondeu"}${ritmo ? ` · ritmo ${ritmo.rotulo.toLowerCase()}` : ""}.</p>
         </div>
         <button class="btn btn-secondary btn-sm" id="btn-refazer-trilha">${onb.saltado ? "Responder ao questionário" : "Rever respostas"}</button>
       </div>

@@ -206,7 +206,7 @@ function renderAdminComunidades(){
           <thead><tr><th>Comunidade</th><th>Canal</th><th>Quem vê</th><th>Estado</th><th></th></tr></thead>
           <tbody>
             ${lista.length ? lista.map(linhaDaComunidade).join("")
-              : `<tr><td colspan="5"><div class="empty-note">Ainda não há comunidades. Cria uma para cada grupo de WhatsApp ou Telegram dos teus programas.</div></td></tr>`}
+              : `<tr><td colspan="5"><div class="empty-note">Ainda não há comunidades. Crie uma para cada grupo de WhatsApp ou Telegram dos seus programas.</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -224,7 +224,7 @@ function linhaDaComunidade(c){
   const ofertas = nomesDasOfertas(c.ofertas);
   const quem = c.todos ? "Todos os alunos"
     : ofertas.length ? ofertas.map(textoSeguro).join(", ")
-    : `<span class="erro">Ninguém: escolhe uma oferta ou abre a todos</span>`;
+    : `<span class="erro">Ninguém: escolha uma oferta ou abra a todos</span>`;
   const canal = (CANAIS_ADMIN.find(x => x.valor === c.canal) || CANAIS_ADMIN[2]).rotulo;
   return `<tr class="${c.ativa !== false && !c.todos && !ofertas.length ? "tint-risco" : ""}">
     <td><div style="font-weight:500">${textoSeguro(c.nome)}</div><div class="sub-celula">${textoSeguro(c.descricao || "")}</div></td>

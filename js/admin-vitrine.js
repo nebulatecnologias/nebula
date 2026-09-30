@@ -74,7 +74,7 @@ async function renderAdminVitrine(){
           <thead><tr><th>Oferta</th><th>Entrega</th><th>Preço</th><th>Estado</th><th>Pré-venda</th><th>Na Vitrine</th></tr></thead>
           <tbody>
             ${lista.length ? lista.map(linhaDaVitrine).join("")
-              : `<tr><td colspan="6"><div class="empty-note">Ainda não há ofertas que entreguem conteúdo da Academia. Cria-as no Payflow e liga-as a um curso ou a um plano.</div></td></tr>`}
+              : `<tr><td colspan="6"><div class="empty-note">Ainda não há ofertas que entreguem conteúdo da Academia. Crie-as no Payflow e ligue-as a um curso ou a um plano.</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -118,7 +118,7 @@ function motivoDeNaoAparecer(o){
   /* Sem aulas só entra em pré-venda, e a pré-venda liga-se à mão: nunca
      sozinha (decisão do Shelton, 27/09/2026). */
   const aulas = cursos.reduce((s,c) => s + (c.aulas || 0), 0);
-  if(!aulas && !o.emBreve) return "o que entrega ainda não tem nenhuma aula (liga a pré-venda para a vender antes)";
+  if(!aulas && !o.emBreve) return "o que entrega ainda não tem nenhuma aula (ligue a pré-venda para a vender antes)";
 
   return null;
 }

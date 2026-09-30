@@ -14,7 +14,7 @@ function renderAdminAparencia(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Aparência",
-      descricao: "O nome, o logótipo, a cor e o texto de entrada que os teus alunos veem. As alterações aplicam-se de imediato.",
+      descricao: "O nome, o logótipo, a cor e o texto de entrada que os seus alunos veem. As alterações aplicam-se de imediato.",
       acaoRotulo: "Editar identidade",
       acaoId: "btn-editar-marca"
     })}
@@ -37,7 +37,7 @@ function renderAdminAparencia(){
         <p class="previa-rodape">${a.rodape || ""}</p>
       </div>
       <div class="previa-form">
-        <strong>Entrar na tua conta</strong>
+        <strong>Entrar na sua conta</strong>
         <span class="previa-campo">Email</span>
         <span class="previa-campo">Password</span>
         <span class="btn btn-primary btn-block" aria-hidden="true">Entrar</span>
@@ -151,7 +151,7 @@ function renderAdminConfig(){
 
     <div class="section-title"><h2>Dados desta demonstração</h2></div>
     <div class="card painel">
-      <p class="hint" style="margin-bottom:14px;">Nesta fase, tudo o que configuras fica guardado neste browser. Exporta para levar a configuração para outro computador — ou para a guardares antes de repor.</p>
+      <p class="hint" style="margin-bottom:14px;">Nesta fase, tudo o que configura fica guardado neste browser. Exporte para levar a configuração para outro computador — ou para a guardar antes de repor.</p>
       <div class="linha-acoes">
         <button class="btn btn-secondary" id="btn-exportar">Exportar configuração</button>
         <button class="btn btn-secondary" id="btn-importar">Importar configuração</button>
@@ -184,11 +184,11 @@ function renderAdminConfig(){
   ficheiro.addEventListener("change", e => importarConfiguracao(e.target.files[0]));
   document.getElementById("btn-repor").addEventListener("click", () => confirmarAcao({
     titulo: "Repor a demonstração",
-    mensagem: "Todo o conteúdo que criaste — cursos, membros, eventos, banners — volta ao estado original. Não há forma de desfazer.",
+    mensagem: "Todo o conteúdo que criou — cursos, membros, eventos, banners — volta ao estado original. Não há forma de desfazer.",
     textoConfirmar: "Repor tudo",
     aoConfirmar: () => {
       if(!modoDemonstracao()){
-        mostrarToast("Repor apagaria o conteúdo real de toda a academia. Apaga curso a curso em Conteúdos.");
+        mostrarToast("Repor apagaria o conteúdo real de toda a academia. Apague curso a curso em Conteúdos.");
         return;
       }
       reporDB(); location.reload();
@@ -233,11 +233,11 @@ function importarConfiguracao(ficheiro){
     }
     confirmarAcao({
       titulo: "Importar configuração",
-      mensagem: `Vais substituir o conteúdo atual por ${novo.cursos.length} cursos e ${(novo.membros||[]).length} membros do ficheiro.`,
+      mensagem: `Vai substituir o conteúdo atual por ${novo.cursos.length} cursos e ${(novo.membros||[]).length} membros do ficheiro.`,
       textoConfirmar: "Importar",
       aoConfirmar: () => {
         if(!modoDemonstracao()){
-          mostrarToast("A importação em massa ainda não está ligada ao servidor. Cria o conteúdo no painel, ou fala comigo.");
+          mostrarToast("A importação em massa ainda não está ligada ao servidor. Crie o conteúdo no painel.");
           return;
         }
         DB = Object.assign(dbPadrao(), novo);

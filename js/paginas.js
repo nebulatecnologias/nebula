@@ -67,7 +67,7 @@ function renderEvento(id){
   /* Um evento que não aparece aqui ou já foi apagado, ou não é para esta
      pessoa (a regra de leitura do servidor não lho deu). Nos dois casos,
      a mesma frase. */
-  if(!e){ paginaVazia(raiz, "Este encontro já não está disponível, ou não é para ti."); return; }
+  if(!e){ paginaVazia(raiz, "Este encontro já não está disponível, ou não é para si."); return; }
 
   const quando = new Date(e.data + "T" + (e.hora || "00:00") + ":00");
   const passado = quando <= new Date();
@@ -90,7 +90,7 @@ function renderEvento(id){
       : "";
     nota = checkout
       ? "O pagamento abre numa página segura do Payflow. Assim que for confirmado, o link da sala aparece aqui."
-      : "Fala com a tua mentoria para garantires o lugar.";
+      : "Fale com a sua mentoria para garantir o lugar.";
   } else {
     acoes = [
       e.link ? `<a class="btn btn-primary btn-lg" href="${linkExterno(e.link)}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : "",
@@ -143,7 +143,7 @@ function renderOferta(id){
     if(jaTem){
       raiz.innerHTML = paginaHTML({
         arte: arteDoCurso(jaTem),
-        etiquetas: [etiqueta("Já tens acesso", "tens")],
+        etiquetas: [etiqueta("Já tem acesso", "tem-acesso")],
         titulo: jaTem.titulo,
         texto: jaTem.subtitulo,
         acoes: `<button class="btn btn-primary btn-lg" type="button" data-abrir-curso="${jaTem.id}">Abrir o curso ${setaCirculo()}</button>`
@@ -152,7 +152,7 @@ function renderOferta(id){
       raiz.querySelector("[data-abrir-curso]").addEventListener("click", () => irPara("curso", jaTem.id));
       return;
     }
-    paginaVazia(raiz, "Isto não está disponível de momento. Vê o que há na Vitrine, ou fala com a tua mentoria.");
+    paginaVazia(raiz, "Isto não está disponível de momento. Veja o que há na Vitrine, ou fale com a sua mentoria.");
     return;
   }
 
@@ -188,7 +188,7 @@ function renderOferta(id){
     acoes: o.destino
       ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} ${o.emBreve ? "Garantir na pré-venda" : "Desbloquear"} · ${formatarPreco(o.preco, o.moeda)}${o.mensal ? "/mês" : ""}</a>`
       : "",
-    nota: !o.destino ? "Fala com a tua mentoria para desbloqueares isto."
+    nota: !o.destino ? "Fale com a sua mentoria para desbloquear isto."
       : preVenda ? `${textoDaPreVenda(o.abreEm)}. O pagamento abre numa página segura do Payflow; assim que for confirmado, o curso aparece em Meus cursos e as aulas vão aparecendo lá.`
       : "O pagamento abre numa página segura do Payflow. Assim que for confirmado, o acesso abre-se aqui."
   });
