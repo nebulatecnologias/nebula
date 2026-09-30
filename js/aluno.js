@@ -449,7 +449,7 @@ function renderCurso(cursoId){
   const btnContinuar = document.getElementById("btn-continuar-curso");
   if(btnContinuar) btnContinuar.addEventListener("click", () => irPara("aula", curso.id, loc.aula.id));
   const btnCert = document.getElementById("btn-ver-certificado-curso");
-  if(btnCert) btnCert.addEventListener("click", () => abrirCertificado(curso));
+  if(btnCert) btnCert.addEventListener("click", () => abrirCertificado(curso.id));
 
   const container = document.getElementById("lista-modulos");
   curso.modulos.forEach((modulo, mIdx) => {
@@ -571,7 +571,16 @@ function renderAula(cursoId, aulaId){
   document.getElementById("btn-concluir").addEventListener("click", () => {
     const antes = badgesDesbloqueados();
     estado.progresso[aula.id] = !estado.progresso[aula.id];
-    salvarProgresso(aula.id, estado.progresso[aula.id]);
+    const concluiu = estado.progresso[aula.id];
+    /* O certificado lê-se depois de a aula ficar gravada: é a base que o grava. */
+    salvarProgresso(aula.id, concluiu)
+      .then(() => concluiu ? atualizarCertificados() : [])
+      .then(novos => {
+        if(!novos.length) return;
+        atualizarSidebarGlobal();
+        mostrarToast(novos.length > 1 ? "Os seus certificados ficaram gravados"
+                                      : `Concluiu ${textoSeguro(novos[0].titulo)}: o seu certificado ficou gravado`);
+      });
     const depois = badgesDesbloqueados();
     atualizarSidebarGlobal();
     renderAula(curso.id, aula.id);
@@ -960,11 +969,17 @@ function renderCalendario(){
 }
 
 /* ---------------- Certificados ---------------- */
-function abrirCertificado(curso){
+/* O certificado mostra-se como ficou gravado: o nome, o curso e a data do dia
+   em que o aluno concluiu, e não os de hoje. */
+function abrirCertificado(cursoId){
+  const cert = certificadoDoCurso(cursoId);
+  if(!cert) return;
+  const curso = cursoPorId(cursoId);
   document.getElementById("modal-cert-conteudo").innerHTML = certificadoHTML({
-    nome: estado.nome,
-    curso: curso.titulo,
-    data: new Date().toLocaleDateString("pt-PT", { day:"numeric", month:"long", year:"numeric" }),
+    nome: textoSeguro(cert.nome || estado.nome),
+    curso: textoSeguro(cert.cursoTitulo || (curso && curso.titulo) || ""),
+    data: dataDoCertificado(cert.emitidoEm),
+    codigo: cert.codigo,
     comFechar: true
   });
   document.getElementById("btn-fechar-certificado").addEventListener("click", fecharCertificado);
@@ -976,31 +991,40 @@ function renderCertificados(){
   document.getElementById("content-certificados").innerHTML = `
     <div class="page-head">
       <h1>Certificados</h1>
-      <p class="desc">Um certificado é desbloqueado automaticamente quando conclui ${regraCertificado()}% de um curso.</p>
+      <p class="desc">O certificado fica gravado quando conclui ${regraCertificado()}% de um curso, e é seu para sempre.</p>
     </div>
     <div class="cert-grid" id="cert-grid"></div>
   `;
   const grid = document.getElementById("cert-grid");
-  grid.innerHTML = cursosVisiveis().map(c => {
-    const p = progressoCurso(c);
-    const concluido = certificadoDesbloqueado(c);
-    return `<div class="card cert-card ${concluido?"":"locked"}" data-curso="${c.id}">
-      <div class="cert-preview">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>
-        <span>${concluido?"Certificado disponível":"Por desbloquear"}</span>
-      </div>
+  const icone = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 21l5-2.5L17 21l-1.5-8.5"/></svg>`;
+  const gravado = cert => `<div class="card cert-card" data-curso="${cert.cursoId}">
+      <div class="cert-preview">${icone}<span>Certificado gravado</span></div>
       <div class="cert-body">
-        <h4>${c.titulo}</h4>
-        ${concluido
-          ? `<button class="btn btn-secondary btn-sm btn-block">Ver certificado</button>`
-          : `<div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div><div class="cert-locked-note">${p.pct}% de ${regraCertificado()}% — continue para desbloquear</div>`
-        }
+        <h4>${textoSeguro(cert.cursoTitulo)}</h4>
+        <div class="cert-emitido">Emitido em ${dataDoCertificado(cert.emitidoEm)}</div>
+        <button class="btn btn-secondary btn-sm btn-block">Ver certificado</button>
       </div>
     </div>`;
-  }).join("");
+  const visiveis = cursosVisiveis().filter(cursoEmiteCertificado);
+  const cartoes = visiveis.map(c => {
+    const cert = certificadoDoCurso(c.id);
+    if(cert) return gravado(Object.assign({}, cert, { cursoTitulo: cert.cursoTitulo || c.titulo }));
+    const p = progressoCurso(c);
+    return `<div class="card cert-card locked" data-curso="${c.id}">
+      <div class="cert-preview">${icone}<span>Por desbloquear</span></div>
+      <div class="cert-body">
+        <h4>${c.titulo}</h4>
+        <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div><div class="cert-locked-note">${p.pct}% de ${regraCertificado()}% — continue para desbloquear</div>
+      </div>
+    </div>`;
+  });
+  /* Um certificado fica mesmo que o curso já não esteja à vista: foi fechado,
+     deixou de emitir, ou o acesso acabou. */
+  const aVista = new Set(visiveis.map(c => c.id));
+  meusCertificados().filter(cert => !aVista.has(cert.cursoId)).forEach(cert => cartoes.push(gravado(cert)));
+  grid.innerHTML = cartoes.join("") || `<div class="empty-note">Ainda não há cursos com certificado.</div>`;
   grid.querySelectorAll(".cert-card:not(.locked)").forEach(el => el.addEventListener("click", () => {
-    const curso = cursoPorId(el.getAttribute("data-curso"));
-    abrirCertificado(curso);
+    abrirCertificado(el.getAttribute("data-curso"));
   }));
 }
 

@@ -235,6 +235,8 @@ function entrarEmDemonstracao(email){
   }
   estado.prevendoComoAluno = false;
   guardarEstado();
+  /* A sério, é a base que grava os certificados; aqui grava-os o browser. */
+  if(estado.papel !== "administrador") atualizarCertificados();
   mostrarEcra("app");
   arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
   if(onboardingPendente()) abrirOnboarding(false);

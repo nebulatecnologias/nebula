@@ -385,7 +385,7 @@ function badgesDesbloqueados(){ return new Set(DB.conquistas.filter(conquistaDes
 function formatarDataEvento(dataStr){ const [y,m,d] = dataStr.split("-").map(Number); const meses=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"]; return { dia:String(d).padStart(2,"0"), mes:meses[m-1] }; }
 function diasAte(dataHora){ const diff = Math.round((dataHora - new Date())/86400000); return diff; }
 /* Certificado: um só desenho, usado pelo aluno e pela pré-visualização do painel. */
-function certificadoHTML({ nome, curso, data, comFechar }){
+function certificadoHTML({ nome, curso, data, codigo, comFechar }){
   const c = DB.config.certificado;
   return `
     ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
@@ -397,14 +397,49 @@ function certificadoHTML({ nome, curso, data, comFechar }){
     <p style="font-size:14px;">${c.rodape}</p>
     ${c.assinaturaNome ? `<div class="cert-assinatura"><span class="linha"></span><strong>${c.assinaturaNome}</strong><span class="cargo">${c.assinaturaCargo||""}</span></div>` : ""}
     <div class="cert-date">Emitido em ${data}</div>
+    ${codigo ? `<div class="cert-codigo">Código ${textoSeguro(codigo)}</div>` : ""}
   `;
 }
 
 /* Um curso emite certificado quando o aluno chega à percentagem definida no painel. */
 function regraCertificado(){ return DB.config.certificado.regraPct || 100; }
 function cursoEmiteCertificado(curso){ return curso.certificado !== false; }
-function certificadoDesbloqueado(curso){
-  return cursoEmiteCertificado(curso) && progressoCurso(curso).pct >= regraCertificado();
+
+/* OS CERTIFICADOS GRAVAM-SE quando o aluno conclui o curso, e ficam guardados
+   (decisão do Shelton a 30/09/2026). Antes calculavam-se a cada visita, com a
+   data de hoje — um certificado que muda de data sempre que se abre não é um
+   certificado. A sério quem grava é a base (um trigger no progresso); aqui só
+   se lê o que ficou. Mudar a regra, tirar aulas ou fechar o curso depois não
+   apaga nada. Na demonstração não há base, e grava-se no browser pela mesma
+   regra. */
+function quemSouNaDemonstracao(){ return estado.membroId || estado.email; }
+function meusCertificados(){
+  const todos = DB.certificados || [];
+  /* Na demonstração o browser é partilhado por todas as pessoas inventadas. */
+  return modoDemonstracao() ? todos.filter(c => c.utilizadorId === quemSouNaDemonstracao()) : todos;
+}
+function certificadoDoCurso(cursoId){ return meusCertificados().find(c => c.cursoId === cursoId) || null; }
+function certificadoDesbloqueado(curso){ return !!certificadoDoCurso(curso.id); }
+function certificadoPorGravar(curso){
+  return cursoEmiteCertificado(curso) && !certificadoDoCurso(curso.id) && progressoCurso(curso).pct >= regraCertificado();
+}
+/* Depois de concluir uma aula: devolve os cursos cujo certificado acabou de
+   ficar gravado, para se dizer à pessoa. */
+async function atualizarCertificados(){
+  const porGravar = cursosVisiveis().filter(certificadoPorGravar);
+  if(!porGravar.length) return [];
+  if(modoDemonstracao()){
+    const hex = () => Array.from({ length:12 }, () => "0123456789ABCDEF"[Math.floor(Math.random()*16)]).join("");
+    porGravar.forEach(c => DB.certificados.push({ id:novoId("cert"), utilizadorId:quemSouNaDemonstracao(), cursoId:c.id, codigo:hex(),
+      emitidoEm:new Date().toISOString(), nome:estado.nome, cursoTitulo:c.titulo }));
+    guardarDB();
+    return porGravar;
+  }
+  try { DB.certificados = await API.lerCertificados(); } catch(e){ return []; }
+  return porGravar.filter(c => certificadoDoCurso(c.id));
+}
+function dataDoCertificado(iso){
+  return new Date(iso).toLocaleDateString("pt-PT", { day:"numeric", month:"long", year:"numeric", timeZone:"Africa/Maputo" });
 }
 
 /* Avaliação da aula feita por quem está na sessão. */
@@ -740,7 +775,7 @@ function atualizarSidebarGlobal(){
   if(fill) fill.style.width = p.pct + "%";
   document.getElementById("avatar-iniciais").innerHTML = avatarConteudo();
   const dotCert = document.getElementById("dot-certificados");
-  if(dotCert){ const temCertificado = DB.cursos.some(c=>progressoCurso(c).pct===100); dotCert.classList.toggle("hidden", !temCertificado); }
+  if(dotCert){ const temCertificado = meusCertificados().length > 0; dotCert.classList.toggle("hidden", !temCertificado); }
   const dotCal = document.getElementById("dot-calendario");
   if(dotCal){ const proximoEm7Dias = DB.eventos.some(e=>{ const d=diasAte(new Date(e.data+"T"+e.hora+":00")); return d>=0 && d<=7; }); dotCal.classList.toggle("hidden", !proximoEm7Dias); }
   /* A Comunidade deixou de ter conversa própria (fase 5): não há nada de

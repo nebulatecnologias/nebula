@@ -184,27 +184,32 @@ function modeloCertificadoHTML(){
   `;
 }
 
+/* Os certificados que a base gravou, do mais recente para o mais antigo. O
+   nome e o curso são os do dia em que ficaram gravados. */
 function emitidosCertificadoHTML(){
-  const regra = regraCertificado();
-  const emitidos = DB.membros.filter(m => m.papel!=="administrador" && (m.progresso||0) >= regra);
+  const emitidos = DB.certificadosEmitidos || [];
+  const membro = id => (DB.membros || []).find(m => m.id === id);
   return `
     <div class="card table-card">
       <div class="table-card-head">
         <h3>Certificados emitidos</h3>
-        <span class="count">${emitidos.length} alunos chegaram aos ${regra}%</span>
+        <span class="count">${emitidos.length} ${emitidos.length === 1 ? "certificado" : "certificados"}</span>
       </div>
       <div class="table-wrap" tabindex="0">
         <table class="admin-table">
-          <thead><tr><th>Aluno</th><th>Curso</th><th>Progresso</th><th>Estado</th></tr></thead>
+          <thead><tr><th>Aluno</th><th>Curso</th><th>Emitido em</th><th>Código</th></tr></thead>
           <tbody>
-            ${emitidos.length ? emitidos.map(m => `
-              <tr class="tint-concluido">
-                <td><div class="cell-user"><div class="avatar">${iniciais(m.nome)}</div><div class="meta"><div class="nome">${m.nome}</div><div class="sub">${m.email}</div></div></div></td>
-                <td>${m.curso||"—"}</td>
-                <td class="num">${m.progresso}%</td>
-                <td><span class="pill pill-ativo">Emitido</span></td>
-              </tr>
-            `).join("") : `<tr><td colspan="4"><div class="empty-note">Ainda nenhum aluno atingiu os ${regra}% necessários.</div></td></tr>`}
+            ${emitidos.length ? emitidos.map(c => {
+              const m = membro(c.utilizadorId);
+              const nome = c.nome || (m && m.nome) || "—";
+              return `
+              <tr>
+                <td><div class="cell-user"><div class="avatar">${textoSeguro(iniciais(nome === "—" ? "?" : nome))}</div><div class="meta"><div class="nome">${textoSeguro(nome)}</div><div class="sub">${textoSeguro((m && m.email) || "")}</div></div></div></td>
+                <td>${textoSeguro(c.cursoTitulo || "—")}</td>
+                <td>${dataDoCertificado(c.emitidoEm)}</td>
+                <td><code class="cert-codigo-celula">${textoSeguro(c.codigo)}</code></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="4"><div class="empty-note">Ainda nenhum aluno concluiu um curso. O certificado grava-se sozinho quando concluir ${regraCertificado()}% de um curso.</div></td></tr>`}
           </tbody>
         </table>
       </div>

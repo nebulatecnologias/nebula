@@ -243,6 +243,15 @@ const MEMBROS_PADRAO = [
   { id:"m9", nome:"Shelton Douglas",     email:"admin@kingdomacademy.com", telefone:"+258 84 000 0000", papel:"administrador", planoId:"vitalicio", acesso:"ativo", membroDesde:"2026-01-01", curso:"—", categoria:"negocios", origem:"Equipa", ultimoAcesso:"hoje", engajamento:"quente", progresso:0, estagio:"ativo", responsavel:"—" }
 ];
 
+/* Certificados já gravados, para a aba «Emitidos» do painel na demonstração.
+   Pessoas inventadas (as de MEMBROS_PADRAO). */
+const CERTIFICADOS_EMITIDOS_PADRAO = [
+  { id:"cert-d1", utilizadorId:"m3", cursoId:"mi", codigo:"A1B2C3D4E5F6", emitidoEm:"2026-08-18T16:42:00Z",
+    nome:"Leonor Matsinhe", cursoTitulo:"Mentalidade Inquebrável" },
+  { id:"cert-d2", utilizadorId:"m8", cursoId:"mi", codigo:"0F9E8D7C6B5A", emitidoEm:"2026-09-02T09:15:00Z",
+    nome:"Ana Machava", cursoTitulo:"Mentalidade Inquebrável" }
+];
+
 const CURSO_STATS_PADRAO = {
   kt:{ inscritos:186, avaliacao:4.8, conclusao:34 },
   mi:{ inscritos:142, avaliacao:4.9, conclusao:88 },
@@ -422,6 +431,8 @@ function dbPadrao(){
     notificacoes: NOTIFICACOES_PADRAO,
     conquistas: CONQUISTAS_PADRAO,
     convites: CONVITES_PADRAO,
+    certificados: [],
+    certificadosEmitidos: CERTIFICADOS_EMITIDOS_PADRAO,
   }));
 }
 

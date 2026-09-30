@@ -119,6 +119,11 @@ const API = {
        pode impedir a entrada de quem já tem acesso. */
     try { await c.rpc("aceitar_convite"); } catch(e){ /* segue-se na mesma */ }
 
+    /* Os certificados gravam-se na base quando o aluno conclui o curso. Isto
+       grava os que faltarem a quem entra (a regra pode ter baixado desde a
+       última aula) antes de se lerem. Tal como o convite, nunca trava a entrada. */
+    try { await c.rpc("verificar_certificados"); } catch(e){ /* segue-se na mesma */ }
+
     const [
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
@@ -185,7 +190,7 @@ const API = {
     DB.ofertas     = ofertas.map(deOferta);
     DB.planos      = planos.map(dePlano);
     DB.turmas      = turmas.map(t => deTurma(t, cursos));
-    DB.certificados = certificados;
+    DB.certificados = certificados.map(deCertificado);
 
     const idsLidas = new Set(lidas.map(l => l.notificacao_id));
     DB.notificacoes = notificacoes.map(n => ({
@@ -198,15 +203,17 @@ const API = {
 
     /* Quem é da equipa vê também os rascunhos, os membros e os convites. */
     if(ehEquipa()){
-      const [membros, convites] = await Promise.all([
+      const [membros, convites, emitidos] = await Promise.all([
         lista(this.pub()
           .from("utilizadores")
           .select("id, nome, email, perfil, estado, criado_em, lead_id")
           .is("removido_em", null)),
-        lista(c.from("convites").select("*").order("criado_em", { ascending:false }))
+        lista(c.from("convites").select("*").order("criado_em", { ascending:false })),
+        lista(c.from("certificados").select("*").order("emitido_em", { ascending:false }))
       ]);
       DB.membros  = membros.map(deMembro);
       DB.convites = convites.map(deConvite);
+      DB.certificadosEmitidos = emitidos.map(deCertificado);
 
       /* Quantas pessoas confirmaram presença em cada encontro. */
       const todas = await lista(c.from("presencas").select("evento_id"));
@@ -216,6 +223,7 @@ const API = {
     } else {
       DB.membros  = [deMembro(this.utilizador)];
       DB.convites = [];
+      DB.certificadosEmitidos = [];
     }
   },
 
@@ -368,6 +376,14 @@ const API = {
     const { error } = await this.cliente.from("notificacoes_lidas")
       .upsert(ids.map(id => ({ notificacao_id:id, utilizador_id:eu })), { onConflict:"notificacao_id,utilizador_id" });
     if(error) throw new Error(traduzirErroDados(error));
+  },
+
+  /* Os meus certificados, relidos depois de concluir uma aula: quem os
+     grava é a base, e o browser só precisa de saber o que ficou gravado. */
+  async lerCertificados(){
+    const eu = this.utilizador.id;
+    const linhas = await lista(this.cliente.from("certificados").select("*").eq("utilizador_id", eu));
+    return linhas.map(deCertificado);
   },
 
   /* Progresso e presenças são linhas que existem ou não existem. */
@@ -610,6 +626,12 @@ function deTurma(t, cursos){
   const curso = cursos.find(c => c.oferta_id === t.oferta_id);
   return { id:String(t.id), nome:t.nome, cursoId:curso ? curso.id : null,
            inicio:t.inicio, fim:t.fim, ativa:t.estado !== "Concluída", membros:[] };
+}
+
+/* Um certificado gravado: o nome e o título ficam como estavam no dia. */
+function deCertificado(r){
+  return { id:r.id, utilizadorId:r.utilizador_id, cursoId:r.curso_id, codigo:r.codigo,
+           emitidoEm:r.emitido_em, nome:r.nome || "", cursoTitulo:r.curso_titulo || "" };
 }
 
 function deMembro(u){
