@@ -81,9 +81,23 @@ async function arrancar(){
   /* O link do email do convite: `?convite=<token>`. O servidor diz se o
      convite ainda vale; se valer, devolve o link de entrada e segue-se
      para ele. Se não, diz-se porquê, aqui mesmo. */
-  const token = new URLSearchParams(location.search).get("convite");
+  const pedido = new URLSearchParams(location.search);
+  const token = pedido.get("convite");
   if(token){
     await abrirConviteDoEmail(token);
+    return;
+  }
+
+  /* O link do email de recuperação: `?token_hash=…&type=recovery`. O código
+     confirma-se aqui e pede-se a password nova. */
+  const codigo = pedido.get("token_hash");
+  if(codigo){
+    history.replaceState(null, "", location.pathname);
+    aplicarAparencia();
+    mostrarEcra("login");
+    try { await API.entrarComCodigo(codigo, pedido.get("type") === "invite" ? "invite" : "recovery"); }
+    catch(erro){ avisoLogin(erro.message); return; }
+    pedirNovaPassword(false);
     return;
   }
 
@@ -128,10 +142,17 @@ async function abrirConviteDoEmail(token){
     avisoLogin(erro.message || "Não foi possível abrir o convite agora. Tenta daqui a pouco.");
     return;
   }
-  if(r.estado === "ok" && r.link){ location.replace(r.link); return; }
-
   /* O token sai do endereço: recarregar não deve voltar a perguntar. */
   history.replaceState(null, "", location.pathname + location.hash);
+
+  if(r.estado === "ok" && r.tokenHash){
+    try { await API.entrarComCodigo(r.tokenHash, r.tipo || "invite"); }
+    catch(erro){ aplicarAparencia(); mostrarEcra("login"); avisoLogin(erro.message); return; }
+    aplicarAparencia();
+    mostrarEcra("login");
+    pedirNovaPassword(true);
+    return;
+  }
   aplicarAparencia();
   mostrarEcra("login");
   if(r.estado === "aceite"){

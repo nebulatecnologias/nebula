@@ -76,6 +76,17 @@ const API = {
     if(data && data.error) throw new Error(data.error);
   },
 
+  /* O código que vem por email (convite ou recuperação), confirmado aqui com
+     verifyOtp, como faz a Kingdom Library. Não passa pelos redireccionamentos
+     do Supabase, que só voltam para as moradas da lista do Auth e, fora dela,
+     mandavam as pessoas para localhost:3000. */
+  async entrarComCodigo(tokenHash, tipo){
+    const { data, error } = await this.cliente.auth.verifyOtp({ token_hash: tokenHash, type: tipo });
+    if(error || !data?.session) throw new Error("Este link já foi usado ou expirou. Pede um novo.");
+    this.precisaDePassword = true;
+    return data.session;
+  },
+
   /* O link do email do convite: `?convite=<token>`. O servidor diz se o
      convite ainda vale e, se valer, devolve o link de entrada. */
   async abrirConvite(token){
