@@ -69,7 +69,11 @@ const API = {
     if(data.estado !== "Ativo") throw new Error(t("Este acesso está suspenso. Fale com a sua mentoria."));
     /* O papel é o desta organização (nucleo.membros), não o perfil geral da
        conta: quem administra uma Academia pode ser aluno noutra. Sem papel,
-       a pessoa não é membro desta. */
+       a pessoa não é membro desta. Antes de perguntar, aceitam-se os convites
+       à espera: é o convite que faz da pessoa membro (o dono de uma escola
+       nova não é membro de nada até o aceitar). Não tem efeito em quem não
+       tem convite, e um erro aqui não trava a entrada. */
+    try { await this.cliente.rpc("aceitar_convite"); } catch(e){ /* segue-se na mesma */ }
     const { data: papel, error: semPapel } = await this.cliente.rpc("meu_papel");
     if(semPapel) throw semPapel;
     if(!papel) throw new Error(t("A sua conta ainda não está ligada à academia. Fale com a mentoria."));
@@ -277,7 +281,9 @@ const API = {
   /* Convidar grava o convite com o prazo e manda o email pelo Resend.
      Corre no servidor: o browser não tem (nem pode ter) essa chave. */
   async convidar(pedido){
-    const { data, error } = await this.cliente.functions.invoke("convidar-aluno", { body:pedido });
+    /* O convite é para a escola deste endereço. */
+    const corpo = Object.assign({ organizacao: this.organizacao ? this.organizacao.slug : undefined }, pedido);
+    const { data, error } = await this.cliente.functions.invoke("convidar-aluno", { body:corpo });
     if(error){
       let detalhe = "";
       try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }

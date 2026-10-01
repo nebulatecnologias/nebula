@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "consola/index.html"
+        ],
+        "createdAt": "2026-10-01T20:14:08.140Z",
+        "reason": "DESIGN.md linha 408: «CTA glow» (--cta-shadow) é a sombra documentada dos botões principais; a consola reutiliza o .btn-primary da app e abre em tema claro"
+      }
+    ]
+  }
+}

@@ -30,7 +30,9 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
         que a Kingdom gravou), «Kingdom» só onde está explicado acima. */
   const achados = [];
   for(const f of await readdir(join(raiz, 'js'))){
-    if(!f.endsWith('.js') || f === 'dados.js' || f === 'idioma-en.js') continue;
+    /* consola.js é a consola da operadora da plataforma, onde a Kingdom é a
+       escola 1 (não é marca mostrada a alunos de outra escola). */
+    if(!f.endsWith('.js') || f === 'dados.js' || f === 'idioma-en.js' || f === 'consola.js') continue;
     (await readFile(join(raiz, 'js', f), 'utf8')).split('\n').forEach((l, i) => {
       if(/kingdom/i.test(l) && !PERMITIDO.some(r => r.test(l))) achados.push(`js/${f}:${i + 1}: ${l.trim().slice(0, 90)}`);
     });

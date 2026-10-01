@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Consola da plataforma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* A consola: uma página só, para quem administra a plataforma. Usa as peças
+     da app (botões, campos, cartões) e o tema claro. */
+  [hidden]{ display:none !important; }
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  body{ background:var(--canvas); }
+  .consola{ max-width:1080px; margin:0 auto; padding:28px 16px 64px; }
+  .consola-topo{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
+  .consola-topo h1{ font-size:clamp(26px,3.2vw,34px); letter-spacing:-.025em; line-height:1.2; margin:0 0 6px; }
+  .consola-topo p{ margin:0; color:var(--muted); }
+  .consola-topo .accoes{ display:flex; gap:8px; flex-wrap:wrap; }
+  .resumo{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:24px; }
+  .resumo .card{ padding:16px 18px; }
+  .resumo .num{ font-size:26px; font-weight:500; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .resumo .rot{ font-size:13px; color:var(--muted); }
+  .escolas{ display:grid; gap:16px; }
+  .escola{ padding:20px 22px; }
+  .escola-cabeca{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .escola-cabeca h2{ font-size:20px; margin:0 0 4px; letter-spacing:-.02em; }
+  .escola-cabeca .meta{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:13.5px; }
+  .escola-cabeca .meta code{ font-family:var(--mono); font-size:12.5px; background:var(--sunken); padding:2px 7px; border-radius:var(--r-sm); color:var(--ink-2); }
+  .escola-accoes{ display:flex; gap:8px; flex-wrap:wrap; }
+  .numeros{ display:flex; gap:22px; flex-wrap:wrap; margin:14px 0 4px; font-size:14px; color:var(--ink-2); }
+  .numeros b{ font-weight:500; font-variant-numeric:tabular-nums; }
+  .bloco{ margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
+  .bloco h3{ font-size:13.5px; font-weight:500; color:var(--muted); margin:0 0 8px; }
+  .linha{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; flex-wrap:wrap; }
+  .linha + .linha{ border-top:1px dashed var(--line); }
+  .linha .quem{ min-width:0; }
+  .linha .quem strong{ font-weight:500; display:block; }
+  .linha .quem span{ color:var(--muted); font-size:13.5px; overflow-wrap:anywhere; }
+  .linha .mexer{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .linha select{ min-height:34px; border-radius:var(--r-field); border:1px solid var(--line-strong); background:var(--surface); padding:0 10px; font:inherit; font-size:13.5px; color:var(--ink); }
+  .vazio{ color:var(--muted); font-size:14px; margin:0; }
+  .pill-suspensa{ background:var(--amber-soft); color:var(--amber-ink); }
+  .pill-papel{ background:var(--sunken); color:var(--ink-2); }
+  .pill-papel::before{ display:none; }
+  .aviso{ border-radius:var(--r-md); padding:12px 14px; font-size:14px; margin:0 0 14px; }
+  .aviso.erro{ background:var(--red-soft); color:var(--red-ink); }
+  .aviso.ok{ background:var(--green-soft); color:var(--green-ink); }
+  .aviso.nota{ background:var(--amber-soft); color:var(--amber-ink); }
+  .copiar{ display:flex; gap:8px; margin-top:8px; }
+  .copiar input{ flex:1; min-width:0; min-height:38px; border:1px solid var(--line-strong); border-radius:var(--r-field); padding:0 10px; font-family:var(--mono); font-size:12.5px; background:var(--sunken); color:var(--ink-2); }
+  dialog{ border:none; border-radius:var(--r-xl); padding:0; width:min(520px, calc(100vw - 32px)); background:var(--surface); color:var(--ink); box-shadow:var(--shadow-pop); }
+  dialog::backdrop{ background:var(--scrim); }
+  dialog form{ padding:24px 24px 20px; }
+  dialog h2{ font-size:21px; margin:0 0 6px; letter-spacing:-.015em; }
+  dialog .sub{ color:var(--muted); margin:0 0 18px; font-size:14px; }
+  dialog .rodape{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+  dialog fieldset{ border:none; padding:0; margin:0; }
+  dialog legend{ font-size:13.5px; font-weight:500; color:var(--ink-2); margin:6px 0 10px; padding:0; }
+  .entrar{ max-width:420px; margin:10vh auto 0; padding:28px; }
+  .entrar h1{ font-size:21px; margin:0 0 6px; }
+  .entrar p{ color:var(--muted); margin:0 0 18px; }
+  .sem-acesso{ max-width:520px; margin:12vh auto 0; padding:28px; text-align:center; }
+  .sem-acesso h1{ font-size:21px; margin:0 0 8px; }
+  .sem-acesso p{ color:var(--muted); margin:0 0 18px; }
+  .a-carregar{ color:var(--muted); text-align:center; margin-top:18vh; }
+</style>
+</head>
+<body>
+<main class="consola">
+  <p class="a-carregar" id="a-carregar">A abrir a consola...</p>
+
+  <!-- Sem sessão -->
+  <section class="card entrar" id="ecra-entrar" hidden>
+    <h1>Consola da plataforma</h1>
+    <p>Entre com a sua conta de administração.</p>
+    <form id="form-entrar" novalidate>
+      <div class="aviso erro" id="entrar-erro" hidden></div>
+      <div class="field"><label for="entrar-email">Email</label><input type="email" id="entrar-email" autocomplete="username" required></div>
+      <div class="field"><label for="entrar-password">Password</label><input type="password" id="entrar-password" autocomplete="current-password" required></div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Entrar</button>
+    </form>
+  </section>
+
+  <!-- Com sessão, mas sem ser da administração -->
+  <section class="card sem-acesso" id="ecra-sem-acesso" hidden>
+    <h1>Esta página é da administração da plataforma</h1>
+    <p>A sua conta não tem acesso à consola. Se gere uma escola, a sua área está no endereço dela.</p>
+    <button class="btn btn-secondary" type="button" id="btn-sair-sem-acesso">Sair</button>
+  </section>
+
+  <!-- A consola -->
+  <section id="ecra-consola" hidden>
+    <header class="consola-topo">
+      <div>
+        <h1>Escolas</h1>
+        <p>Cada escola tem a sua área de membros, a sua marca e a sua equipa.</p>
+      </div>
+      <div class="accoes">
+        <button class="btn btn-primary" type="button" id="btn-nova-escola">Nova escola</button>
+        <button class="btn btn-texto" type="button" id="btn-sair">Sair</button>
+      </div>
+    </header>
+    <div class="aviso ok" id="aviso-geral" hidden></div>
+    <div class="resumo" id="resumo"></div>
+    <div class="escolas" id="lista-escolas"></div>
+  </section>
+</main>
+
+<!-- Nova escola -->
+<dialog id="dlg-escola" aria-labelledby="dlg-escola-titulo">
+  <form method="dialog" id="form-escola" novalidate>
+    <h2 id="dlg-escola-titulo">Nova escola</h2>
+    <p class="sub">A escola nasce vazia: o dono entra, põe a marca e cria os cursos.</p>
+    <div class="aviso erro" id="escola-erro" hidden></div>
+    <div class="field"><label for="escola-nome">Nome da escola</label><input id="escola-nome" required maxlength="80" placeholder="ex: Escola de Liderança"></div>
+    <div class="field"><label for="escola-slug">Nome curto</label><input id="escola-slug" required maxlength="41" placeholder="ex: lideranca" autocapitalize="off" spellcheck="false">
+      <p class="hint">Letras minúsculas, números e hífenes. Abre a escola em <span id="escola-slug-previa">membros.kingdomcompny.com/?org=…</span> enquanto não tiver domínio.</p></div>
+    <div class="field"><label for="escola-dominio">Domínio (opcional)</label><input id="escola-dominio" maxlength="120" placeholder="ex: membros.escoladelideranca.com" autocapitalize="off" spellcheck="false">
+      <p class="hint">O domínio só funciona depois de apontado para a plataforma (DNS e Vercel).</p></div>
+    <fieldset>
+      <legend>Dono da escola (opcional)</legend>
+      <div class="field"><label for="escola-dono-nome">Nome</label><input id="escola-dono-nome" maxlength="80"></div>
+      <div class="field"><label for="escola-dono-email">Email</label><input id="escola-dono-email" type="email" maxlength="120">
+        <p class="hint">Recebe um convite por email para escolher a password e entrar como dono.</p></div>
+    </fieldset>
+    <div class="rodape">
+      <button class="btn btn-texto" type="button" data-fechar>Cancelar</button>
+      <button class="btn btn-primary" type="submit" id="btn-criar-escola">Criar escola</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Convidar para a equipa -->
+<dialog id="dlg-convite" aria-labelledby="dlg-convite-titulo">
+  <form method="dialog" id="form-convite" novalidate>
+    <h2 id="dlg-convite-titulo">Convidar para a equipa</h2>
+    <p class="sub" id="convite-escola"></p>
+    <div class="aviso erro" id="convite-erro" hidden></div>
+    <div class="field"><label for="convite-nome">Nome</label><input id="convite-nome" maxlength="80"></div>
+    <div class="field"><label for="convite-email">Email</label><input id="convite-email" type="email" required maxlength="120"></div>
+    <div class="field"><label for="convite-papel">Papel</label>
+      <select id="convite-papel">
+        <option value="dono">Dono — gere tudo na escola</option>
+        <option value="admin">Administrador</option>
+        <option value="colaborador">Colaborador</option>
+      </select></div>
+    <div class="rodape">
+      <button class="btn btn-texto" type="button" data-fechar>Cancelar</button>
+      <button class="btn btn-primary" type="submit" id="btn-enviar-convite">Enviar convite</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Juntar domínio -->
+<dialog id="dlg-dominio" aria-labelledby="dlg-dominio-titulo">
+  <form method="dialog" id="form-dominio" novalidate>
+    <h2 id="dlg-dominio-titulo">Juntar domínio</h2>
+    <p class="sub" id="dominio-escola"></p>
+    <div class="aviso erro" id="dominio-erro" hidden></div>
+    <div class="field"><label for="dominio-valor">Domínio</label><input id="dominio-valor" required maxlength="120" placeholder="ex: membros.escoladelideranca.com" autocapitalize="off" spellcheck="false">
+      <p class="hint">Só funciona depois de apontado para a plataforma (DNS e Vercel).</p></div>
+    <div class="rodape">
+      <button class="btn btn-texto" type="button" data-fechar>Cancelar</button>
+      <button class="btn btn-primary" type="submit">Juntar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="../vendor/supabase.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/consola.js"></script>
+</body>
+</html>
