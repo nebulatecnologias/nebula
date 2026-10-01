@@ -20,6 +20,7 @@ const PERMITIDO = [
   /payflow\.kingdomcompny\.com/,           // o Payflow é da Kingdom até ao F1b
   /kingdom-dashboard\.vercel\.app/,        // o painel de gestão, idem
   /da Kingdom: noutra escola a Vitrine/,   // comentário do URL_PAYFLOW
+  /servem a Kingdom: noutra escola não aparecem/, // comentário: Vitrine e Migração
 ];
 
 export default async function ({ navegador, base, igual, verdade, contem, naoContem }){

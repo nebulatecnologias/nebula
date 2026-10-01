@@ -369,7 +369,7 @@ const APARENCIA_PADRAO = {
   logoUrl: "",
   simbolo: "iniciais",
   corAccent: "#f4621d",
-  temaPadrao: "auto",
+  temaPadrao: "light",
   rodape: "",
   loginTitulo: "Bem-vindo à sua área de membros.",
   loginTexto: "Entre para continuar os seus cursos onde ficou — aulas, comunidade e o seu progresso, tudo num só lugar."

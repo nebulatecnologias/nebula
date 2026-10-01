@@ -198,15 +198,27 @@ try {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(typeof DB !== "undefined") aplicarTema(); });
 } catch(e){ /* browsers antigos: fica o tema do arranque */ }
 
+/* A Vitrine e a Migração vivem das ofertas do Payflow, que até ao F1b só
+   servem a Kingdom: noutra escola não aparecem. */
+const VISTAS_DO_PAYFLOW = new Set(["vitrine", "admin-vitrine", "admin-migracao"]);
+function semPayflow(){
+  return typeof API !== "undefined" && !!API.organizacao && API.organizacao.payflow === false;
+}
+function vistaDisponivel(view){ return !(semPayflow() && VISTAS_DO_PAYFLOW.has(view)); }
+function semVistasDoPayflow(lista){
+  return lista.map(g => ({ ...g, itens:g.itens.filter(i => vistaDisponivel(i.view)) })).filter(g => g.itens.length);
+}
+
 /* Só as abas ligadas em Configurações chegam ao aluno. */
 function navDoAluno(){
   const ligadas = new Set(DB.config.abasAluno || []);
-  return NAV_ALUNO
+  return semVistasDoPayflow(NAV_ALUNO
     .map(g => ({ ...g, itens:g.itens.filter(i => ligadas.has(i.view)) }))
-    .filter(g => g.itens.length);
+    .filter(g => g.itens.length));
 }
 function abaDoAlunoLigada(view){
   if(view==="curso" || view==="aula") return (DB.config.abasAluno||[]).includes("catalogo");
+  if(!vistaDisponivel(view)) return false;
   return !NAV_ALUNO.some(g=>g.itens.some(i=>i.view===view)) || (DB.config.abasAluno||[]).includes(view);
 }
 /* Cursos criados pelo administrador ainda não têm estatísticas registadas. */
@@ -699,6 +711,7 @@ function irPara(view, a, b){
      app sem nada visível: voltamos ao início. */
   if(!container){ if(view!=="dashboard") irPara("dashboard"); return; }
   /* Uma aba desligada em Configurações não abre para o aluno. */
+  if(!vistaDisponivel(view)){ irPara(ehAdmin ? "admin-visao" : "dashboard"); return; }
   if(!ehAdmin && papelEfetivo()!=="administrador" && !abaDoAlunoLigada(view) && view!=="dashboard"){ irPara("dashboard"); return; }
   document.querySelectorAll("#app-shell .content > div").forEach(v=>v.classList.add("hidden"));
   container.classList.remove("hidden");
@@ -719,7 +732,7 @@ function renderSidebarNav(activeView){
   /* O painel da equipa fica em português; só a navegação do aluno se traduz. */
   const doAluno = papelEfetivo()!=="administrador";
   const tr = texto => doAluno ? t(texto) : texto;
-  const lista = doAluno ? navDoAluno() : NAV_ADMIN;
+  const lista = doAluno ? navDoAluno() : semVistasDoPayflow(NAV_ADMIN);
   const navView = (activeView==="curso" || activeView==="aula") ? "catalogo" : activeView;
   const el = document.getElementById("sidebar-nav-items");
   el.innerHTML = lista.map(grupo => `
