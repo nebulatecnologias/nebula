@@ -13,6 +13,7 @@ function totalDeAulas(){
 
 function renderAdminIntegracoes(){
   const i = DB.config.integracoes;
+  const respostas = (DB.config.email || {}).respostaPara || "";
   const comVideo = aulasComVideo().length;
   const total = totalDeAulas();
   const porLigar = DB.cursos.flatMap(c => c.modulos.flatMap(m => m.aulas.filter(a=>!temVideo(a)).map(a => ({ a, m, c }))));
@@ -51,6 +52,15 @@ function renderAdminIntegracoes(){
         </div>
         <span class="pill ${i.suporteUrl?"pill-ativo":"pill-inativo"}">${i.suporteUrl?"Ativo":"Sem canal"}</span>
         <button class="btn btn-secondary btn-sm" id="btn-config-suporte">Configurar</button>
+      </div>
+      <div class="integracao">
+        <div class="stat-icon ${respostas?"accent":""}">${ICONS.chat}</div>
+        <div class="integracao-info">
+          <strong>Respostas aos emails</strong>
+          <span class="sub-celula">${respostas ? textoSeguro(respostas) : "Quando um aluno responde a um email da academia (convite, password), a resposta vai para o dono da escola."}</span>
+        </div>
+        <span class="pill ${respostas?"pill-ativo":"pill-inativo"}">${respostas?"Ativo":"Para o dono"}</span>
+        <button class="btn btn-secondary btn-sm" id="btn-config-respostas">Configurar</button>
       </div>
     </div>
 
@@ -91,6 +101,7 @@ function renderAdminIntegracoes(){
 
   document.getElementById("btn-config-player").addEventListener("click", configurarPlayer);
   document.getElementById("btn-config-suporte").addEventListener("click", configurarSuporte);
+  document.getElementById("btn-config-respostas").addEventListener("click", configurarRespostas);
   document.querySelectorAll("#content-admin [data-ligar]").forEach(b =>
     b.addEventListener("click", () => irPara("admin-curso-editor", b.getAttribute("data-ligar"))));
 }
@@ -131,6 +142,28 @@ function configurarSuporte(){
       salvarIntegracoes();
       renderAdminIntegracoes();
       mostrarToast(v.suporteUrl ? "Canal de apoio ativo" : "Canal de apoio removido");
+    }
+  });
+}
+
+/* Para onde vão as respostas aos emails da academia. Os emails saem do
+   endereço da plataforma com o nome da escola; quem responde chega aqui. */
+function configurarRespostas(){
+  DB.config.email = DB.config.email || {};
+  abrirDrawer({
+    titulo: "Respostas aos emails",
+    subtitulo: "Os emails da academia saem com o nome da escola. Quem lhes responder escreve para este endereço.",
+    campos: [
+      { nome:"respostaPara", rotulo:"Email para respostas", tipo:"texto", placeholder:"apoio@a-sua-escola.com", dica:"Deixe vazio para as respostas irem para o dono da escola." }
+    ],
+    valores: DB.config.email,
+    aoGuardar: v => {
+      const email = String(v.respostaPara || "").trim().toLowerCase();
+      if(email && !/^[^\s<>"@]+@[^\s<>"@]+\.[^\s<>"@]+$/.test(email)){ mostrarToast("Esse email não parece válido."); return false; }
+      DB.config.email.respostaPara = email;
+      salvarEmail();
+      renderAdminIntegracoes();
+      mostrarToast(email ? "As respostas vão para " + email : "As respostas vão para o dono da escola");
     }
   });
 }

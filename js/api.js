@@ -103,10 +103,19 @@ const API = {
      Supabase: o mesmo remetente e o mesmo desenho dos outros emails. A
      resposta é igual com ou sem conta — nunca se diz quem tem acesso. */
   async pedirNovaPassword(email){
+    /* O link volta a esta escola: no domínio dela, ou aqui com ?org= (sem
+       ele, o email abria num separador novo já sem saber da escola). A carta
+       sai com a marca da escola. */
+    const enderecoDeVolta = () => {
+      const u = new URL(location.origin + location.pathname);
+      const escola = organizacaoDoEndereco();
+      if(escola && escola !== location.hostname) u.searchParams.set("org", escola);
+      if(idioma() === "en") u.searchParams.set("lang", "en");
+      return u.toString() + "#nova-password";
+    };
     const { data, error } = await this.cliente.functions.invoke("recuperar-password", {
       /* O email sai na língua de quem pediu, e o link volta com ela. */
-      body:{ email, onde:"academia", idioma: idioma(),
-             volta: location.origin + location.pathname + (idioma() === "en" ? "?lang=en" : "") + "#nova-password" }
+      body:{ email, onde:"academia", idioma: idioma(), volta: enderecoDeVolta() }
     });
     if(error){
       let detalhe = "";
@@ -995,6 +1004,7 @@ async function salvarAparencia(){
   return guardarChaveDeConfig("aparencia", DB.aparencia);
 }
 function salvarGamificacao(){ return guardarChaveDeConfig("gamificacao", DB.config.gamificacao); }
+function salvarEmail(){ return guardarChaveDeConfig("email", DB.config.email || {}); }
 function salvarCertificado(){ return guardarChaveDeConfig("certificado", DB.config.certificado); }
 function salvarIntegracoes(){
   DB.config.integracoes.suporteUrl = linkExterno(DB.config.integracoes.suporteUrl);
