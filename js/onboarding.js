@@ -55,22 +55,22 @@ function renderPassoOnboarding(){
 
   const passos = [
     {
-      titulo: "O que o trouxe aqui?",
-      sub: "Escolha uma ou mais áreas. É por aí que vamos começar a sua trilha.",
-      opcoes: objetivosDisponiveis().map(o => ({ id:o.id, rotulo:o.nome, cor:o.cor })),
+      titulo: t("O que o trouxe aqui?"),
+      sub: t("Escolha uma ou mais áreas. É por aí que vamos começar a sua trilha."),
+      opcoes: objetivosDisponiveis().map(o => ({ id:o.id, rotulo:t(o.nome), cor:o.cor })),
       multipla: true,
       valor: r.objetivos
     },
     {
-      titulo: "Quanto tempo tem por semana?",
-      sub: "Serve para calibrar o ritmo que lhe vamos sugerir.",
-      opcoes: RITMOS.map(x => ({ id:x.id, rotulo:x.rotulo, desc:x.desc })),
+      titulo: t("Quanto tempo tem por semana?"),
+      sub: t("Serve para calibrar o ritmo que lhe vamos sugerir."),
+      opcoes: RITMOS.map(x => ({ id:x.id, rotulo:t(x.rotulo), desc:t(x.desc) })),
       valor: r.ritmo
     },
     {
-      titulo: "Em que ponto está agora?",
-      sub: "Ajuda-nos a perceber por onde entrar.",
-      opcoes: MOMENTOS.map(x => ({ id:x.id, rotulo:x.rotulo, desc:x.desc })),
+      titulo: t("Em que ponto está agora?"),
+      sub: t("Ajuda-nos a perceber por onde entrar."),
+      opcoes: MOMENTOS.map(x => ({ id:x.id, rotulo:t(x.rotulo), desc:t(x.desc) })),
       valor: r.momento
     }
   ][passo];
@@ -79,7 +79,7 @@ function renderPassoOnboarding(){
   const podeAvancar = passos.multipla ? passos.valor.length > 0 : !!passos.valor;
 
   corpo.innerHTML = `
-    <div class="onb-passos" role="img" aria-label="Passo ${passo+1} de 3">${[0,1,2].map(i=>`<span class="${i<=passo?"feito":""}"></span>`).join("")}</div>
+    <div class="onb-passos" role="img" aria-label="${t("Passo {n} de 3", { n:passo+1 })}">${[0,1,2].map(i=>`<span class="${i<=passo?"feito":""}"></span>`).join("")}</div>
     <h2>${passos.titulo}</h2>
     <p class="onb-sub">${passos.sub}</p>
     <div class="onb-opcoes">
@@ -91,8 +91,8 @@ function renderPassoOnboarding(){
         </button>`).join("")}
     </div>
     <div class="onb-acoes">
-      ${passo ? `<button class="btn btn-texto" id="onb-atras">Voltar</button>` : `<button class="btn btn-texto" id="onb-saltar">Saltar por agora</button>`}
-      <button class="btn btn-primary" id="onb-avancar" ${podeAvancar?"":"disabled"}>${passo===2?"Ver a minha trilha":"Continuar"}</button>
+      ${passo ? `<button class="btn btn-texto" id="onb-atras">${t("Voltar")}</button>` : `<button class="btn btn-texto" id="onb-saltar">${t("Saltar por agora")}</button>`}
+      <button class="btn btn-primary" id="onb-avancar" ${podeAvancar?"":"disabled"}>${passo===2 ? t("Ver a minha trilha") : t("Continuar")}</button>
     </div>
   `;
 
@@ -153,22 +153,22 @@ function renderResultadoOnboarding(corpo){
   const nomes = (estado.onboarding.objetivos||[]).map(id => categoriaDe(id).nome);
 
   corpo.innerHTML = `
-    <div class="onb-passos" role="img" aria-label="Passo 3 de 3, concluído">${[0,1,2].map(()=>'<span class="feito"></span>').join("")}</div>
-    <h2>Por aqui, ${estado.nome.split(" ")[0]}.</h2>
-    <p class="onb-sub">${nomes.length ? `Focámos em ${nomes.join(", ")}` : "Montámos um percurso com o que tem disponível"}${ritmo ? `, a ${ritmo.aulasSemana} aulas por semana` : ""}.</p>
+    <div class="onb-passos" role="img" aria-label="${t("Passo 3 de 3, concluído")}">${[0,1,2].map(()=>'<span class="feito"></span>').join("")}</div>
+    <h2>${t("Por aqui, {nome}.", { nome:estado.nome.split(" ")[0] })}</h2>
+    <p class="onb-sub">${nomes.length ? t("Focámos em {areas}", { areas:nomes.join(", ") }) : t("Montámos um percurso com o que tem disponível")}${ritmo ? t(", a {n} aulas por semana", { n:ritmo.aulasSemana }) : ""}.</p>
     ${trilha.length ? `<ol class="onb-trilha">
       ${trilha.map(c => {
         const cat = categoriaDe(c.categoria);
         const aulas = contarAulas(c);
         return `<li>
           <span class="onb-trilha-capa" style="--field:${campoDoCurso(c.id)};${c.capa?`background-image:url(${c.capa})`:""}">${c.capa?"":(c.sigla||"")}</span>
-          <span class="onb-trilha-txt"><strong>${c.titulo}</strong><span>${cat.nome} · ${aulas} aula${aulas===1?"":"s"}</span></span>
+          <span class="onb-trilha-txt"><strong>${c.titulo}</strong><span>${cat.nome} · ${contagemDeAulas(aulas)}</span></span>
         </li>`;
       }).join("")}
-    </ol>` : `<p class="onb-sub">Ainda não há cursos no seu acesso. Fale com a sua mentoria.</p>`}
+    </ol>` : `<p class="onb-sub">${t("Ainda não há cursos no seu acesso. Fale com a sua mentoria.")}</p>`}
     <div class="onb-acoes">
-      <button class="btn btn-texto" id="onb-refazer">Responder de novo</button>
-      <button class="btn btn-primary" id="onb-comecar">${trilha.length ? "Começar" : "Entrar"}</button>
+      <button class="btn btn-texto" id="onb-refazer">${t("Responder de novo")}</button>
+      <button class="btn btn-primary" id="onb-comecar">${trilha.length ? t("Começar") : tc("onboarding", "Entrar")}</button>
     </div>
   `;
   document.getElementById("onb-refazer").addEventListener("click", () => { estado.passoOnb = 0; renderPassoOnboarding(); });
@@ -197,10 +197,10 @@ function trilhaHTML(){
     <div class="card trilha-card">
       <div class="trilha-head">
         <div>
-          <h3>A sua trilha</h3>
-          <p class="sub-celula" style="margin:0;">${onb.saltado ? "Sugerida para si" : "Montada a partir do que respondeu"}${ritmo ? ` · ritmo ${ritmo.rotulo.toLowerCase()}` : ""}.</p>
+          <h3>${t("A sua trilha")}</h3>
+          <p class="sub-celula" style="margin:0;">${onb.saltado ? t("Sugerida para si") : t("Montada a partir do que respondeu")}${ritmo ? ` · ${t("ritmo {ritmo}", { ritmo:t(ritmo.rotulo).toLowerCase() })}` : ""}.</p>
         </div>
-        <button class="btn btn-secondary btn-sm" id="btn-refazer-trilha">${onb.saltado ? "Responder ao questionário" : "Rever respostas"}</button>
+        <button class="btn btn-secondary btn-sm" id="btn-refazer-trilha">${onb.saltado ? t("Responder ao questionário") : t("Rever respostas")}</button>
       </div>
       <ol class="trilha-passos">
         ${trilha.map((c,i) => {
@@ -210,7 +210,7 @@ function trilhaHTML(){
             <span class="trilha-num">${p.pct===100 ? iconeCheck() : i+1}</span>
             <span class="trilha-txt">
               <strong>${c.titulo}</strong>
-              <span class="sub-celula">${cat.nome} · ${p.concluidas} de ${p.total} aulas</span>
+              <span class="sub-celula">${cat.nome} · ${t("{feitas} de {total} aulas", { feitas:p.concluidas, total:p.total })}</span>
             </span>
             <span class="trilha-pct">${p.pct}%</span>
           </li>`;

@@ -34,6 +34,7 @@ const API = {
     const { data } = await this.cliente.auth.getSession();
     if(!data.session) return null;
     this.precisaDePassword = !!(data.session.user.user_metadata || {}).precisa_password;
+    this.idiomaDaCompra = (data.session.user.user_metadata || {}).idioma || null;
     return this.carregarUtilizador(data.session.user.id);
   },
 
@@ -44,8 +45,8 @@ const API = {
       .eq("id", id)
       .maybeSingle();
     if(error) throw error;
-    if(!data) throw new Error("A sua conta ainda não está ligada à academia. Fale com a mentoria.");
-    if(data.estado !== "Ativo") throw new Error("Este acesso está suspenso. Fale com a sua mentoria.");
+    if(!data) throw new Error(t("A sua conta ainda não está ligada à academia. Fale com a mentoria."));
+    if(data.estado !== "Ativo") throw new Error(t("Este acesso está suspenso. Fale com a sua mentoria."));
     this.utilizador = data;
     return data;
   },
@@ -53,6 +54,8 @@ const API = {
   async entrar(email, password){
     const { data, error } = await this.cliente.auth.signInWithPassword({ email, password });
     if(error) throw new Error(traduzirErroAuth(error));
+    /* A língua com que a pessoa comprou vem na conta desde o convite. */
+    this.idiomaDaCompra = (data.user.user_metadata || {}).idioma || null;
     return this.carregarUtilizador(data.user.id);
   },
 
@@ -66,14 +69,16 @@ const API = {
      resposta é igual com ou sem conta — nunca se diz quem tem acesso. */
   async pedirNovaPassword(email){
     const { data, error } = await this.cliente.functions.invoke("recuperar-password", {
-      body:{ email, onde:"academia", volta: location.origin + location.pathname + "#nova-password" }
+      /* O email sai na língua de quem pediu, e o link volta com ela. */
+      body:{ email, onde:"academia", idioma: idioma(),
+             volta: location.origin + location.pathname + (idioma() === "en" ? "?lang=en" : "") + "#nova-password" }
     });
     if(error){
       let detalhe = "";
       try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
-      throw new Error(detalhe || "Não foi possível enviar agora. Tente daqui a pouco.");
+      throw new Error(t(detalhe || "Não foi possível enviar agora. Tente daqui a pouco."));
     }
-    if(data && data.error) throw new Error(data.error);
+    if(data && data.error) throw new Error(t(data.error));
   },
 
   /* O código que vem por email (convite ou recuperação), confirmado aqui com
@@ -82,7 +87,7 @@ const API = {
      mandavam as pessoas para localhost:3000. */
   async entrarComCodigo(tokenHash, tipo){
     const { data, error } = await this.cliente.auth.verifyOtp({ token_hash: tokenHash, type: tipo });
-    if(error || !data?.session) throw new Error("Este link já foi usado ou expirou. Peça um novo.");
+    if(error || !data?.session) throw new Error(t("Este link já foi usado ou expirou. Peça um novo."));
     this.precisaDePassword = true;
     return data.session;
   },
@@ -94,7 +99,7 @@ const API = {
     if(error){
       let detalhe = "";
       try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
-      throw new Error(detalhe || "Não foi possível abrir o convite agora. Tente daqui a pouco.");
+      throw new Error(t(detalhe || "Não foi possível abrir o convite agora. Tente daqui a pouco."));
     }
     return data || { estado:"inexistente" };
   },
@@ -690,6 +695,8 @@ function aplicarEstadoDoAluno({ progresso, presencas, onboarding, perfil }){
     ? { feito:true, saltado:onboarding.saltado, objetivos:onboarding.objetivos||[],
         ritmo:onboarding.ritmo, momento:onboarding.momento }
     : null;
+  aplicarIdiomaDaConta({ perfil: perfil && perfil.idioma, compra: API.idiomaDaCompra });
+  estado.idioma = perfil && perfil.idioma || null;
   if(perfil){
     estado.fotoUrl = perfil.foto_url || null;
     estado.tema = perfil.tema || null;
@@ -719,13 +726,13 @@ function aplicarReacoes(posts, reacoes, eu){
 function porOrdem(a, b){ return (a.ordem||0) - (b.ordem||0); }
 
 function tempoRelativo(iso){
-  if(!iso) return "agora";
+  if(!iso) return t("agora");
   const seg = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if(seg < 60) return "agora";
-  if(seg < 3600) return `há ${Math.floor(seg/60)} min`;
-  if(seg < 86400) return `há ${Math.floor(seg/3600)}h`;
+  if(seg < 60) return t("agora");
+  if(seg < 3600) return t("há {n} min", { n:Math.floor(seg/60) });
+  if(seg < 86400) return t("há {n}h", { n:Math.floor(seg/3600) });
   const dias = Math.floor(seg/86400);
-  return dias === 1 ? "ontem" : `há ${dias} dias`;
+  return dias === 1 ? t("ontem") : t("há {n} dias", { n:dias });
 }
 
 /* ============================================================
@@ -781,7 +788,7 @@ const MAPAS = {
   plano:    { tabela:"planos", suave:true,
               para: p => ({ id:p.id, nome:p.nome, descricao:p.descricao||null, ordem:p.ordem||0 }) },
   onboarding:{ tabela:"onboarding", para: o => ({ utilizador_id:API.utilizador.id, objetivos:o.objetivos||[], ritmo:o.ritmo, momento:o.momento, saltado:!!o.saltado }) },
-  perfil:   { tabela:"perfis", para: p => ({ utilizador_id:API.utilizador.id, foto_url:p.fotoUrl||null, tema:p.tema||null, streak_dias:p.streakDias||0, notificacoes:p.notificacoes||{} }) }
+  perfil:   { tabela:"perfis", para: p => ({ utilizador_id:API.utilizador.id, foto_url:p.fotoUrl||null, tema:p.tema||null, streak_dias:p.streakDias||0, notificacoes:p.notificacoes||{}, idioma:p.idioma||null }) }
 };
 
 /* ============================================================
@@ -790,41 +797,41 @@ const MAPAS = {
 function traduzirErroFicheiro(erro){
   const m = (erro && erro.message || "").toLowerCase();
   if(m.includes("exceeded the maximum allowed size") || m.includes("payload too large"))
-    return "O ficheiro é grande de mais para este tipo de conteúdo.";
+    return t("O ficheiro é grande de mais para este tipo de conteúdo.");
   if(m.includes("mime type") || m.includes("invalid_mime"))
-    return "Este tipo de ficheiro não é aceite aqui.";
+    return t("Este tipo de ficheiro não é aceite aqui.");
   if(m.includes("row-level security") || m.includes("unauthorized"))
-    return "Não tem permissão para enviar este ficheiro.";
-  if(m.includes("failed to fetch")) return "Perdemos a ligação ao enviar o ficheiro.";
-  return erro && erro.message ? erro.message : "Não foi possível enviar o ficheiro.";
+    return t("Não tem permissão para enviar este ficheiro.");
+  if(m.includes("failed to fetch")) return t("Perdemos a ligação ao enviar o ficheiro.");
+  return erro && erro.message ? t(erro.message) : t("Não foi possível enviar o ficheiro.");
 }
 
 function traduzirErroAuth(erro){
   const m = (erro && erro.message || "").toLowerCase();
   if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
-    return "Não conseguimos falar com o servidor. Verifique a sua ligação à internet e tente de novo.";
-  if(m.includes("invalid login")) return "Email ou password errados.";
-  if(m.includes("email not confirmed")) return "Confirme o email antes de entrar. Procure a mensagem que lhe enviámos.";
-  if(m.includes("rate limit") || m.includes("too many")) return "Demasiadas tentativas. Espere um minuto e tente de novo.";
+    return t("Não conseguimos falar com o servidor. Verifique a sua ligação à internet e tente de novo.");
+  if(m.includes("invalid login")) return t("Email ou password errados.");
+  if(m.includes("email not confirmed")) return t("Confirme o email antes de entrar. Procure a mensagem que lhe enviámos.");
+  if(m.includes("rate limit") || m.includes("too many")) return t("Demasiadas tentativas. Espere um minuto e tente de novo.");
   if(m.includes("easy to guess") || m.includes("weak password") || m.includes("pwned"))
-    return "Essa password aparece em fugas de dados conhecidas. Escolha outra que não use noutro sítio.";
+    return t("Essa password aparece em fugas de dados conhecidas. Escolha outra que não use noutro sítio.");
   if(m.includes("password should be") || m.includes("password should contain"))
-    return "Essa password não cumpre as regras da academia: " + (erro.message || "") + ".";
-  return erro && erro.message ? erro.message : "Não foi possível entrar.";
+    return t("Essa password não cumpre as regras da academia: {regra}.", { regra:erro.message || "" });
+  return erro && erro.message ? t(erro.message) : t("Não foi possível entrar.");
 }
 
 function traduzirErroDados(erro){
   const codigo = erro && erro.code;
   const m = (erro && erro.message || "").toLowerCase();
   if(m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
-    return "Perdemos a ligação ao servidor. Verifique a internet e recarregue a página.";
+    return t("Perdemos a ligação ao servidor. Verifique a internet e recarregue a página.");
   if(codigo === "42P01" || (erro.message||"").includes("schema must be one of"))
     return 'O schema "academia" ainda não está exposto na API do Supabase (Settings → Data API → Exposed schemas).';
   if(codigo === "42501" || codigo === "PGRST301")
-    return "Não tem permissão para esta operação.";
-  if(codigo === "23505") return "Já existe um registo com estes dados.";
-  if(codigo === "23503") return "Este registo está ligado a outro e não pode ficar assim.";
-  return erro && erro.message ? erro.message : "Não foi possível guardar.";
+    return t("Não tem permissão para esta operação.");
+  if(codigo === "23505") return t("Já existe um registo com estes dados.");
+  if(codigo === "23503") return t("Este registo está ligado a outro e não pode ficar assim.");
+  return erro && erro.message ? t(erro.message) : t("Não foi possível guardar.");
 }
 
 
@@ -898,7 +905,7 @@ async function salvarAula(aula, moduloId){
 
 function avisarQueNaoGuardou(erro){
   const motivo = erro && erro.message ? erro.message : String(erro);
-  mostrarToast("Não ficou guardado: " + motivo);
+  mostrarToast(t("Não ficou guardado: {motivo}", { motivo }));
   mostrarBarraDeFalha(motivo);
   console.error("Falha ao guardar:", erro);
 }
@@ -911,9 +918,9 @@ function mostrarBarraDeFalha(motivo){
   barra.id = "barra-falha";
   barra.className = "barra-falha";
   barra.innerHTML = `
-    <span>Uma alteração não chegou ao servidor — o que vê pode não estar gravado.
+    <span>${t("Uma alteração não chegou ao servidor — o que vê pode não estar gravado.")}
     <strong>${motivo}</strong></span>
-    <button class="btn btn-secondary btn-sm" id="btn-recarregar-falha">Recarregar</button>
+    <button class="btn btn-secondary btn-sm" id="btn-recarregar-falha">${t("Recarregar")}</button>
   `;
   document.body.appendChild(barra);
   document.getElementById("btn-recarregar-falha").addEventListener("click", () => location.reload());
@@ -980,7 +987,7 @@ async function salvarPerfil(){
   if(String(estado.fotoUrl||"").startsWith("data:"))
     estado.fotoUrl = await passarParaStorage(estado.fotoUrl, "perfis/" + API.utilizador.id);
   return API.guardar("perfil", {
-    fotoUrl: estado.fotoUrl, tema: estado.tema,
+    fotoUrl: estado.fotoUrl, tema: estado.tema, idioma: estado.idioma,
     streakDias: estado.streakDias, notificacoes: estado.notificacoes
   }).catch(erro => avisarQueNaoGuardou(erro));
 }

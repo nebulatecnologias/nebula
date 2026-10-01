@@ -34,7 +34,11 @@ function cursosVisiveis(){
   const permitidos = new Set([...doPlano, ...cursosPorTurma(membro), ...abertos]);
   return publicados.filter(c => permitidos.has(c.id));
 }
-function categoriaDe(id){ return DB.categorias[id] || { nome:"Sem categoria", cor:"#6c6b74" }; }
+/* O nome das categorias de origem traduz-se; o que a equipa criar fica como escreveu. */
+function categoriaDe(id){
+  const c = DB.categorias[id];
+  return c ? Object.assign({}, c, { nome:t(c.nome) }) : { nome:t("Sem categoria"), cor:"#6c6b74" };
+}
 
 /* Como um encontro se paga. O aluno vê isto como etiqueta no cartão. */
 const ROTULO_ACESSO = { gratuito:"Gratuito", exclusivo:"Exclusivo", pago:"Pago" };
@@ -96,7 +100,7 @@ function marcaHTML(pequeno){
   const marca = a.logoUrl
     ? `<img class="crest logo-imagem" src="${a.logoUrl}" alt="${a.nomeEscola}"${pequeno?' style="width:34px;height:34px;"':""}>`
     : crestSVG(a.corAccent, pequeno);
-  return `${marca}<span class="wordmark">${a.nomeEscola}<small>${a.sublinha||""}</small></span>`;
+  return `${marca}<span class="wordmark">${a.nomeEscola}<small>${a.sublinha ? t(a.sublinha) : ""}</small></span>`;
 }
 
 function aplicarAparencia(){
@@ -118,15 +122,16 @@ function aplicarAparencia(){
     raiz.setProperty("--ring", `0 0 0 3px ${hexParaRgba(c, 0.28)}`);
   }
 
-  document.title = a.nomeEscola + " — Área de Membros";
+  document.title = a.nomeEscola + " — " + t("Área de Membros");
   document.querySelectorAll(".brand-mark").forEach(el => {
     el.innerHTML = marcaHTML(!!el.closest(".sidebar-head, .topbar"));
   });
 
   const titulo = document.querySelector("#login-quote h2");
   const texto  = document.querySelector("#login-quote p");
-  if(titulo) titulo.textContent = a.loginTitulo;
-  if(texto)  texto.textContent = a.loginTexto;
+  /* Traduz-se o texto de origem; o que a equipa escrever fica como está. */
+  if(titulo) titulo.textContent = t(a.loginTitulo);
+  if(texto)  texto.textContent = t(a.loginTexto);
   const rodape = document.getElementById("login-rodape");
   if(rodape) rodape.textContent = a.rodape || "";
 
@@ -239,10 +244,10 @@ function playerHTML(aula, titulo){
   return `
     <div class="placeholder-inner">
       <div class="play-badge"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>
-      <div class="placeholder-label">${papelEfetivo() === "administrador" && temCodigo ? "Código de incorporação não reconhecido" : "Esta aula não tem vídeo"}</div>
+      <div class="placeholder-label">${papelEfetivo() === "administrador" && temCodigo ? "Código de incorporação não reconhecido" : t("Esta aula não tem vídeo")}</div>
       <div class="placeholder-sub">${papelEfetivo() === "administrador"
         ? (temCodigo ? "O código colado não traz um endereço de vídeo." : "Cole o código de incorporação em Conteúdos › aula › Vídeo.")
-        : "O conteúdo desta aula está no texto e nos materiais abaixo. Pode marcá-la como concluída ou seguir para a próxima."}</div>
+        : t("O conteúdo desta aula está no texto e nos materiais abaixo. Pode marcá-la como concluída ou seguir para a próxima.")}</div>
     </div>`;
 }
 /* ============================================================
@@ -382,7 +387,7 @@ function conquistaDesbloqueada(b){
   }
 }
 function badgesDesbloqueados(){ return new Set(DB.conquistas.filter(conquistaDesbloqueada).map(b=>b.id)); }
-function formatarDataEvento(dataStr){ const [y,m,d] = dataStr.split("-").map(Number); const meses=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"]; return { dia:String(d).padStart(2,"0"), mes:meses[m-1] }; }
+function formatarDataEvento(dataStr){ const [y,m,d] = dataStr.split("-").map(Number); const meses = idioma() === "en" ? ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] : ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"]; return { dia:String(d).padStart(2,"0"), mes:meses[m-1] }; }
 function diasAte(dataHora){ const diff = Math.round((dataHora - new Date())/86400000); return diff; }
 /* Certificado: um só desenho, usado pelo aluno e pela pré-visualização do painel. */
 function certificadoHTML({ nome, curso, data, codigo, comFechar }){
@@ -390,14 +395,14 @@ function certificadoHTML({ nome, curso, data, codigo, comFechar }){
   return `
     ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
     ${crestSVG(DB.aparencia.corAccent)}
-    <p class="cert-titulo">${c.titulo.charAt(0) + c.titulo.slice(1).toLowerCase()}</p>
+    <p class="cert-titulo">${(tituloCert => tituloCert.charAt(0) + tituloCert.slice(1).toLowerCase())(t(c.titulo))}</p>
     <h2>${nome}</h2>
-    <p>${c.frase}</p>
+    <p>${t(c.frase)}</p>
     <div class="cert-course">${curso}</div>
-    <p style="font-size:14px;">${c.rodape}</p>
-    ${c.assinaturaNome ? `<div class="cert-assinatura"><span class="linha"></span><strong>${c.assinaturaNome}</strong><span class="cargo">${c.assinaturaCargo||""}</span></div>` : ""}
-    <div class="cert-date">Emitido em ${data}</div>
-    ${codigo ? `<div class="cert-codigo">Código ${textoSeguro(codigo)}</div>` : ""}
+    <p style="font-size:14px;">${t(c.rodape)}</p>
+    ${c.assinaturaNome ? `<div class="cert-assinatura"><span class="linha"></span><strong>${c.assinaturaNome}</strong><span class="cargo">${t(c.assinaturaCargo||"")}</span></div>` : ""}
+    <div class="cert-date">${t("Emitido em {data}", { data })}</div>
+    ${codigo ? `<div class="cert-codigo">${t("Código {codigo}", { codigo:textoSeguro(codigo) })}</div>` : ""}
   `;
 }
 
@@ -439,7 +444,7 @@ async function atualizarCertificados(){
   return porGravar.filter(c => certificadoDoCurso(c.id));
 }
 function dataDoCertificado(iso){
-  return new Date(iso).toLocaleDateString("pt-PT", { day:"numeric", month:"long", year:"numeric", timeZone:"Africa/Maputo" });
+  return new Date(iso).toLocaleDateString(localeDoIdioma(), { day:"numeric", month:"long", year:"numeric", timeZone:"Africa/Maputo" });
 }
 
 /* Avaliação da aula feita por quem está na sessão. */
@@ -447,7 +452,7 @@ function minhaAvaliacao(aulaId){
   const membro = membroAtual();
   return (DB.avaliacoes||[]).find(a => a.aulaId===aulaId && (membro ? a.membroId===membro.id : a.membroId===null));
 }
-function espacoPorId(id){ return (DB.espacos||[]).find(e=>e.id===id) || { nome:"Geral", cor:"#ff5a1f" }; }
+function espacoPorId(id){ return (DB.espacos||[]).find(e=>e.id===id) || { nome:t("Geral"), cor:"#ff5a1f" }; }
 function espacosAtivos(){ return (DB.espacos||[]).filter(e=>e.ativo!==false); }
 /* O feed do aluno esconde o que foi moderado e põe os fixados à frente. */
 function postsVisiveis(){
@@ -483,7 +488,7 @@ function linkExterno(url){
 /* Abre um endereço numa aba nova, já normalizado. */
 function abrirLink(url){
   const destino = linkExterno(url);
-  if(!destino){ mostrarToast("Este link não é válido."); return false; }
+  if(!destino){ mostrarToast(t("Este link não é válido.")); return false; }
   window.open(destino, "_blank", "noopener");
   return true;
 }
@@ -513,14 +518,14 @@ function mostrarToast(msg){
 function renderNotificacoes(){
   const painel = document.getElementById("notif-panel");
   painel.innerHTML = `
-    <div class="notif-panel-head">Notificações</div>
+    <div class="notif-panel-head">${t("Notificações")}</div>
     <div class="notif-list">
       ${DB.notificacoes.length ? DB.notificacoes.map(n => `
         <div class="notif-item ${destinoDaNotificacao(n)?"clicavel":""}" data-notif="${n.id}">
           <span class="dot-unread ${n.lida?"lida":""}"></span>
-          <div class="txt"><strong>${n.titulo}</strong><p>${n.desc}</p><span class="tempo">${n.tempo}</span></div>
+          <div class="txt"><strong>${tNotificacao(n.titulo)}</strong><p>${tNotificacao(n.desc)}</p><span class="tempo">${n.tempo}</span></div>
         </div>
-      `).join("") : '<div class="notif-empty">Sem notificações por agora.</div>'}
+      `).join("") : `<div class="notif-empty">${t("Sem notificações por agora.")}</div>`}
     </div>
   `;
 
@@ -531,6 +536,19 @@ function renderNotificacoes(){
     painel.classList.add("hidden");
     irPara(destino.view, destino.id);
   }));
+}
+
+/* As notificações nascem na base, em português (academia_privado.anunciar_*).
+   Traduzem-se pela forma; o nome do curso ou da aula fica como a equipa o
+   escreveu. */
+function tNotificacao(texto){
+  const s = String(texto || "");
+  if(idioma() !== "en") return s;
+  let m;
+  if((m = s.match(/^Nova aula em (.+)$/))) return t("Nova aula em {curso}", { curso:m[1] });
+  if((m = s.match(/^Novo curso: (.+)$/))) return t("Novo curso: {curso}", { curso:m[1] });
+  if((m = s.match(/^(\d{2}\/\d{2}) às (\d{2}:\d{2})$/))) return t("{dia} às {hora}", { dia:m[1], hora:m[2] });
+  return t(s);
 }
 
 /* Um aviso que não leva a lado nenhum é só ruído: só fica clicável se
@@ -664,15 +682,18 @@ function irPara(view, a, b){
 }
 
 function renderSidebarNav(activeView){
-  const lista = papelEfetivo()==="administrador" ? NAV_ADMIN : navDoAluno();
+  /* O painel da equipa fica em português; só a navegação do aluno se traduz. */
+  const doAluno = papelEfetivo()!=="administrador";
+  const tr = texto => doAluno ? t(texto) : texto;
+  const lista = doAluno ? navDoAluno() : NAV_ADMIN;
   const navView = (activeView==="curso" || activeView==="aula") ? "catalogo" : activeView;
   const el = document.getElementById("sidebar-nav-items");
   el.innerHTML = lista.map(grupo => `
-    <div class="nav-label">${grupo.grupo}</div>
+    <div class="nav-label">${tr(grupo.grupo)}</div>
     ${grupo.itens.map(it => `
       <div class="nav-item ${it.view===navView?"active":""}" data-view="${it.view}">
         ${it.icon}
-        <span>${it.label}</span>
+        <span>${tr(it.label)}</span>
         ${it.dot ? `<span class="nav-dot hidden" id="dot-${it.dot}"></span>` : ""}
       </div>
     `).join("")}
@@ -697,14 +718,15 @@ function renderTabbar(lista, navView){
   const barra = document.getElementById("tabbar");
   if(!barra) return;
   const itens = lista.flatMap(g => g.itens);
-  const ordem = papelEfetivo()==="administrador" ? TABBAR_ADMIN : TABBAR_ALUNO;
+  const aluno = papelEfetivo()!=="administrador";
+  const ordem = aluno ? TABBAR_ALUNO : TABBAR_ADMIN;
   const escolhidos = ordem.map(v => itens.find(i => i.view === v)).filter(Boolean).slice(0, 4);
   const iconeMais = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
   barra.innerHTML = escolhidos.map(it => `
     <button type="button" class="${it.view===navView?"active":""}" data-tab="${it.view}" ${it.view===navView?'aria-current="page"':""}>
-      ${it.icon}<span>${ROTULO_CURTO[it.view] || it.label}</span>
+      ${it.icon}<span>${aluno ? t(ROTULO_CURTO[it.view] || it.label) : (ROTULO_CURTO[it.view] || it.label)}</span>
     </button>`).join("") + `
-    <button type="button" data-tab-mais>${iconeMais}<span>Mais</span></button>`;
+    <button type="button" data-tab-mais>${iconeMais}<span>${aluno ? t("Mais") : "Mais"}</span></button>`;
   barra.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => irPara(b.getAttribute("data-tab"))));
   barra.querySelector("[data-tab-mais]").addEventListener("click", () => {
     document.getElementById("sidebar").classList.add("open");
@@ -724,7 +746,7 @@ function renderSidebarFoot(){
     `;
   } else {
     el.innerHTML = `
-      <div class="progress-mini-label"><span>Progresso geral</span><span id="sidebar-pct">0%</span></div>
+      <div class="progress-mini-label"><span>${t("Progresso geral")}</span><span id="sidebar-pct">0%</span></div>
       <div class="progress-track thin"><div class="progress-fill mini" id="sidebar-progress-fill" style="width:0%"></div></div>
     `;
   }

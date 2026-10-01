@@ -33,7 +33,7 @@ function voltarDaPagina(){
    botões. O resto é texto. */
 function paginaHTML({ arte, etiquetas = [], titulo, texto, detalhes = [], acoes = "", nota = "" }){
   return `
-    <button class="back-link" type="button" data-voltar>${ICONE_VOLTAR}Voltar</button>
+    <button class="back-link" type="button" data-voltar>${ICONE_VOLTAR}${t("Voltar")}</button>
     <article class="pagina-destaque">
       <div class="pagina-arte">${arte}</div>
       <div class="pagina-corpo">
@@ -49,7 +49,7 @@ function paginaHTML({ arte, etiquetas = [], titulo, texto, detalhes = [], acoes 
 
 function paginaVazia(raiz, frase){
   raiz.innerHTML = `
-    <button class="back-link" type="button" data-voltar>${ICONE_VOLTAR}Voltar</button>
+    <button class="back-link" type="button" data-voltar>${ICONE_VOLTAR}${t("Voltar")}</button>
     <div class="card pagina-vazia"><p>${frase}</p></div>`;
   ligarVoltar(raiz);
 }
@@ -67,7 +67,7 @@ function renderEvento(id){
   /* Um evento que não aparece aqui ou já foi apagado, ou não é para esta
      pessoa (a regra de leitura do servidor não lho deu). Nos dois casos,
      a mesma frase. */
-  if(!e){ paginaVazia(raiz, "Este encontro já não está disponível, ou não é para si."); return; }
+  if(!e){ paginaVazia(raiz, t("Este encontro já não está disponível, ou não é para si.")); return; }
 
   const quando = new Date(e.data + "T" + (e.hora || "00:00") + ":00");
   const passado = quando <= new Date();
@@ -79,42 +79,42 @@ function renderEvento(id){
   const porComprar = e.acesso === "pago" && !e.link;
   const checkout = oferta ? (linkCheckout(oferta.atalho) || linkExterno(oferta.link)) : "";
   const confirmado = !!estado.presencasConfirmadas[e.id];
-  const dataLonga = quando.toLocaleDateString("pt-PT", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+  const dataLonga = quando.toLocaleDateString(localeDoIdioma(), { weekday:"long", day:"numeric", month:"long", year:"numeric" });
 
   let acoes = "", nota = "";
   if(passado){
-    nota = "Este encontro já aconteceu.";
+    nota = t("Este encontro já aconteceu.");
   } else if(porComprar){
     acoes = checkout && oferta
-      ? `<a class="btn btn-primary btn-lg" href="${checkout}" target="_blank" rel="noopener" data-comprar>Garantir lugar · ${formatarPreco(oferta.preco, oferta.moeda)} ${setaCirculo()}</a>`
+      ? `<a class="btn btn-primary btn-lg" href="${checkout}" target="_blank" rel="noopener" data-comprar>${t("Garantir lugar")} · ${formatarPreco(oferta.preco, oferta.moeda)} ${setaCirculo()}</a>`
       : "";
     nota = checkout
-      ? "O pagamento abre numa página segura do Payflow. Assim que for confirmado, o link da sala aparece aqui."
-      : "Fale com a sua mentoria para garantir o lugar.";
+      ? t("O pagamento abre numa página segura do Payflow. Assim que for confirmado, o link da sala aparece aqui.")
+      : t("Fale com a sua mentoria para garantir o lugar.");
   } else {
     acoes = [
-      e.link ? `<a class="btn btn-primary btn-lg" href="${linkExterno(e.link)}" target="_blank" rel="noopener">Entrar na sala ${setaCirculo()}</a>` : "",
-      `<button class="btn btn-secondary btn-lg" type="button" data-confirmar-presenca data-done="${confirmado}">${confirmado ? iconeCheck() + " Presença confirmada" : "Confirmar presença"}</button>`,
-      `<button class="btn btn-texto btn-lg" type="button" data-lembrete-pagina>Guardar lembrete</button>`
+      e.link ? `<a class="btn btn-primary btn-lg" href="${linkExterno(e.link)}" target="_blank" rel="noopener">${t("Entrar na sala")} ${setaCirculo()}</a>` : "",
+      `<button class="btn btn-secondary btn-lg" type="button" data-confirmar-presenca data-done="${confirmado}">${confirmado ? iconeCheck() + " " + t("Presença confirmada") : t("Confirmar presença")}</button>`,
+      `<button class="btn btn-texto btn-lg" type="button" data-lembrete-pagina>${t("Guardar lembrete")}</button>`
     ].join("");
   }
   if(e.local && !porComprar){
-    acoes += `<a class="btn btn-secondary btn-lg" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.local)}" target="_blank" rel="noopener">Ver no mapa ${setaCirculo()}</a>`;
+    acoes += `<a class="btn btn-secondary btn-lg" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.local)}" target="_blank" rel="noopener">${t("Ver no mapa")} ${setaCirculo()}</a>`;
   }
 
   raiz.innerHTML = paginaHTML({
     arte: `<div class="pagina-data ${passado ? "passada" : ""}"><span class="dia">${dia}</span><span class="mes">${mes}</span></div>`,
     etiquetas: [
-      etiqueta(ROTULO_ACESSO[e.acesso] || "Gratuito", "acesso " + (e.acesso || "gratuito")),
+      etiqueta(t(ROTULO_ACESSO[e.acesso] || "Gratuito"), "acesso " + (e.acesso || "gratuito")),
       `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>`,
-      passado ? etiqueta("Realizado", "passado") : etiqueta("Em breve", "em-breve")
+      passado ? etiqueta(t("Realizado"), "passado") : etiqueta(t("Em breve"), "em-breve")
     ],
     titulo: e.titulo,
     texto: e.descricao,
     detalhes: [
-      `<span class="rotulo">Quando</span><strong>${dataLonga}, às ${e.hora}</strong>`,
-      `<span class="rotulo">Formato</span><strong>${textoSeguro(e.tipo) || "Encontro"}</strong>`,
-      `<span class="rotulo">Onde</span><strong>${e.local ? textoSeguro(e.local) : (e.link || porComprar ? "Online" : "A anunciar")}</strong>`
+      `<span class="rotulo">${t("Quando")}</span><strong>${t("{data}, às {hora}", { data:dataLonga, hora:e.hora })}</strong>`,
+      `<span class="rotulo">${t("Formato")}</span><strong>${textoSeguro(e.tipo) || t("Encontro")}</strong>`,
+      `<span class="rotulo">${t("Onde")}</span><strong>${e.local ? textoSeguro(e.local) : (e.link || porComprar ? t("Online") : t("A anunciar"))}</strong>`
     ],
     acoes, nota
   });
@@ -124,7 +124,7 @@ function renderEvento(id){
   if(presenca) presenca.addEventListener("click", () => {
     estado.presencasConfirmadas[e.id] = !estado.presencasConfirmadas[e.id];
     salvarPresenca(e.id, estado.presencasConfirmadas[e.id]);
-    if(estado.presencasConfirmadas[e.id]) mostrarToast("Presença confirmada!");
+    if(estado.presencasConfirmadas[e.id]) mostrarToast(t("Presença confirmada!"));
     renderEvento(id);
   });
   const lembrete = raiz.querySelector("[data-lembrete-pagina]");
@@ -143,54 +143,54 @@ function renderOferta(id){
     if(jaTem){
       raiz.innerHTML = paginaHTML({
         arte: arteDoCurso(jaTem),
-        etiquetas: [etiqueta("Já tem acesso", "tem-acesso")],
+        etiquetas: [etiqueta(t("Já tem acesso"), "tem-acesso")],
         titulo: jaTem.titulo,
         texto: jaTem.subtitulo,
-        acoes: `<button class="btn btn-primary btn-lg" type="button" data-abrir-curso="${jaTem.id}">Abrir o curso ${setaCirculo()}</button>`
+        acoes: `<button class="btn btn-primary btn-lg" type="button" data-abrir-curso="${jaTem.id}">${t("Abrir o curso")} ${setaCirculo()}</button>`
       });
       ligarVoltar(raiz);
       raiz.querySelector("[data-abrir-curso]").addEventListener("click", () => irPara("curso", jaTem.id));
       return;
     }
-    paginaVazia(raiz, "Isto não está disponível de momento. Veja o que há na Vitrine, ou fale com a sua mentoria.");
+    paginaVazia(raiz, t("Isto não está disponível de momento. Veja o que há na Vitrine, ou fale com a sua mentoria."));
     return;
   }
 
   const primeiro = o.cursos[0] || {};
   const varios = o.cursos.length > 1;
   const cat = categoriaDe(primeiro.categoria);
-  const aulas = `${o.aulas} aula${o.aulas === 1 ? "" : "s"}`;
+  const aulas = contagemDeAulas(o.aulas);
   const duracao = duracaoEmTexto(varios ? o.segundos : primeiro.segundos);
   const nota = varios ? null : notaEmTexto(primeiro.nota, primeiro.avaliacoes);
   /* Em pré-venda o conteúdo ainda não existe: diz-se quando abre, em vez de
      «0 aulas», que se leria como um curso vazio. */
   const preVenda = o.emBreve && !o.aulas;
-  const conteudo = preVenda ? (o.abreEm ? dataCurta(o.abreEm) : "Em breve")
-    : varios ? `${o.cursos.length} cursos · ${aulas}`
-    : `${primeiro.modulos || 0} módulo${primeiro.modulos === 1 ? "" : "s"} · ${aulas}`;
+  const conteudo = preVenda ? (o.abreEm ? dataCurta(o.abreEm) : t("Em breve"))
+    : varios ? `${t("{n} cursos", { n:o.cursos.length })} · ${aulas}`
+    : `${contagemDeModulos(primeiro.modulos || 0)} · ${aulas}`;
 
   raiz.innerHTML = paginaHTML({
     arte: arteDoCurso(primeiro),
     etiquetas: [
-      etiqueta(`${ICONS.cadeado} Por desbloquear`, "bloqueado"),
-      o.emBreve ? etiqueta("Pré-venda", "em-breve") : "",
-      varios ? etiqueta("Plano", "") : `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>`
+      etiqueta(`${ICONS.cadeado} ${t("Por desbloquear")}`, "bloqueado"),
+      o.emBreve ? etiqueta(t("Pré-venda"), "em-breve") : "",
+      varios ? etiqueta(t("Plano"), "") : `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>`
     ].filter(Boolean),
     titulo: varios ? o.nome : (primeiro.titulo || o.nome),
     texto: o.chamada || (varios ? "" : primeiro.subtitulo),
     detalhes: [
-      varios ? `<span class="rotulo">Inclui</span><strong>${o.cursos.map(c => textoSeguro(c.titulo)).join(" · ")}</strong>` : "",
-      `<span class="rotulo">${preVenda ? "As aulas abrem" : "Conteúdo"}</span><strong>${conteudo}</strong>`,
-      duracao ? `<span class="rotulo">Duração</span><strong>${duracao}</strong>` : "",
-      nota ? `<span class="rotulo">Avaliação</span><strong>${nota.texto} de 5 · ${nota.n} avaliaç${nota.n === 1 ? "ão" : "ões"}</strong>` : "",
-      !varios && primeiro.facilitador ? `<span class="rotulo">Com</span><strong>${textoSeguro(primeiro.facilitador)}</strong>` : ""
+      varios ? `<span class="rotulo">${t("Inclui")}</span><strong>${o.cursos.map(c => textoSeguro(c.titulo)).join(" · ")}</strong>` : "",
+      `<span class="rotulo">${preVenda ? t("As aulas abrem") : t("Conteúdo")}</span><strong>${conteudo}</strong>`,
+      duracao ? `<span class="rotulo">${t("Duração")}</span><strong>${duracao}</strong>` : "",
+      nota ? `<span class="rotulo">${t("Avaliação")}</span><strong>${t("{nota} de 5", { nota:nota.texto })} · ${nota.n === 1 ? t("1 avaliação") : t("{n} avaliações", { n:nota.n })}</strong>` : "",
+      !varios && primeiro.facilitador ? `<span class="rotulo">${t("Com")}</span><strong>${textoSeguro(primeiro.facilitador)}</strong>` : ""
     ].filter(Boolean),
     acoes: o.destino
-      ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} ${o.emBreve ? "Garantir na pré-venda" : "Desbloquear"} · ${formatarPreco(o.preco, o.moeda)}${o.mensal ? "/mês" : ""}</a>`
+      ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} ${o.emBreve ? t("Garantir na pré-venda") : t("Desbloquear")} · ${formatarPreco(o.preco, o.moeda)}${o.mensal ? t("/mês") : ""}</a>`
       : "",
-    nota: !o.destino ? "Fale com a sua mentoria para desbloquear isto."
-      : preVenda ? `${textoDaPreVenda(o.abreEm)}. O pagamento abre numa página segura do Payflow; assim que for confirmado, o curso aparece em Meus cursos e as aulas vão aparecendo lá.`
-      : "O pagamento abre numa página segura do Payflow. Assim que for confirmado, o acesso abre-se aqui."
+    nota: !o.destino ? t("Fale com a sua mentoria para desbloquear isto.")
+      : preVenda ? `${textoDaPreVenda(o.abreEm)}. ${t("O pagamento abre numa página segura do Payflow; assim que for confirmado, o curso aparece em Meus cursos e as aulas vão aparecendo lá.")}`
+      : t("O pagamento abre numa página segura do Payflow. Assim que for confirmado, o acesso abre-se aqui.")
   });
   ligarVoltar(raiz);
 }
@@ -208,14 +208,14 @@ function arteDoCurso(c){
 function renderDestaque(id){
   const raiz = document.getElementById("content-destaque");
   const b = (DB.banners || []).find(x => x.id === id && x.ativo !== false);
-  if(!b){ paginaVazia(raiz, "Isto já não está disponível."); return; }
+  if(!b){ paginaVazia(raiz, t("Isto já não está disponível.")); return; }
   const link = linkExterno(b.link);
   raiz.innerHTML = paginaHTML({
     arte: `<div class="pagina-capa ${b.imagem ? "com-capa" : ""}" style="${fundoBanner(b)}"></div>`,
     etiquetas: b.eyebrow ? [etiqueta(textoSeguro(b.eyebrow), "")] : [],
     titulo: b.titulo,
     texto: b.resumo,
-    acoes: link ? `<a class="btn btn-primary btn-lg" href="${link}" target="_blank" rel="noopener">${textoSeguro(b.cta) || "Saber mais"} ${setaCirculo()}</a>` : ""
+    acoes: link ? `<a class="btn btn-primary btn-lg" href="${link}" target="_blank" rel="noopener">${textoSeguro(b.cta) || t("Saber mais")} ${setaCirculo()}</a>` : ""
   });
   ligarVoltar(raiz);
 }

@@ -35,6 +35,7 @@ A conversa entre alunos não vive na Academia: vive nos grupos de cada programa 
 - Dinheiro escreve-se sempre `MZ 1 500,00` / `R 129,00` (símbolo da tesouraria à frente, duas casas decimais).
 - O back-end crítico (Edge Functions de pagamentos, acessos e emails; RLS; esquema) fica fora do trabalho de interface.
 - Língua da interface: português europeu (Moçambique), tratamento por «você» (decidido a 30/09/2026, igual à Kingdom Library, ao Payflow e às cartas). O teste `testes/casos/13-voce.mjs` falha se um «tu» voltar.
+- Duas línguas para o aluno: português e inglês (decidido a 30/09/2026, no molde do checkout). O português é a chave e `js/idioma-en.js` só tem o inglês; abre a última escolhida no browser, senão a guardada na conta, senão a da compra, senão português. O painel da equipa e o conteúdo que a equipa escreve ficam em português. O teste `15-idioma.mjs` falha se faltar uma tradução.
 
 ## Brand Commitments
 

@@ -21,11 +21,11 @@ function abrirDrawer({ titulo, subtitulo, campos, valores = {}, textoGuardar = "
           <h3>${titulo}</h3>
           ${subtitulo ? `<p class="drawer-sub">${subtitulo}</p>` : ""}
         </div>
-        <button class="modal-close" type="button" data-fechar aria-label="Fechar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <button class="modal-close" type="button" data-fechar aria-label="${t("Fechar")}"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
       <div class="drawer-body">${camposHTML(campos, valores)}</div>
       <div class="drawer-foot">
-        <button class="btn btn-secondary" type="button" data-fechar>Cancelar</button>
+        <button class="btn btn-secondary" type="button" data-fechar>${t("Cancelar")}</button>
         <button class="btn btn-primary" type="button" id="drawer-guardar">${textoGuardar}</button>
       </div>
     </div>
@@ -189,7 +189,7 @@ function confirmarAcao({ titulo, mensagem, textoConfirmar = "Apagar", aoConfirma
       <h3>${titulo}</h3>
       <p>${mensagem}</p>
       <div class="confirm-acoes">
-        <button class="btn btn-secondary" type="button" data-cancelar>Cancelar</button>
+        <button class="btn btn-secondary" type="button" data-cancelar>${t("Cancelar")}</button>
         <button class="btn btn-perigo" type="button" data-confirmar>${textoConfirmar}</button>
       </div>
     </div>

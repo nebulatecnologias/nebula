@@ -1467,3 +1467,16 @@ button.back-link:hover{ color:var(--ink); }
   .estado-chip-conta{ min-width:24px; height:24px; }
   .campos-par{ grid-template-columns:1fr; gap:0; }
 }
+
+/* ============================================================
+   PT / EN — o mesmo selector na entrada e nas Definições, no molde do
+   checkout: a sigla diz a língua (uma bandeira sozinha não diz).
+   ============================================================ */
+.seletor-idioma{ display:inline-flex; gap:2px; padding:3px; border-radius:999px; background:var(--sunken); }
+.seletor-idioma button{ font:inherit; font-size:13px; font-weight:500; min-height:32px; min-width:44px; padding:0 12px;
+  border:0; border-radius:999px; background:transparent; color:var(--muted); cursor:pointer; }
+.seletor-idioma button:hover{ color:var(--ink); }
+.seletor-idioma button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(28,22,16,.08); }
+.seletor-idioma button:focus-visible{ outline:none; box-shadow:var(--ring); }
+.login-idioma{ display:flex; justify-content:flex-end; margin:-8px -6px 12px 0; }
+.login-idioma:empty{ display:none; }
