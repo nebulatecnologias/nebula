@@ -1480,3 +1480,30 @@ button.back-link:hover{ color:var(--ink); }
 .seletor-idioma button:focus-visible{ outline:none; box-shadow:var(--ring); }
 .login-idioma{ display:flex; justify-content:flex-end; margin:-8px -6px 12px 0; }
 .login-idioma:empty{ display:none; }
+
+/* Configurações › Endereço da área de membros (domínio próprio). */
+.bloco-dominio .dominio-atual{ display:flex; flex-wrap:wrap; align-items:baseline; gap:8px; margin-bottom:18px; }
+.bloco-dominio .dominio-atual a{ font-weight:500; color:var(--accent-ink, var(--accent)); word-break:break-all; }
+.bloco-dominio .linha-campo{ display:flex; gap:10px; }
+.bloco-dominio .linha-campo input{ flex:1; min-width:0; }
+.bloco-dominio .linha-campo .btn{ flex-shrink:0; min-height:48px; }
+.bloco-dominio .dominio-estado{ display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-top:1px solid var(--line); }
+.bloco-dominio .dominio-estado p{ margin:3px 0 0; color:var(--ink-2); font-size:14.5px; line-height:1.5; }
+.bloco-dominio .dominio-instrucao{ margin:6px 0 10px; font-size:14.5px; color:var(--ink-2); }
+.bloco-dominio .tabela-dns td{ white-space:normal; }
+.bloco-dominio .dns-valor{ font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:13px; background:var(--sunken); padding:3px 7px; border-radius:6px; word-break:break-all; }
+.bloco-dominio .dominio-passos{ list-style:none; margin:16px 0 8px; padding:0; display:grid; gap:8px; }
+.bloco-dominio .dominio-passos li{ display:flex; align-items:center; gap:10px; font-size:14.5px; color:var(--muted); }
+.bloco-dominio .dominio-passos li.feito{ color:var(--ink); }
+.bloco-dominio .dominio-passos .marca{ width:22px; height:22px; border-radius:50%; display:inline-grid; place-items:center; font-size:12px; background:var(--sunken); color:var(--muted); flex-shrink:0; }
+.bloco-dominio .dominio-passos li.feito .marca{ background:var(--green-soft); color:var(--green-ink); }
+.bloco-dominio .linha-acoes{ margin-top:14px; }
+@media (max-width:560px){
+  .bloco-dominio .linha-campo{ flex-direction:column; }
+  .bloco-dominio .dominio-estado{ flex-direction:column; gap:6px; }
+  .bloco-dominio .tabela-dns thead{ display:none; }
+  .bloco-dominio .tabela-dns tr{ display:block; padding:10px 0; border-bottom:1px solid var(--line); }
+  .bloco-dominio .tabela-dns td{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; padding:5px 14px; border:0; }
+  .bloco-dominio .tabela-dns td::before{ content:attr(data-rotulo); width:44px; flex-shrink:0; font-size:12.5px; color:var(--muted); }
+  .bloco-dominio .tabela-dns tbody tr:hover td{ background:none; }
+}

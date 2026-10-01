@@ -65,7 +65,11 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   await pg.fill('#dominio-valor', 'membros.lideranca.exemplo');
   await pg.click('#form-dominio button[type=submit]');
   await pg.waitForTimeout(150);
-  igual(await pg.getAttribute('[data-escola="lideranca"] a.btn', 'href'), 'https://membros.lideranca.exemplo', 'Com domínio, a escola abre nele');
+  /* Desde a W3, um domínio pedido só abre depois de verificado (o TXT da
+     prova e o DNS a apontar): até lá a escola abre com ?org= e o cartão diz
+     que está à espera do DNS. */
+  contem(await pg.getAttribute('[data-escola="lideranca"] a.btn', 'href'), '?org=lideranca', 'Um domínio pedido ainda não abre a escola');
+  contem(await pg.textContent('[data-escola="lideranca"]'), 'membros.lideranca.exemplo · à espera do DNS', 'e o cartão diz que está à espera do DNS');
 
   /* 6. Mexer na equipa: mudar o papel e suspender. */
   await pg.selectOption('[data-escola="teste"] select[data-papel]', 'admin');

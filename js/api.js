@@ -303,6 +303,27 @@ const API = {
   },
 
 
+  /* O domínio próprio da escola (Configurações). Lê-se na base; ligar,
+     verificar e remover passam pelo servidor, que confere o DNS e fala com a
+     Vercel. */
+  async dominioProprio(){
+    const { data, error } = await this.cliente.rpc("dominio_proprio");
+    if(error) throw new Error(error.message);
+    return data;
+  },
+  async gerirDominio(accao, dominio){
+    const { data, error } = await this.cliente.functions.invoke("dominio-proprio", {
+      body:{ accao, dominio: dominio || null, organizacao: this.organizacao ? this.organizacao.id : null }
+    });
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || traduzirErroAuth(error));
+    }
+    if(data && data.error) throw new Error(data.error);
+    return data;
+  },
+
   /* Os acessos da própria pessoa. Quem paga faz isso NOUTRO separador -- o
      checkout abre-se ao lado -- e por isso a Academia fica parada num ecrã
      que já não corresponde ao que ela tem. Isto trata do caso em que o

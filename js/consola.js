@@ -114,7 +114,8 @@ function fonteDemo(){
     },
     async juntarDominio(org, dominio){
       if(!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(String(dominio).toLowerCase())) throw new Error("Domínio inválido.");
-      achar(org).dominios.push(dominio.toLowerCase());
+      const e = achar(org);
+      e.dominiosPorLigar = (e.dominiosPorLigar || []).concat({ dominio: dominio.toLowerCase(), estado: "pendente" });
     },
     async mudarMembro(org, pessoa, papel, ativo){
       const e = achar(org);
@@ -252,6 +253,7 @@ const Consola = {
           <span><b>${Number(e.alunos || 0)}</b> ${Number(e.alunos) === 1 ? "aluno activo" : "alunos activos"}</span>
           <span><b>${Number(e.cursos || 0)}</b> ${Number(e.cursos) === 1 ? "curso" : "cursos"}</span>
           <span>${e.dominios.length ? esc(e.dominios.join(" · ")) : "Sem domínio próprio"}</span>
+          ${(e.dominiosPorLigar || []).map(d => `<span>${esc(d.dominio)} · ${d.estado === "verificado" ? "a ligar" : "à espera do DNS"}</span>`).join("")}
         </div>
         <div class="bloco">
           <h3>Equipa</h3>
@@ -390,7 +392,7 @@ const Consola = {
     try {
       await this.fonte.juntarDominio(this.dominioOrg.id, document.getElementById("dominio-valor").value.trim().toLowerCase());
       document.getElementById("dlg-dominio").close();
-      this.aviso("Domínio juntado. Falta apontá-lo para a plataforma (DNS e Vercel).", "ok");
+      this.aviso("Domínio pedido. A escola vê os registos a criar no DNS em Configurações › Endereço da área de membros, e verifica lá.", "ok");
       await this.recarregar();
     } catch(e){ erro.textContent = e.message; erro.hidden = false; }
   },

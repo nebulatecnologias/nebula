@@ -103,8 +103,11 @@ function renderAdminConfig(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Configurações",
-      descricao: "Os interruptores gerais da área de membros e o que fazer com os dados desta demonstração."
+      descricao: "O endereço da área de membros, os interruptores gerais e o que fazer com os dados desta demonstração."
     })}
+
+    <div class="section-title"><h2>Endereço da área de membros</h2></div>
+    <div class="card painel bloco-dominio" id="bloco-dominio"></div>
 
     <div class="section-title"><h2>Abas que o aluno vê</h2></div>
     <div class="card painel">
@@ -162,6 +165,7 @@ function renderAdminConfig(){
     </div>
   `;
 
+  mostrarBlocoDominio();
   document.querySelectorAll("#content-admin [data-toggle-aba]").forEach(t =>
     t.addEventListener("click", () => alternarAba(t.getAttribute("data-toggle-aba"))));
   document.querySelectorAll("#content-admin .atalho[data-ir]").forEach(x =>
