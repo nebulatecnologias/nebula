@@ -752,7 +752,7 @@ function renderComunidade(){
   `;
 }
 
-/* «Kingdom · Geral» → «KG»: só contam as palavras que começam por letra. */
+/* «Liderança · Geral» → «LG»: só contam as palavras que começam por letra. */
 function iniciaisDoGrupo(nome){
   return String(nome || "").split(/\s+/).filter(w => /^[\p{L}\p{N}]/u.test(w))
     .slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
@@ -821,11 +821,11 @@ function paraICSData(dataStr, horaStr, offsetMin){
 function baixarLembrete(evento){
   const ics = [
     "BEGIN:VCALENDAR","VERSION:2.0","BEGIN:VEVENT",
-    "UID:"+evento.id+"@kingdomacademy",
+    "UID:"+evento.id+"@"+location.hostname,
     "DTSTART:"+paraICSData(evento.data, evento.hora, 0),
     "DTEND:"+paraICSData(evento.data, evento.hora, 60),
     "SUMMARY:"+evento.titulo,
-    "DESCRIPTION:"+(evento.tipo||"")+" - Kingdom Academy"+(evento.link?" - "+evento.link:""),
+    "DESCRIPTION:"+[evento.tipo, DB.aparencia.nomeEscola, evento.link].filter(Boolean).join(" - "),
     ...(evento.link ? ["URL:"+evento.link] : []),
     "END:VEVENT","END:VCALENDAR"
   ].join("\r\n");
@@ -938,7 +938,7 @@ function renderCalendario(){
   document.getElementById("content-calendario").innerHTML = `
     <div class="page-head">
       <h1>${t("Calendário")}</h1>
-      <p class="desc">${t("Mentorias em grupo, masterclasses e encontros ao vivo com a Kingdom Academy.")}</p>
+      <p class="desc">${t("Mentorias em grupo, masterclasses e encontros ao vivo.")}</p>
     </div>
     ${carrosselBannersHTML("carrossel-aluno")}
     <div class="section-title"><h2>${t("Próximos encontros")}</h2></div>

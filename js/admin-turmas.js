@@ -76,7 +76,7 @@ function editarTurma(id){
     titulo: turma ? "Editar turma" : "Nova turma",
     subtitulo: "Os alunos inscritos passam a ver este curso na sua área.",
     campos: [
-      { nome:"nome", rotulo:"Nome da turma", tipo:"texto", obrigatorio:true, placeholder:"ex: Kingdom Tracktion · Turma 2" },
+      { nome:"nome", rotulo:"Nome da turma", tipo:"texto", obrigatorio:true, placeholder:"ex: Programa de Liderança · Turma 2" },
       { nome:"cursoId", rotulo:"Curso", tipo:"select", opcoes:opcoesCursos(), obrigatorio:true },
       { nome:"inicio", rotulo:"Início", tipo:"data" },
       { nome:"fim", rotulo:"Fim", tipo:"data" },
@@ -226,7 +226,7 @@ function editarModeloCertificado(){
       { nome:"regraPct", rotulo:"Emitir a partir de (%)", tipo:"numero", obrigatorio:true, dica:"Percentagem do curso que o aluno tem de concluir." },
       { nome:"titulo", rotulo:"Título", tipo:"texto", obrigatorio:true },
       { nome:"frase", rotulo:"Frase de conclusão", tipo:"texto", placeholder:"concluiu com sucesso o curso" },
-      { nome:"rodape", rotulo:"Rodapé", tipo:"texto", placeholder:"na Kingdom Academy" },
+      { nome:"rodape", rotulo:"Rodapé", tipo:"texto", placeholder:"ex: na Escola de Liderança" },
       { nome:"assinaturaNome", rotulo:"Assinatura — nome", tipo:"texto", dica:"Deixe vazio para não mostrar assinatura." },
       { nome:"assinaturaCargo", rotulo:"Assinatura — cargo", tipo:"texto" }
     ],

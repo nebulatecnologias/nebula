@@ -242,7 +242,7 @@ function editarComunidade(id){
     titulo: c ? "Editar comunidade" : "Nova comunidade",
     subtitulo: "Aparece na aba Comunidade de quem está inscrito nas ofertas escolhidas.",
     campos: [
-      { nome:"nome", rotulo:"Nome do grupo", tipo:"texto", obrigatorio:true, placeholder:"ex: Kingdom Founders · Turma 3" },
+      { nome:"nome", rotulo:"Nome do grupo", tipo:"texto", obrigatorio:true, placeholder:"ex: Programa de Liderança · Turma 3" },
       { nome:"descricao", rotulo:"Descrição", tipo:"textarea", placeholder:"Uma linha a dizer para que serve o grupo." },
       { nome:"canal", rotulo:"Canal", tipo:"select", opcoes:CANAIS_ADMIN },
       { nome:"link", rotulo:"Link de convite", tipo:"url", obrigatorio:true, placeholder:"https://chat.whatsapp.com/…",

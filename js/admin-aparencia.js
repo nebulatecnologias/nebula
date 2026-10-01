@@ -9,7 +9,7 @@ const PROXIMO_TEMA = { auto:"light", light:"dark", dark:"auto" };
 function renderAdminAparencia(){
   const a = DB.aparencia;
   const tema = NOME_TEMA[a.temaPadrao] ? a.temaPadrao : "auto";
-  const daCasa = corEhDaKingdom(a.corAccent);
+  const daCasa = corDeOrigem(a.corAccent);
 
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
@@ -19,8 +19,8 @@ function renderAdminAparencia(){
       acaoId: "btn-editar-marca"
     })}
     <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon accent">${ICONS.palette}</div><div class="stat-label">Cor de destaque</div><div class="stat-value" style="font-size:17px;display:flex;align-items:center;gap:8px;"><span class="amostra-cor" style="background:${daCasa ? COR_KINGDOM : a.corAccent}"></span>${daCasa ? "Laranja Kingdom" : a.corAccent}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.image}</div><div class="stat-label">Logótipo</div><div class="stat-value" style="font-size:17px;">${a.logoUrl ? "Imagem própria" : "Símbolo Kingdom"}</div></div>
+      <div class="card stat-card"><div class="stat-icon accent">${ICONS.palette}</div><div class="stat-label">Cor de destaque</div><div class="stat-value" style="font-size:17px;display:flex;align-items:center;gap:8px;"><span class="amostra-cor" style="background:${daCasa ? COR_DE_ORIGEM : a.corAccent}"></span>${daCasa ? "Laranja de origem" : a.corAccent}</div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.image}</div><div class="stat-label">Logótipo</div><div class="stat-value" style="font-size:17px;">${a.logoUrl ? "Imagem própria" : a.simbolo === "coroa" ? "Coroa" : "Iniciais do nome"}</div></div>
       <div class="card stat-card" style="cursor:pointer;" id="card-tema">
         <div class="stat-icon">${ICONS.gear}</div>
         <div class="stat-label">Tema por omissão</div>
@@ -45,7 +45,7 @@ function renderAdminAparencia(){
     </div>
 
     <div class="card table-card">
-      <div class="table-card-head"><h3>Paleta em uso</h3><span class="count">${daCasa ? "A da Kingdom Library" : "Derivada da cor de destaque"}</span></div>
+      <div class="table-card-head"><h3>Paleta em uso</h3><span class="count">${daCasa ? "A paleta de origem" : "Derivada da cor de destaque"}</span></div>
       <div class="paleta-grid">
         <div><span class="amostra-cor grande" style="background:var(--cta)"></span><strong>Botão principal</strong><span class="sub-celula">Um por ecrã</span></div>
         <div><span class="amostra-cor grande" style="background:var(--accent)"></span><strong>Destaque</strong><span class="sub-celula">Ícone ativo, foco, progresso</span></div>
@@ -74,11 +74,11 @@ function editarMarca(){
       { nome:"nomeEscola", rotulo:"Nome da escola", tipo:"texto", obrigatorio:true },
       { nome:"sublinha", rotulo:"Sublinha", tipo:"texto", placeholder:"ex: Formação & Mentoria" },
       { nome:"logoUrl", rotulo:"Logótipo", tipo:"imagem", pasta:"marca", dica:"Quadrado, de preferência com fundo transparente. Sem imagem, fica o símbolo." },
-      { nome:"corAccent", rotulo:"Cor de destaque", tipo:"cor", dica:"Botões, realces e o símbolo da marca. O laranja Kingdom (#f4621d) mantém a paleta da Kingdom Library." },
+      { nome:"corAccent", rotulo:"Cor de destaque", tipo:"cor", dica:"Botões, realces e o símbolo da marca. O laranja de origem (#f4621d) mantém a paleta completa." },
       { nome:"temaPadrao", rotulo:"Tema por omissão", tipo:"select", opcoes:[{valor:"auto",rotulo:"Automático (segue o sistema)"},{valor:"light",rotulo:"Claro"},{valor:"dark",rotulo:"Escuro"}] },
       { nome:"loginTitulo", rotulo:"Frase de entrada", tipo:"textarea" },
       { nome:"loginTexto", rotulo:"Texto de apoio", tipo:"textarea" },
-      { nome:"rodape", rotulo:"Rodapé", tipo:"texto", placeholder:"© 2026 Kingdom Company" }
+      { nome:"rodape", rotulo:"Rodapé", tipo:"texto", placeholder:"© 2026 Nome da empresa" }
     ],
     valores: DB.aparencia,
     aoGuardar: v => {
@@ -216,7 +216,7 @@ function descarregarFicheiro(nome, conteudo, tipo){
 
 function exportarConfiguracao(){
   const data = new Date().toISOString().slice(0,10);
-  descarregarFicheiro(`kingdom-academy-${data}.json`, JSON.stringify(DB, null, 2), "application/json");
+  descarregarFicheiro(`${nomeDeFicheiroDaEscola()}-${data}.json`, JSON.stringify(DB, null, 2), "application/json");
   mostrarToast("Configuração exportada");
 }
 

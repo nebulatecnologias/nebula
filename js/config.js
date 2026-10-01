@@ -23,6 +23,8 @@ function organizacaoDoEndereco(){
    É o mesmo endereço que o Payflow partilha ao cliente — não há um segundo
    checkout para a Academia, porque dois caminhos para o mesmo pagamento
    acabam sempre a divergir num deles. */
+/* Até o Payflow servir outros clientes (F1b), as ofertas e a Vitrine são só
+   da Kingdom: noutra escola a Vitrine fica vazia e este endereço não se usa. */
 const URL_PAYFLOW = "https://payflow.kingdomcompny.com";
 const linkCheckout = atalho => atalho ? `${URL_PAYFLOW}/${encodeURIComponent(atalho)}` : "";
 

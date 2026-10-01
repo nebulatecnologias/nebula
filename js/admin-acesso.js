@@ -597,7 +597,7 @@ function editarPlano(id){
       ? `Vendido pela oferta "${oferta.nome}". O preço e a cobrança são de lá.`
       : "Junta vários cursos sob um nome. O preço é da oferta que o vender, no Payflow.",
     campos: [
-      { nome:"nome", rotulo:"Nome do plano", tipo:"texto", obrigatorio:true, placeholder:"ex: Kingdom All Access" },
+      { nome:"nome", rotulo:"Nome do plano", tipo:"texto", obrigatorio:true, placeholder:"ex: Acesso Total" },
       { nome:"descricao", rotulo:"Descrição", tipo:"texto", placeholder:"Para que serve este pacote." },
       { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", opcoes:opcoesCursosDoPlano(),
         dica:"Quem comprar a oferta que vende este plano abre todos estes cursos." }

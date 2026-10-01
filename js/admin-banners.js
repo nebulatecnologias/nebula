@@ -4,7 +4,7 @@
    ============================================================ */
 
 const GRADIENTES = [
-  { valor:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)", rotulo:"Laranja Kingdom" },
+  { valor:"linear-gradient(160deg,#ff8a45 0%,#f25a12 55%,#d9470a 100%)", rotulo:"Laranja" },
   { valor:"linear-gradient(160deg,#7b72e8,#564cc9)", rotulo:"Violeta (encontros e prazos)" },
   { valor:"linear-gradient(120deg,#ff5a1f,#c23f13)", rotulo:"Laranja (anterior)" },
   { valor:"linear-gradient(120deg,#1f8f8a,#0d4d4a)", rotulo:"Verde-azulado" },

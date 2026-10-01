@@ -136,7 +136,7 @@ function exportarRelatorioCSV(){
   ]));
   /* Aspas duplicadas para o caso de um nome trazer vírgulas. */
   const csv = linhas.map(l => l.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  descarregarFicheiro(`kingdom-academy-alunos-${new Date().toISOString().slice(0,10)}.csv`, "﻿"+csv, "text/csv");
+  descarregarFicheiro(`${nomeDeFicheiroDaEscola()}-alunos-${new Date().toISOString().slice(0,10)}.csv`, "﻿"+csv, "text/csv");
   mostrarToast("Relatório exportado");
 }
 

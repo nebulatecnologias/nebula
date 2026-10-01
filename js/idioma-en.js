@@ -197,7 +197,7 @@ const EN = {
   "Mentalidade": "Mindset",
   "Mente Multidisciplinar": "Multidisciplinary Mind",
   "Mentor da Comunidade": "Community Mentor",
-  "Mentorias em grupo, masterclasses e encontros ao vivo com a Kingdom Academy.": "Group mentoring, masterclasses and live sessions with Kingdom Academy.",
+  "Mentorias em grupo, masterclasses e encontros ao vivo.": "Group mentoring, masterclasses and live sessions.",
   "Metade do Caminho": "Halfway There",
   "Meus cursos": "My courses",
   "Montada a partir do que respondeu": "Built from your answers",
@@ -374,5 +374,7 @@ const EN = {
   "{xp} XP acumulados": "{xp} XP earned",
   "Área": "Area",
   "Área de Membros": "Members Area",
+  "Bem-vindo à sua área de membros.": "Welcome to your members area.",
+  "Entre para continuar os seus cursos onde ficou — aulas, comunidade e o seu progresso, tudo num só lugar.": "Sign in to pick up your courses where you left off — lessons, community and your progress, all in one place.",
   "Não foi possível enviar o ficheiro. Recarregue a página e tente de novo.": "The file could not be uploaded. Reload the page and try again.",
 };

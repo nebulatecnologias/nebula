@@ -36,6 +36,14 @@ const API = {
      (ofertas, turmas) é preciso pedir o schema public. */
   pub(){ return this.cliente.schema("public"); },
 
+  /* A marca da escola deste endereço, para o ecrã de entrada: nome,
+     logótipo, cor, textos. Lê-se antes de alguém entrar. */
+  async marca(){
+    const { data, error } = await this.pub().rpc("marca_da_academia", { p_endereco: organizacaoDoEndereco() });
+    if(error) throw error;
+    return data;
+  },
+
   /* ---------------- Autenticação ---------------- */
   /* Quem foi convidado entra pela primeira vez sem password nenhuma.
      Essa marca fica na conta, não no endereço: assim não se perde num
@@ -696,9 +704,24 @@ function estadoDaLinhaDoConvite(c){
   return "enviado";
 }
 
+/* A marca que chegou da base, antes de entrar: fica guardada no browser
+   (por endereço) para a próxima abertura já começar com ela. */
+const MARCA_CHAVE = "academia.marca:";
+function aplicarMarcaPublica(m){
+  if(!m) return;
+  DB.aparencia = Object.assign({}, APARENCIA_PADRAO, m);
+  if(!DB.aparencia.nomeEscola) DB.aparencia.nomeEscola = m.nome || "";
+  try { localStorage.setItem(MARCA_CHAVE + organizacaoDoEndereco(), JSON.stringify(m)); } catch(e){}
+}
+function marcaGuardada(){
+  try { return JSON.parse(localStorage.getItem(MARCA_CHAVE + organizacaoDoEndereco()) || "null"); }
+  catch(e){ return null; }
+}
+
 function aplicarConfig(linhas){
   const porChave = Object.fromEntries(linhas.map(l => [l.chave, l.valor]));
   DB.aparencia = Object.assign({}, APARENCIA_PADRAO, porChave.aparencia || {});
+  if(!DB.aparencia.nomeEscola) DB.aparencia.nomeEscola = (API.organizacao && API.organizacao.nome) || "";
   DB.config = Object.assign({}, CONFIG_PADRAO, porChave.geral || {}, {
     gamificacao: Object.assign({}, CONFIG_PADRAO.gamificacao, porChave.gamificacao || {}),
     certificado: Object.assign({}, CONFIG_PADRAO.certificado, porChave.certificado || {}),
@@ -1029,7 +1052,7 @@ function salvarNome(nome){
 
 /* ============================================================
    O que pertence ao CRM
-   Membros, planos, turmas e ofertas sao do Kingdom Dashboard. A
+   Membros, planos, turmas e ofertas sao do painel de gestão. A
    academia le-os, nao os escreve: duas listas do mesmo acabam sempre
    a divergir. Estes ecras mostram o que la esta e mandam editar la.
    ============================================================ */
@@ -1038,9 +1061,9 @@ const URL_CRM = "https://kingdom-dashboard.vercel.app";
 function soNoCRM(oQue){
   if(modoDemonstracao()) return false;
   confirmarAcao({
-    titulo: oQue + " vivem no Kingdom Dashboard",
-    mensagem: `Para a academia e o CRM não ficarem com duas listas diferentes, ${oQue.toLowerCase()} são geridos num só lugar. Crie ou altere lá, e aqui aparece no próximo carregamento.`,
-    textoConfirmar: "Abrir o Dashboard",
+    titulo: oQue + " vivem no painel de gestão",
+    mensagem: `Para a academia e o painel de gestão não ficarem com duas listas diferentes, ${oQue.toLowerCase()} são geridos num só lugar. Crie ou altere lá, e aqui aparece no próximo carregamento.`,
+    textoConfirmar: "Abrir o painel de gestão",
     aoConfirmar: () => window.open(URL_CRM, "_blank", "noopener")
   });
   return true;

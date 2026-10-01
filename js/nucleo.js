@@ -64,25 +64,54 @@ function clarearHex(hex, quanto){
   return "#" + [r,g,b].map(c=>c.toString(16).padStart(2,"0")).join("");
 }
 
-/* A coroa da Kingdom: quadrado laranja com a coroa branca, o mesmo sinal da
-   Kingdom Library. Com uma cor de destaque própria, a coroa veste essa cor. */
-const COR_KINGDOM = "#f4621d";
-let contadorCoroas = 0;
-function crestSVG(cor, pequeno){
+/* O sinal da marca, quando a escola não tem logótipo: um quadrado na cor de
+   destaque com as iniciais do nome, ou a coroa (`simbolo: "coroa"`, o sinal
+   da Kingdom, gravado na Aparência dela). Na cor de origem, o quadrado leva o
+   degradé laranja da paleta completa. */
+const COR_DE_ORIGEM = "#f4621d";
+let contadorSimbolos = 0;
+function simboloSVG(a, pequeno){
   const tam = pequeno ? ' width="34" height="34"' : "";
-  const id = "kc-" + (++contadorCoroas);
-  const propria = cor && !corEhDaKingdom(cor);
-  const fundo = propria
-    ? `<rect width="64" height="64" rx="15" fill="${cor}"/>`
-    : `<defs><linearGradient id="${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#${id})"/>`;
-  return `<svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"${tam}>${fundo}<path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>`;
+  const id = "sb-" + (++contadorSimbolos);
+  const cor = a.corAccent;
+  const fundo = corDeOrigem(cor)
+    ? `<defs><linearGradient id="${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#${id})"/>`
+    : `<rect width="64" height="64" rx="15" fill="${cor}"/>`;
+  const sinal = a.simbolo === "coroa"
+    ? `<path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/>`
+    : `<text x="32" y="33" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="'Google Sans', system-ui, sans-serif" font-weight="700" font-size="${iniciaisDaEscola(a).length > 1 ? 24 : 30}">${textoSeguro(iniciaisDaEscola(a))}</text>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="crest" viewBox="0 0 64 64" role="img" aria-label="${textoSeguro(a.nomeEscola || "")}"${tam}>${fundo}${sinal}</svg>`;
 }
 
-/* O laranja antigo da Academia e o da Library contam como "a cor da casa":
-   ficam com a paleta completa da Library em vez de uma cor avulsa. */
-function corEhDaKingdom(cor){
+/* «Escola de Liderança» → «EL»: contam as palavras com maiúscula (o «de»
+   não), e só as outras se não houver nenhuma. Sem nome, o quadrado fica liso. */
+function iniciaisDaEscola(a){
+  const palavras = String(a.nomeEscola || "").split(/\s+/).filter(p => /^\p{L}/u.test(p));
+  const maiusculas = palavras.filter(p => /^\p{Lu}/u.test(p));
+  return (maiusculas.length ? maiusculas : palavras).slice(0, 2).map(p => p.charAt(0)).join("").toUpperCase();
+}
+
+/* «Escola de Liderança» → «escola-de-lideranca», para os ficheiros que se
+   descarregam (exportações, relatórios). */
+function nomeDeFicheiroDaEscola(){
+  const base = DB.aparencia.nomeEscola || (typeof API !== "undefined" && API.organizacao && API.organizacao.slug) || "academia";
+  return String(base).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "academia";
+}
+
+/* O logótipo, se a escola tiver um; senão o sinal. */
+function simboloHTML(pequeno){
+  const a = DB.aparencia;
+  return a.logoUrl
+    ? `<img class="crest logo-imagem" src="${a.logoUrl}" alt="${textoSeguro(a.nomeEscola || "")}"${pequeno?' style="width:34px;height:34px;"':""}>`
+    : simboloSVG(a, pequeno);
+}
+
+/* O laranja de origem (e o antigo da Academia) ficam com a paleta completa,
+   em vez de uma cor avulsa. */
+function corDeOrigem(cor){
   const c = String(cor || "").trim().toLowerCase();
-  return !c || c === COR_KINGDOM || c === "#ff5a1f";
+  return !c || c === COR_DE_ORIGEM || c === "#ff5a1f";
 }
 
 /* Um campo pastel por curso, sempre o mesmo para o mesmo curso — as capas sem
@@ -97,17 +126,14 @@ function campoDoCurso(id){
 
 function marcaHTML(pequeno){
   const a = DB.aparencia;
-  const marca = a.logoUrl
-    ? `<img class="crest logo-imagem" src="${a.logoUrl}" alt="${a.nomeEscola}"${pequeno?' style="width:34px;height:34px;"':""}>`
-    : crestSVG(a.corAccent, pequeno);
-  return `${marca}<span class="wordmark">${a.nomeEscola}<small>${a.sublinha ? t(a.sublinha) : ""}</small></span>`;
+  return `${simboloHTML(pequeno)}<span class="wordmark">${textoSeguro(a.nomeEscola || "")}<small>${a.sublinha ? t(a.sublinha) : ""}</small></span>`;
 }
 
 function aplicarAparencia(){
   const a = DB.aparencia;
   const raiz = document.documentElement.style;
   const propriedades = ["--accent","--accent-soft","--accent-ink","--accent-line","--cta","--cta-hover","--cta-shadow","--brand-panel","--ring"];
-  if(corEhDaKingdom(a.corAccent)){
+  if(corDeOrigem(a.corAccent)){
     propriedades.forEach(p => raiz.removeProperty(p));
   } else {
     const c = a.corAccent;
@@ -122,10 +148,18 @@ function aplicarAparencia(){
     raiz.setProperty("--ring", `0 0 0 3px ${hexParaRgba(c, 0.28)}`);
   }
 
-  document.title = a.nomeEscola + " — " + t("Área de Membros");
+  document.title = a.nomeEscola ? a.nomeEscola + " — " + t("Área de Membros") : t("Área de Membros");
   document.querySelectorAll(".brand-mark").forEach(el => {
     el.innerHTML = marcaHTML(!!el.closest(".sidebar-head, .topbar"));
   });
+  const doArranque = document.getElementById("arranque-simbolo");
+  if(doArranque) doArranque.innerHTML = a.nomeEscola || a.logoUrl ? simboloHTML(false) : "";
+  /* O ícone da aba é o da escola: o logótipo, ou o sinal desenhado. */
+  const icone = document.getElementById("icone-marca");
+  if(icone && (a.nomeEscola || a.logoUrl)){
+    if(a.logoUrl) icone.removeAttribute("type"); else icone.type = "image/svg+xml";
+    icone.href = a.logoUrl || "data:image/svg+xml," + encodeURIComponent(simboloSVG(a, false));
+  }
 
   const titulo = document.querySelector("#login-quote h2");
   const texto  = document.querySelector("#login-quote p");
@@ -394,7 +428,7 @@ function certificadoHTML({ nome, curso, data, codigo, comFechar }){
   const c = DB.config.certificado;
   return `
     ${comFechar ? '<button class="modal-close" id="btn-fechar-certificado"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' : ""}
-    ${crestSVG(DB.aparencia.corAccent)}
+    ${simboloHTML(false)}
     <p class="cert-titulo">${(tituloCert => tituloCert.charAt(0) + tituloCert.slice(1).toLowerCase())(t(c.titulo))}</p>
     <h2>${nome}</h2>
     <p>${t(c.frase)}</p>

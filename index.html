@@ -3,10 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kingdom Academy — Área de Membros</title>
-<meta name="description" content="Área de membros da Kingdom Academy: os seus cursos, aulas, encontros ao vivo e comunidade.">
+<title>Área de Membros</title>
+<meta name="description" content="Os seus cursos, aulas, encontros ao vivo e comunidade, num só lugar.">
 <!-- Pré-visualização ao partilhar o link (WhatsApp, Facebook, LinkedIn, X).
-     As redes só leem endereços absolutos, por isso a imagem aponta ao domínio. -->
+     As redes só leem endereços absolutos, por isso a imagem aponta ao domínio.
+     As redes não correm JavaScript: estas etiquetas são as do domínio principal
+     (a Kingdom). Cada domínio com as suas chega com os domínios próprios (W3),
+     servidas pelo Vercel conforme o endereço. O título e o ícone da aba já
+     mudam com a marca de cada escola. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kingdom Academy">
 <meta property="og:title" content="Kingdom Academy — Área de Membros">
@@ -26,7 +30,7 @@
 <meta name="theme-color" content="#f5f3f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="favicon.ico" sizes="32x32">
-<link rel="icon" href="img/coroa.svg" type="image/svg+xml">
+<link rel="icon" id="icone-marca" href="img/coroa.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +42,7 @@
 <!-- ==================== ARRANQUE ==================== -->
 <div id="view-arranque">
   <div class="arranque-caixa">
-    <svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"><defs><linearGradient id="kc-html1" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#kc-html1)"/><path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
+    <div id="arranque-simbolo"></div>
     <p id="arranque-texto" data-t>A preparar a sua área de membros...</p>
   </div>
 </div>
@@ -47,15 +51,12 @@
 <div id="view-login" class="hidden">
   <div class="login-shell">
     <aside class="login-brandside">
-      <div class="brand-mark">
-        <svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"><defs><linearGradient id="kc-html2" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#kc-html2)"/><path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
-        <span class="wordmark">Kingdom Academy<small>Formação & Mentoria</small></span>
-      </div>
+      <div class="brand-mark"></div>
       <div class="login-quote" id="login-quote">
-        <h2>Autoridade constrói-se em privado, muito antes de aparecer em público.</h2>
-        <p>Aceda à sua área de membros e continue os seus cursos onde ficou — módulos, aulas, comunidade e o seu progresso, tudo num só lugar.</p>
+        <h2></h2>
+        <p></p>
       </div>
-      <p id="login-rodape">© 2026 Kingdom Company</p>
+      <p id="login-rodape"></p>
     </aside>
     <main class="login-formside">
       <div class="login-card">
@@ -84,10 +85,7 @@
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-head">
-      <div class="brand-mark">
-        <svg class="crest" viewBox="0 0 64 64" role="img" aria-label="Kingdom"><defs><linearGradient id="kc-html3" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ff8a4a"/><stop offset=".55" stop-color="#f7662a"/><stop offset="1" stop-color="#e8480c"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#kc-html3)"/><path d="M12.5 27.1 23.9 30.7 31.9 17.9 39.9 30.7 49.7 27.1 46.5 44.8H17.7Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
-        <span class="wordmark">Kingdom Academy<small>Formação & Mentoria</small></span>
-      </div>
+      <div class="brand-mark"></div>
     </div>
     <nav class="sidebar-nav">
       <div id="sidebar-nav-items"></div>

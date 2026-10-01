@@ -361,16 +361,29 @@ const CONQUISTAS_PADRAO = [
   { id:"b7", titulo:"Mentor da Comunidade", desc:"Em breve: ajudar outros alunos na comunidade.", regra:{ tipo:"manual", valor:0 } }
 ];
 
+/* A Aparência de uma escola nova, antes de a equipa a mudar. Sem nome
+   próprio, a escola usa o nome da organização (vem da base). */
 const APARENCIA_PADRAO = {
-  nomeEscola: "Kingdom Academy",
-  sublinha: "Formação & Mentoria",
+  nomeEscola: "",
+  sublinha: "",
   logoUrl: "",
+  simbolo: "iniciais",
   corAccent: "#f4621d",
   temaPadrao: "auto",
+  rodape: "",
+  loginTitulo: "Bem-vindo à sua área de membros.",
+  loginTexto: "Entre para continuar os seus cursos onde ficou — aulas, comunidade e o seu progresso, tudo num só lugar."
+};
+
+/* O modo de demonstração mostra uma escola de exemplo: a Kingdom Academy. */
+const APARENCIA_DEMO = Object.assign({}, APARENCIA_PADRAO, {
+  nomeEscola: "Kingdom Academy",
+  sublinha: "Formação & Mentoria",
+  simbolo: "coroa",
   rodape: "© 2026 Kingdom Company",
   loginTitulo: "Autoridade constrói-se em privado, muito antes de aparecer em público.",
   loginTexto: "Aceda à sua área de membros e continue os seus cursos onde ficou — módulos, aulas, comunidade e o seu progresso, tudo num só lugar."
-};
+});
 
 const CONFIG_PADRAO = {
   bannerIntervalo: 60,
@@ -379,9 +392,9 @@ const CONFIG_PADRAO = {
     regraPct: 100,
     titulo: "CERTIFICADO DE CONCLUSÃO",
     frase: "concluiu com sucesso o curso",
-    rodape: "na Kingdom Academy",
-    assinaturaNome: "Shelton Douglas",
-    assinaturaCargo: "Fundador · Kingdom Academy"
+    rodape: "",
+    assinaturaNome: "",
+    assinaturaCargo: ""
   },
   integracoes: {
     player: "Panda Video",
@@ -392,12 +405,19 @@ const CONFIG_PADRAO = {
     suporteRotulo: "Falar com a mentoria",
     suporteUrl: ""
   },
-  planoPadrao: "Kingdom All Access",
   mostrarCursosBloqueados: true,
   /* Abas da área do aluno que estão ligadas. */
   abasAluno: ["dashboard","catalogo","vitrine","calendario","comunidade","conquistas","certificados","definicoes"],
   alunosPublicam: true
 };
+
+const CONFIG_DEMO = Object.assign({}, CONFIG_PADRAO, {
+  certificado: Object.assign({}, CONFIG_PADRAO.certificado, {
+    rodape: "na Kingdom Academy",
+    assinaturaNome: "Shelton Douglas",
+    assinaturaCargo: "Fundador · Kingdom Academy"
+  })
+});
 
 /* ============================================================
    DB — fonte única de conteúdo/configuração.
@@ -411,8 +431,8 @@ const ESTADO_CHAVE = "kingdom-academy:estado:v1";
 function dbPadrao(){
   return JSON.parse(JSON.stringify({
     versao: 1,
-    aparencia: APARENCIA_PADRAO,
-    config: CONFIG_PADRAO,
+    aparencia: APARENCIA_DEMO,
+    config: CONFIG_DEMO,
     categorias: CATEGORIAS_PADRAO,
     cursos: CURSOS_PADRAO,
     turmas: TURMAS_PADRAO,
@@ -455,6 +475,8 @@ function dbVazio(){
     if(Array.isArray(molde[chave])) molde[chave] = [];
     else if(chave !== "config" && chave !== "aparencia" && typeof molde[chave] === "object") molde[chave] = {};
   });
+  molde.aparencia = JSON.parse(JSON.stringify(APARENCIA_PADRAO));
+  molde.config = JSON.parse(JSON.stringify(CONFIG_PADRAO));
   return molde;
 }
 

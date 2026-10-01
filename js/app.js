@@ -95,6 +95,13 @@ async function arrancar(){
     return;
   }
 
+  /* A marca desta escola: primeiro a que ficou guardada (sem piscar), depois
+     a que a base diz agora. Sem resposta, fica a guardada ou a de origem. */
+  const guardada = marcaGuardada();
+  if(guardada){ aplicarMarcaPublica(guardada); aplicarAparencia(); }
+  try { aplicarMarcaPublica(await API.marca()); aplicarAparencia(); }
+  catch(e){ /* segue: a marca não é razão para não deixar entrar */ }
+
   /* O link do email do convite: `?convite=<token>`. O servidor diz se o
      convite ainda vale; se valer, devolve o link de entrada e segue-se
      para ele. Se não, diz-se porquê, aqui mesmo. */
