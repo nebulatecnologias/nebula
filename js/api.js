@@ -8,6 +8,7 @@
 const API = {
   cliente: null,
   utilizador: null,          // { id, nome, email, perfil }
+  organizacao: null,         // { id, slug, nome } — a do endereço
 
   iniciar(){
     if(this.cliente) return this.cliente;
@@ -65,6 +66,10 @@ const API = {
     if(semPapel) throw semPapel;
     if(!papel) throw new Error(t("A sua conta ainda não está ligada à academia. Fale com a mentoria."));
     data.perfil = papel;
+    /* Os ficheiros novos vão para a pasta da organização (o/<id>/…). */
+    const { data: organizacao, error: semOrganizacao } = await this.cliente.rpc("organizacao_atual");
+    if(semOrganizacao) throw semOrganizacao;
+    this.organizacao = organizacao;
     this.utilizador = data;
     return data;
   },
@@ -1102,18 +1107,26 @@ function nomeSeguro(nome){
     .slice(-60);
 }
 
+/* Cada organização tem a sua pasta nos dois baldes; as regras do Storage
+   lêem a organização neste prefixo. Os ficheiros de antes (sem prefixo)
+   são da Kingdom e continuam a abrir. */
+function pastaDaOrganizacao(pasta){
+  if(!API.organizacao || !API.organizacao.id) throw new Error(t("Não foi possível enviar o ficheiro. Recarregue a página e tente de novo."));
+  return `o/${API.organizacao.id}/${pasta}`;
+}
+
 /* Envia e devolve o endereço a guardar na linha. Em modo de
    demonstração devolve o data: URL de sempre, para os testes
    continuarem a correr sem servidor. */
 async function enviarImagem(ficheiro, pasta){
   if(modoDemonstracao()) return lerComoDataURL(ficheiro);
-  const caminho = `${pasta}/${novoId("img")}-${nomeSeguro(ficheiro.name)}`;
+  const caminho = `${pastaDaOrganizacao(pasta)}/${novoId("img")}-${nomeSeguro(ficheiro.name)}`;
   return API.enviarFicheiro(BALDE_PUBLICO, caminho, ficheiro);
 }
 
 async function enviarAnexo(ficheiro, pasta){
   if(modoDemonstracao()) return lerComoDataURL(ficheiro);
-  const caminho = `${pasta}/${novoId("anx")}-${nomeSeguro(ficheiro.name)}`;
+  const caminho = `${pastaDaOrganizacao(pasta)}/${novoId("anx")}-${nomeSeguro(ficheiro.name)}`;
   return API.enviarFicheiro(BALDE_PRIVADO, caminho, ficheiro);
 }
 

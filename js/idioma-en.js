@@ -374,4 +374,5 @@ const EN = {
   "{xp} XP acumulados": "{xp} XP earned",
   "Área": "Area",
   "Área de Membros": "Members Area",
+  "Não foi possível enviar o ficheiro. Recarregue a página e tente de novo.": "The file could not be uploaded. Reload the page and try again.",
 };
