@@ -13,9 +13,20 @@ const API = {
     if(this.cliente) return this.cliente;
     if(typeof supabase === "undefined")
       throw new Error("A biblioteca do Supabase não carregou.");
+    /* O cabeçalho da organização só vai para a base (/rest/v1/). As Edge
+       Functions declaram uma a uma os cabeçalhos que aceitam, e um a mais
+       fazia o browser recusar o pedido. */
+    const organizacao = organizacaoDoEndereco();
+    const comOrganizacao = (url, opcoes = {}) => {
+      if(!String(url).includes("/rest/v1/")) return fetch(url, opcoes);
+      const cabecalhos = new Headers(opcoes.headers || {});
+      cabecalhos.set("x-organizacao", organizacao);
+      return fetch(url, Object.assign({}, opcoes, { headers: cabecalhos }));
+    };
     this.cliente = supabase.createClient(SUPABASE_URL, SUPABASE_CHAVE, {
       db: { schema: ESQUEMA },
-      auth: { persistSession: true, autoRefreshToken: true }
+      auth: { persistSession: true, autoRefreshToken: true },
+      global: { fetch: comOrganizacao }
     });
     return this.cliente;
   },
@@ -47,6 +58,13 @@ const API = {
     if(error) throw error;
     if(!data) throw new Error(t("A sua conta ainda não está ligada à academia. Fale com a mentoria."));
     if(data.estado !== "Ativo") throw new Error(t("Este acesso está suspenso. Fale com a sua mentoria."));
+    /* O papel é o desta organização (nucleo.membros), não o perfil geral da
+       conta: quem administra uma Academia pode ser aluno noutra. Sem papel,
+       a pessoa não é membro desta. */
+    const { data: papel, error: semPapel } = await this.cliente.rpc("meu_papel");
+    if(semPapel) throw semPapel;
+    if(!papel) throw new Error(t("A sua conta ainda não está ligada à academia. Fale com a mentoria."));
+    data.perfil = papel;
     this.utilizador = data;
     return data;
   },
@@ -209,10 +227,7 @@ const API = {
     /* Quem é da equipa vê também os rascunhos, os membros e os convites. */
     if(ehEquipa()){
       const [membros, convites, emitidos] = await Promise.all([
-        lista(this.pub()
-          .from("utilizadores")
-          .select("id, nome, email, perfil, estado, criado_em, lead_id")
-          .is("removido_em", null)),
+        lista(c.rpc("membros_da_organizacao")),
         lista(c.from("convites").select("*").order("criado_em", { ascending:false })),
         lista(c.from("certificados").select("*").order("emitido_em", { ascending:false }))
       ]);
