@@ -98,7 +98,7 @@ body{ background:var(--canvas); }
 .c-linhas i{ display:block; border-top:1px dashed var(--line); }
 .c-linhas i:last-child{ border-top-style:solid; border-color:var(--line-strong); }
 .c-barra{ position:relative; height:100%; display:flex; align-items:flex-end; justify-content:center; border-radius:10px; padding:0; cursor:pointer; }
-.c-barra-fill{ display:block; width:100%; max-width:46px; height:var(--h,0%); min-height:3px; border-radius:10px 10px 6px 6px; background:var(--c-barra); transition:height .35s var(--ease), background .18s var(--ease), box-shadow .18s; }
+.c-barra-fill{ display:block; width:100%; max-width:46px; height:var(--h,0%); min-height:3px; border-radius:10px 10px 6px 6px; background:var(--c-barra); transition:background .18s var(--ease), box-shadow .18s; }
 .c-barra:hover .c-barra-fill{ background:var(--c-barra-hover); }
 .c-barra.ativa .c-barra-fill{ background:var(--cta); box-shadow:0 10px 22px -12px rgba(226,78,12,.8); }
 .c-barra-mes{ position:absolute; bottom:-24px; left:50%; transform:translateX(-50%); font-size:12px; color:var(--muted); white-space:nowrap; }
