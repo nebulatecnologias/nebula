@@ -77,16 +77,20 @@ function fonteDemo(){
   let sessao = null;
   const espera = () => new Promise(r => setTimeout(r, 60));
   const planos = [
-    { id:"essencial", nome:"Essencial", alunosMax:500, precoMensal:199, precoAnual:1990, moeda:"ZAR", simbolo:"R", aVenda:true },
-    { id:"profissional", nome:"Profissional", alunosMax:1500, precoMensal:399, precoAnual:3990, moeda:"ZAR", simbolo:"R", aVenda:true },
-    { id:"escala", nome:"Escala", alunosMax:5000, precoMensal:799, precoAnual:null, moeda:"ZAR", simbolo:"R", aVenda:true },
+    { id:"essencial", nome:"Essencial", alunosMax:500, aVenda:true,
+      precos:{ MZN:{ mensal:3500, anual:35000, simbolo:"MZ" }, ZAR:{ mensal:199, anual:1990, simbolo:"R" } } },
+    { id:"profissional", nome:"Profissional", alunosMax:1500, aVenda:true,
+      precos:{ MZN:{ mensal:7000, anual:70000, simbolo:"MZ" }, ZAR:{ mensal:399, anual:3990, simbolo:"R" } } },
+    { id:"escala", nome:"Escala", alunosMax:5000, aVenda:true,
+      precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:799, anual:null, simbolo:"R" } } },
   ];
   let contaExiste = q.has("existe");
   return {
     iniciar(){},
     async planos(){
       await espera();
-      return q.has("fechado") ? planos.map(p => Object.assign({}, p, { precoMensal:null, precoAnual:null, aVenda:false })) : planos;
+      return q.has("fechado") ? planos.map(p => Object.assign({}, p, { aVenda:false,
+        precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } })) : planos;
     },
     async sessao(){ return sessao; },
     async entrar(email, senha){
@@ -106,18 +110,28 @@ function fonteDemo(){
 
 /* ---------------- A página ---------------- */
 const fonte = new URLSearchParams(location.search).has("demo") ? fonteDemo() : fonteReal();
-const E = { planos:[], plano:null, ciclo:"mensal", escola:null, diasTeste:7, existente:false };
+const E = { planos:[], plano:null, ciclo:"mensal", moeda:"MZN", escola:null, diasTeste:7, existente:false };
 
-const precoDe = (p, ciclo) => ciclo === "anual" ? p.precoAnual : p.precoMensal;
+/* O país decide a moeda: Moçambique paga em meticais, a África do Sul em rand
+   (decisão do Shelton a 02/10). Um plano está à venda numa moeda se tiver
+   preço nela, num dos ciclos. */
+const MOEDAS = { MZN:"Moçambique", ZAR:"África do Sul" };
+const precosDe = (p, moeda) => ((p.precos || {})[moeda || E.moeda]) || {};
+const precoDe = (p, ciclo, moeda) => { const v = precosDe(p, moeda)[ciclo]; return v == null ? null : Number(v); };
+const simboloDe = p => precosDe(p).simbolo || E.moeda;
+const vendeEm = (p, moeda) => precoDe(p, "mensal", moeda) != null || precoDe(p, "anual", moeda) != null;
+const moedasAVenda = () => Object.keys(MOEDAS).filter(m => E.planos.some(p => vendeEm(p, m)));
 
-function escolherPlano(id, ciclo){
-  const aVenda = E.planos.filter(p => p.aVenda);
+function escolherPlano(id, ciclo, moeda){
+  const moedas = moedasAVenda();
+  E.moeda = moedas.includes(moeda) ? moeda : moedas.includes(E.moeda) ? E.moeda : moedas[0];
+  const aVenda = E.planos.filter(p => vendeEm(p, E.moeda));
   E.plano = aVenda.find(p => p.id === id) || aVenda.find(p => p.id === "profissional") || aVenda[0];
-  E.ciclo = ciclo === "anual" && E.plano.precoAnual != null ? "anual"
-          : E.plano.precoMensal != null ? "mensal" : "anual";
+  E.ciclo = ciclo === "anual" && precoDe(E.plano, "anual") != null ? "anual"
+          : precoDe(E.plano, "mensal") != null ? "mensal" : "anual";
   try {
     const u = new URL(location.href);
-    u.searchParams.set("plano", E.plano.id); u.searchParams.set("ciclo", E.ciclo);
+    u.searchParams.set("plano", E.plano.id); u.searchParams.set("ciclo", E.ciclo); u.searchParams.set("moeda", E.moeda);
     history.replaceState(null, "", u);
   } catch(e){ /* sem history */ }
   desenharPlano();
@@ -127,10 +141,11 @@ function desenharPlano(){
   const p = E.plano, preco = precoDe(p, E.ciclo);
   $("plano-nome").textContent = `Plano ${p.nome}`;
   $("plano-alunos").textContent = `Até ${contagem(p.alunosMax)} alunos`;
-  $("plano-valor").textContent = dinheiro(preco, p.simbolo);
+  $("plano-valor").textContent = dinheiro(preco, simboloDe(p));
   let por = E.ciclo === "anual" ? "por ano" : "por mês";
-  if(E.ciclo === "anual" && p.precoMensal){
-    const poupa = Math.round((1 - p.precoAnual / (p.precoMensal * 12)) * 100);
+  const mensal = precoDe(p, "mensal");
+  if(E.ciclo === "anual" && mensal){
+    const poupa = Math.round((1 - preco / (mensal * 12)) * 100);
     if(poupa > 0) por += ` · poupa ${poupa}%`;
   }
   $("plano-por").textContent = por;
@@ -140,12 +155,15 @@ function desenharPlano(){
     b.hidden = precoDe(p, c) == null;
   });
   $("ciclo").hidden = [...document.querySelectorAll("#ciclo button")].filter(b => !b.hidden).length < 2;
-  $("plano-gratis").textContent = `${E.diasTeste} dias grátis. Depois, ${dinheiro(preco, p.simbolo)} ${E.ciclo === "anual" ? "por ano" : "por mês"}. Pode cancelar antes.`;
+  document.querySelectorAll("#pais button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.moeda === E.moeda)));
+  $("pais").hidden = moedasAVenda().length < 2;
+  $("plano-gratis").textContent = `${E.diasTeste} dias grátis. Depois, ${dinheiro(preco, simboloDe(p))} ${E.ciclo === "anual" ? "por ano" : "por mês"}. Pode cancelar antes.`;
+  preencherEscolha();
 }
 
 function preencherEscolha(){
   const s = $("plano-escolher");
-  s.innerHTML = E.planos.filter(p => p.aVenda)
+  s.innerHTML = E.planos.filter(p => vendeEm(p, E.moeda))
     .map(p => `<option value="${esc(p.id)}">${esc(p.nome)} — até ${esc(contagem(p.alunosMax))} alunos</option>`).join("");
   s.value = E.plano.id;
   s.hidden = s.options.length < 2;
@@ -197,7 +215,7 @@ async function enviarConta(ev){
   const email = $("f-email").value.trim().toLowerCase();
   const corpo = {
     nomeEscola:$("f-escola").value.trim(), nome:$("f-nome").value.trim(), email,
-    senha:E.existente ? "" : $("f-senha").value, plano:E.plano.id, ciclo:E.ciclo, aceitouTermos:true,
+    senha:E.existente ? "" : $("f-senha").value, plano:E.plano.id, ciclo:E.ciclo, moeda:E.moeda, aceitouTermos:true,
   };
   aOcupar(btn, E.existente ? "A entrar…" : "A criar…");
   try {
@@ -222,6 +240,7 @@ async function enviarConta(ev){
 function aAbrir(){
   $("painel-conta").hidden = true;
   $("plano-escolhas").hidden = true;
+  $("pais").hidden = true;
   $("painel-pronta").hidden = false;
   $("pronta-titulo").textContent = `A «${E.escola.nome}» está criada`;
   $("pronta-texto").textContent = "A abrir a sua área de membros, na página Cobrança…";
@@ -240,11 +259,11 @@ async function arrancar(){
   $("ecra-criar").hidden = false;
 
   const q = new URLSearchParams(location.search);
-  escolherPlano(q.get("plano"), q.get("ciclo"));
-  preencherEscolha();
+  escolherPlano(q.get("plano"), q.get("ciclo"), (q.get("moeda") || "").toUpperCase() || (q.get("pais") === "za" ? "ZAR" : q.get("pais") === "mz" ? "MZN" : null));
 
-  $("plano-escolher").addEventListener("change", e => escolherPlano(e.target.value, E.ciclo));
-  document.querySelectorAll("#ciclo button").forEach(b => b.addEventListener("click", () => escolherPlano(E.plano.id, b.dataset.ciclo)));
+  $("plano-escolher").addEventListener("change", e => escolherPlano(e.target.value, E.ciclo, E.moeda));
+  document.querySelectorAll("#pais button").forEach(b => b.addEventListener("click", () => escolherPlano(E.plano.id, E.ciclo, b.dataset.moeda)));
+  document.querySelectorAll("#ciclo button").forEach(b => b.addEventListener("click", () => escolherPlano(E.plano.id, b.dataset.ciclo, E.moeda)));
   $("form-conta").addEventListener("submit", enviarConta);
 
 }

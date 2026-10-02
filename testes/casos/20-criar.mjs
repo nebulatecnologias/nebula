@@ -13,7 +13,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   const txt = async (pg, s) => (await pg.textContent(s)).replace(NBSP, ' ');
 
   /* 1. O plano do endereço, com os dois ciclos. */
-  let pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&ciclo=anual`);
+  let pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&ciclo=anual&moeda=ZAR`);
   verdade(await pg.isVisible('#ecra-criar'), 'Com planos à venda, a página mostra o formulário');
   igual(await pg.textContent('#plano-nome'), 'Plano Essencial', 'O plano vem do endereço');
   igual(await txt(pg, '#plano-alunos'), 'Até 500 alunos', 'com o limite de alunos');
@@ -23,6 +23,11 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(await txt(pg, '#plano-valor'), 'R 199,00', 'Mensal muda o preço');
   verdade(new URL(pg.url()).search.includes('ciclo=mensal'), 'e o endereço acompanha a escolha');
   contem(await txt(pg, '#plano-gratis'), '7 dias grátis. Depois, R 199,00 por mês', 'Diz quanto se paga depois dos dias grátis');
+  await pg.click('#pais [data-moeda="MZN"]');
+  igual(await txt(pg, '#plano-valor'), 'MZ 3 500,00', 'Moçambique mostra o preço em meticais, com o símbolo da tesouraria');
+  verdade(new URL(pg.url()).search.includes('moeda=MZN'), 'e o endereço guarda a moeda');
+  igual(await pg.locator('#plano-escolher option').count(), 2, 'Em meticais, só os planos com preço em meticais (o Escala não tem)');
+  await pg.click('#pais [data-moeda="ZAR"]');
   await pg.selectOption('#plano-escolher', 'escala');
   verdade(await pg.isHidden('#ciclo'), 'Um plano só com preço mensal não mostra a troca de ciclo');
   igual(await txt(pg, '#plano-alunos'), 'Até 5 000 alunos', 'Os milhares agrupam-se também abaixo de dez mil');
@@ -45,8 +50,8 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.waitForSelector('#painel-pronta:not([hidden])');
   const chamadas = await pg.evaluate(() => window.__criarDemo.chamadas);
   const criar = chamadas.find(c => c[0] === 'criar-escola')[1];
-  igual(JSON.stringify([criar.plano, criar.ciclo, criar.aceitouTermos]), '["profissional","mensal",true]',
-    'Vai para o servidor o plano, o ciclo e os termos aceites');
+  igual(JSON.stringify([criar.plano, criar.ciclo, criar.moeda, criar.aceitouTermos]), '["profissional","mensal","MZN",true]',
+    'Vai para o servidor o plano, o ciclo, a moeda (Moçambique por omissão) e os termos aceites');
   verdade(chamadas.some(c => c[0] === 'entrar'), 'e entra com a conta nova');
   igual(await pg.textContent('#pronta-titulo'), 'A «Escola de Exemplo» está criada', 'Diz que a área está criada');
   igual(await pg.evaluate(() => window.__criarDemo.abriu), '/?org=escola-de-exemplo#/cobranca',

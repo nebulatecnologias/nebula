@@ -41,6 +41,7 @@
   .ciclo button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(28,22,16,.12); }
   .ciclo button:focus-visible{ outline:2px solid var(--ink); outline-offset:1px; }
   .plano-linha select{ min-height:34px; border-radius:var(--r-field); border:1px solid var(--line-strong); background:var(--surface); padding:0 10px; font:inherit; font-size:13.5px; color:var(--ink); }
+  .pais{ margin-top:14px; }
   .gratis{ margin:12px 0 0; font-size:13.5px; color:var(--green-ink); background:var(--green-soft); border-radius:var(--r-md); padding:9px 12px; }
 
   .painel{ padding:24px 22px 22px; }
@@ -99,6 +100,10 @@
           <div class="valor" id="plano-valor"></div>
           <div class="por" id="plano-por"></div>
         </div>
+      </div>
+      <div class="ciclo pais" role="group" aria-label="País" id="pais">
+        <button type="button" data-moeda="MZN" aria-pressed="true">Moçambique · meticais</button>
+        <button type="button" data-moeda="ZAR" aria-pressed="false">África do Sul · rand</button>
       </div>
       <div class="plano-linha" id="plano-escolhas">
         <div class="ciclo" role="group" aria-label="Pagamento" id="ciclo">

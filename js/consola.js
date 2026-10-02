@@ -57,7 +57,8 @@ function fonteReal(){
     mudarMembro: (org, pessoa, papel, ativo) => rpc("consola_mudar_membro", { p_organizacao: org, p_utilizador: pessoa, p_papel: papel, p_ativo: ativo }),
     revogarConvite: id => rpc("consola_revogar_convite", { p_convite: id }),
     cobranca: () => rpc("consola_cobranca"),
-    guardarPlano: (plano, mensal, anual) => rpc("consola_guardar_plano", { p_plano: plano, p_mensal: mensal, p_anual: anual }),
+    guardarPlano: (plano, p) => rpc("consola_guardar_plano", { p_plano: plano,
+      p_mensal_mzn: p.MZN.mensal, p_anual_mzn: p.MZN.anual, p_mensal_zar: p.ZAR.mensal, p_anual_zar: p.ZAR.anual }),
     isentar: (org, isenta) => rpc("consola_isentar", { p_organizacao: org, p_isenta: isenta }),
     ambiente: a => rpc("consola_ambiente", { p_ambiente: a }),
     async convidar(pedido){
@@ -92,9 +93,9 @@ function fonteDemo(){
   /* A mensalidade, em memória: preços por preencher, como na base hoje. */
   const cobranca = {
     planos: [
-      { id:"essencial", nome:"Essencial", alunosMax:500, precoMensal:null, precoAnual:null, simbolo:"R" },
-      { id:"profissional", nome:"Profissional", alunosMax:1500, precoMensal:null, precoAnual:null, simbolo:"R" },
-      { id:"escala", nome:"Escala", alunosMax:5000, precoMensal:null, precoAnual:null, simbolo:"R" }
+      { id:"essencial", nome:"Essencial", alunosMax:500, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } },
+      { id:"profissional", nome:"Profissional", alunosMax:1500, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } },
+      { id:"escala", nome:"Escala", alunosMax:5000, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } }
     ],
     definicoes: { ambiente:"teste", diasTeste:7, diasTolerancia:3 },
     contas: { "org-kingdom": { estado:"isenta", plano:"escala", ciclo:"mensal" }, "org-teste": { estado:"isenta", plano:"escala", ciclo:"mensal" } }
@@ -143,11 +144,14 @@ function fonteDemo(){
         escolas: escolas.map(e => Object.assign({ id:e.id, slug:e.slug, nome:e.nome, kingdom:e.kingdom, temCartao:false, contaEmDia:true },
           cobranca.contas[e.id] || { estado:null })) }));
     },
-    async guardarPlano(plano, mensal, anual){
+    async guardarPlano(plano, precos){
       const p = cobranca.planos.find(x => x.id === plano);
       if(!p) throw new Error("Plano não encontrado.");
-      if((mensal != null && !(mensal > 0)) || (anual != null && !(anual > 0))) throw new Error("Preço inválido.");
-      p.precoMensal = mensal; p.precoAnual = anual;
+      for(const m of ["MZN", "ZAR"]) for(const c of ["mensal", "anual"]){
+        const v = precos[m][c];
+        if(v != null && !(v > 0)) throw new Error("Preço inválido.");
+        p.precos[m][c] = v;
+      }
     },
     async isentar(org, isenta){
       const e = achar(org);
@@ -231,14 +235,15 @@ const Consola = {
   mensalidadeHTML(){
     const c = this.cobranca;
     if(!c) return `<p class="vazio">Não foi possível ler a mensalidade.</p>`;
-    const sim = (c.planos[0] || {}).simbolo || "R";
+    const sim = m => ((c.planos[0] || {}).precos || {})[m]?.simbolo || m;
     const n = v => v == null ? "" : String(v).replace(".", ",");
     const producao = c.definicoes && c.definicoes.ambiente === "producao";
+    const COLUNAS = [["MZN","mensal","Mensal"], ["MZN","anual","Anual"], ["ZAR","mensal","Mensal"], ["ZAR","anual","Anual"]];
     return `
       <div class="escola-cabeca">
         <div>
           <h2>Mensalidade das escolas</h2>
-          <div class="meta"><span>Cobrada em rand pela Paystack. Sem preço, o plano não se vende nesse ciclo.</span></div>
+          <div class="meta"><span>As escolas de Moçambique pagam em meticais, as da África do Sul em rand. Sem preço, o plano não se vende nessa moeda e nesse ciclo.</span></div>
         </div>
         <div class="escola-accoes">
           <label class="sr-only" for="ambiente-paystack">Ambiente da Paystack</label>
@@ -251,13 +256,15 @@ const Consola = {
       </div>
       <div class="table-wrap">
         <table class="tabela-planos">
-          <thead><tr><th>Plano</th><th>Alunos</th><th>Mensal (${esc(sim)})</th><th>Anual (${esc(sim)})</th><th></th></tr></thead>
+          <thead>
+            <tr><th rowspan="2">Plano</th><th rowspan="2">Alunos</th><th colspan="2" class="grupo">Meticais (${esc(sim("MZN"))})</th><th colspan="2" class="grupo">Rand (${esc(sim("ZAR"))})</th><th rowspan="2"></th></tr>
+            <tr><th>Mensal</th><th>Anual</th><th>Mensal</th><th>Anual</th></tr>
+          </thead>
           <tbody>${c.planos.map(p => `
             <tr data-plano="${esc(p.id)}">
               <td data-rotulo="Plano"><strong>${esc(p.nome)}</strong></td>
               <td data-rotulo="Alunos">até ${Number(p.alunosMax || 0).toLocaleString("pt-PT", { useGrouping:"always" })}</td>
-              <td data-rotulo="Mensal (${esc(sim)})"><input inputmode="decimal" aria-label="Preço mensal do ${esc(p.nome)}" data-preco="mensal" value="${esc(n(p.precoMensal))}" placeholder="sem preço"></td>
-              <td data-rotulo="Anual (${esc(sim)})"><input inputmode="decimal" aria-label="Preço anual do ${esc(p.nome)}" data-preco="anual" value="${esc(n(p.precoAnual))}" placeholder="sem preço"></td>
+              ${COLUNAS.map(([m, ciclo, rot]) => `<td data-rotulo="${rot} (${esc(sim(m))})"><input inputmode="decimal" aria-label="Preço ${rot.toLowerCase()} do ${esc(p.nome)} em ${m === "MZN" ? "meticais" : "rand"}" data-moeda="${m}" data-preco="${ciclo}" value="${esc(n(((p.precos || {})[m] || {})[ciclo]))}" placeholder="sem preço"></td>`).join("")}
               <td><button class="btn btn-secondary btn-sm" type="button" data-guardar-plano="${esc(p.id)}">Guardar</button></td>
             </tr>`).join("")}</tbody>
         </table>
@@ -270,15 +277,16 @@ const Consola = {
     const rotulos = { pendente:"Falta o cartão", teste:"Em teste", ativa:"Ativa", em_atraso:"Em atraso", cancelada:"Cancelada", isenta:"Isenta" };
     const plano = ((this.cobranca && this.cobranca.planos) || []).find(p => p.id === a.plano);
     const ate = a.estado === "teste" ? a.testeAte : a.pagoAte;
-    return `<span>Mensalidade: <b>${esc(rotulos[a.estado] || a.estado)}</b>${a.estado !== "isenta" && plano ? ` · ${esc(plano.nome)} ${a.ciclo === "anual" ? "anual" : "mensal"}` : ""}${ate && a.estado !== "isenta" ? ` · até ${esc(dataCurta(ate))}` : ""}${a.cancelaNoFim ? " · cancela no fim" : ""}${a.ultimoErro ? ` · ${esc(a.ultimoErro)}` : ""}</span>`;
+    return `<span>Mensalidade: <b>${esc(rotulos[a.estado] || a.estado)}</b>${a.estado !== "isenta" && plano ? ` · ${esc(plano.nome)} ${a.ciclo === "anual" ? "anual" : "mensal"}${a.moeda ? " em " + (a.moeda === "MZN" ? "meticais" : "rand") : ""}` : ""}${ate && a.estado !== "isenta" ? ` · até ${esc(dataCurta(ate))}` : ""}${a.cancelaNoFim ? " · cancela no fim" : ""}${a.ultimoErro ? ` · ${esc(a.ultimoErro)}` : ""}</span>`;
   },
 
   async guardarPlano(id){
     const linha = document.querySelector(`#mensalidade tr[data-plano="${CSS.escape(id)}"]`);
-    const ler = q => { const t = linha.querySelector(`[data-preco="${q}"]`).value.trim().replace(/\s/g, "").replace(",", ".");
+    const ler = (m, q) => { const t = linha.querySelector(`[data-moeda="${m}"][data-preco="${q}"]`).value.trim().replace(/\s/g, "").replace(",", ".");
       if(!t) return null; const v = Number(t); if(!(v > 0)) throw new Error("Escreva o preço só com números, por exemplo 399,00."); return Math.round(v * 100) / 100; };
     try {
-      await this.fonte.guardarPlano(id, ler("mensal"), ler("anual"));
+      const precos = { MZN:{ mensal:ler("MZN", "mensal"), anual:ler("MZN", "anual") }, ZAR:{ mensal:ler("ZAR", "mensal"), anual:ler("ZAR", "anual") } };
+      await this.fonte.guardarPlano(id, precos);
       this.aviso("Preço guardado. Vale para as escolas novas e para as próximas cobranças.", "ok");
     } catch(err){ this.aviso(err.message, "erro"); }
     await this.recarregar();

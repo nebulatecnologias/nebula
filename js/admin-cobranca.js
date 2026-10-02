@@ -38,7 +38,7 @@ function cobrancaDaDemonstracao(){
     DB.cobrancaDemo = {
       pedido: pedido || "",
       assinatura: {
-        plano:"profissional", ciclo:"mensal", estado,
+        plano:"profissional", ciclo:"mensal", estado, moeda:"ZAR", simbolo:"R",
         testeAte: estado === "teste" ? dia(5) : dia(-40), pagoAte: estado === "ativa" ? dia(21) : estado === "em_atraso" ? dia(-2) : null,
         cancelaNoFim:false, ultimoErro: estado === "em_atraso" ? "O cartão não tinha saldo suficiente." : null,
         cartao: estado === "pendente" ? null : { marca:"visa", ultimos4:"8204", expira:"03/2029", banco:"Banco de Exemplo" },
@@ -47,9 +47,9 @@ function cobrancaDaDemonstracao(){
       contaEmDia: estado !== "pendente" && estado !== "cancelada",
       alunosAtivos: 450, limite: 1500,
       planos: [
-        { id:"essencial", nome:"Essencial", alunosMax:500, precoMensal:199, precoAnual:1990, simbolo:"R", aVenda:true },
-        { id:"profissional", nome:"Profissional", alunosMax:1500, precoMensal:399, precoAnual:3990, simbolo:"R", aVenda:true },
-        { id:"escala", nome:"Escala", alunosMax:5000, precoMensal:799, precoAnual:7990, simbolo:"R", aVenda:true }
+        { id:"essencial", nome:"Essencial", alunosMax:500, aVenda:true, precos:{ MZN:{ mensal:3500, anual:35000, simbolo:"MZ" }, ZAR:{ mensal:199, anual:1990, simbolo:"R" } } },
+        { id:"profissional", nome:"Profissional", alunosMax:1500, aVenda:true, precos:{ MZN:{ mensal:7000, anual:70000, simbolo:"MZ" }, ZAR:{ mensal:399, anual:3990, simbolo:"R" } } },
+        { id:"escala", nome:"Escala", alunosMax:5000, aVenda:true, precos:{ MZN:{ mensal:14000, anual:140000, simbolo:"MZ" }, ZAR:{ mensal:799, anual:7990, simbolo:"R" } } }
       ],
       faturas: estado === "pendente" ? [] : [
         { id:"f3", inicio:dia(-9), fim:dia(21), valor:399, estado: estado === "em_atraso" ? "falhou" : "paga", plano:"profissional", ciclo:"mensal", pagoEm: estado === "em_atraso" ? null : dia(-9), motivo: estado === "em_atraso" ? "O cartão não tinha saldo suficiente." : null },
@@ -75,7 +75,11 @@ async function carregarCobranca(){
 
 /* ---------------- Peças ---------------- */
 const planoDaCobranca = id => ((estadoCobranca.info || {}).planos || []).find(p => p.id === id) || null;
-const precoDoCiclo = (p, ciclo) => p ? (ciclo === "anual" ? p.precoAnual : p.precoMensal) : null;
+/* O preço na moeda da escola (Moçambique: meticais; África do Sul: rand). */
+const moedaDaEscola = () => (((estadoCobranca.info || {}).assinatura || {}).moeda) || "ZAR";
+const precoDoCiclo = (p, ciclo) => { const v = p && ((p.precos || {})[moedaDaEscola()] || {})[ciclo]; return v == null ? null : Number(v); };
+const simboloDaEscola = () => { const i = estadoCobranca.info || {}; return (i.assinatura && i.assinatura.simbolo)
+  || ((((i.planos || [])[0] || {}).precos || {})[moedaDaEscola()] || {}).simbolo || moedaDaEscola(); };
 function dataCobranca(iso){
   try { return new Date(iso).toLocaleDateString("pt-PT", { day:"numeric", month:"long", year:"numeric" }); }
   catch(e){ return ""; }
@@ -91,7 +95,7 @@ function blocoAssinatura(i){
   const e = ESTADOS_DA_ASSINATURA[a.estado] || ESTADOS_DA_ASSINATURA.ativa;
   const p = planoDaCobranca(a.plano);
   const preco = precoDoCiclo(p, a.ciclo);
-  const simbolo = (p && p.simbolo) || "R";
+  const simbolo = simboloDaEscola();
   const ocupado = estadoCobranca.ocupado ? "disabled" : "";
   const fim = a.pagoAte || a.testeAte;
   let texto = "", accoes = "";
@@ -157,7 +161,7 @@ function blocoPlano(i){
         <h3>Plano contratado</h3>
         ${estadoCobranca.mudarPlano || a.estado === "cancelada" ? "" : `<button class="btn btn-secondary btn-sm" type="button" data-cobranca="mudar-plano" ${ocupado}>Alterar</button>`}
       </div>
-      <p class="cobranca-plano-nome"><strong>${textoSeguro(p ? p.nome : a.plano)}</strong> · ${a.ciclo === "anual" ? "anual" : "mensal"}${p ? ` · ${formatarPreco(precoDoCiclo(p, a.ciclo), p.simbolo)} por ${a.ciclo === "anual" ? "ano" : "mês"}` : ""}</p>
+      <p class="cobranca-plano-nome"><strong>${textoSeguro(p ? p.nome : a.plano)}</strong> · ${a.ciclo === "anual" ? "anual" : "mensal"}${p ? ` · ${formatarPreco(precoDoCiclo(p, a.ciclo), simboloDaEscola())} por ${a.ciclo === "anual" ? "ano" : "mês"}` : ""}</p>
       <div class="cobranca-uso" role="img" aria-label="${pct}% utilizado">
         <div class="barra-track"><div class="barra-fill cobranca-fill ${pct >= 90 ? "quase" : ""}" style="width:${pct}%"></div></div>
       </div>
@@ -213,7 +217,7 @@ const ESTADOS_DA_FATURA = {
 function blocoFaturas(i){
   if(i.assinatura.estado === "isenta") return "";
   const faturas = i.faturas || [];
-  const simbolo = ((i.planos || [])[0] || {}).simbolo || "R";
+  const simbolo = simboloDaEscola();
   const valor = v => formatarPreco(v, simbolo).replace(/^\S+\s/, "");
   return `
     <div class="card cobranca-bloco cobranca-faturas" id="cobranca-faturas">
@@ -264,7 +268,7 @@ function mostrarNovoPreco(plano, ciclo){
   if(!alvo || !p) return;
   const preco = precoDoCiclo(p, ciclo);
   alvo.textContent = preco == null ? "Este plano ainda não tem preço neste ciclo."
-    : `${formatarPreco(preco, p.simbolo)} por ${ciclo === "anual" ? "ano" : "mês"}, a partir da próxima cobrança.`;
+    : `${formatarPreco(preco, simboloDaEscola())} por ${ciclo === "anual" ? "ano" : "mês"}, a partir da próxima cobrança.`;
 }
 
 async function comCobrancaOcupada(qual, trabalho, recarregar = true){
