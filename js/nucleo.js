@@ -738,6 +738,7 @@ function irPara(view, a, b){
   atualizarTopbarCTA(view);
   renderAvisoPrevia();
   if(typeof renderAvisoConta === "function") renderAvisoConta();
+  renderAvisoSuporte();
   fecharMenuMobile();
   escreverEndereco(view, a, b);
   window.scrollTo(0,0);
@@ -833,6 +834,31 @@ function entrarPreviaAluno(){
 function sairPreviaAluno(){
   estado.prevendoComoAluno = false;
   irPara("admin-visao");
+}
+
+/* A consola abre uma escola com ?ver=aluno para «ver como aluno»: entra-se
+   já na pré-visualização do aluno (só quem é administração pode). */
+function arrancarComoPedido(){
+  let verAluno = false;
+  try { verAluno = estado.papel === "administrador" && new URLSearchParams(location.search).get("ver") === "aluno"; } catch(e){ /* sem endereço */ }
+  estado.prevendoComoAluno = verAluno;
+  if(verAluno){ irPara("dashboard"); return; }
+  arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+}
+
+/* Quem administra a plataforma e entra numa escola sem ser membro dela está
+   como suporte: diz-se em todos os ecrãs, para nunca se confundir com a
+   equipa da escola. */
+function renderAvisoSuporte(){
+  document.querySelectorAll(".aviso-suporte").forEach(el => el.remove());
+  if(typeof API === "undefined" || !API.organizacao || !API.organizacao.suporte) return;
+  const conteudo = document.querySelector("#app-shell .content > div:not(.hidden)");
+  if(!conteudo) return;
+  const aviso = document.createElement("div");
+  aviso.className = "aviso-suporte";
+  aviso.setAttribute("role", "status");
+  aviso.innerHTML = `<span>Está em <strong>${textoSeguro(API.organizacao.nome || API.organizacao.slug)}</strong> como suporte da plataforma. O que mudar aqui muda para a escola.</span><a class="btn btn-secondary btn-sm" href="/consola/">Voltar à consola</a>`;
+  conteudo.prepend(aviso);
 }
 
 function papelEfetivo(){

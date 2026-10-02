@@ -1539,3 +1539,7 @@ button.back-link:hover{ color:var(--ink); }
 .aviso-conta{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:12px 14px 12px 18px; border-radius:var(--r-md); margin-bottom:22px; font-size:14px; font-weight:500; }
 .aviso-conta-aluno{ background:var(--amber-soft); color:var(--amber-ink); }
 .aviso-conta-equipa{ background:var(--red-soft); color:var(--red-ink); }
+
+/* Suporte da plataforma dentro de uma escola */
+.aviso-suporte{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:10px 10px 10px 18px; border-radius:var(--r-md); margin-bottom:22px; font-size:14px; background:var(--blue-soft); color:var(--blue-ink); }
+.aviso-suporte strong{ font-weight:500; }

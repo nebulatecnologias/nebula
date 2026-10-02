@@ -23,9 +23,17 @@ function nomeCurto(nome){
   return String(nome || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 41).replace(/-+$/, "");
 }
-/* Onde a escola abre: o domínio dela, ou este endereço com ?org=. */
-function enderecoDaEscola(e){
-  return e.dominios && e.dominios.length ? "https://" + e.dominios[0] : `${location.origin}/?org=${encodeURIComponent(e.slug)}`;
+
+/* «Ver como»: a escola aberta neste endereço (onde a sessão da consola já
+   vale), como a equipa dela a vê ou como um aluno a vê. A base conta quem
+   administra a plataforma como administração da escola (suporte), e a app
+   diz em todos os ecrãs que se está como suporte. */
+function verComo(e, como){
+  const u = new URL(location.origin + "/");
+  u.searchParams.set("org", e.slug);
+  if(como === "aluno") u.searchParams.set("ver", "aluno");
+  if(modoDemonstracao()) u.searchParams.set("demo", "1");
+  return u.toString();
 }
 
 /* ---------------- A base ---------------- */
@@ -364,7 +372,8 @@ const Consola = {
             </div>
           </div>
           <div class="escola-accoes">
-            <a class="btn btn-secondary btn-sm" href="${esc(enderecoDaEscola(e))}" target="_blank" rel="noopener">Abrir</a>
+            <a class="btn btn-secondary btn-sm" href="${esc(verComo(e, "organizacao"))}" target="_blank" rel="noopener" data-ver-como="organizacao">Ver como organização</a>
+            <a class="btn btn-secondary btn-sm" href="${esc(verComo(e, "aluno"))}" target="_blank" rel="noopener" data-ver-como="aluno">Ver como aluno</a>
             <button class="btn btn-secondary btn-sm" type="button" data-convidar="${esc(e.id)}">Convidar para a equipa</button>
             <button class="btn btn-secondary btn-sm" type="button" data-dominio="${esc(e.id)}">Juntar domínio</button>
             ${e.kingdom ? "" : `<button class="btn btn-sm ${suspensa ? "btn-secondary" : "btn-perigo-suave"}" type="button" data-estado="${esc(e.id)}" data-para="${suspensa ? "ativa" : "suspensa"}">${suspensa ? "Reactivar" : "Suspender"}</button>`}

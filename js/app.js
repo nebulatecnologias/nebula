@@ -210,8 +210,7 @@ async function entrarNaArea(){
   normalizarDB();
   aplicarAparencia();
   mostrarEcra("app");
-  estado.prevendoComoAluno = false;
-  arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+  arrancarComoPedido();
   ligarAcessoEmDireto();
   if(onboardingPendente()) abrirOnboarding(false);
 }
@@ -264,7 +263,7 @@ function entrarEmDemonstracao(email){
   /* A sério, é a base que grava os certificados; aqui grava-os o browser. */
   if(estado.papel !== "administrador") atualizarCertificados();
   mostrarEcra("app");
-  arrancarNoEndereco(estado.papel === "administrador" ? "admin-visao" : "dashboard");
+  arrancarComoPedido();
   if(onboardingPendente()) abrirOnboarding(false);
 }
 

@@ -18,7 +18,10 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   contem(await pg.textContent('[data-escola="kingdom"]'), 'Kingdom Academy', 'A escola mostra o nome da marca dela');
   contem(await pg.textContent('[data-escola="kingdom"]'), 'Na Kingdom, a equipa gere-se no painel de gestão', 'Na Kingdom a equipa não se mexe aqui');
   igual(await pg.locator('[data-escola="kingdom"] [data-estado]').count(), 0, 'e a Kingdom não tem botão de suspender');
-  igual(await pg.getAttribute('[data-escola="teste"] a.btn', 'href'), `${base}/?org=teste`, 'Sem domínio, a escola abre com ?org=');
+  igual(await pg.getAttribute('[data-escola="teste"] [data-ver-como="organizacao"]', 'href'), `${base}/?org=teste&demo=1`,
+    '«Ver como organização» abre a escola neste endereço, com ?org=');
+  igual(await pg.getAttribute('[data-escola="teste"] [data-ver-como="aluno"]', 'href'), `${base}/?org=teste&ver=aluno&demo=1`,
+    '«Ver como aluno» abre-a já na vista do aluno');
 
   /* 2. Nova escola: o nome curto acompanha o nome; a validação vem da fonte. */
   await pg.click('#btn-nova-escola');
