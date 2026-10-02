@@ -66,6 +66,21 @@
   .sem-acesso{ max-width:520px; margin:12vh auto 0; padding:28px; text-align:center; }
   .sem-acesso h1{ font-size:21px; margin:0 0 8px; }
   .sem-acesso p{ color:var(--muted); margin:0 0 18px; }
+  .mensalidade{ margin-bottom:24px; }
+  .tabela-planos{ width:100%; border-collapse:collapse; margin-top:14px; font-size:14px; }
+  .tabela-planos th{ text-align:left; font-weight:500; color:var(--muted); font-size:13px; padding:8px 10px; border-bottom:1px solid var(--line); }
+  .tabela-planos td{ padding:8px 10px; border-bottom:1px dashed var(--line); vertical-align:middle; }
+  .tabela-planos td strong{ font-weight:500; }
+  .tabela-planos input{ width:130px; min-height:36px; border:1px solid var(--line-strong); border-radius:var(--r-field); padding:0 10px; font:inherit; font-variant-numeric:tabular-nums; background:var(--surface); color:var(--ink); }
+  .seletor-ambiente{ min-height:34px; border-radius:var(--r-field); border:1px solid var(--line-strong); background:var(--surface); padding:0 10px; font:inherit; font-size:13.5px; color:var(--ink); }
+  .conta-escola{ align-items:center; margin-top:4px; }
+  @media (max-width:640px){
+    .tabela-planos thead{ display:none; }
+    .tabela-planos tr{ display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; padding:10px 0; border-bottom:1px solid var(--line); }
+    .tabela-planos td{ border:0; padding:0; }
+    .tabela-planos td[data-rotulo]::before{ content:attr(data-rotulo); display:block; font-size:12px; color:var(--muted); margin-bottom:3px; }
+    .tabela-planos input{ width:100%; }
+  }
   .a-carregar{ color:var(--muted); text-align:center; margin-top:18vh; }
 </style>
 </head>
@@ -106,6 +121,7 @@
     </header>
     <div class="aviso ok" id="aviso-geral" hidden></div>
     <div class="resumo" id="resumo"></div>
+    <section class="card escola mensalidade" id="mensalidade" aria-label="Mensalidade das escolas"></section>
     <div class="escolas" id="lista-escolas"></div>
   </section>
 </main>

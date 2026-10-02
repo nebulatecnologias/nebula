@@ -26,13 +26,6 @@
   .criar-topo h1{ font-size:clamp(26px,4.4vw,32px); line-height:1.18; letter-spacing:-.025em; margin:0 0 8px; font-weight:500; }
   .criar-topo p{ margin:0; color:var(--muted); }
 
-  .passos{ display:flex; gap:8px; margin:0 0 18px; padding:0; list-style:none; font-size:13px; color:var(--muted); }
-  .passos li{ display:flex; align-items:center; gap:8px; }
-  .passos li + li::before{ content:""; width:22px; height:1px; background:var(--line-strong); }
-  .passos b{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--sunken); color:var(--ink-2); font-weight:500; font-size:12px; }
-  .passos [aria-current="step"]{ color:var(--ink); font-weight:500; }
-  .passos [aria-current="step"] b{ background:var(--ink); color:#fff; }
-  .passos .feito b{ background:var(--green-soft); color:var(--green-ink); }
 
   .plano{ padding:18px 20px; margin-bottom:16px; }
   .plano-cabeca{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
@@ -64,12 +57,6 @@
   .erro-campo{ color:var(--red-ink); font-size:12.5px; margin-top:6px; }
   .field input[aria-invalid="true"]{ border-color:var(--red-ink); }
 
-  .cartao-resumo{ display:grid; gap:8px; margin:0 0 18px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface-2); font-size:14px; }
-  .cartao-resumo div{ display:flex; justify-content:space-between; gap:12px; }
-  .cartao-resumo span{ color:var(--muted); }
-  .cartao-resumo b{ font-weight:500; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .seguro{ display:flex; gap:8px; align-items:flex-start; color:var(--muted); font-size:12.5px; margin:12px 0 0; }
-  .seguro svg{ flex:none; margin-top:1px; }
 
   .pronta{ text-align:center; padding:32px 22px 26px; }
   .pronta .sinal{ width:52px; height:52px; border-radius:50%; display:grid; place-items:center; margin:0 auto 14px; background:var(--green-soft); color:var(--green-ink); }
@@ -100,10 +87,6 @@
       <p>Cursos, alunos e a sua marca, num endereço seu.</p>
     </header>
 
-    <ol class="passos" aria-label="Passos">
-      <li id="passo-1" aria-current="step"><b>1</b>Conta</li>
-      <li id="passo-2"><b>2</b>Cartão</li>
-    </ol>
 
     <!-- O plano escolhido (vem do endereço: ?plano=&ciclo=) -->
     <section class="card plano" aria-labelledby="plano-nome">
@@ -167,22 +150,9 @@
             <p class="hint">Não se lembra? Use «Esqueceu a password?» na página de entrada e volte aqui.</p>
           </div>
         </div>
-        <p class="consentimento">Ao continuar, aceita os <a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> e a <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>. A seguir pedimos o cartão: só é cobrado no fim dos 7 dias grátis, e pode cancelar antes.</p>
+        <p class="consentimento">Ao continuar, aceita os <a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> e a <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>. Os pagamentos fazem-se depois, na página Cobrança da sua área de membros; só paga no fim dos 7 dias grátis, e pode cancelar antes.</p>
         <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-conta">Continuar</button>
       </form>
-    </section>
-
-    <!-- 2. O cartão -->
-    <section class="card painel" id="painel-cartao" hidden>
-      <h2>Falta o cartão</h2>
-      <p class="sub" id="cartao-sub"></p>
-      <div class="aviso erro" id="cartao-erro" role="alert" hidden></div>
-      <div class="cartao-resumo" id="cartao-resumo"></div>
-      <button class="btn btn-primary btn-block btn-lg" type="button" id="btn-cartao">Pôr o cartão</button>
-      <p class="seguro">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        <span id="cartao-seguro"></span>
-      </p>
     </section>
 
     <!-- Pronta -->
@@ -192,7 +162,7 @@
       </div>
       <h2 id="pronta-titulo"></h2>
       <p id="pronta-texto"></p>
-      <a class="btn btn-primary btn-lg" id="btn-entrar" href="/">Entrar na área de membros</a>
+      <a class="btn btn-primary btn-lg" id="btn-entrar" href="/">Abrir a área de membros</a>
     </section>
   </section>
 

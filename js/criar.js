@@ -5,20 +5,19 @@
    cima, com a troca de ciclo e de plano. Depois:
      1. a conta: nome da área, o nome da pessoa, email, senha (duas vezes);
         se o email já tem conta, pede-se a senha dessa conta e cria-se com ela;
-     2. o cartão: a Paystack verifica-o com R 1,00, devolvido logo, e só se
-        cobra no fim dos 7 dias grátis (a função plataforma-cartao);
-     3. pronta: o botão abre a área nova (?org=<nome curto>).
-   Sem cartão a área fica guardada, mas pendente: não abre aos alunos.
+     2. a área abre-se logo, na página Cobrança (?org=<nome curto>#/cobranca):
+        é lá que se paga, como na referência (decisão do Shelton a 02/10).
+   Esta página vai ser o fim do site de vendas, que mostra os planos e manda
+   para aqui com ?plano= e ?ciclo=.
 
    O dinheiro é só apresentação: o preço que se cobra sai da base, nunca
    daqui. A página é da plataforma, que ainda não tem marca: não leva a de
    nenhuma escola.
 
    Duas fontes com a mesma forma: a base e a demonstração (?demo=1), em
-   memória, para os testes — que nunca falam com a Paystack nem criam contas.
+   memória, para os testes — que nunca criam contas.
    ============================================================ */
 
-const GUARDADO = "criar.escola";
 const $ = id => document.getElementById(id);
 
 function esc(t){
@@ -33,47 +32,6 @@ function dinheiro(n, simbolo){
 }
 /* Uma contagem (não é dinheiro): «1 500». */
 function contagem(n){ return Number(n || 0).toLocaleString("pt-PT", { useGrouping:"always" }); }
-function dataLonga(d){
-  try { return new Date(d).toLocaleDateString("pt-PT", { day:"numeric", month:"long" }); }
-  catch(e){ return ""; }
-}
-function lerGuardado(){ try { return JSON.parse(sessionStorage.getItem(GUARDADO) || "null"); } catch(e){ return null; } }
-function guardar(v){ try { v ? sessionStorage.setItem(GUARDADO, JSON.stringify(v)) : sessionStorage.removeItem(GUARDADO); } catch(e){ /* sem armazenamento */ } }
-
-/* ---------------- A Paystack ---------------- */
-/* O formulário da Paystack, como no Payflow: o número do cartão nunca passa
-   por esta página. Se o script não vier (rede, bloqueador), diz-se. */
-const PAYSTACK_JS = "https://js.paystack.co/v2/inline.js";
-let paystackAPedir = null;
-function carregarPaystack(){
-  if(window.PaystackPop) return Promise.resolve(window.PaystackPop);
-  if(paystackAPedir) return paystackAPedir;
-  paystackAPedir = new Promise((ok, nao) => {
-    const el = document.createElement("script");
-    el.src = PAYSTACK_JS; el.async = true;
-    const prazo = setTimeout(() => nao(new Error("demorou de mais")), 8000);
-    el.onload = () => { clearTimeout(prazo); window.PaystackPop ? ok(window.PaystackPop) : nao(new Error("sem PaystackPop")); };
-    el.onerror = () => { clearTimeout(prazo); nao(new Error("não carregou")); };
-    document.head.appendChild(el);
-  }).catch(e => { paystackAPedir = null; throw e; });
-  return paystackAPedir;
-}
-/* Responde uma vez só: a Paystack pode chamar onCancel a seguir a onSuccess. */
-async function formularioPaystack(accessCode, referencia){
-  let Pop;
-  try { Pop = await carregarPaystack(); } catch(e){ return { ok:false, motivo:"sem-script" }; }
-  return new Promise(resolve => {
-    let respondeu = false;
-    const uma = r => { if(!respondeu){ respondeu = true; resolve(r); } };
-    try {
-      new Pop().resumeTransaction(accessCode, {
-        onSuccess: t => uma({ ok:true, referencia:(t && t.reference) || referencia }),
-        onCancel: () => uma({ ok:false, motivo:"desistiu" }),
-        onError: () => uma({ ok:false, motivo:"erro" }),
-      });
-    } catch(e){ uma({ ok:false, motivo:"sem-script" }); }
-  });
-}
 
 /* ---------------- A base ---------------- */
 function fonteReal(){
@@ -107,9 +65,7 @@ function fonteReal(){
       if(error) throw new Error(/invalid/i.test(error.message) ? "A senha não confere com este email." : error.message);
     },
     criarEscola: corpo => invocar("criar-escola", corpo),
-    iniciarCartao: org => invocar("plataforma-cartao", { accao:"iniciar", organizacao:org }),
-    confirmarCartao: (org, referencia) => invocar("plataforma-cartao", { accao:"confirmar", organizacao:org, referencia }),
-    formulario: formularioPaystack,
+    abrir: endereco => location.assign(endereco),
   };
 }
 
@@ -144,26 +100,13 @@ function fonteDemo(){
       const slug = corpo.nomeEscola.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
       return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao };
     },
-    async iniciarCartao(org){
-      await espera(); registo.chamadas.push(["cartao-iniciar", org]);
-      return { access_code:"demo", referencia:"PLTV-0000000000000000", valor:1, moeda:"ZAR", ambiente:"teste" };
-    },
-    async confirmarCartao(org, referencia){
-      await espera(); registo.chamadas.push(["cartao-confirmar", referencia]);
-      if(q.has("recusa")) throw new Error("O cartão não tinha saldo suficiente.");
-      return { ok:true, estado:"teste", testeAte:new Date(Date.now() + 7 * 864e5).toISOString(),
-               cartao:{ marca:"visa", ultimos4:"4081", expira:"12/2030" } };
-    },
-    async formulario(){
-      await espera(); registo.chamadas.push(["formulario"]);
-      return q.has("desiste") ? { ok:false, motivo:"desistiu" } : { ok:true, referencia:"PLTV-0000000000000000" };
-    },
+    abrir(endereco){ registo.abriu = endereco; },
   };
 }
 
 /* ---------------- A página ---------------- */
 const fonte = new URLSearchParams(location.search).has("demo") ? fonteDemo() : fonteReal();
-const E = { planos:[], plano:null, ciclo:"mensal", escola:null, diasTeste:7, verificacao:1, existente:false };
+const E = { planos:[], plano:null, ciclo:"mensal", escola:null, diasTeste:7, existente:false };
 
 const precoDe = (p, ciclo) => ciclo === "anual" ? p.precoAnual : p.precoMensal;
 
@@ -197,8 +140,7 @@ function desenharPlano(){
     b.hidden = precoDe(p, c) == null;
   });
   $("ciclo").hidden = [...document.querySelectorAll("#ciclo button")].filter(b => !b.hidden).length < 2;
-  const fim = new Date(Date.now() + E.diasTeste * 864e5);
-  $("plano-gratis").textContent = `${E.diasTeste} dias grátis. A primeira cobrança, de ${dinheiro(preco, p.simbolo)}, é a ${dataLonga(fim)}. Pode cancelar antes.`;
+  $("plano-gratis").textContent = `${E.diasTeste} dias grátis. Depois, ${dinheiro(preco, p.simbolo)} ${E.ciclo === "anual" ? "por ano" : "por mês"}. Pode cancelar antes.`;
 }
 
 function preencherEscolha(){
@@ -267,9 +209,8 @@ async function enviarConta(ev){
       throw e;
     }
     if(r.contaNova) await fonte.entrar(email, corpo.senha);
-    E.escola = { organizacao:r.organizacao, slug:r.slug, nome:corpo.nomeEscola, plano:E.plano.id, ciclo:E.ciclo };
-    guardar(E.escola);
-    passoCartao();
+    E.escola = { organizacao:r.organizacao, slug:r.slug, nome:corpo.nomeEscola };
+    aAbrir();
   } catch(e){
     aOcupar(btn);
     if(E.existente) btn.textContent = "Entrar e continuar";
@@ -277,65 +218,16 @@ async function enviarConta(ev){
   }
 }
 
-/* ---- passo 2: o cartão ---- */
-function passoCartao(){
-  $("passo-1").removeAttribute("aria-current"); $("passo-1").classList.add("feito");
-  $("passo-2").setAttribute("aria-current", "step");
+/* ---- a área criada: abre-se na Cobrança ---- */
+function aAbrir(){
   $("painel-conta").hidden = true;
   $("plano-escolhas").hidden = true;
-  $("painel-cartao").hidden = false;
-  const p = E.plano, preco = precoDe(p, E.ciclo);
-  const fim = new Date(Date.now() + E.diasTeste * 864e5);
-  $("cartao-sub").textContent = `A «${E.escola.nome}» está criada. Ponha o cartão para começar os ${E.diasTeste} dias grátis.`;
-  $("cartao-resumo").innerHTML = `
-    <div><span>Plano</span><b>${esc(p.nome)} · ${E.ciclo === "anual" ? "anual" : "mensal"}</b></div>
-    <div><span>Hoje</span><b>${esc(dinheiro(0, p.simbolo))}</b></div>
-    <div><span>A partir de ${esc(dataLonga(fim))}</span><b>${esc(dinheiro(preco, p.simbolo))} ${E.ciclo === "anual" ? "por ano" : "por mês"}</b></div>`;
-  $("cartao-seguro").textContent = `Para confirmar o cartão cobramos ${dinheiro(E.verificacao, p.simbolo)}, que devolvemos logo. A cobrança é em rand sul-africano (ZAR); o número do cartão fica com a Paystack, nós não o vemos.`;
-  $("painel-cartao").scrollIntoView({ block:"start", behavior:"smooth" });
-  $("btn-cartao").focus({ preventScroll:true });
-}
-
-function erroCartao(msg, tom){
-  const box = $("cartao-erro");
-  box.className = "aviso " + (tom || "erro");
-  box.textContent = msg || ""; box.hidden = !msg;
-}
-
-async function porCartao(){
-  const btn = $("btn-cartao");
-  erroCartao("");
-  aOcupar(btn, "A abrir…");
-  try {
-    const ini = await fonte.iniciarCartao(E.escola.organizacao);
-    aOcupar(btn); aOcupar(btn, "À espera do cartão…");
-    const f = await fonte.formulario(ini.access_code, ini.referencia);
-    if(!f.ok){
-      aOcupar(btn);
-      if(f.motivo === "desistiu") return erroCartao("O cartão ficou por pôr. A sua área de membros está guardada: ponha o cartão quando quiser.", "nota");
-      if(f.motivo === "sem-script") return erroCartao("Não conseguimos abrir o formulário do cartão. Verifique a ligação, ou desligue o bloqueador de anúncios, e tente outra vez.");
-      return erroCartao("O formulário do cartão deu um erro. Tente outra vez.");
-    }
-    aOcupar(btn); aOcupar(btn, "A confirmar…");
-    const r = await fonte.confirmarCartao(E.escola.organizacao, f.referencia);
-    pronta(r);
-  } catch(e){
-    aOcupar(btn);
-    erroCartao(e.message || "Não foi possível confirmar o cartão.");
-  }
-}
-
-/* ---- pronta ---- */
-function pronta(r){
-  guardar(null);
-  $("passo-2").removeAttribute("aria-current"); $("passo-2").classList.add("feito");
-  $("painel-cartao").hidden = true;
   $("painel-pronta").hidden = false;
-  $("pronta-titulo").textContent = `A «${E.escola.nome}» está pronta`;
-  const ate = r && r.testeAte ? dataLonga(r.testeAte) : dataLonga(Date.now() + E.diasTeste * 864e5);
-  $("pronta-texto").textContent = `Os ${E.diasTeste} dias grátis vão até ${ate}. Pode cancelar antes, sem custos, em Configurações › Cobrança.`;
-  $("btn-entrar").href = `/?org=${encodeURIComponent(E.escola.slug)}`;
-  $("btn-entrar").focus({ preventScroll:true });
+  $("pronta-titulo").textContent = `A «${E.escola.nome}» está criada`;
+  $("pronta-texto").textContent = "A abrir a sua área de membros, na página Cobrança…";
+  const endereco = `/?org=${encodeURIComponent(E.escola.slug)}#/cobranca`;
+  $("btn-entrar").href = endereco;
+  fonte.abrir(endereco);
 }
 
 /* ---- arranque ---- */
@@ -348,20 +240,12 @@ async function arrancar(){
   $("ecra-criar").hidden = false;
 
   const q = new URLSearchParams(location.search);
-  const guardado = lerGuardado();
-  escolherPlano(guardado ? guardado.plano : q.get("plano"), guardado ? guardado.ciclo : q.get("ciclo"));
+  escolherPlano(q.get("plano"), q.get("ciclo"));
   preencherEscolha();
 
   $("plano-escolher").addEventListener("change", e => escolherPlano(e.target.value, E.ciclo));
   document.querySelectorAll("#ciclo button").forEach(b => b.addEventListener("click", () => escolherPlano(E.plano.id, b.dataset.ciclo)));
   $("form-conta").addEventListener("submit", enviarConta);
-  $("btn-cartao").addEventListener("click", porCartao);
 
-  /* Voltou à página a meio (recarregou, ou desistiu do cartão): a área já
-     existe e a sessão está aberta — falta só o cartão. */
-  if(guardado && guardado.organizacao && await fonte.sessao()){
-    E.escola = guardado;
-    passoCartao();
-  }
 }
 arrancar();

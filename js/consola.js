@@ -56,6 +56,10 @@ function fonteReal(){
     juntarDominio: (id, dominio) => rpc("consola_juntar_dominio", { p_organizacao: id, p_dominio: dominio }),
     mudarMembro: (org, pessoa, papel, ativo) => rpc("consola_mudar_membro", { p_organizacao: org, p_utilizador: pessoa, p_papel: papel, p_ativo: ativo }),
     revogarConvite: id => rpc("consola_revogar_convite", { p_convite: id }),
+    cobranca: () => rpc("consola_cobranca"),
+    guardarPlano: (plano, mensal, anual) => rpc("consola_guardar_plano", { p_plano: plano, p_mensal: mensal, p_anual: anual }),
+    isentar: (org, isenta) => rpc("consola_isentar", { p_organizacao: org, p_isenta: isenta }),
+    ambiente: a => rpc("consola_ambiente", { p_ambiente: a }),
     async convidar(pedido){
       const { data, error } = await c.functions.invoke("convidar-aluno", { body: Object.assign({ dias: 14 }, pedido) });
       if(error){
@@ -85,6 +89,16 @@ function fonteDemo(){
       equipa:[{ id:"u2", nome:"Bruno Exemplo", email:"bruno@exemplo.invalid", papel:"dono", estado:"ativo" }], convites:[] }
   ];
   const achar = org => { const e = escolas.find(x => x.id === org); if(!e) throw new Error("Escola não encontrada."); return e; };
+  /* A mensalidade, em memória: preços por preencher, como na base hoje. */
+  const cobranca = {
+    planos: [
+      { id:"essencial", nome:"Essencial", alunosMax:500, precoMensal:null, precoAnual:null, simbolo:"R" },
+      { id:"profissional", nome:"Profissional", alunosMax:1500, precoMensal:null, precoAnual:null, simbolo:"R" },
+      { id:"escala", nome:"Escala", alunosMax:5000, precoMensal:null, precoAnual:null, simbolo:"R" }
+    ],
+    definicoes: { ambiente:"teste", diasTeste:7, diasTolerancia:3 },
+    contas: { "org-kingdom": { estado:"isenta", plano:"escala", ciclo:"mensal" }, "org-teste": { estado:"isenta", plano:"escala", ciclo:"mensal" } }
+  };
   const pausa = () => new Promise(r => setTimeout(r, 30));
   return {
     iniciar(){},
@@ -123,6 +137,24 @@ function fonteDemo(){
       const m = e.equipa.find(x => x.id === pessoa);
       m.papel = papel; m.estado = ativo ? "ativo" : "suspenso";
     },
+    async cobranca(){
+      await pausa();
+      return JSON.parse(JSON.stringify({ planos: cobranca.planos, definicoes: cobranca.definicoes,
+        escolas: escolas.map(e => Object.assign({ id:e.id, slug:e.slug, nome:e.nome, kingdom:e.kingdom, temCartao:false, contaEmDia:true },
+          cobranca.contas[e.id] || { estado:null })) }));
+    },
+    async guardarPlano(plano, mensal, anual){
+      const p = cobranca.planos.find(x => x.id === plano);
+      if(!p) throw new Error("Plano não encontrado.");
+      if((mensal != null && !(mensal > 0)) || (anual != null && !(anual > 0))) throw new Error("Preço inválido.");
+      p.precoMensal = mensal; p.precoAnual = anual;
+    },
+    async isentar(org, isenta){
+      const e = achar(org);
+      if(!isenta && e.kingdom) throw new Error("A Kingdom não paga mensalidade.");
+      cobranca.contas[org] = Object.assign({ plano:"essencial", ciclo:"mensal" }, cobranca.contas[org] || {}, { estado: isenta ? "isenta" : "pendente" });
+    },
+    async ambiente(a){ cobranca.definicoes.ambiente = a; },
     async revogarConvite(conviteId){
       escolas.forEach(e => { e.convites = e.convites.filter(c => c.id !== conviteId); });
     },
@@ -185,7 +217,86 @@ const Consola = {
   async recarregar(){
     try { this.escolas = await this.fonte.escolas(); }
     catch(e){ this.aviso(e.message, "erro"); this.escolas = []; }
+    try { this.cobranca = await this.fonte.cobranca(); }
+    catch(e){ this.cobranca = null; }
     this.desenhar();
+  },
+
+  /* ---------------- A mensalidade ----------------
+     Os preços de cada plano (ZAR), o ambiente da Paystack e, em cada escola,
+     o estado da conta. O dinheiro aqui é o que a base cobra: o que se escreve
+     guarda-se como está, com duas casas. */
+  contaDe(id){ return ((this.cobranca && this.cobranca.escolas) || []).find(x => x.id === id) || null; },
+
+  mensalidadeHTML(){
+    const c = this.cobranca;
+    if(!c) return `<p class="vazio">Não foi possível ler a mensalidade.</p>`;
+    const sim = (c.planos[0] || {}).simbolo || "R";
+    const n = v => v == null ? "" : String(v).replace(".", ",");
+    const producao = c.definicoes && c.definicoes.ambiente === "producao";
+    return `
+      <div class="escola-cabeca">
+        <div>
+          <h2>Mensalidade das escolas</h2>
+          <div class="meta"><span>Cobrada em rand pela Paystack. Sem preço, o plano não se vende nesse ciclo.</span></div>
+        </div>
+        <div class="escola-accoes">
+          <label class="sr-only" for="ambiente-paystack">Ambiente da Paystack</label>
+          <select id="ambiente-paystack" class="seletor-ambiente">
+            <option value="teste"${producao ? "" : " selected"}>Paystack: teste</option>
+            <option value="producao"${producao ? " selected" : ""}>Paystack: produção</option>
+          </select>
+          <span class="pill ${producao ? "pill-ativo" : "pill-suspensa"}" id="pill-ambiente">${producao ? "A cobrar a sério" : "Modo de teste"}</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="tabela-planos">
+          <thead><tr><th>Plano</th><th>Alunos</th><th>Mensal (${esc(sim)})</th><th>Anual (${esc(sim)})</th><th></th></tr></thead>
+          <tbody>${c.planos.map(p => `
+            <tr data-plano="${esc(p.id)}">
+              <td data-rotulo="Plano"><strong>${esc(p.nome)}</strong></td>
+              <td data-rotulo="Alunos">até ${Number(p.alunosMax || 0).toLocaleString("pt-PT", { useGrouping:"always" })}</td>
+              <td data-rotulo="Mensal (${esc(sim)})"><input inputmode="decimal" aria-label="Preço mensal do ${esc(p.nome)}" data-preco="mensal" value="${esc(n(p.precoMensal))}" placeholder="sem preço"></td>
+              <td data-rotulo="Anual (${esc(sim)})"><input inputmode="decimal" aria-label="Preço anual do ${esc(p.nome)}" data-preco="anual" value="${esc(n(p.precoAnual))}" placeholder="sem preço"></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-guardar-plano="${esc(p.id)}">Guardar</button></td>
+            </tr>`).join("")}</tbody>
+        </table>
+      </div>`;
+  },
+
+  contaHTML(e){
+    const a = this.contaDe(e.id);
+    if(!a || !a.estado) return `<span>Sem assinatura</span>`;
+    const rotulos = { pendente:"Falta o cartão", teste:"Em teste", ativa:"Ativa", em_atraso:"Em atraso", cancelada:"Cancelada", isenta:"Isenta" };
+    const plano = ((this.cobranca && this.cobranca.planos) || []).find(p => p.id === a.plano);
+    const ate = a.estado === "teste" ? a.testeAte : a.pagoAte;
+    return `<span>Mensalidade: <b>${esc(rotulos[a.estado] || a.estado)}</b>${a.estado !== "isenta" && plano ? ` · ${esc(plano.nome)} ${a.ciclo === "anual" ? "anual" : "mensal"}` : ""}${ate && a.estado !== "isenta" ? ` · até ${esc(dataCurta(ate))}` : ""}${a.cancelaNoFim ? " · cancela no fim" : ""}${a.ultimoErro ? ` · ${esc(a.ultimoErro)}` : ""}</span>`;
+  },
+
+  async guardarPlano(id){
+    const linha = document.querySelector(`#mensalidade tr[data-plano="${CSS.escape(id)}"]`);
+    const ler = q => { const t = linha.querySelector(`[data-preco="${q}"]`).value.trim().replace(/\s/g, "").replace(",", ".");
+      if(!t) return null; const v = Number(t); if(!(v > 0)) throw new Error("Escreva o preço só com números, por exemplo 399,00."); return Math.round(v * 100) / 100; };
+    try {
+      await this.fonte.guardarPlano(id, ler("mensal"), ler("anual"));
+      this.aviso("Preço guardado. Vale para as escolas novas e para as próximas cobranças.", "ok");
+    } catch(err){ this.aviso(err.message, "erro"); }
+    await this.recarregar();
+  },
+
+  async mudarAmbiente(a){
+    if(a === "producao" && !confirm("Passar a Paystack para produção? Os cartões postos a partir de agora são cobrados a sério.")){ this.desenhar(); return; }
+    try { await this.fonte.ambiente(a); this.aviso(a === "producao" ? "A Paystack está em produção." : "A Paystack está em modo de teste.", "ok"); }
+    catch(err){ this.aviso(err.message, "erro"); }
+    await this.recarregar();
+  },
+
+  async isentar(org, isenta){
+    const e = this.escolaPorId(org);
+    if(!isenta && !confirm(`Voltar a cobrar ${e.nomeEscola || e.nome}? Sem cartão, os alunos deixam de ver os cursos até a escola o pôr.`)) return;
+    try { await this.fonte.isentar(org, isenta); this.aviso(isenta ? "Escola isenta da mensalidade." : "A escola volta a pagar mensalidade.", "ok"); }
+    catch(err){ this.aviso(err.message, "erro"); }
+    await this.recarregar();
   },
 
   desenhar(){
@@ -197,6 +308,8 @@ const Consola = {
       [soma("alunos"), "alunos activos"],
       [soma("cursos"), "cursos"]
     ].map(([n, r]) => `<div class="card"><div class="num">${n}</div><div class="rot">${r}</div></div>`).join("");
+
+    document.getElementById("mensalidade").innerHTML = this.mensalidadeHTML();
 
     document.getElementById("lista-escolas").innerHTML = this.escolas.length
       ? this.escolas.map(e => this.escolaHTML(e)).join("")
@@ -255,6 +368,12 @@ const Consola = {
           <span>${e.dominios.length ? esc(e.dominios.join(" · ")) : "Sem domínio próprio"}</span>
           ${(e.dominiosPorLigar || []).map(d => `<span>${esc(d.dominio)} · ${d.estado === "verificado" ? "a ligar" : "à espera do DNS"}</span>`).join("")}
         </div>
+        <div class="numeros conta-escola">
+          ${this.contaHTML(e)}
+          ${e.kingdom ? "" : (this.contaDe(e.id) || {}).estado === "isenta"
+            ? `<button class="btn btn-sm btn-texto" type="button" data-isentar="${esc(e.id)}" data-isenta="">Voltar a cobrar</button>`
+            : `<button class="btn btn-sm btn-texto" type="button" data-isentar="${esc(e.id)}" data-isenta="1">Isentar</button>`}
+        </div>
         <div class="bloco">
           <h3>Equipa</h3>
           ${equipa}
@@ -300,6 +419,10 @@ const Consola = {
     document.getElementById("form-dominio").addEventListener("submit", ev => { ev.preventDefault(); this.juntarDominio(); });
 
     /* As acções de cada escola (a lista redesenha-se, por isso delega-se). */
+    const mensalidade = document.getElementById("mensalidade");
+    mensalidade.addEventListener("click", ev => { const b = ev.target.closest("[data-guardar-plano]"); if(b) this.guardarPlano(b.dataset.guardarPlano); });
+    mensalidade.addEventListener("change", ev => { if(ev.target.id === "ambiente-paystack") this.mudarAmbiente(ev.target.value); });
+
     const lista = document.getElementById("lista-escolas");
     lista.addEventListener("click", ev => {
       const b = ev.target.closest("button");
@@ -308,6 +431,7 @@ const Consola = {
       else if(b.dataset.dominio) this.abrirDominio(b.dataset.dominio);
       else if(b.dataset.estado) this.mudarEstado(b.dataset.estado, b.dataset.para);
       else if(b.dataset.revogar) this.revogar(b.dataset.revogar);
+      else if(b.dataset.isentar) this.isentar(b.dataset.isentar, !!b.dataset.isenta);
       else if(b.hasAttribute("data-membro-estado")) this.mudarMembro(b.dataset.org, b.dataset.pessoa, b.dataset.papelActual, !b.dataset.ativo);
     });
     lista.addEventListener("change", ev => {

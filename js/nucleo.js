@@ -204,7 +204,18 @@ const VISTAS_DO_PAYFLOW = new Set(["vitrine", "admin-vitrine", "admin-migracao"]
 function semPayflow(){
   return typeof API !== "undefined" && !!API.organizacao && API.organizacao.payflow === false;
 }
-function vistaDisponivel(view){ return !(semPayflow() && VISTAS_DO_PAYFLOW.has(view)); }
+/* A Cobrança é da administração da escola (não da equipa toda), e não
+   aparece às escolas isentas, que não pagam mensalidade. */
+function cobrancaDisponivel(){
+  if(typeof modoDemonstracao === "function" && modoDemonstracao()) return true;
+  if(typeof API === "undefined" || !API.utilizador || API.utilizador.perfil !== "admin") return false;
+  const conta = API.organizacao && API.organizacao.conta;
+  return !!conta && conta.estado !== "isenta";
+}
+function vistaDisponivel(view){
+  if(view === "admin-cobranca") return cobrancaDisponivel();
+  return !(semPayflow() && VISTAS_DO_PAYFLOW.has(view));
+}
 function semVistasDoPayflow(lista){
   return lista.map(g => ({ ...g, itens:g.itens.filter(i => vistaDisponivel(i.view)) })).filter(g => g.itens.length);
 }
@@ -647,6 +658,7 @@ function enderecoDe(view, a, b){
   if(view === "curso" && a) return "#/curso/" + encodeURIComponent(a);
   if(view === "aula"  && a && b) return "#/curso/" + encodeURIComponent(a) + "/aula/" + encodeURIComponent(b);
   if(PAGINAS_COM_MORADA.includes(view) && a) return "#/" + view + "/" + encodeURIComponent(a);
+  if(view === "admin-cobranca") return "#/cobranca";
   return "";
 }
 
@@ -657,6 +669,8 @@ function lerEndereco(){
   if(!bruto.startsWith("#/")) return null;
   const partes = bruto.slice(2).split("/").filter(Boolean).map(decodeURIComponent);
   if(PAGINAS_COM_MORADA.includes(partes[0]) && partes[1]) return { view:partes[0], a:partes[1] };
+  /* Quem acabou de criar a área de membros chega aqui para tratar da cobrança. */
+  if(partes[0] === "cobranca") return { view:"admin-cobranca" };
   if(partes[0] !== "curso" || !partes[1]) return null;
   if(partes[2] === "aula" && partes[3]) return { view:"aula", a:partes[1], b:partes[3] };
   return { view:"curso", a:partes[1] };
@@ -723,6 +737,7 @@ function irPara(view, a, b){
   atualizarSidebarGlobal();
   atualizarTopbarCTA(view);
   renderAvisoPrevia();
+  if(typeof renderAvisoConta === "function") renderAvisoConta();
   fecharMenuMobile();
   escreverEndereco(view, a, b);
   window.scrollTo(0,0);

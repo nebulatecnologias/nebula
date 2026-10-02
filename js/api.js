@@ -324,6 +324,42 @@ const API = {
     return data;
   },
 
+  /* A mensalidade da escola (Configurações › Cobrança, W4). O que se lê e os
+     dados de faturação, o plano e o cancelamento vão à base; o cartão e o
+     «Pagar agora» passam pelo servidor, que fala com a Paystack. */
+  async cobrancaDaEscola(){
+    const { data, error } = await this.cliente.rpc("cobranca_da_escola");
+    if(error) throw new Error(error.message);
+    return data;
+  },
+  async guardarFaturacao(dados){
+    const { error } = await this.cliente.rpc("guardar_faturacao", { p_dados: dados });
+    if(error) throw new Error(error.message);
+  },
+  async mudarPlano(plano, ciclo){
+    const { error } = await this.cliente.rpc("mudar_plano", { p_plano: plano, p_ciclo: ciclo });
+    if(error) throw new Error(error.message);
+  },
+  async cancelarAssinatura(cancelar){
+    const { error } = await this.cliente.rpc("cancelar_assinatura", { p_cancelar: !!cancelar });
+    if(error) throw new Error(error.message);
+  },
+  async pedirAoServidorDaCobranca(funcao, corpo){
+    const { data, error } = await this.cliente.functions.invoke(funcao, {
+      body: Object.assign({ organizacao: this.organizacao ? this.organizacao.id : null }, corpo || {})
+    });
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || traduzirErroAuth(error));
+    }
+    if(data && data.error) throw new Error(data.error);
+    return data;
+  },
+  cartaoIniciar(){ return this.pedirAoServidorDaCobranca("plataforma-cartao", { accao:"iniciar" }); },
+  cartaoConfirmar(referencia){ return this.pedirAoServidorDaCobranca("plataforma-cartao", { accao:"confirmar", referencia }); },
+  pagarAgora(){ return this.pedirAoServidorDaCobranca("plataforma-cobrar", {}); },
+
   /* Os acessos da própria pessoa. Quem paga faz isso NOUTRO separador -- o
      checkout abre-se ao lado -- e por isso a Academia fica parada num ecrã
      que já não corresponde ao que ela tem. Isto trata do caso em que o

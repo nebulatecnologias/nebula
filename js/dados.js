@@ -76,7 +76,8 @@ const NAV_ADMIN = [
   ]},
   { grupo:"Conta", itens:[
     { view:"admin-aparencia", label:"Aparência", icon:ICONS.palette },
-    { view:"admin-config", label:"Configurações", icon:ICONS.gear }
+    { view:"admin-config", label:"Configurações", icon:ICONS.gear },
+    { view:"admin-cobranca", label:"Cobrança", icon:ICONS.card }
   ]}
 ];
 

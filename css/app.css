@@ -1507,3 +1507,35 @@ button.back-link:hover{ color:var(--ink); }
   .bloco-dominio .tabela-dns td::before{ content:attr(data-rotulo); width:44px; flex-shrink:0; font-size:12.5px; color:var(--muted); }
   .bloco-dominio .tabela-dns tbody tr:hover td{ background:none; }
 }
+
+/* Configurações › Cobrança (W4·4) */
+.cobranca-bloco{ margin-bottom:16px; }
+.cobranca-cabeca{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.cobranca-cabeca h3{ font-size:16px; font-weight:500; letter-spacing:-.01em; margin:0; }
+.cobranca-texto{ margin:0 0 14px; color:var(--ink-2); max-width:62ch; }
+.cobranca-plano-nome{ margin:0 0 12px; color:var(--ink-2); }
+.cobranca-plano-nome strong{ color:var(--ink); font-weight:500; }
+.cobranca-uso{ margin-bottom:8px; }
+.cobranca-fill{ background:var(--accent); }
+.cobranca-fill.quase{ background:var(--amber-ink); }
+.cobranca-mudar{ margin-top:16px; padding-top:16px; border-top:1px solid var(--line); display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+.cobranca-mudar .hint, .cobranca-mudar .linha-acoes{ grid-column:1 / -1; }
+.cobranca-mudar .hint{ margin:0 0 12px; }
+.cobranca-cartao-linha{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:0 0 8px; }
+.cobranca-cartao-linha strong{ color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+.cobranca-campos{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+.cobranca-faturas{ overflow:hidden; }
+.cobranca-faturas .table-wrap{ margin-top:12px; }
+.tabela-faturas .num{ text-align:right; font-variant-numeric:tabular-nums; }
+@media (max-width:640px){
+  .cobranca-mudar, .cobranca-campos{ grid-template-columns:1fr; }
+  .tabela-faturas thead{ display:none; }
+  .tabela-faturas tr{ display:block; padding:12px 18px; border-bottom:1px solid var(--line); }
+  .tabela-faturas td{ display:flex; justify-content:space-between; gap:12px; padding:3px 0; border:0; white-space:normal; text-align:right; }
+  .tabela-faturas td::before{ content:attr(data-rotulo); color:var(--muted); text-align:left; }
+}
+
+/* O aviso da conta da escola, em cima de cada ecrã */
+.aviso-conta{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:12px 14px 12px 18px; border-radius:var(--r-md); margin-bottom:22px; font-size:14px; font-weight:500; }
+.aviso-conta-aluno{ background:var(--amber-soft); color:var(--amber-ink); }
+.aviso-conta-equipa{ background:var(--red-soft); color:var(--red-ink); }

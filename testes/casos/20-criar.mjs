@@ -1,6 +1,6 @@
 import { abrirPagina } from '../util.mjs';
 
-export const nome = 'Criar área de membros (/criar): plano do endereço, conta, cartão e pronta';
+export const nome = 'Criar área de membros (/criar): plano do endereço, conta, e a área abre na Cobrança';
 
 /* W4 (decisões do Shelton a 02/10/2026): no molde do Memberkit, o plano vem
    no endereço e mostra-se em cima; a conta pede nome da área, nome, email e a
@@ -22,7 +22,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.click('#ciclo [data-ciclo="mensal"]');
   igual(await txt(pg, '#plano-valor'), 'R 199,00', 'Mensal muda o preço');
   verdade(new URL(pg.url()).search.includes('ciclo=mensal'), 'e o endereço acompanha a escolha');
-  contem(await txt(pg, '#plano-gratis'), '7 dias grátis. A primeira cobrança, de R 199,00', 'Diz quando e quanto se cobra');
+  contem(await txt(pg, '#plano-gratis'), '7 dias grátis. Depois, R 199,00 por mês', 'Diz quanto se paga depois dos dias grátis');
   await pg.selectOption('#plano-escolher', 'escala');
   verdade(await pg.isHidden('#ciclo'), 'Um plano só com preço mensal não mostra a troca de ciclo');
   igual(await txt(pg, '#plano-alunos'), 'Até 5 000 alunos', 'Os milhares agrupam-se também abaixo de dez mil');
@@ -42,24 +42,16 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(await pg.getAttribute('#f-senha2', 'aria-invalid'), 'true', 'e o campo fica marcado');
   await pg.fill('#f-senha2', 'segredo-forte');
   await pg.click('#btn-conta');
-  await pg.waitForSelector('#painel-cartao:not([hidden])');
+  await pg.waitForSelector('#painel-pronta:not([hidden])');
   const chamadas = await pg.evaluate(() => window.__criarDemo.chamadas);
   const criar = chamadas.find(c => c[0] === 'criar-escola')[1];
   igual(JSON.stringify([criar.plano, criar.ciclo, criar.aceitouTermos]), '["profissional","mensal",true]',
     'Vai para o servidor o plano, o ciclo e os termos aceites');
   verdade(chamadas.some(c => c[0] === 'entrar'), 'e entra com a conta nova');
-  igual(await pg.getAttribute('#passo-2', 'aria-current'), 'step', 'O passo do cartão fica marcado');
-  contem(await pg.textContent('#cartao-sub'), 'A «Escola de Exemplo» está criada', 'Diz que a área está criada');
-  const resumo = (await pg.innerText('#cartao-resumo')).replace(NBSP, ' ').replace(/\s+/g, ' ');
-  contem(resumo, 'Hoje R 0,00', 'Hoje não se paga nada');
-  contem(resumo, 'R 399,00 por mês', 'e diz o que se cobra depois');
-  contem(await pg.textContent('#cartao-seguro'), 'rand sul-africano (ZAR)', 'Avisa que a cobrança é em rand');
-  await pg.click('#btn-cartao');
-  await pg.waitForSelector('#painel-pronta:not([hidden])');
-  igual(await pg.textContent('#pronta-titulo'), 'A «Escola de Exemplo» está pronta', 'Com o cartão, está pronta');
-  igual(await pg.getAttribute('#btn-entrar', 'href'), '/?org=escola-de-exemplo', 'e o botão abre a área nova pelo nome curto');
-  igual(JSON.stringify((await pg.evaluate(() => window.__criarDemo.chamadas)).map(c => c[0]).slice(-3)),
-    '["cartao-iniciar","formulario","cartao-confirmar"]', 'O cartão abre, passa pelo formulário e confirma-se no servidor');
+  igual(await pg.textContent('#pronta-titulo'), 'A «Escola de Exemplo» está criada', 'Diz que a área está criada');
+  igual(await pg.evaluate(() => window.__criarDemo.abriu), '/?org=escola-de-exemplo#/cobranca',
+    'e abre-a logo na página Cobrança, onde se paga (não há cartão nesta página)');
+  igual(await pg.getAttribute('#btn-entrar', 'href'), '/?org=escola-de-exemplo#/cobranca', 'com um botão para o mesmo sítio');
   igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript');
   await pg.close();
 
@@ -80,23 +72,8 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   contem(await pg.textContent('#conta-erro'), 'A senha não confere', 'Uma senha errada diz-se');
   await pg.fill('#f-senha-existente', 'a-certa-123');
   await pg.click('#btn-conta');
-  await pg.waitForSelector('#painel-cartao:not([hidden])');
+  await pg.waitForSelector('#painel-pronta:not([hidden])');
   verdade(true, 'Com a senha certa, cria a área com a conta que já existia');
-  await pg.close();
-
-  /* 4. Desistir do cartão: a área fica guardada e volta-se ao cartão. */
-  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&desiste=1`);
-  await pg.fill('#f-escola', 'Escola Três');
-  await pg.fill('#f-nome', 'Ana Exemplo');
-  await pg.fill('#f-email', 'ana@exemplo.invalid');
-  await pg.fill('#f-senha', 'segredo-forte');
-  await pg.fill('#f-senha2', 'segredo-forte');
-  await pg.click('#btn-conta');
-  await pg.waitForSelector('#painel-cartao:not([hidden])');
-  await pg.click('#btn-cartao');
-  await pg.waitForTimeout(300);
-  contem(await pg.textContent('#cartao-erro'), 'O cartão ficou por pôr', 'Desistir do cartão diz que a área ficou guardada');
-  falso(await pg.isDisabled('#btn-cartao'), 'e o botão volta para tentar outra vez');
   await pg.close();
 
   /* 5. Fechado: sem preços, não se vende. */
