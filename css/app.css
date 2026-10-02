@@ -1279,8 +1279,8 @@ button.chip{ font:inherit; font-size:14px; }
 .sidebar-nav .nav-label{ padding:12px 12px 4px; }
 .rotulo-cta{ display:inline; }
 @media (max-width:980px){
-  #btn-ver-como-aluno{ width:36px; padding:0; }
-  #btn-ver-como-aluno .rotulo-cta{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  #btn-ver-como-aluno, #btn-ver-como-organizacao{ width:36px; padding:0; }
+  #btn-ver-como-aluno .rotulo-cta, #btn-ver-como-organizacao .rotulo-cta{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 }
 
 /* Entrar: o formulário num cartão branco, como na Library. */
@@ -1543,3 +1543,10 @@ button.back-link:hover{ color:var(--ink); }
 /* Suporte da plataforma dentro de uma escola */
 .aviso-suporte{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:10px 10px 10px 18px; border-radius:var(--r-md); margin-bottom:22px; font-size:14px; background:var(--blue-soft); color:var(--blue-ink); }
 .aviso-suporte strong{ font-weight:500; }
+
+/* «Ver como organização» na barra de cima (administração da plataforma) */
+.ver-como-card{ max-width:560px; width:min(560px, calc(100vw - 32px)); }
+.ver-como-lista{ display:grid; gap:2px; margin:6px 0 14px; max-height:min(52vh, 420px); overflow:auto; }
+.ver-como-escola{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 0; border-bottom:1px solid var(--line); }
+.ver-como-escola strong{ display:block; font-weight:500; }
+#topbar-cta{ display:inline-flex; gap:8px; align-items:center; }

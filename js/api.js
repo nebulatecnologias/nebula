@@ -82,6 +82,10 @@ const API = {
     const { data: organizacao, error: semOrganizacao } = await this.cliente.rpc("organizacao_atual");
     if(semOrganizacao) throw semOrganizacao;
     this.organizacao = organizacao;
+    /* Quem administra a plataforma vê o «Ver como organização» na barra de
+       cima (a lista das escolas vem da consola). Um erro aqui não trava nada. */
+    try { const { data: adm } = await this.cliente.rpc("consola_sou_admin"); this.adminPlataforma = adm === true; }
+    catch(e){ this.adminPlataforma = false; }
     this.utilizador = data;
     return data;
   },
@@ -306,6 +310,12 @@ const API = {
   /* O domínio próprio da escola (Configurações). Lê-se na base; ligar,
      verificar e remover passam pelo servidor, que confere o DNS e fala com a
      Vercel. */
+  async escolasDaPlataforma(){
+    const { data, error } = await this.cliente.rpc("consola_organizacoes");
+    if(error) throw new Error(error.message);
+    return data || [];
+  },
+
   async dominioProprio(){
     const { data, error } = await this.cliente.rpc("dominio_proprio");
     if(error) throw new Error(error.message);

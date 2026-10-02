@@ -818,11 +818,58 @@ function renderSidebarFoot(){
 function atualizarTopbarCTA(view){
   const el = document.getElementById("topbar-cta");
   if(estado.papel==="administrador" && !estado.prevendoComoAluno && view.indexOf("admin-")===0){
-    el.innerHTML = `<button class="btn btn-secondary btn-sm" id="btn-ver-como-aluno" title="Ver como aluno"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="rotulo-cta">Ver como aluno</span></button>`;
+    el.innerHTML = (souAdminDaPlataforma() ? `<button class="btn btn-secondary btn-sm" id="btn-ver-como-organizacao" title="Ver como organização"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg><span class="rotulo-cta">Ver como organização</span></button> ` : "")
+      + `<button class="btn btn-secondary btn-sm" id="btn-ver-como-aluno" title="Ver como aluno"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="rotulo-cta">Ver como aluno</span></button>`;
     document.getElementById("btn-ver-como-aluno").addEventListener("click", entrarPreviaAluno);
+    const org = document.getElementById("btn-ver-como-organizacao");
+    if(org) org.addEventListener("click", abrirVerComoOrganizacao);
   } else {
     el.innerHTML = "";
   }
+}
+
+/* «Ver como organização» (pedido do Shelton a 02/10): quem administra a
+   plataforma escolhe uma escola e abre-a como a equipa dela a vê, ou já como
+   um aluno a vê. Abre num separador novo, neste endereço (onde a sessão vale);
+   a escola vê-se como suporte, com o aviso em todos os ecrãs. */
+function souAdminDaPlataforma(){
+  if(typeof modoDemonstracao === "function" && modoDemonstracao()) return estado.papel === "administrador";
+  return typeof API !== "undefined" && API.adminPlataforma === true;
+}
+function enderecoVerComo(slug, aluno){
+  const u = new URL(location.origin + location.pathname);
+  u.searchParams.set("org", slug);
+  if(aluno) u.searchParams.set("ver", "aluno");
+  if(modoDemonstracao()) u.searchParams.set("demo", "1");
+  return u.toString();
+}
+async function abrirVerComoOrganizacao(){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `<div class="card confirm-card ver-como-card" role="dialog" aria-modal="true" aria-labelledby="ver-como-titulo">
+      <h3 id="ver-como-titulo">Ver como organização</h3>
+      <p>Abra uma escola como a equipa dela a vê, ou como um aluno a vê. Abre num separador novo.</p>
+      <div class="ver-como-lista"><p class="hint">A carregar as escolas…</p></div>
+      <div class="confirm-acoes"><a class="btn btn-texto" href="/consola/">Abrir a consola</a><button class="btn btn-secondary" type="button" data-fechar>Fechar</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const fechar = () => overlay.remove();
+  overlay.querySelector("[data-fechar]").addEventListener("click", fechar);
+  overlay.addEventListener("click", e => { if(e.target === overlay) fechar(); });
+  let escolas = [];
+  try {
+    escolas = modoDemonstracao()
+      ? [{ slug:"kingdom", nome:"Kingdom Company", nomeEscola:"Kingdom Academy", estado:"ativa" }, { slug:"teste", nome:"Escola de Teste", estado:"ativa" }]
+      : await API.escolasDaPlataforma();
+  } catch(e){ overlay.querySelector(".ver-como-lista").innerHTML = `<p class="hint">Não foi possível carregar as escolas.</p>`; return; }
+  overlay.querySelector(".ver-como-lista").innerHTML = escolas.length ? escolas.map(e => `
+    <div class="ver-como-escola" data-escola="${textoSeguro(e.slug)}">
+      <div><strong>${textoSeguro(e.nomeEscola || e.nome)}</strong><span class="sub-celula">${textoSeguro(e.slug)}${e.estado !== "ativa" ? " · suspensa" : ""}</span></div>
+      <div class="linha-acoes">
+        <a class="btn btn-secondary btn-sm" href="${textoSeguro(enderecoVerComo(e.slug, false))}" target="_blank" rel="noopener" data-ver-como="organizacao">Organização</a>
+        <a class="btn btn-secondary btn-sm" href="${textoSeguro(enderecoVerComo(e.slug, true))}" target="_blank" rel="noopener" data-ver-como="aluno">Aluno</a>
+      </div>
+    </div>`).join("") : `<p class="hint">Ainda não há escolas.</p>`;
 }
 
 /* Permite ao administrador confirmar, na vista real do aluno, o efeito do que configurou. */
