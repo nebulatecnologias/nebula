@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Política de privacidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* Rascunho para revisão jurídica (W4·5). Os [parênteses rectos] são o que
+     falta preencher; nada aqui foi inventado como facto. */
+  body{ background:var(--canvas); }
+  .legal{ max-width:720px; margin:0 auto; padding:40px 16px 72px; line-height:1.65; }
+  .legal h1{ font-size:clamp(26px,4.4vw,32px); font-weight:500; letter-spacing:-.025em; margin:0 0 6px; }
+  .legal .data{ color:var(--muted); margin:0 0 18px; }
+  .legal h2{ font-size:18px; font-weight:500; letter-spacing:-.01em; margin:30px 0 8px; }
+  .legal p, .legal li{ color:var(--ink-2); }
+  .legal ul{ padding-left:20px; }
+  .rascunho{ background:var(--amber-soft); color:var(--amber-ink); border-radius:var(--r-md); padding:12px 14px; font-size:14px; margin:0 0 24px; }
+  .falta{ background:var(--sunken); border-radius:4px; padding:0 4px; color:var(--ink); }
+  .tabela{ width:100%; border-collapse:collapse; font-size:14px; margin:8px 0; }
+  .tabela th, .tabela td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .tabela th{ font-weight:500; color:var(--ink); }
+  @media (max-width:520px){ .tabela thead{ display:none; } .tabela tr{ display:block; padding:8px 0; border-bottom:1px solid var(--line); } .tabela td{ display:block; border:0; padding:2px 0; } .tabela td:first-child{ font-weight:500; color:var(--ink); } }
+</style>
+</head>
+<body>
+<main class="legal">
+  <h1>Política de privacidade</h1>
+  <p class="data">Versão de 2 de outubro de 2026</p>
+  <p class="rascunho">Rascunho para revisão jurídica. Ainda não é o texto final.</p>
+
+  <h2>1. Quem trata os dados</h2>
+  <p>A plataforma é prestada por <span class="falta">[nome legal da entidade]</span>, <span class="falta">[morada]</span>. Para os dados de quem cria e gere uma área de membros (a escola), somos o responsável pelo tratamento. Para os dados dos alunos de cada escola, a responsável é a escola, e nós tratamo-los por conta dela, só para prestar o serviço.</p>
+
+  <h2>2. Que dados recolhemos, e porquê</h2>
+  <table class="tabela">
+    <thead><tr><th>Dados</th><th>Para quê</th></tr></thead>
+    <tbody>
+      <tr><td>Nome, email e senha (guardada cifrada) de quem gere a escola</td><td>Criar a conta e entrar.</td></tr>
+      <tr><td>Nome da área de membros, marca e domínio</td><td>Mostrar a área de membros aos alunos.</td></tr>
+      <tr><td>Dados de faturação: nome ou empresa, NUIT, morada, telefone</td><td>Emitir as faturas da mensalidade.</td></tr>
+      <tr><td>Cartão: marca, últimos 4 dígitos, validade e um código de autorização da Paystack</td><td>Cobrar a mensalidade. O número completo do cartão fica com a Paystack; nós nunca o vemos nem guardamos.</td></tr>
+      <tr><td>Faturas e pagamentos</td><td>Contabilidade e obrigações fiscais.</td></tr>
+      <tr><td>Dados dos alunos (nome, email, progresso nos cursos), postos pela escola</td><td>Prestar o serviço à escola, por conta dela.</td></tr>
+      <tr><td>Registos técnicos (endereço IP, datas de acesso)</td><td>Segurança, prevenção de abusos e prova da aceitação dos termos.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Com quem partilhamos</h2>
+  <p>Só com os fornecedores de que precisamos para prestar o serviço, cada um obrigado a proteger os dados:</p>
+  <ul>
+    <li>Supabase — base de dados e contas.</li>
+    <li>Vercel — alojamento das páginas.</li>
+    <li>Resend — envio dos emails da plataforma.</li>
+    <li>Paystack — pagamentos por cartão.</li>
+  </ul>
+  <p>Alguns destes fornecedores guardam dados fora de Moçambique e da África do Sul. <span class="falta">[Confirmar as regiões e as garantias de transferência.]</span> Não vendemos dados a ninguém.</p>
+
+  <h2>4. Quanto tempo guardamos</h2>
+  <ul>
+    <li>Enquanto a conta estiver ativa, e mais <span class="falta">[90]</span> dias depois de fechar, para exportação ou reativação.</li>
+    <li>Faturas e pagamentos: o tempo que a lei fiscal exigir. <span class="falta">[Confirmar prazo.]</span></li>
+  </ul>
+
+  <h2>5. Os seus direitos</h2>
+  <p>Pode pedir para ver, corrigir, exportar ou apagar os seus dados, e opor-se a um tratamento, escrevendo para <span class="falta">[email de contacto]</span>. Os alunos de uma escola devem dirigir-se primeiro à escola; ajudamos a escola a responder. <span class="falta">[Confirmar enquadramento legal: POPIA (África do Sul) e a legislação moçambicana aplicável, e a autoridade de controlo a indicar.]</span></p>
+
+  <h2>6. Segurança</h2>
+  <p>As ligações são cifradas, as senhas guardam-se cifradas, e cada escola só vê os seus próprios dados. O código de autorização do cartão só é lido pelo servidor.</p>
+
+  <h2>7. Alterações</h2>
+  <p>Se mudarmos esta política, avisamos por email e na plataforma antes de a mudança valer.</p>
+</main>
+</body>
+</html>

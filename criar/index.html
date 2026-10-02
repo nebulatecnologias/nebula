@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar a sua área de membros</title>
+<meta name="description" content="Crie a sua área de membros: cursos, alunos e a sua marca. 7 dias grátis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* Criar uma área de membros (W4). A página é da plataforma, que ainda não
+     tem nome nem marca: nada de coroa nem do laranja da Kingdom. Os botões e o
+     foco vão na tinta. */
+  [hidden]{ display:none !important; }
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  :root{
+    --cta:var(--ink); --cta-hover:#2f2b26; --cta-shadow:0 1px 2px rgba(28,22,16,.18);
+    --accent:var(--ink-2); --ring:none;
+  }
+  .field input:focus-visible,.plano-linha select:focus-visible{ outline:2px solid var(--ink-2); outline-offset:1px; }
+  body{ background:var(--canvas); }
+  .criar{ max-width:560px; margin:0 auto; padding:40px 16px 72px; }
+  .criar-topo{ margin-bottom:22px; }
+  .criar-topo h1{ font-size:clamp(26px,4.4vw,32px); line-height:1.18; letter-spacing:-.025em; margin:0 0 8px; font-weight:500; }
+  .criar-topo p{ margin:0; color:var(--muted); }
+
+  .passos{ display:flex; gap:8px; margin:0 0 18px; padding:0; list-style:none; font-size:13px; color:var(--muted); }
+  .passos li{ display:flex; align-items:center; gap:8px; }
+  .passos li + li::before{ content:""; width:22px; height:1px; background:var(--line-strong); }
+  .passos b{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--sunken); color:var(--ink-2); font-weight:500; font-size:12px; }
+  .passos [aria-current="step"]{ color:var(--ink); font-weight:500; }
+  .passos [aria-current="step"] b{ background:var(--ink); color:#fff; }
+  .passos .feito b{ background:var(--green-soft); color:var(--green-ink); }
+
+  .plano{ padding:18px 20px; margin-bottom:16px; }
+  .plano-cabeca{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .plano-nome{ color:var(--ink); font-size:18px; font-weight:500; letter-spacing:-.015em; margin:0 0 2px; }
+  .plano-alunos{ color:var(--muted); font-size:14px; margin:0; }
+  .plano-preco{ text-align:right; }
+  @media (max-width:520px){ .plano-preco{ text-align:left; } }
+  .plano-preco .valor{ font-size:22px; font-weight:500; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .plano-preco .por{ color:var(--muted); font-size:13.5px; }
+  .plano-linha{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+  .ciclo{ display:inline-flex; padding:3px; border-radius:999px; background:var(--sunken); }
+  .ciclo button{ min-height:32px; padding:0 14px; border:0; border-radius:999px; background:transparent; color:var(--ink-2); font:inherit; font-size:13.5px; font-weight:500; cursor:pointer; }
+  .ciclo button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(28,22,16,.12); }
+  .ciclo button:focus-visible{ outline:2px solid var(--ink); outline-offset:1px; }
+  .plano-linha select{ min-height:34px; border-radius:var(--r-field); border:1px solid var(--line-strong); background:var(--surface); padding:0 10px; font:inherit; font-size:13.5px; color:var(--ink); }
+  .gratis{ margin:12px 0 0; font-size:13.5px; color:var(--green-ink); background:var(--green-soft); border-radius:var(--r-md); padding:9px 12px; }
+
+  .painel{ padding:24px 22px 22px; }
+  .painel h2{ font-size:19px; font-weight:500; letter-spacing:-.015em; margin:0 0 4px; }
+  .painel .sub{ color:var(--muted); margin:0 0 18px; font-size:14px; }
+  .dupla{ display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  @media (max-width:520px){ .dupla{ grid-template-columns:1fr; } .painel{ padding:20px 16px 18px; } }
+  .consentimento{ font-size:13px; color:var(--muted); line-height:1.55; margin:4px 0 16px; }
+  .consentimento a{ color:var(--ink-2); text-decoration:underline; }
+  .aviso{ border-radius:var(--r-md); padding:12px 14px; font-size:14px; margin:0 0 16px; }
+  .aviso.erro{ background:var(--red-soft); color:var(--red-ink); }
+  .aviso.nota{ background:var(--amber-soft); color:var(--amber-ink); }
+  .aviso.ok{ background:var(--green-soft); color:var(--green-ink); }
+  .erro-campo{ color:var(--red-ink); font-size:12.5px; margin-top:6px; }
+  .field input[aria-invalid="true"]{ border-color:var(--red-ink); }
+
+  .cartao-resumo{ display:grid; gap:8px; margin:0 0 18px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface-2); font-size:14px; }
+  .cartao-resumo div{ display:flex; justify-content:space-between; gap:12px; }
+  .cartao-resumo span{ color:var(--muted); }
+  .cartao-resumo b{ font-weight:500; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .seguro{ display:flex; gap:8px; align-items:flex-start; color:var(--muted); font-size:12.5px; margin:12px 0 0; }
+  .seguro svg{ flex:none; margin-top:1px; }
+
+  .pronta{ text-align:center; padding:32px 22px 26px; }
+  .pronta .sinal{ width:52px; height:52px; border-radius:50%; display:grid; place-items:center; margin:0 auto 14px; background:var(--green-soft); color:var(--green-ink); }
+  .pronta h2{ font-size:22px; font-weight:500; letter-spacing:-.02em; margin:0 0 8px; }
+  .pronta p{ color:var(--muted); margin:0 0 18px; }
+  .roda{ display:inline-block; width:16px; height:16px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:roda .8s linear infinite; vertical-align:-3px; }
+  @keyframes roda{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion:reduce){ .roda{ animation-duration:2.4s; } }
+  .a-carregar{ color:var(--muted); text-align:center; margin-top:16vh; }
+  .rodape-pagina{ margin-top:22px; text-align:center; font-size:12.5px; color:var(--muted); }
+  .rodape-pagina a{ color:var(--muted); }
+</style>
+</head>
+<body>
+<main class="criar">
+  <p class="a-carregar" id="a-carregar">A carregar…</p>
+
+  <section id="ecra-fechado" hidden>
+    <header class="criar-topo">
+      <h1>Ainda não abrimos as inscrições</h1>
+      <p>Os planos ainda não estão à venda. Volte em breve.</p>
+    </header>
+  </section>
+
+  <section id="ecra-criar" hidden>
+    <header class="criar-topo">
+      <h1>Crie a sua área de membros</h1>
+      <p>Cursos, alunos e a sua marca, num endereço seu.</p>
+    </header>
+
+    <ol class="passos" aria-label="Passos">
+      <li id="passo-1" aria-current="step"><b>1</b>Conta</li>
+      <li id="passo-2"><b>2</b>Cartão</li>
+    </ol>
+
+    <!-- O plano escolhido (vem do endereço: ?plano=&ciclo=) -->
+    <section class="card plano" aria-labelledby="plano-nome">
+      <div class="plano-cabeca">
+        <div>
+          <p class="plano-nome" id="plano-nome"></p>
+          <p class="plano-alunos" id="plano-alunos"></p>
+        </div>
+        <div class="plano-preco">
+          <div class="valor" id="plano-valor"></div>
+          <div class="por" id="plano-por"></div>
+        </div>
+      </div>
+      <div class="plano-linha" id="plano-escolhas">
+        <div class="ciclo" role="group" aria-label="Pagamento" id="ciclo">
+          <button type="button" data-ciclo="mensal" aria-pressed="true">Mensal</button>
+          <button type="button" data-ciclo="anual" aria-pressed="false">Anual</button>
+        </div>
+        <label class="sr-only" for="plano-escolher">Plano</label>
+        <select id="plano-escolher"></select>
+      </div>
+      <p class="gratis" id="plano-gratis"></p>
+    </section>
+
+    <!-- 1. A conta -->
+    <section class="card painel" id="painel-conta">
+      <h2>Os seus dados</h2>
+      <p class="sub">É com este email e esta senha que entra para gerir a área de membros.</p>
+      <form id="form-conta" novalidate>
+        <div class="aviso erro" id="conta-erro" role="alert" hidden></div>
+        <div class="field">
+          <label for="f-escola">Nome da área de membros</label>
+          <input id="f-escola" maxlength="80" autocomplete="organization" placeholder="ex: Escola de Liderança" required>
+          <p class="hint">Aparece aos alunos. Pode mudá-lo depois.</p>
+        </div>
+        <div class="field">
+          <label for="f-nome">O seu nome</label>
+          <input id="f-nome" maxlength="80" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" type="email" maxlength="254" autocomplete="email" autocapitalize="off" spellcheck="false" required>
+        </div>
+        <div class="dupla" id="campos-senha">
+          <div class="field">
+            <label for="f-senha">Senha</label>
+            <input id="f-senha" type="password" minlength="8" autocomplete="new-password" required>
+            <p class="hint">Pelo menos 8 caracteres.</p>
+          </div>
+          <div class="field">
+            <label for="f-senha2">Confirmar senha</label>
+            <input id="f-senha2" type="password" minlength="8" autocomplete="new-password" required>
+          </div>
+        </div>
+        <!-- O email já tem conta: entra-se com ela -->
+        <div id="campos-existente" hidden>
+          <div class="aviso nota">Este email já tem conta. Escreva a senha dessa conta para criar a área de membros com ela.</div>
+          <div class="field">
+            <label for="f-senha-existente">Senha da sua conta</label>
+            <input id="f-senha-existente" type="password" autocomplete="current-password">
+            <p class="hint">Não se lembra? Use «Esqueceu a password?» na página de entrada e volte aqui.</p>
+          </div>
+        </div>
+        <p class="consentimento">Ao continuar, aceita os <a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> e a <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>. A seguir pedimos o cartão: só é cobrado no fim dos 7 dias grátis, e pode cancelar antes.</p>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-conta">Continuar</button>
+      </form>
+    </section>
+
+    <!-- 2. O cartão -->
+    <section class="card painel" id="painel-cartao" hidden>
+      <h2>Falta o cartão</h2>
+      <p class="sub" id="cartao-sub"></p>
+      <div class="aviso erro" id="cartao-erro" role="alert" hidden></div>
+      <div class="cartao-resumo" id="cartao-resumo"></div>
+      <button class="btn btn-primary btn-block btn-lg" type="button" id="btn-cartao">Pôr o cartão</button>
+      <p class="seguro">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span id="cartao-seguro"></span>
+      </p>
+    </section>
+
+    <!-- Pronta -->
+    <section class="card pronta" id="painel-pronta" hidden>
+      <div class="sinal" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h2 id="pronta-titulo"></h2>
+      <p id="pronta-texto"></p>
+      <a class="btn btn-primary btn-lg" id="btn-entrar" href="/">Entrar na área de membros</a>
+    </section>
+  </section>
+
+  <p class="rodape-pagina"><a href="/termos/">Termos de uso</a> · <a href="/privacidade/">Privacidade</a></p>
+</main>
+
+<script src="../vendor/supabase.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/criar.js"></script>
+</body>
+</html>
