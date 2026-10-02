@@ -6,8 +6,7 @@
         próxima cobrança, cancelar ou retomar, e «Pagar agora» em atraso;
      2. Plano contratado — o uso («30% utilizado — 450 de 1 500 alunos») e
         a troca de plano ou de ciclo, que vale na próxima cobrança;
-     3. Cartão — marca, últimos 4 e validade; trocar abre o formulário da
-        Paystack (R 1,00 de verificação, devolvido logo);
+     3. Cartão — marca, últimos 4 e validade; trocar abre o Payflow;
      4. Dados de faturação — nome ou empresa, NUIT, morada, telefone;
      5. Faturas emitidas — período, valor, pagamento e estado.
 
@@ -21,7 +20,7 @@
 let estadoCobranca = { carregado:false, info:null, erro:"", ocupado:false, mudarPlano:false };
 
 const ESTADOS_DA_ASSINATURA = {
-  pendente:  { pill:"pill-morno",   rotulo:"Falta o cartão" },
+  pendente:  { pill:"pill-morno",   rotulo:"Falta o pagamento" },
   teste:     { pill:"pill-ativo",   rotulo:"Em teste" },
   ativa:     { pill:"pill-ativo",   rotulo:"Ativa" },
   em_atraso: { pill:"pill-quente",  rotulo:"Pagamento em atraso" },
@@ -103,8 +102,8 @@ function blocoAssinatura(i){
   if(a.estado === "isenta"){
     texto = "Esta área de membros não paga mensalidade.";
   } else if(a.estado === "pendente"){
-    texto = "A área de membros está criada, mas falta o cartão para começar os 7 dias grátis. Até lá, os alunos não vêem os cursos.";
-    accoes = `<button class="btn btn-primary" type="button" data-cobranca="cartao" ${ocupado}>Pôr o cartão</button>`;
+    texto = "A área de membros está criada. Para começar os 7 dias grátis, ponha o pagamento: cartão, ou fatura mensal (em Moçambique, por M-Pesa). Até lá, os alunos não vêem os cursos.";
+    accoes = `<button class="btn btn-primary" type="button" data-cobranca="cartao" ${ocupado}>Pôr o pagamento</button>`;
   } else if(a.estado === "cancelada"){
     texto = "A assinatura terminou. Os alunos não vêem os cursos; a equipa continua a entrar. Fale connosco para a reativar.";
   } else if(a.cancelaNoFim){
@@ -112,9 +111,9 @@ function blocoAssinatura(i){
     accoes = `<button class="btn btn-secondary" type="button" data-cobranca="retomar" ${ocupado}>Retomar a assinatura</button>`;
   } else {
     if(a.estado === "teste") texto = `Os dias grátis vão até ${dataCobranca(a.testeAte)}. A primeira cobrança, de ${formatarPreco(preco, simbolo)}, é nesse dia.`;
-    else if(a.estado === "em_atraso") texto = `A última cobrança falhou${a.ultimoErro ? " (" + textoSeguro(a.ultimoErro).replace(/\.$/, "").replace(/^./, l => l.toLowerCase()) + ")" : ""}. Tentamos de novo uma vez por dia. Passados 3 dias, os alunos deixam de ver os cursos até o pagamento entrar.`;
+    else if(a.estado === "em_atraso") texto = `A última cobrança falhou${a.ultimoErro ? " (" + textoSeguro(a.ultimoErro).replace(/\.$/, "").replace(/^./, l => l.toLowerCase()) + ")" : ""}. Pague a fatura em aberto para não perder o acesso: passados 7 dias, os alunos deixam de ver os cursos até o pagamento entrar.`;
     else texto = `Próxima cobrança: ${formatarPreco(preco, simbolo)} a ${dataCobranca(fim)}.`;
-    accoes = (a.estado === "em_atraso" ? `<button class="btn btn-primary" type="button" data-cobranca="pagar" ${ocupado}>${estadoCobranca.ocupado === "pagar" ? "A cobrar…" : "Pagar agora"}</button>` : "")
+    accoes = (a.estado === "em_atraso" ? `<button class="btn btn-primary" type="button" data-cobranca="pagar" ${ocupado}>Pagar agora</button>` : "")
            + `<button class="btn btn-perigo-suave" type="button" data-cobranca="cancelar" ${ocupado}>Cancelar assinatura</button>`;
   }
   return `
@@ -180,11 +179,11 @@ function blocoCartao(i){
     <div class="card painel cobranca-bloco" id="cobranca-cartao">
       <div class="cobranca-cabeca">
         <h3>Cartão</h3>
-        ${a.estado === "cancelada" ? "" : `<button class="btn btn-secondary btn-sm" type="button" data-cobranca="cartao" ${ocupado}>${estadoCobranca.ocupado === "cartao" ? "A abrir…" : c ? "Alterar" : "Pôr o cartão"}</button>`}
+        ${a.estado === "cancelada" ? "" : `<button class="btn btn-secondary btn-sm" type="button" data-cobranca="cartao" ${ocupado}>${c ? "Alterar" : "Pôr o pagamento"}</button>`}
       </div>
       ${c ? `<p class="cobranca-cartao-linha"><strong>${textoSeguro(marca)} •••• ${textoSeguro(c.ultimos4 || "")}</strong>${c.expira ? `<span class="sub-celula">Validade ${textoSeguro(c.expira)}</span>` : ""}</p>`
           : `<p class="hint">Ainda não há cartão.</p>`}
-      <p class="hint">A cobrança é em rand sul-africano (ZAR), pela Paystack. O número do cartão fica com ela; nós só vemos os últimos 4 dígitos.</p>
+      <p class="hint">${a.metodo === "fatura" ? "Paga por fatura mensal. Pode passar a cartão quando quiser." : "A cobrança é feita pelo Payflow, em rand sul-africano (ZAR). O número do cartão fica com ele; aqui só aparecem os últimos 4 dígitos."}</p>
     </div>`;
 }
 
@@ -233,7 +232,9 @@ function blocoFaturas(i){
                 <td data-rotulo="Período">${dataCurtaCobranca(f.inicio)} – ${dataCurtaCobranca(f.fim)}</td>
                 <td data-rotulo="Plano">${textoSeguro(p ? p.nome : f.plano)} · ${f.ciclo === "anual" ? "anual" : "mensal"}</td>
                 <td data-rotulo="Valor (${textoSeguro(simbolo)})" class="num">${valor(f.valor)}</td>
-                <td data-rotulo="Pagamento">${f.pagoEm ? dataCurtaCobranca(f.pagoEm) : f.motivo ? `<span class="sub-celula">${textoSeguro(f.motivo)}</span>` : "—"}</td>
+                <td data-rotulo="Pagamento">${f.pagoEm ? dataCurtaCobranca(f.pagoEm)
+                  : f.estado !== "reembolsada" && /^https:\/\//.test(f.link || "") ? `<a class="btn btn-secondary btn-sm" href="${textoSeguro(f.link)}" target="_blank" rel="noopener">Pagar</a>`
+                  : f.motivo ? `<span class="sub-celula">${textoSeguro(f.motivo)}</span>` : "—"}</td>
                 <td data-rotulo="Estado"><span class="pill ${e.pill}">${e.rotulo}</span></td>
               </tr>`;
             }).join("")}</tbody>
@@ -280,18 +281,40 @@ async function comCobrancaOcupada(qual, trabalho, recarregar = true){
   desenharCobranca();
 }
 
+/* O que se paga, muda ou cancela faz-se no Payflow (decisão do Shelton a
+   02/10): a Academia só abre os links que ele mandou com os eventos da
+   assinatura (academia-receber). Na demonstração, os botões mexem na conta
+   que vive no browser, para se ver o caminho inteiro. */
+const SEM_LINK = "O link do Payflow ainda não chegou: aparece aqui, e por email, assim que a sua assinatura estiver criada.";
+function linkDoPayflow(qual){
+  const i = estadoCobranca.info || {}, l = ((i.assinatura || {}).links) || {};
+  if(qual === "fatura"){
+    const f = (i.faturas || []).find(x => x.estado === "pendente" || x.estado === "falhou");
+    if(f && f.link) return f.link;
+    qual = "pagamento";
+  }
+  return l[qual] || (qual === "cartao" ? l.pagamento : null) || null;
+}
+function abrirNoPayflow(qual){
+  const url = linkDoPayflow(qual);
+  if(url && /^https:\/\//.test(url)) window.open(url, "_blank", "noopener");
+  else mostrarToast(SEM_LINK);
+}
+
 function accaoCobranca(accao){
   const demo = modoDemonstracao();
+  if(!demo){
+    const destino = { "mudar-plano":"gerir", cancelar:"gerir", retomar:"gerir", pagar:"fatura", cartao:"cartao" }[accao];
+    if(destino){ abrirNoPayflow(destino); return; }
+  }
   if(accao === "mudar-plano"){ estadoCobranca.mudarPlano = true; desenharCobranca(); return; }
   if(accao === "fechar-plano"){ estadoCobranca.mudarPlano = false; desenharCobranca(); return; }
   if(accao === "guardar-plano"){
     const plano = document.getElementById("cobranca-plano").value, ciclo = document.getElementById("cobranca-ciclo").value;
     comCobrancaOcupada("plano", async () => {
-      if(demo){
-        const p = planoDaCobranca(plano);
-        if(precoDoCiclo(p, ciclo) == null) throw new Error("Esse plano ainda não está à venda.");
-        demoMudar(c => { c.assinatura.plano = plano; c.assinatura.ciclo = ciclo; c.limite = p.alunosMax; });
-      } else await API.mudarPlano(plano, ciclo);
+      const p = planoDaCobranca(plano);
+      if(precoDoCiclo(p, ciclo) == null) throw new Error("Esse plano ainda não está à venda.");
+      demoMudar(c => { c.assinatura.plano = plano; c.assinatura.ciclo = ciclo; c.limite = p.alunosMax; });
       estadoCobranca.mudarPlano = false;
       mostrarToast("Plano mudado. Vale a partir da próxima cobrança.");
     });
@@ -316,8 +339,7 @@ function accaoCobranca(accao){
         : `Tudo continua a funcionar até ${dataCobranca(fim)}, que já está pago. Depois disso não há mais cobranças, e os alunos deixam de ver os cursos.`,
       textoConfirmar: "Cancelar assinatura",
       aoConfirmar: () => comCobrancaOcupada("cancelar", async () => {
-        if(demo) demoMudar(c => { c.assinatura.cancelaNoFim = true; });
-        else await API.cancelarAssinatura(true);
+        demoMudar(c => { c.assinatura.cancelaNoFim = true; });
         mostrarToast("Assinatura cancelada no fim do período.");
       })
     });
@@ -325,82 +347,30 @@ function accaoCobranca(accao){
   }
   if(accao === "retomar"){
     comCobrancaOcupada("retomar", async () => {
-      if(demo) demoMudar(c => { c.assinatura.cancelaNoFim = false; });
-      else await API.cancelarAssinatura(false);
+      demoMudar(c => { c.assinatura.cancelaNoFim = false; });
       mostrarToast("Assinatura retomada.");
     });
     return;
   }
   if(accao === "pagar"){
     comCobrancaOcupada("pagar", async () => {
-      let r;
-      if(demo){ demoMudar(c => { c.assinatura.estado = "ativa"; c.assinatura.ultimoErro = null; c.contaEmDia = true;
+      demoMudar(c => { c.assinatura.estado = "ativa"; c.assinatura.ultimoErro = null; c.contaEmDia = true;
         c.assinatura.pagoAte = new Date(Date.now() + 30 * 864e5).toISOString(); if(c.faturas[0]){ c.faturas[0].estado = "paga"; c.faturas[0].pagoEm = new Date().toISOString(); c.faturas[0].motivo = null; } });
-        r = { estado:"paga" }; }
-      else r = await API.pagarAgora();
-      mostrarToast(r && r.estado === "paga" ? "Pagamento feito. Os alunos voltam a ver os cursos."
-        : r && r.estado === "pendente" ? "O banco ainda está a confirmar. Veja de novo daqui a pouco."
-        : r && r.estado === "falhou" ? "O cartão foi recusado outra vez. Experimente outro cartão."
-        : "Não havia nada para cobrar agora.");
+      mostrarToast("Pagamento feito. Os alunos voltam a ver os cursos.");
     });
     return;
   }
   if(accao === "cartao"){
     comCobrancaOcupada("cartao", async () => {
-      let r;
-      if(demo){
-        demoMudar(c => {
-          c.assinatura.cartao = { marca:"mastercard", ultimos4:"4444", expira:"11/2030" };
-          if(c.assinatura.estado === "pendente"){ c.assinatura.estado = "teste"; c.assinatura.testeAte = new Date(Date.now() + 7 * 864e5).toISOString(); c.contaEmDia = true; }
-        });
-        r = { ok:true };
-      } else {
-        const ini = await API.cartaoIniciar();
-        const f = await formularioDoCartao(ini.access_code, ini.referencia);
-        if(!f.ok){
-          if(f.motivo === "desistiu") return;
-          throw new Error(f.motivo === "sem-script" ? "Não conseguimos abrir o formulário do cartão. Verifique a ligação ou o bloqueador de anúncios." : "O formulário do cartão deu um erro.");
-        }
-        r = await API.cartaoConfirmar(f.referencia);
-      }
-      if(r && r.cobranca && r.cobranca.estado === "falhou") mostrarToast("Cartão guardado, mas a cobrança em atraso foi recusada.");
-      else mostrarToast("Cartão guardado.");
+      demoMudar(c => {
+        c.assinatura.cartao = { marca:"mastercard", ultimos4:"4444", expira:"11/2030" };
+        if(c.assinatura.estado === "pendente"){ c.assinatura.estado = "teste"; c.assinatura.testeAte = new Date(Date.now() + 7 * 864e5).toISOString(); c.contaEmDia = true; }
+      });
+      mostrarToast("Cartão guardado.");
     });
   }
 }
 const val = id => (document.getElementById(id) || {}).value || "";
-
-/* O formulário da Paystack, como no Payflow e no /criar: o número do cartão
-   nunca passa pela nossa página. Responde uma vez só. */
-let paystackDaCobranca = null;
-function carregarPaystackDaCobranca(){
-  if(window.PaystackPop) return Promise.resolve(window.PaystackPop);
-  if(paystackDaCobranca) return paystackDaCobranca;
-  paystackDaCobranca = new Promise((ok, nao) => {
-    const el = document.createElement("script");
-    el.src = "https://js.paystack.co/v2/inline.js"; el.async = true;
-    const prazo = setTimeout(() => nao(new Error("demorou")), 8000);
-    el.onload = () => { clearTimeout(prazo); window.PaystackPop ? ok(window.PaystackPop) : nao(new Error("sem PaystackPop")); };
-    el.onerror = () => { clearTimeout(prazo); nao(new Error("não carregou")); };
-    document.head.appendChild(el);
-  }).catch(e => { paystackDaCobranca = null; throw e; });
-  return paystackDaCobranca;
-}
-async function formularioDoCartao(accessCode, referencia){
-  let Pop;
-  try { Pop = await carregarPaystackDaCobranca(); } catch(e){ return { ok:false, motivo:"sem-script" }; }
-  return new Promise(resolve => {
-    let respondeu = false;
-    const uma = r => { if(!respondeu){ respondeu = true; resolve(r); } };
-    try {
-      new Pop().resumeTransaction(accessCode, {
-        onSuccess: t => uma({ ok:true, referencia:(t && t.reference) || referencia }),
-        onCancel: () => uma({ ok:false, motivo:"desistiu" }),
-        onError: () => uma({ ok:false, motivo:"erro" })
-      });
-    } catch(e){ uma({ ok:false, motivo:"sem-script" }); }
-  });
-}
 
 /* ---------------- O aviso da conta ----------------
    Em cima de cada ecrã: aos alunos, quando a escola não tem a conta em dia
@@ -415,7 +385,7 @@ function avisoDaConta(){
   if(!conta || conta.estado === "isenta") return null;
   const equipa = papelEfetivo() === "administrador";
   if(!equipa) return emDia ? null : { tom:"aviso-conta-aluno", texto:"Os cursos estão temporariamente indisponíveis. A escola já foi avisada; volte a tentar mais tarde." };
-  if(conta.estado === "pendente") return { tom:"aviso-conta-equipa", texto:"Falta o cartão para começar os dias grátis. Até lá, os alunos não vêem os cursos.", ir:"Pôr o cartão" };
+  if(conta.estado === "pendente") return { tom:"aviso-conta-equipa", texto:"Falta pôr o pagamento para começar os dias grátis. Até lá, os alunos não vêem os cursos.", ir:"Pôr o pagamento" };
   if(conta.estado === "em_atraso") return { tom:"aviso-conta-equipa", texto: emDia ? "A última cobrança falhou. Trate do pagamento para os alunos não perderem o acesso." : "A conta não está em dia: os alunos não vêem os cursos.", ir:"Ver cobrança" };
   if(!emDia) return { tom:"aviso-conta-equipa", texto:"A assinatura terminou: os alunos não vêem os cursos.", ir:"Ver cobrança" };
   return null;

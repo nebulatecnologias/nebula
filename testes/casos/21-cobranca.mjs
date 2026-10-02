@@ -82,7 +82,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   /* 6. Pendente: falta o cartão. */
   await estadoDaConta(pg, 'pendente');
   await pg.waitForTimeout(300);
-  igual(await texto(pg, '#cobranca-assinatura .pill'), 'Falta o cartão', 'Sem cartão, a assinatura diz que falta');
+  igual(await texto(pg, '#cobranca-assinatura .pill'), 'Falta o pagamento', 'Sem pagamento posto, a assinatura diz que falta');
   await pg.click('#cobranca-assinatura [data-cobranca="cartao"]');
   await pg.waitForTimeout(300);
   igual(await texto(pg, '#cobranca-assinatura .pill'), 'Em teste', 'Com o cartão, começam os dias grátis');
@@ -114,5 +114,25 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.waitForTimeout(300);
   const largura = await pg.evaluate(() => document.documentElement.scrollWidth);
   verdade(largura <= 375, `No telemóvel não há deslocamento para o lado (${largura}px)`);
+  await pg.close();
+
+  /* 10. Fora da demonstração, os botões abrem o Payflow: o link da fatura em
+     aberto, o do cartão (ou o de pagamento), e sem link diz-se que ainda vem. */
+  pg = await entrarDemo(navegador, base, ADMIN);
+  await estadoDaConta(pg, 'em_atraso');
+  await pg.waitForTimeout(250);
+  const links = await pg.evaluate(() => {
+    estadoCobranca.info.assinatura.links = { pagamento:'https://payflow.exemplo/pagar', gerir:'https://payflow.exemplo/gerir' };
+    estadoCobranca.info.faturas[0].link = 'https://payflow.exemplo/f3';
+    const r = { fatura: linkDoPayflow('fatura'), cartao: linkDoPayflow('cartao'), gerir: linkDoPayflow('gerir') };
+    estadoCobranca.info.assinatura.links = {};
+    estadoCobranca.info.faturas.forEach(f => { f.link = null; });
+    r.semNada = linkDoPayflow('fatura');
+    return r;
+  });
+  igual(links.fatura, 'https://payflow.exemplo/f3', '«Pagar agora» abre a fatura em aberto no Payflow');
+  igual(links.cartao, 'https://payflow.exemplo/pagar', 'Trocar o cartão, sem link próprio, abre o de pagamento');
+  igual(links.gerir, 'https://payflow.exemplo/gerir', 'Mudar de plano e cancelar abrem a gestão no Payflow');
+  igual(links.semNada, null, 'Sem links ainda, não há para onde ir (e a página diz que o link vem)');
   await pg.close();
 }
