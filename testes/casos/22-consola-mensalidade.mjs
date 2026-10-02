@@ -35,6 +35,13 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   igual(await pg.inputValue('#mensalidade tr[data-plano="essencial"] [data-moeda="MZN"][data-preco="mensal"]'), '3500', 'tanto em meticais');
   igual(await pg.inputValue('#mensalidade tr[data-plano="essencial"] [data-moeda="MZN"][data-preco="anual"]'), '', 'e um preço deixado vazio fica sem preço');
 
+  /* O rand pelo câmbio (1 R = 4,5 MT): o metical preenche o rand vazio. */
+  contem(await m(), '1 R = 4,5 MT', 'A consola diz o câmbio');
+  await pg.fill('#mensalidade tr[data-plano="profissional"] [data-moeda="MZN"][data-preco="mensal"]', '1 350');
+  await pg.click('#mensalidade [data-guardar-plano="profissional"]');
+  await pg.waitForTimeout(150);
+  igual(await pg.inputValue('#mensalidade tr[data-plano="profissional"] [data-moeda="ZAR"][data-preco="mensal"]'), '300', 'MZ 1 350 dá R 300,00 pelo câmbio');
+
   /* O ambiente: passar a produção pede confirmação. */
   igual(await pg.textContent('#pill-ambiente'), 'Modo de teste', 'A Paystack começa em teste');
   await pg.selectOption('#ambiente-paystack', 'producao');

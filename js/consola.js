@@ -105,7 +105,7 @@ function fonteDemo(){
       { id:"profissional", nome:"Profissional", alunosMax:1500, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } },
       { id:"escala", nome:"Premium", alunosMax:5000, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } }
     ],
-    definicoes: { ambiente:"teste", diasTeste:7, diasTolerancia:3 },
+    definicoes: { ambiente:"teste", diasTeste:7, diasTolerancia:3, cambioZarMzn:4.5 },
     contas: { "org-kingdom": { estado:"isenta", plano:"escala", ciclo:"mensal" }, "org-teste": { estado:"isenta", plano:"escala", ciclo:"mensal" } }
   };
   const pausa = () => new Promise(r => setTimeout(r, 30));
@@ -238,6 +238,8 @@ const Consola = {
      Os preços de cada plano (ZAR), o ambiente da Paystack e, em cada escola,
      o estado da conta. O dinheiro aqui é o que a base cobra: o que se escreve
      guarda-se como está, com duas casas. */
+  cambio(){ const v = Number(((this.cobranca || {}).definicoes || {}).cambioZarMzn); return v > 0 ? v : null; },
+
   contaDe(id){ return ((this.cobranca && this.cobranca.escolas) || []).find(x => x.id === id) || null; },
 
   mensalidadeHTML(){
@@ -251,7 +253,7 @@ const Consola = {
       <div class="escola-cabeca">
         <div>
           <h2>Mensalidade das escolas</h2>
-          <div class="meta"><span>As escolas de Moçambique pagam em meticais, as da África do Sul em rand. Sem preço, o plano não se vende nessa moeda e nesse ciclo.</span></div>
+          <div class="meta"><span>As escolas de Moçambique pagam em meticais, as da África do Sul em rand. Sem preço, o plano não se vende nessa moeda e nesse ciclo.${this.cambio() ? ` Rand pelo câmbio 1 R = ${esc(String(this.cambio()).replace(".", ","))} MT: o rand que ficar vazio calcula-se ao guardar.` : ""}</span></div>
         </div>
         <div class="escola-accoes">
           <label class="sr-only" for="ambiente-paystack">Ambiente da Paystack</label>
@@ -294,6 +296,10 @@ const Consola = {
       if(!t) return null; const v = Number(t); if(!(v > 0)) throw new Error("Escreva o preço só com números, por exemplo 399,00."); return Math.round(v * 100) / 100; };
     try {
       const precos = { MZN:{ mensal:ler("MZN", "mensal"), anual:ler("MZN", "anual") }, ZAR:{ mensal:ler("ZAR", "mensal"), anual:ler("ZAR", "anual") } };
+      /* «Para rand faz-se o câmbio» (Shelton, 02/10): o rand vazio sai do metical. */
+      const cambio = this.cambio();
+      if(cambio) for(const c of ["mensal", "anual"])
+        if(precos.ZAR[c] == null && precos.MZN[c] != null) precos.ZAR[c] = Math.round(precos.MZN[c] / cambio * 100) / 100;
       await this.fonte.guardarPlano(id, precos);
       this.aviso("Preço guardado. Vale para as escolas novas e para as próximas cobranças.", "ok");
     } catch(err){ this.aviso(err.message, "erro"); }
