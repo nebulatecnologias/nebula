@@ -859,7 +859,7 @@ async function abrirVerComoOrganizacao(){
   let escolas = [];
   try {
     escolas = modoDemonstracao()
-      ? [{ slug:"kingdom", nome:"Kingdom Company", nomeEscola:"Kingdom Academy", estado:"ativa" }, { slug:"teste", nome:"Escola de Teste", estado:"ativa" }]
+      ? ESCOLAS_DEMO
       : await API.escolasDaPlataforma();
   } catch(e){ overlay.querySelector(".ver-como-lista").innerHTML = `<p class="hint">Não foi possível carregar as escolas.</p>`; return; }
   overlay.querySelector(".ver-como-lista").innerHTML = escolas.length ? escolas.map(e => `

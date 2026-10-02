@@ -48,6 +48,12 @@ const NAV_ALUNO = [
   ]}
 ];
 
+/* As escolas que o «Ver como organização» mostra na demonstração. */
+const ESCOLAS_DEMO = [
+  { slug:"kingdom", nome:"Kingdom Company", nomeEscola:"Kingdom Academy", estado:"ativa" },
+  { slug:"teste", nome:"Escola de Teste", estado:"ativa" }
+];
+
 const NAV_ADMIN = [
   { grupo:"Geral", itens:[
     { view:"admin-visao", label:"Visão geral", icon:ICONS.home }
