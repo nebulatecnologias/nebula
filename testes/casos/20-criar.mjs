@@ -26,7 +26,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.click('#pais [data-moeda="MZN"]');
   igual(await txt(pg, '#plano-valor'), 'MZ 3 500,00', 'Moçambique mostra o preço em meticais, com o símbolo da tesouraria');
   verdade(new URL(pg.url()).search.includes('moeda=MZN'), 'e o endereço guarda a moeda');
-  igual(await pg.locator('#plano-escolher option').count(), 2, 'Em meticais, só os planos com preço em meticais (o Escala não tem)');
+  igual(await pg.locator('#plano-escolher option').count(), 2, 'Em meticais, só os planos com preço em meticais (o Premium não tem)');
   await pg.click('#pais [data-moeda="ZAR"]');
   await pg.selectOption('#plano-escolher', 'escala');
   verdade(await pg.isHidden('#ciclo'), 'Um plano só com preço mensal não mostra a troca de ciclo');

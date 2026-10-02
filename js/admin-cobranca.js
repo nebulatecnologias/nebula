@@ -49,7 +49,7 @@ function cobrancaDaDemonstracao(){
       planos: [
         { id:"essencial", nome:"Essencial", alunosMax:500, aVenda:true, precos:{ MZN:{ mensal:3500, anual:35000, simbolo:"MZ" }, ZAR:{ mensal:199, anual:1990, simbolo:"R" } } },
         { id:"profissional", nome:"Profissional", alunosMax:1500, aVenda:true, precos:{ MZN:{ mensal:7000, anual:70000, simbolo:"MZ" }, ZAR:{ mensal:399, anual:3990, simbolo:"R" } } },
-        { id:"escala", nome:"Escala", alunosMax:5000, aVenda:true, precos:{ MZN:{ mensal:14000, anual:140000, simbolo:"MZ" }, ZAR:{ mensal:799, anual:7990, simbolo:"R" } } }
+        { id:"escala", nome:"Premium", alunosMax:5000, aVenda:true, precos:{ MZN:{ mensal:14000, anual:140000, simbolo:"MZ" }, ZAR:{ mensal:799, anual:7990, simbolo:"R" } } }
       ],
       faturas: estado === "pendente" ? [] : [
         { id:"f3", inicio:dia(-9), fim:dia(21), valor:399, estado: estado === "em_atraso" ? "falhou" : "paga", plano:"profissional", ciclo:"mensal", pagoEm: estado === "em_atraso" ? null : dia(-9), motivo: estado === "em_atraso" ? "O cartão não tinha saldo suficiente." : null },

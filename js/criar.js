@@ -81,7 +81,7 @@ function fonteDemo(){
       precos:{ MZN:{ mensal:3500, anual:35000, simbolo:"MZ" }, ZAR:{ mensal:199, anual:1990, simbolo:"R" } } },
     { id:"profissional", nome:"Profissional", alunosMax:1500, aVenda:true,
       precos:{ MZN:{ mensal:7000, anual:70000, simbolo:"MZ" }, ZAR:{ mensal:399, anual:3990, simbolo:"R" } } },
-    { id:"escala", nome:"Escala", alunosMax:5000, aVenda:true,
+    { id:"escala", nome:"Premium", alunosMax:5000, aVenda:true,
       precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:799, anual:null, simbolo:"R" } } },
   ];
   let contaExiste = q.has("existe");
@@ -122,7 +122,11 @@ const simboloDe = p => precosDe(p).simbolo || E.moeda;
 const vendeEm = (p, moeda) => precoDe(p, "mensal", moeda) != null || precoDe(p, "anual", moeda) != null;
 const moedasAVenda = () => Object.keys(MOEDAS).filter(m => E.planos.some(p => vendeEm(p, m)));
 
+/* O site de vendas pode dizer o plano pelo nome: «premium» é o «escala». */
+const NOMES_DOS_PLANOS = { premium:"escala" };
+
 function escolherPlano(id, ciclo, moeda){
+  id = NOMES_DOS_PLANOS[String(id || "").toLowerCase()] || id;
   const moedas = moedasAVenda();
   E.moeda = moedas.includes(moeda) ? moeda : moedas.includes(E.moeda) ? E.moeda : moedas[0];
   const aVenda = E.planos.filter(p => vendeEm(p, E.moeda));

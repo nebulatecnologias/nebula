@@ -44,7 +44,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   contem(await texto(pg, '#cobranca-novo-preco'), 'R 7 990,00 por ano, a partir da próxima cobrança', 'Antes de guardar, diz o preço novo e quando vale');
   await pg.click('[data-cobranca="guardar-plano"]');
   await pg.waitForTimeout(250);
-  contem(await texto(pg, '#cobranca-plano-bloco'), 'Escala · anual', 'Guardado, o plano muda');
+  contem(await texto(pg, '#cobranca-plano-bloco'), 'Premium · anual', 'Guardado, o plano muda');
   contem(await texto(pg, '#cobranca-plano-bloco'), '12% utilizado — 600 de 5 000 alunos', 'e o uso conta com o limite novo');
 
   /* 3. Faturação guardada. */

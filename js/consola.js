@@ -103,7 +103,7 @@ function fonteDemo(){
     planos: [
       { id:"essencial", nome:"Essencial", alunosMax:500, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } },
       { id:"profissional", nome:"Profissional", alunosMax:1500, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } },
-      { id:"escala", nome:"Escala", alunosMax:5000, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } }
+      { id:"escala", nome:"Premium", alunosMax:5000, precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } }
     ],
     definicoes: { ambiente:"teste", diasTeste:7, diasTolerancia:3 },
     contas: { "org-kingdom": { estado:"isenta", plano:"escala", ciclo:"mensal" }, "org-teste": { estado:"isenta", plano:"escala", ciclo:"mensal" } }
