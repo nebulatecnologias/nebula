@@ -128,8 +128,8 @@ function fonteReal(){
     async sair(){ await c.auth.signOut(); },
     souAdmin: () => rpc("consola_sou_admin"),
     escolas: () => rpc("consola_organizacoes"),
-    /* Faturas, evolução e eventos: só depois de ligada a consola_painel. Até
-       lá a consola diz que ainda não os tem, em vez de inventar zeros. */
+    /* Faturas, evolução, alunos por curso e eventos (academia.consola_painel).
+       Se a função falhar, a consola diz que não os tem, em vez de inventar zeros. */
     async painel(){
       try { const p = await rpc("consola_painel"); return Object.assign({ ligado:true, faturas:[], eventos:[], historico:{}, detalhe:{} }, p || {}); }
       catch(e){ return { ligado:false, faturas:[], eventos:[], historico:{}, detalhe:{} }; }
@@ -192,7 +192,7 @@ function fonteDemo(){
     { slug:"horizonte", nome:"Instituto Horizonte de Liderança", criado:330, alunos:1184, cursos:9, dominios:["aulas.horizonte.exemplo"],
       conta:{ estado:"ativa", plano:"profissional", moeda:"MZN", metodo:"cartao" }, equipa:2 },
     { slug:"mare-de-fe", nome:"Escola Maré de Fé", criado:300, alunos:463, cursos:4,
-      conta:{ estado:"ativa", plano:"essencial", moeda:"MZN", metodo:"mpesa" } },
+      conta:{ estado:"ativa", plano:"essencial", moeda:"MZN", metodo:"fatura" } },
     { slug:"ponte-viva", nome:"Academia Ponte Viva", criado:275, alunos:820, cursos:7,
       conta:{ estado:"ativa", plano:"profissional", moeda:"ZAR", metodo:"cartao" }, equipa:2 },
     { slug:"raizes", nome:"Escola Raízes", criado:250, alunos:233, cursos:3,
@@ -200,7 +200,7 @@ function fonteDemo(){
     { slug:"aurora", nome:"Centro Bíblico Aurora", criado:320, alunos:2940, cursos:14, dominios:["escola.aurora.exemplo"],
       conta:{ estado:"ativa", plano:"escala", moeda:"ZAR", metodo:"cartao" }, equipa:3 },
     { slug:"acorde", nome:"Escola de Música Acorde", criado:6, alunos:38, cursos:2,
-      conta:{ estado:"teste", plano:"essencial", moeda:"MZN", metodo:"mpesa", testeAte:1 } },
+      conta:{ estado:"teste", plano:"essencial", moeda:"MZN", metodo:"fatura", testeAte:1 } },
     { slug:"cume", nome:"Formação Cume", criado:190, alunos:145, cursos:2, queda:true,
       conta:{ estado:"em_atraso", plano:"essencial", moeda:"ZAR", metodo:"cartao", pagoAte:-6, tentativas:3, ultimoErro:"O banco recusou o pagamento." } },
     { slug:"nova-alianca", nome:"Escola Nova Aliança", criado:220, alunos:980, cursos:6,
@@ -280,7 +280,7 @@ function fonteDemo(){
     const daOrg = faturas.filter(f => f.organizacao === "org-" + s.slug);
     if(c.estado === "em_atraso"){
       const ultima = daOrg[daOrg.length - 1];
-      ultima.estado = c.metodo === "mpesa" ? "por_pagar" : "falhada";
+      ultima.estado = c.metodo === "fatura" ? "por_pagar" : "falhada";
       ultima.erro = c.ultimoErro;
       ultima.link = "https://payflow.kingdomcompny.com/pagar/demo-" + s.slug;
     }
@@ -396,9 +396,10 @@ const FATURA = {
   paga:      { rotulo:"Paga",      pill:"pill-ativo" },
   por_pagar: { rotulo:"Por pagar", pill:"pill-teste" },
   falhada:   { rotulo:"Falhou",    pill:"pill-quente" },
-  anulada:   { rotulo:"Anulada",   pill:"pill-inativo" }
+  anulada:   { rotulo:"Anulada",   pill:"pill-inativo" },
+  reembolsada: { rotulo:"Reembolsada", pill:"pill-inativo" }
 };
-const METODO = { cartao:"Cartão", mpesa:"M-Pesa", emola:"e-Mola" };
+const METODO = { cartao:"Cartão", fatura:"Fatura", mpesa:"M-Pesa", emola:"e-Mola" };
 
 /* ---------------- A página ---------------- */
 const Consola = {
@@ -520,7 +521,7 @@ const Consola = {
     if(a.estado === "teste" && a.testeAte){
       const d = diasEntre(new Date(), a.testeAte);
       if(d <= 3) r.push({ tom:"tempo", peso:50, icone:ICONE.relogio, titulo:nome,
-        texto:`O teste acaba ${relativo(a.testeAte)}: a primeira cobrança é a ${dataCurta(a.testeAte)}${a.metodo ? `, por ${METODO[a.metodo] || a.metodo}` : ""}.`, rota:vai("pagamento"), rotulo:"Ver" });
+        texto:`O teste acaba ${relativo(a.testeAte)}: a primeira cobrança é a ${dataCurta(a.testeAte)}${a.metodo ? `, por ${(METODO[a.metodo] || a.metodo).toLowerCase()}` : ""}.`, rota:vai("pagamento"), rotulo:"Ver" });
     }
     const max = this.alunosMax(e);
     if(max && !e.kingdom && a.estado !== "isenta"){
@@ -662,6 +663,7 @@ const Consola = {
             </div>
           </div>
           ${this.graficoHTML()}
+          ${this.ui.serie === "alunos" && this.notaEstimada() ? `<p class="c-nota">${esc(this.notaEstimada())}</p>` : ""}
         </section>
         <section class="card c-painel" aria-labelledby="t-saude">
           <div class="c-seccao"><div><h2 id="t-saude">Saúde da carteira</h2><span class="sub">Das organizações que pagam ou vão pagar</span></div></div>
@@ -724,6 +726,15 @@ const Consola = {
   },
   /* A barra em destaque: a escolhida, ou o último mês fechado (o mês em
      curso ainda vai a meio, e compará-lo enganava). */
+  /* Os meses antes da primeira fotografia contam-se pela data de entrada dos
+     alunos activos hoje (quem saiu entretanto não entra na conta). */
+  notaEstimada(e){
+    const lista = e ? [this.historicoDe(e)] : Object.values(this.painel.historico || {});
+    const est = lista.flat().filter(x => x && x.estimado && x.alunos != null).map(x => x.mes).sort();
+    if(!est.length) return "";
+    const ate = est[est.length - 1];
+    return `Até ${nomeDoMes(ate)}, contado pela data de entrada dos alunos activos hoje; depois, pelo número no fim de cada mês.`;
+  },
   barraAtiva(s){
     if(this.ui.barra != null && this.ui.barra < s.length) return this.ui.barra;
     return this.ui.serie === "organizacoes" ? s.length - 1 : Math.max(0, s.length - 2);
@@ -1043,6 +1054,7 @@ const Consola = {
             <div class="c-barras" style="--n:${h.length}"><div class="c-linhas" aria-hidden="true"><i></i><i></i><i></i></div>
             ${h.map((x, i) => `<div class="c-barra${i === h.length - 1 ? " ativa" : ""}" role="img" aria-label="${esc(nomeDoMes(x.mes))}: ${contagem(x.alunos)} alunos" style="--h:${(x.alunos / max * 100).toFixed(1)}%"><span class="c-barra-fill"></span><span class="c-barra-mes" aria-hidden="true">${esc(nomeDoMes(x.mes, true))}</span></div>`).join("")}</div></div>`
           : `<p class="c-vazio">${this.painel.ligado ? "Ainda não há meses suficientes para mostrar a evolução." : "A evolução aparece quando a consola guardar o histórico dos alunos."}</p>`}
+          ${h.length > 1 && this.notaEstimada(e) ? `<p class="c-nota">${esc(this.notaEstimada(e))}</p>` : ""}
         </section>
         <section class="card c-painel">
           <div class="c-seccao"><h2>Precisa de atenção</h2></div>
