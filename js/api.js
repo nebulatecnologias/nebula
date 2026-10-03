@@ -347,6 +347,25 @@ const API = {
     const { error } = await this.cliente.rpc("guardar_faturacao", { p_dados: dados });
     if(error) throw new Error(error.message);
   },
+  /* Integrações › Payflow da escola (02/10/2026): o segredo da integração no
+     Payflow dela (fica cifrado no Vault) e que produto abre que cursos. */
+  async integracoesDaEscola(){
+    const { data, error } = await this.cliente.rpc("integracoes_da_escola");
+    if(error) throw new Error(error.message);
+    return data;
+  },
+  async guardarPayflowEscola(segredo){
+    const { error } = await this.cliente.rpc("integracao_payflow_guardar", { p_segredo: segredo || "" });
+    if(error) throw new Error(error.message);
+  },
+  async guardarProdutoExterno(produto, nome, cursos){
+    const { error } = await this.cliente.rpc("produto_externo_guardar", { p_produto: produto, p_nome: nome || null, p_cursos: cursos });
+    if(error) throw new Error(error.message);
+  },
+  async tirarProdutoExterno(produto){
+    const { error } = await this.cliente.rpc("produto_externo_tirar", { p_produto: produto });
+    if(error) throw new Error(error.message);
+  },
   /* Os acessos da própria pessoa. Quem paga faz isso NOUTRO separador -- o
      checkout abre-se ao lado -- e por isso a Academia fica parada num ecrã
      que já não corresponde ao que ela tem. Isto trata do caso em que o

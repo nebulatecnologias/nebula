@@ -83,6 +83,7 @@ const ICONE = {
   orgs: I('<path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-6h6v6"/><path d="M4 20h16"/>'),
   pagamentos: I('<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h4"/>'),
   planos: I('<path d="M4 7h16M4 12h16M4 17h10"/>'),
+  integracoes: I('<path d="M9 2v6M15 2v6M6 8h12l-1 5a5 5 0 0 1-5 4 5 5 0 0 1-5-4L6 8Z"/><path d="M12 17v5"/>'),
   receita: I('<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>'),
   alunos: I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.2A6.5 6.5 0 0 1 21.5 20"/>'),
   fatura: I('<path d="M6 3h9l4 4v14l-3-2-2.5 2-2.5-2-2.5 2L6 19z"/><path d="M9 9h6M9 13h6"/>'),
@@ -140,6 +141,8 @@ function fonteReal(){
     mudarMembro: (org, pessoa, papel, ativo) => rpc("consola_mudar_membro", { p_organizacao: org, p_utilizador: pessoa, p_papel: papel, p_ativo: ativo }),
     revogarConvite: id => rpc("consola_revogar_convite", { p_convite: id }),
     cobranca: () => rpc("consola_cobranca"),
+    integracoes: () => rpc("consola_integracoes"),
+    guardarPayflow: segredo => rpc("consola_integracao_payflow", { p_segredo: segredo || "" }),
     guardarPlano: (plano, p) => rpc("consola_guardar_plano", { p_plano: plano,
       p_mensal_mzn: p.MZN.mensal, p_anual_mzn: p.MZN.anual, p_mensal_zar: p.ZAR.mensal, p_anual_zar: p.ZAR.anual }),
     isentar: (org, isenta) => rpc("consola_isentar", { p_organizacao: org, p_isenta: isenta }),
@@ -303,6 +306,7 @@ function fonteDemo(){
     eventos.splice(4, 0, { id:"evt_cliente", tipo:"cliente.atualizado", organizacao:"org-horizonte", resultado:"ignorado", recebidoEm:emDias(-3) });
   }
 
+  const integracoes = { payflow: { ligada:false, segredoFim:null, ligadaEm:null, ultimoEvento: eventos[0] ? { tipo:eventos[0].tipo, resultado:eventos[0].resultado, recebidoEm:eventos[0].recebidoEm } : null, eventos: eventos.length } };
   const achar = org => { const e = escolas.find(x => x.id === org); if(!e) throw new Error("Escola não encontrada."); return e; };
   const pausa = () => new Promise(r => setTimeout(r, 30));
   const copia = o => JSON.parse(JSON.stringify(o));
@@ -318,6 +322,14 @@ function fonteDemo(){
     async souAdmin(){ return !pedido.has("visitante"); },
     async escolas(){ await pausa(); return copia(escolas); },
     async painel(){ await pausa(); return copia({ ligado:true, faturas, eventos, historico, detalhe }); },
+    async integracoes(){ await pausa(); return copia(integracoes); },
+    async guardarPayflow(segredo){
+      await pausa();
+      if(segredo && !/^whsec_[A-Za-z0-9+/=_-]{16,200}$/.test(segredo)) throw new Error("O segredo do Payflow começa por whsec_. Copie-o outra vez da integração no Payflow.");
+      integracoes.payflow = segredo ? Object.assign(integracoes.payflow, { ligada:true, segredoFim:segredo.slice(-4), ligadaEm:integracoes.payflow.ligadaEm || new Date().toISOString() })
+                                    : Object.assign(integracoes.payflow, { ligada:false, segredoFim:null });
+      return { ligada: !!segredo };
+    },
     async criar(nome, slug, dominio){
       await pausa();
       if(!String(nome || "").trim()) throw new Error("Falta o nome da escola.");
@@ -408,7 +420,8 @@ const Consola = {
   cobranca: null,
   painel: { ligado:false, faturas:[], eventos:[], historico:{}, detalhe:{} },
   ui: { filtro:"todas", texto:"", ordem:"recentes", pagina:1, sel:null, serie:"receita", barra:null,
-        faturas:"todas", faturasPagina:1, insightsTodos:false },
+        faturas:"todas", faturasPagina:1, insightsTodos:false, intAba:"instaladas" },
+  integracoes: null,
 
   mostrar(qual){
     ["a-carregar","ecra-entrar","ecra-sem-acesso","ecra-consola"].forEach(id => {
@@ -458,6 +471,8 @@ const Consola = {
     catch(e){ this.aviso(e.message, "erro"); this.escolas = []; }
     try { this.cobranca = await this.fonte.cobranca(); }
     catch(e){ this.cobranca = null; }
+    try { this.integracoes = await this.fonte.integracoes(); }
+    catch(e){ this.integracoes = null; }
     try { this.painel = await this.fonte.painel(); }
     catch(e){ this.painel = { ligado:false, faturas:[], eventos:[], historico:{}, detalhe:{} }; }
     this.desenhar();
@@ -561,8 +576,8 @@ const Consola = {
   /* ---------------- Navegação ---------------- */
   rota(){
     const p = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
-    const vista = ["visao","organizacoes","pagamentos","planos"].includes(p[0]) ? p[0] : "visao";
-    return { vista, slug: vista === "organizacoes" ? (p[1] || null) : null, sep: p[2] || "resumo" };
+    const vista = ["visao","organizacoes","pagamentos","planos","integracoes"].includes(p[0]) ? p[0] : "visao";
+    return { vista, slug: vista === "organizacoes" ? (p[1] || null) : null, sep: p[2] || "resumo", app: vista === "integracoes" ? (p[1] || null) : null };
   },
   ir(h){ if(location.hash === h) this.desenhar(); else location.hash = h; },
 
@@ -573,7 +588,8 @@ const Consola = {
       ["visao", "Visão geral", ICONE.visao, ""],
       ["organizacoes", "Organizações", ICONE.orgs, `<span class="c-n">${this.escolas.length}</span>`],
       ["pagamentos", "Pagamentos", ICONE.pagamentos, atencao ? `<span class="c-n alerta" title="Contas em atraso">${atencao}</span>` : ""],
-      ["planos", "Planos e preços", ICONE.planos, ""]
+      ["planos", "Planos e preços", ICONE.planos, ""],
+      ["integracoes", "Integrações", ICONE.integracoes, this.integracoes && this.integracoes.payflow && !this.integracoes.payflow.ligada ? `<span class="c-n alerta" title="Payflow por ligar">1</span>` : ""]
     ];
     if(movel) return itens.map(([v, rot, ic]) => `<button type="button" data-ir="#/${v}" class="${r.vista === v ? "active" : ""}"${r.vista === v ? ' aria-current="page"' : ""}>${ic}<span>${rot.split(" ")[0]}</span></button>`).join("");
     return itens.map(([v, rot, ic, extra]) => `<a class="nav-item${r.vista === v ? " active" : ""}" href="#/${v}"${r.vista === v ? ' aria-current="page"' : ""}>${ic}<span>${rot}</span>${extra}</a>`).join("");
@@ -593,8 +609,9 @@ const Consola = {
     else if(r.vista === "organizacoes") v.innerHTML = this.organizacoesHTML();
     else if(r.vista === "pagamentos") v.innerHTML = this.pagamentosHTML();
     else if(r.vista === "planos") v.innerHTML = this.planosHTML();
+    else if(r.vista === "integracoes"){ v.innerHTML = this.integracoesHTML(r.app); IntegracoesUI.ligarCopiar(v); }
     else v.innerHTML = this.visaoHTML();
-    const t = { visao:"Visão geral", organizacoes:"Organizações", pagamentos:"Pagamentos", planos:"Planos e preços" }[r.vista];
+    const t = { visao:"Visão geral", organizacoes:"Organizações", pagamentos:"Pagamentos", planos:"Planos e preços", integracoes:"Integrações" }[r.vista];
     document.title = `${r.slug && this.escolaPorSlug(r.slug) ? this.nomeDe(this.escolaPorSlug(r.slug)) : t} · Consola`;
     this.posicionarDica();
   },
@@ -1285,6 +1302,107 @@ const Consola = {
       </section>`;
   },
 
+  /* ================= Integrações =================
+     No modelo da Memberkit (pedido do Shelton a 02/10/2026). A da consola
+     é o Payflow que cobra a mensalidade das escolas: a plataforma subscreve
+     o academia-receber nos eventos assinatura.* e cola aqui o segredo (fica
+     cifrado no Vault). Cada escola liga o Payflow dela nas Integrações da
+     área de membros, para as vendas abrirem os cursos. */
+  catalogoDaConsola(){
+    const pf = (this.integracoes || {}).payflow || {};
+    return [
+      { id:"payflow", nome:"Payflow", categoria:"Mensalidade das escolas", indicada:true, instalada:!!pf.ligada,
+        titulo:`Payflow${pf.segredoFim ? " · ····" + pf.segredoFim : ""}`, descricao:"Recebe as assinaturas, os pagamentos e as faturas das escolas." },
+      { id:"resend", nome:"Resend", categoria:"Email transaccional", instalada:false },
+      { id:"vercel", nome:"Vercel", categoria:"Domínios das escolas", instalada:false },
+      { id:"webhook", nome:"Webhooks", categoria:"Notificações", estado:"em_breve", instalada:false }
+    ];
+  },
+
+  integracoesHTML(appId){
+    const lista = this.catalogoDaConsola();
+    const app = appId ? lista.find(a => a.id === appId) : null;
+    const eventos = this.painel.eventos || [];
+    if(app) return IntegracoesUI.ficha(app, this.accoesDaIntegracao(app), this.corpoDaIntegracao(app));
+    const instaladas = lista.filter(a => a.instalada);
+    const aba = this.ui.intAba;
+    return `
+      <header class="c-cabeca"><div><h1>Integrações</h1><p>As aplicações ligadas à plataforma. Abra um cartão para ver como se liga.</p></div></header>
+      ${IntegracoesUI.abas(aba, { instaladas: instaladas.length, disponiveis: lista.length, historico: eventos.length })}
+      ${aba === "historico" ? this.historicoIntegracoesHTML(eventos)
+        : aba === "disponiveis" ? `<div class="int-grelha">${lista.map(IntegracoesUI.cartao).join("")}</div>`
+        : instaladas.length ? `<div class="int-lista">${instaladas.map(IntegracoesUI.linha).join("")}</div>`
+          : `<div class="card c-painel"><p class="c-vazio">Ainda nenhuma integração ligada. O Payflow é a primeira: abra-o em <button class="c-ligacao" type="button" data-int-aba="disponiveis">Disponíveis</button>.</p></div>`}`;
+  },
+
+  historicoIntegracoesHTML(eventos){
+    if(!eventos.length) return `<div class="card int-historico"><div class="int-hist-topo"><span>Sem resultados</span></div><p class="c-vazio">${this.painel.ligado ? "Nenhuma notificação recebida do Payflow." : "Os eventos aparecem quando a consola estiver ligada a eles."}</p></div>`;
+    return `<div class="card int-historico">
+      <div class="int-hist-topo"><span>${contagem(eventos.length)} ${eventos.length === 1 ? "notificação recebida" : "notificações recebidas"} do Payflow</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th class="col-larga">Integração</th><th>Evento</th><th>Organização</th><th>Estado</th></tr></thead>
+        <tbody>${eventos.map(x => { const e = this.escolaPorId(x.organizacao); return `<tr>
+          <td>${esc(IntegracoesUI.quando(x.recebidoEm))}</td><td class="col-larga">Payflow</td>
+          <td><span class="tipo">${esc(x.tipo)}</span></td>
+          <td>${e ? `<a class="c-ligacao" href="#/organizacoes/${esc(e.slug)}/pagamento">${esc(this.nomeDe(e))}</a>` : "—"}</td>
+          <td><span class="pill ${x.resultado === "aplicado" ? "pill-ativo" : "pill-inativo"}">${esc(x.resultado)}</span></td></tr>`; }).join("")}</tbody>
+      </table></div></div>`;
+  },
+
+  accoesDaIntegracao(app){
+    if(app.id === "payflow") return `<a class="btn btn-secondary" href="https://payflow.kingdomcompny.com/" target="_blank" rel="noopener">Abrir o Payflow</a>`;
+    if(app.id === "resend") return `<a class="btn btn-secondary" href="https://resend.com/domains" target="_blank" rel="noopener">Abrir o Resend</a>`;
+    if(app.id === "vercel") return `<a class="btn btn-secondary" href="https://vercel.com/dashboard" target="_blank" rel="noopener">Abrir o Vercel</a>`;
+    return "";
+  },
+
+  corpoDaIntegracao(app){
+    if(app.id === "payflow"){
+      const pf = (this.integracoes || {}).payflow || {};
+      const ult = pf.ultimoEvento;
+      const url = `${typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : ""}/functions/v1/academia-receber`;
+      return `<p class="int-lead">A mensalidade das escolas, cobrada pelo Payflow.</p>
+        <p>O Payflow cobra cada escola (cartão automático, ou fatura por cartão, M-Pesa ou e-Mola) e avisa a plataforma de cada mudança: teste, pagamento, atraso, suspensão, cancelamento. A Academia aplica o que ele diz: abre ou fecha a área de membros da escola e guarda as faturas.</p>
+        <div class="int-estado">${pf.ligada ? `<span class="pill pill-ativo">Ligado</span><span>Segredo <b>····${esc(pf.segredoFim || "")}</b></span>` : `<span class="pill pill-inativo">Por ligar</span>`}
+          ${ult ? `<span>Último evento: <b>${esc(ult.tipo)}</b>, ${esc(IntegracoesUI.quando(ult.recebidoEm))}</span>` : `<span>Ainda sem eventos.</span>`}</div>
+        <h2>1. Crie a integração no Payflow</h2>
+        <ol class="passos">
+          <li>No Payflow da plataforma, abra <strong>Integrações › Webhooks › Nova integração</strong>, com o nome «Área de membros».</li>
+          <li>Em <strong>URL que recebe</strong>, cole este endereço:${IntegracoesUI.copiar(url, "Endereço da plataforma")}</li>
+          <li>Em <strong>Eventos</strong>, marque todos os de assinatura (<code>assinatura.*</code>). Grave e copie o segredo, que aparece uma só vez.</li>
+        </ol>
+        <h2>2. Cole o segredo</h2>
+        <form class="int-form" id="c-int-payflow" novalidate>
+          <div class="field"><label for="c-int-segredo">Segredo do Payflow</label><input id="c-int-segredo" type="password" autocomplete="off" spellcheck="false" placeholder="${pf.ligada ? "Cole um novo para o trocar" : "whsec_…"}">
+            <p class="hint">Fica guardado cifrado. Durante uma troca, o segredo antigo continua a valer se estiver também nos segredos do servidor.</p></div>
+          <div class="acoes"><button class="btn btn-primary btn-sm" type="submit">${pf.ligada ? "Trocar o segredo" : "Ligar o Payflow"}</button>
+            ${pf.ligada ? `<button class="btn btn-perigo-suave btn-sm" type="button" id="c-int-desligar">Desligar</button>` : ""}</div>
+        </form>
+        <h2>3. Experimente</h2>
+        <p>Na integração do Payflow, carregue em <strong>Enviar evento de teste</strong>: aparece no <strong>Histórico</strong> como «ignorado» (não é de assinatura), e prova que a ligação funciona.</p>
+        <h2>E as vendas das escolas?</h2>
+        <p>Cada escola liga o Payflow dela em <strong>Integrações › Payflow</strong>, na própria área de membros: as vendas dela abrem os cursos dela. A consola não precisa de fazer nada.</p>`;
+    }
+    if(app.id === "resend") return `<p class="int-lead">Os emails da Academia saem pelo Resend.</p>
+      <p>Convites, recuperação da password e cartas de quem comprou saem do endereço da plataforma, com o nome de cada escola, e as respostas vão para a escola.</p>
+      <ol class="passos"><li>A chave da API do Resend está nos segredos das Edge Functions do Supabase, com o nome <code>RESEND_API_KEY</code>.</li>
+      <li>O domínio de envio verifica-se no Resend, em <strong>Domains</strong>.</li></ol>
+      <p>Por segurança, a consola não lê nem mostra a chave.</p>`;
+    if(app.id === "vercel") return `<p class="int-lead">Os domínios próprios das escolas ligam-se no Vercel.</p>
+      <p>Quando uma escola junta um domínio e o DNS fica certo, a Academia junta-o ao projecto no Vercel, que dá o certificado sozinho.</p>
+      <ol class="passos"><li>O token do Vercel está nos segredos das Edge Functions do Supabase.</li>
+      <li>Cada domínio vê-se em <strong>Organizações › a escola › Dados › Endereço</strong>.</li></ol>`;
+    return `<p class="int-lead">Avise outros sistemas do que acontece na plataforma.</p><p>Escolas criadas, suspensas ou com o pagamento em atraso, entregues assinadas ao endereço que indicar. Está em preparação.</p>`;
+  },
+
+  async guardarPayflow(segredo){
+    try {
+      await this.fonte.guardarPayflow(segredo);
+      await this.recarregar();
+      this.aviso(segredo ? "Payflow ligado. Envie um evento de teste para confirmar." : "Payflow desligado.", "ok");
+    } catch(err){ this.aviso(err.message, "erro"); }
+  },
+
   /* ================= Planos e preços ================= */
   planosHTML(){
     const c = this.cobranca;
@@ -1401,6 +1519,10 @@ const Consola = {
       const t = ev.target;
       const b = t.closest("button");
       if(b){
+        if(b.dataset.intAba){ this.ui.intAba = b.dataset.intAba; this.ir("#/integracoes"); this.desenhar(); return; }
+        if(b.dataset.intAbrir){ this.ir(`#/integracoes/${b.dataset.intAbrir}`); return; }
+        if(b.hasAttribute("data-int-voltar")){ this.ir("#/integracoes"); return; }
+        if(b.id === "c-int-desligar"){ if(confirm("Desligar o Payflow da plataforma? Os eventos das assinaturas deixam de ser aceites até voltar a ligar.")) this.guardarPayflow(""); return; }
         if(b.dataset.serie){ this.ui.serie = b.dataset.serie; this.ui.barra = null; this.desenhar(); return; }
         if(b.dataset.barra != null){ this.ui.barra = Number(b.dataset.barra); this.posicionarDica(); return; }
         if(b.hasAttribute("data-insights-todos")){ this.ui.insightsTodos = !this.ui.insightsTodos; this.desenhar(); return; }
@@ -1427,6 +1549,9 @@ const Consola = {
         if(!previaVisivel || this.ui.sel === tr.dataset.escola) this.ir(`#/organizacoes/${tr.dataset.escola}`);
         else { this.ui.sel = tr.dataset.escola; this.desenhar(); const n = document.querySelector(`#lista-escolas tr[data-escola="${CSS.escape(this.ui.sel)}"]`); if(n) n.focus({ preventScroll:true }); }
       }
+    });
+    v.addEventListener("submit", ev => {
+      if(ev.target.id === "c-int-payflow"){ ev.preventDefault(); this.guardarPayflow(document.getElementById("c-int-segredo").value.trim()); }
     });
     v.addEventListener("keydown", ev => {
       const tr = ev.target.closest && ev.target.closest("#lista-escolas tbody tr[data-escola]");
