@@ -15,6 +15,14 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   const ir = async h => { await pg.evaluate(h => { location.hash = h; }, h); await pg.waitForTimeout(150); };
   const texto = sel => pg.evaluate(s => document.querySelector(s).innerText.replace(/ /g, ' '), sel);
 
+  /* 0. Os estilos carregam em /consola e em /consola/ (02/10: em /consola, sem a
+        barra, o caminho relativo «consola.css» ia para /consola.css e a consola
+        aparecia sem desenho nenhum). Caminhos absolutos, e o desenho aplicado. */
+  const caminhos = await pg.evaluate(() => [...document.querySelectorAll('link[rel=stylesheet], script[src]')]
+    .map(e => e.getAttribute('href') || e.getAttribute('src')).filter(x => !/^https?:/.test(x)));
+  verdade(caminhos.length >= 5 && caminhos.every(x => x.startsWith('/')), `Estilos e scripts com caminho absoluto (${caminhos.join(', ')})`);
+  igual(await pg.evaluate(() => getComputedStyle(document.querySelector('.c-kpis')).display), 'grid', 'e o desenho da consola está aplicado');
+
   /* 1. A visão geral: números, desempenho, saúde, atenção. */
   verdade(await pg.isVisible('#ecra-consola'), 'Quem administra a plataforma vê a consola');
   contem(await texto('#c-demo'), 'demonstração', 'Em demonstração, a consola diz que os dados são inventados');

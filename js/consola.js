@@ -734,7 +734,7 @@ const Consola = {
     return `
       <div class="c-grafico" id="c-grafico">
         <div class="c-eixo" aria-hidden="true">${[4,3,2,1,0].map(k => `<span>${rotEixo(passo * k)}</span>`).join("")}</div>
-        <div class="c-barras" style="--n:${s.length}">
+        <div class="c-barras" style="--n:${s.length};--n6:${Math.min(s.length, 6)}">
           <div class="c-linhas" aria-hidden="true">${[0,1,2,3,4].map(() => "<i></i>").join("")}</div>
           ${s.map((x, i) => `<button type="button" class="c-barra${i === ativa ? " ativa" : ""}${i === s.length - 1 && qual !== "organizacoes" ? " em-curso" : ""}" data-barra="${i}" style="--h:${topo ? (x.v / topo * 100).toFixed(2) : 0}%" aria-label="${esc(nomeDoMes(x.mes))}: ${esc(this.textoDaSerie(qual, x.v))}"><span class="c-barra-fill"></span><span class="c-barra-mes" aria-hidden="true">${esc(nomeDoMes(x.mes, true))}</span></button>`).join("")}
           <div class="c-dica" id="c-dica" aria-hidden="true"></div>
@@ -1068,7 +1068,7 @@ const Consola = {
         <section class="card c-painel">
           <div class="c-seccao"><div><h2>Alunos activos</h2><span class="sub">No fim de cada mês</span></div></div>
           ${h.length > 1 ? `<div class="c-grafico" style="height:200px"><div class="c-eixo" aria-hidden="true">${[1,.5,0].map(k => `<span>${contagem(max * k)}</span>`).join("")}</div>
-            <div class="c-barras" style="--n:${h.length}"><div class="c-linhas" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="c-barras" style="--n:${h.length};--n6:${Math.min(h.length, 6)}"><div class="c-linhas" aria-hidden="true"><i></i><i></i><i></i></div>
             ${h.map((x, i) => `<div class="c-barra${i === h.length - 1 ? " ativa" : ""}" role="img" aria-label="${esc(nomeDoMes(x.mes))}: ${contagem(x.alunos)} alunos" style="--h:${(x.alunos / max * 100).toFixed(1)}%"><span class="c-barra-fill"></span><span class="c-barra-mes" aria-hidden="true">${esc(nomeDoMes(x.mes, true))}</span></div>`).join("")}</div></div>`
           : `<p class="c-vazio">${this.painel.ligado ? "Ainda não há meses suficientes para mostrar a evolução." : "A evolução aparece quando a consola guardar o histórico dos alunos."}</p>`}
           ${h.length > 1 && this.notaEstimada(e) ? `<p class="c-nota">${esc(this.notaEstimada(e))}</p>` : ""}
