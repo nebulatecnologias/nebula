@@ -181,6 +181,73 @@
   });
   mostra(0, true); anda();
 
+  /* ---------------- Pilares: separadores que seguem a leitura ---------------- */
+  const abas = [...document.querySelectorAll("#pilares-abas a")];
+  const indicador = $("pilares-indicador");
+  const marcaAba = a => {
+    abas.forEach(x => { x.classList.toggle("ativo", x === a); if(x === a) x.setAttribute("aria-current", "true"); else x.removeAttribute("aria-current"); });
+    indicador.style.setProperty("--x", `${a.offsetLeft}px`);
+    indicador.style.setProperty("--w", `${a.offsetWidth}px`);
+    const caixa = a.parentElement;
+    if(caixa.scrollWidth > caixa.clientWidth) caixa.scrollTo({ left:a.offsetLeft - 20, behavior:calmo ? "auto" : "smooth" });
+  };
+  if(abas.length){
+    requestAnimationFrame(() => marcaAba(abas[0]));
+    addEventListener("resize", () => marcaAba(abas.find(a => a.classList.contains("ativo")) || abas[0]));
+    if("IntersectionObserver" in window){
+      const visiveis = new Map();
+      const espiao = new IntersectionObserver(es => {
+        es.forEach(e => visiveis.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0));
+        let melhor = null, r = 0;
+        visiveis.forEach((v, id) => { if(v > r){ r = v; melhor = id; } });
+        if(melhor){ const a = abas.find(x => x.getAttribute("href") === `#${melhor}`); if(a && !a.classList.contains("ativo")) marcaAba(a); }
+      }, { rootMargin:"-150px 0px -35% 0px", threshold:[0, .2, .4, .6, .8, 1] });
+      document.querySelectorAll(".pilar").forEach(p => espiao.observe(p));
+    }
+  }
+
+  /* Os desenhos de cada pilar acordam quando entram no ecrã. */
+  const desenhos = [...document.querySelectorAll(".pilar-visual")];
+  const acorda = el => {
+    el.classList.add("visto");
+    if(el.querySelector("#fluxo")) correFluxo();
+    if(el.querySelector("#ranking")) sobeRanking();
+  };
+  if(calmo || !("IntersectionObserver" in window)) desenhos.forEach(acorda);
+  else {
+    const io2 = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ acorda(e.target); io2.unobserve(e.target); } }), { threshold:0.35 });
+    desenhos.forEach(el => io2.observe(el));
+  }
+
+  /* Entrega: os passos acendem-se um a um e recomeçam. */
+  function correFluxo(){
+    const passos = [...document.querySelectorAll("#fluxo .fluxo-passo")];
+    if(calmo){ passos.forEach(p => p.classList.add("aceso")); return; }
+    let i = 0;
+    const passo = () => {
+      if(i === passos.length){ setTimeout(() => { passos.forEach(p => p.classList.remove("aceso")); i = 0; setTimeout(passo, 700); }, 2600); return; }
+      passos[i++].classList.add("aceso");
+      setTimeout(passo, 750);
+    };
+    setTimeout(passo, 400);
+  }
+
+  /* Gamificação: o ranking, com o XP a subir até ao valor. */
+  const RANKING = [
+    ["JA", "Júlia A.", 25432, "#0f8f86"], ["VC", "Vasco C.", 23120, "#2f6fe4"], ["AB", "Artur B.", 19814, "#b3264f"],
+    ["AL", "Ana Langa", 19536, "#7357e8", true], ["DR", "Dina R.", 18012, "#139a5b"], ["JL", "João L.", 16318, "#c2410c"]
+  ];
+  $("ranking").innerHTML = RANKING.map(([ini, nome, xp, cor, eu], i) =>
+    `<li${eu ? ' class="eu"' : ""}><span class="pos">${i + 1}</span><span class="av" style="background:${cor}">${ini}</span><span>${esc(nome)}</span><span class="xp" data-xp="${xp}">${contagem(xp)}</span><span class="tag">XP</span></li>`).join("");
+  function sobeRanking(){
+    if(calmo) return;
+    document.querySelectorAll("#ranking .xp").forEach(el => {
+      const alvo = Number(el.dataset.xp), t0 = performance.now(), dur = 1400;
+      const f = agora => { const k = Math.min((agora - t0) / dur, 1), e = 1 - Math.pow(1 - k, 3); el.textContent = contagem(Math.round(alvo * e)); if(k < 1) requestAnimationFrame(f); };
+      requestAnimationFrame(f);
+    });
+  }
+
   /* ---------------- Preços ---------------- */
   const DECIDIDOS = [
     { id:"essencial", nome:"Essencial", aVenda:true, alunosMax:500, precos:{ MZN:{ mensal:699, anual:null, simbolo:"MZ" }, ZAR:{ mensal:155.33, anual:null, simbolo:"R" } } },
