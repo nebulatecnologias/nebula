@@ -15,7 +15,14 @@ body{ background:var(--canvas); }
   --c-barra:color-mix(in srgb, var(--accent) 17%, var(--surface));
   --c-barra-hover:color-mix(in srgb, var(--accent) 30%, var(--surface));
   --c-tinta-suave:color-mix(in srgb, var(--canvas) 70%, transparent);
+  /* O seleccionado (filtro activo, linha da tabela, página): o laranja dos
+     botões, mais escuro, para a letra branca ler bem (contraste acima de 5:1). */
+  --c-sel:linear-gradient(180deg,#d24a0e 0%,#b23c0a 100%);
+  --c-sel-cor:#bf410b;
+  --c-sel-suave:rgba(255,255,255,.82);
 }
+.chip.active{ background:var(--c-sel); border-color:var(--c-sel-cor); color:#fff; box-shadow:0 6px 14px -8px rgba(178,60,10,.7); }
+.chip.active .chip-n{ background:rgba(255,255,255,.2); color:#fff; }
 
 /* ---------- Entrada e estados de página ---------- */
 .a-carregar{ color:var(--muted); text-align:center; margin-top:18vh; }
@@ -187,12 +194,15 @@ body{ background:var(--canvas); }
 .c-tabela tbody tr:hover td{ background:var(--surface-2); }
 .c-tabela tbody tr:focus-visible{ outline:none; }
 .c-tabela tbody tr:focus-visible td{ box-shadow:inset 0 2px 0 var(--accent), inset 0 -2px 0 var(--accent); }
-.c-tabela tbody tr.sel td{ background:var(--ink); color:var(--canvas); border-color:var(--ink); }
-.c-tabela tbody tr.sel .sub, .c-tabela tbody tr.sel .c-mini-n span{ color:var(--c-tinta-suave); }
-.c-tabela tbody tr.sel .c-org .nome{ color:var(--canvas); }
-.c-tabela tbody tr.sel .progress-track{ background:rgba(255,255,255,.16); }
-.c-tabela tbody tr.sel .pill-plano{ color:var(--canvas); }
-.c-tabela tbody tr.sel .c-seta{ color:var(--canvas); }
+.c-tabela tbody tr.sel td{ background:var(--c-sel-cor); color:#fff; border-color:var(--c-sel-cor); }
+.c-tabela tbody tr.sel td:first-child{ background:var(--c-sel-cor); }
+.c-tabela tbody tr.sel .avatar{ box-shadow:0 0 0 2px rgba(255,255,255,.6); }
+.c-tabela tbody tr.sel .sub, .c-tabela tbody tr.sel .c-mini-n span{ color:var(--c-sel-suave); }
+.c-tabela tbody tr.sel .c-org .nome{ color:#fff; }
+.c-tabela tbody tr.sel .progress-track{ background:rgba(255,255,255,.28); }
+.c-tabela tbody tr.sel .progress-fill{ background:#fff; }
+.c-tabela tbody tr.sel .pill-plano{ color:#fff; }
+.c-tabela tbody tr.sel .c-seta{ color:#fff; }
 .c-tabela .sub{ display:block; font-size:12.5px; color:var(--muted); font-weight:400; }
 .c-org{ display:flex; align-items:center; gap:12px; min-width:0; }
 .c-org .avatar{ width:38px; height:38px; font-size:13px; border-radius:12px; }
@@ -216,7 +226,7 @@ body{ background:var(--canvas); }
 .c-paginas{ display:flex; gap:6px; }
 .c-paginas button{ min-width:36px; height:36px; padding:0 10px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-size:13.5px; font-weight:500; color:var(--ink-2); font-variant-numeric:tabular-nums; display:inline-grid; place-items:center; }
 .c-paginas button:hover{ background:var(--surface-2); border-color:var(--line-strong); }
-.c-paginas button.active{ background:var(--ink); border-color:var(--ink); color:var(--canvas); }
+.c-paginas button.active{ background:var(--c-sel); border-color:var(--c-sel-cor); color:#fff; }
 .c-paginas button:disabled{ opacity:.4; pointer-events:none; }
 .c-paginas svg{ width:15px; height:15px; }
 
