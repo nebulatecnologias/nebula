@@ -11,6 +11,33 @@
         ],
         "createdAt": "2026-10-01T20:14:08.140Z",
         "reason": "DESIGN.md linha 408: «CTA glow» (--cta-shadow) é a sombra documentada dos botões principais; a consola reutiliza o .btn-primary da app e abre em tema claro"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "criar/index.html"
+        ],
+        "createdAt": "2026-10-03T15:14:07.822Z",
+        "reason": "Brilho laranja pinado pela referência Setrex do Shelton (o verde-lima trocado pelo laranja da identidade), 03/10/2026"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-10-03T15:14:07.834Z",
+        "reason": "Brilho laranja pinado pela referência Setrex do Shelton (o verde-lima trocado pelo laranja da identidade), 03/10/2026"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/site.css"
+        ],
+        "createdAt": "2026-10-03T15:14:07.845Z",
+        "reason": "Brilho laranja pinado pela referência Setrex do Shelton (o verde-lima trocado pelo laranja da identidade), 03/10/2026"
       }
     ]
   }
