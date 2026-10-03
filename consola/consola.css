@@ -26,14 +26,25 @@ body{ background:var(--canvas); }
 
 /* ---------- Entrada e estados de página ---------- */
 .a-carregar{ color:var(--muted); text-align:center; margin-top:18vh; }
-.entrar{ max-width:420px; margin:10vh auto 0; padding:28px; }
-.entrar h1{ font-size:21px; margin:0 0 6px; }
-.entrar p{ color:var(--muted); margin:0 0 18px; }
 .sem-acesso{ max-width:520px; margin:12vh auto 0; padding:28px; text-align:center; }
 .sem-acesso h1{ font-size:21px; margin:0 0 8px; }
 .sem-acesso p{ color:var(--muted); margin:0 0 18px; }
-.entrar, .sem-acesso{ margin-left:16px; margin-right:16px; }
-@media (min-width:460px){ .entrar, .sem-acesso{ margin-left:auto; margin-right:auto; } }
+.sem-acesso{ margin-left:16px; margin-right:16px; }
+@media (min-width:560px){ .sem-acesso{ margin-left:auto; margin-right:auto; } }
+
+/* ---------- A entrada: a da área de membros, com a capa preta ---------- */
+.c-capa-preta{ background:linear-gradient(160deg,#2a2622 0%,#171513 55%,#0c0b0a 100%); }
+.c-capa-preta::before{ background:
+  radial-gradient(70% 55% at 100% 0%, rgba(244,98,29,.22), transparent 62%),
+  radial-gradient(60% 50% at 0% 100%, rgba(255,255,255,.06), transparent 65%); }
+.c-capa-preta::after{ border-color:rgba(255,255,255,.12); box-shadow:0 0 0 70px rgba(255,255,255,.03), 0 0 0 140px rgba(255,255,255,.02); }
+.c-capa-preta .brand-mark{ display:flex; align-items:center; gap:12px; }
+.c-capa-preta .wordmark{ color:#fff; font-weight:700; font-size:18px; letter-spacing:-.02em; line-height:1.15; }
+.c-capa-preta .wordmark small{ display:block; font-weight:500; font-size:12px; color:rgba(255,255,255,.72); letter-spacing:.01em; margin-top:2px; }
+.c-capa-preta .login-quote p{ color:rgba(255,255,255,.78); }
+.c-capa-rodape{ position:relative; z-index:1; margin:0; font-size:13px; color:rgba(255,255,255,.62); }
+.c-entrada .login-aviso{ margin-top:16px; }
+.c-entrada-linha{ justify-content:flex-end; }
 
 /* ---------- Estrutura ---------- */
 .c-sinal{ width:38px; height:38px; border-radius:12px; background:var(--brand-panel); color:#fff; display:grid; place-items:center; flex-shrink:0; box-shadow:0 6px 14px -6px rgba(226,78,12,.55); }

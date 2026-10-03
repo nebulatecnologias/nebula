@@ -14,17 +14,36 @@
 <body>
 <p class="a-carregar" id="a-carregar">A abrir a consola...</p>
 
-<!-- Sem sessão -->
-<section class="card entrar" id="ecra-entrar" hidden>
-  <h1>Consola da plataforma</h1>
-  <p>Entre com a sua conta de administração.</p>
-  <form id="form-entrar" novalidate>
-    <div class="aviso erro" id="entrar-erro" hidden></div>
-    <div class="field"><label for="entrar-email">Email</label><input type="email" id="entrar-email" autocomplete="username" required></div>
-    <div class="field"><label for="entrar-password">Password</label><input type="password" id="entrar-password" autocomplete="current-password" required></div>
-    <button class="btn btn-primary btn-block btn-lg" type="submit">Entrar</button>
-  </form>
-</section>
+<!-- Sem sessão: a entrada, no molde da da área de membros, com a capa preta -->
+<div class="login-shell c-entrada" id="ecra-entrar" hidden>
+  <aside class="login-brandside c-capa-preta" aria-hidden="true">
+    <div class="brand-mark">
+      <span class="c-sinal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><path d="M17 13.5v7M13.5 17h7"/></svg></span>
+      <span class="wordmark">Consola<small>Área de membros</small></span>
+    </div>
+    <div class="login-quote">
+      <h2>Toda a plataforma, num só lugar.</h2>
+      <p>As organizações, os alunos, os pagamentos e as integrações da área de membros, com o que precisa de atenção à frente.</p>
+    </div>
+    <p class="c-capa-rodape">Só para a administração da plataforma.</p>
+  </aside>
+  <main class="login-formside">
+    <div class="login-card">
+      <h1>Entrar na consola</h1>
+      <p class="sub">Introduza os dados da sua conta de administração.</p>
+      <form id="form-entrar" novalidate>
+        <div class="field"><label for="entrar-email">Email</label><input type="email" id="entrar-email" placeholder="o-seu-email@exemplo.com" autocomplete="username" required></div>
+        <div class="field"><label for="entrar-password">Password</label><input type="password" id="entrar-password" placeholder="A sua password" autocomplete="current-password" required></div>
+        <div class="form-row-between c-entrada-linha">
+          <a href="/" class="link-muted" id="entrar-esqueci">Esqueceu-se da password?</a>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Entrar</button>
+      </form>
+      <div class="login-aviso erro" id="entrar-erro" role="alert" hidden></div>
+      <p class="login-foot">A conta e a password são as mesmas da área de membros.</p>
+    </div>
+  </main>
+</div>
 
 <!-- Com sessão, mas sem ser da administração -->
 <section class="card sem-acesso" id="ecra-sem-acesso" hidden>
