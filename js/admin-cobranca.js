@@ -385,7 +385,7 @@ function avisoDaConta(){
   if(!conta || conta.estado === "isenta") return null;
   const equipa = papelEfetivo() === "administrador";
   if(!equipa) return emDia ? null : { tom:"aviso-conta-aluno", texto:"Os cursos estão temporariamente indisponíveis. A escola já foi avisada; volte a tentar mais tarde." };
-  if(conta.estado === "pendente") return { tom:"aviso-conta-equipa", texto:"Falta pôr o pagamento para começar os dias grátis. Até lá, os alunos não vêem os cursos.", ir:"Pôr o pagamento" };
+  if(conta.estado === "pendente") return { tom:"aviso-conta-equipa", texto:"Falta confirmar a validação do pagamento para abrir a área. Até lá, os alunos não vêem os cursos.", ir:"Ver cobrança" };
   if(conta.estado === "em_atraso") return { tom:"aviso-conta-equipa", texto: emDia ? "A última cobrança falhou. Trate do pagamento para os alunos não perderem o acesso." : "A conta não está em dia: os alunos não vêem os cursos.", ir:"Ver cobrança" };
   if(!emDia) return { tom:"aviso-conta-equipa", texto:"A assinatura terminou: os alunos não vêem os cursos.", ir:"Ver cobrança" };
   return null;

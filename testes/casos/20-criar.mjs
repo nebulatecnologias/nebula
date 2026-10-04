@@ -1,6 +1,6 @@
 import { abrirPagina } from '../util.mjs';
 
-export const nome = 'Criar área de membros (/criar): plano do endereço, conta, e a área abre na Cobrança';
+export const nome = 'Criar área de membros (/criar): plano do endereço, conta, validação do M-Pesa ou do cartão, e a área abre no onboarding';
 
 /* W4 (decisões do Shelton a 02/10/2026): no molde do Memberkit, o plano vem
    no endereço e mostra-se em cima; a conta pede nome da área, nome, email e a
@@ -40,29 +40,72 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(await txt(pg, '#plano-valor'), 'R 799,00', 'Sem preço anual, fica o mensal');
   await pg.close();
 
-  /* 2. A conta: validação, depois o cartão, depois pronta. */
+  /* 2. A conta e a validação do M-Pesa (W4·7): o número paga MZ 10,00 pela
+     cobrança do Payflow; confirmado, a área abre no onboarding. */
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=profissional`);
+  verdade(await pg.isVisible('#campo-mpesa'), 'Em meticais pede o número M-Pesa');
+  verdade(await pg.isHidden('#campo-cartao'), 'e não fala de cartão');
   await pg.fill('#f-escola', 'Escola de Exemplo');
   await pg.fill('#f-nome', 'Ana Exemplo');
   await pg.fill('#f-email', 'ana@exemplo.invalid');
+  await pg.fill('#f-mpesa', '86 123 4567');
   await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  contem(await pg.textContent('#conta-erro'), '84 ou 85', 'Um número que não é M-Pesa não passa');
+  await pg.fill('#f-mpesa', '84 123 4567');
   await pg.fill('#f-senha2', 'outra-coisa');
   await pg.click('#btn-conta');
   contem(await pg.textContent('#conta-erro'), 'não são iguais', 'Senhas diferentes não passam');
   igual(await pg.getAttribute('#f-senha2', 'aria-invalid'), 'true', 'e o campo fica marcado');
   await pg.fill('#f-senha2', 'segredo-forte');
   await pg.click('#btn-conta');
-  await pg.waitForSelector('#painel-pronta:not([hidden])');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 4000 });
   const chamadas = await pg.evaluate(() => window.__criarDemo.chamadas);
   const criar = chamadas.find(c => c[0] === 'criar-escola')[1];
-  igual(JSON.stringify([criar.plano, criar.ciclo, criar.moeda, criar.aceitouTermos]), '["profissional","mensal","MZN",true]',
-    'Vai para o servidor o plano, o ciclo, a moeda (Moçambique por omissão) e os termos aceites');
-  verdade(chamadas.some(c => c[0] === 'entrar'), 'e entra com a conta nova');
-  igual(await pg.textContent('#pronta-titulo'), 'A «Escola de Exemplo» está criada', 'Diz que a área está criada');
-  igual(await pg.evaluate(() => window.__criarDemo.abriu), '/?org=escola-de-exemplo#/cobranca',
-    'e abre-a logo na página Cobrança, onde se paga (não há cartão nesta página)');
-  igual(await pg.getAttribute('#btn-entrar', 'href'), '/?org=escola-de-exemplo#/cobranca', 'com um botão para o mesmo sítio');
+  igual(JSON.stringify([criar.plano, criar.ciclo, criar.moeda, criar.msisdn, criar.aceitouTermos]), '["profissional","mensal","MZN","258841234567",true]',
+    'Vai para o servidor o plano, o ciclo, a moeda, o número M-Pesa e os termos aceites');
+  verdade(chamadas.some(c => c[0] === 'entrar'), 'entra com a conta nova');
+  igual(JSON.stringify(chamadas.find(c => c[0] === 'pin')), '["pin","258841234567"]', 'pede o PIN a esse número');
+  verdade(chamadas.some(c => c[0] === 'confirmar'), 'e, pago, pergunta se a área já abriu');
+  igual(await pg.textContent('#pronta-titulo'), 'A «Escola de Exemplo» está aberta', 'Diz que a área está aberta');
+  igual(await pg.evaluate(() => window.__criarDemo.abriu), '/?org=escola-de-exemplo', 'e abre-a no onboarding');
+  igual(await pg.getAttribute('#btn-entrar', 'href'), '/?org=escola-de-exemplo', 'com um botão para o mesmo sítio');
   igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript');
+  await pg.close();
+
+  /* 2a. O M-Pesa recusa (sem saldo): diz porquê, e outro número resolve. */
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial`);
+  await pg.fill('#f-escola', 'Escola Sem Saldo');
+  await pg.fill('#f-nome', 'Ana Exemplo');
+  await pg.fill('#f-email', 'saldo@exemplo.invalid');
+  await pg.fill('#f-mpesa', '840000001');
+  await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#validar-accoes:not([hidden])', { timeout: 3000 });
+  contem(await pg.textContent('#validar-erro'), 'saldo suficiente', 'Uma recusa do M-Pesa diz porquê');
+  contem(await pg.textContent('#validar-texto'), 'Nada foi cobrado', 'e que nada foi cobrado');
+  await pg.fill('#f-outro', '85 765 4321');
+  await pg.click('#form-outro button[type=submit]');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 3000 });
+  verdade(true, 'Outro número paga e a área abre');
+  await pg.close();
+
+  /* 2c. Fora de Moçambique: o cartão, na página segura do Payflow. */
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&pago=1`);
+  verdade(await pg.isHidden('#campo-mpesa'), 'Em rand não pede número M-Pesa');
+  contem(await pg.textContent('#campo-cartao'), 'R 18,00', 'e diz que valida o cartão');
+  await pg.fill('#f-escola', 'Escola do Cabo');
+  await pg.fill('#f-nome', 'Ana Exemplo');
+  await pg.fill('#f-email', 'cabo@exemplo.invalid');
+  await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#btn-cartao:not([hidden])', { timeout: 3000 });
+  igual(await pg.getAttribute('#btn-cartao', 'href'), 'https://payflow.kingdomcompny.com/c/demo123', 'O botão abre a cobrança da validação no Payflow');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 7000 });
+  verdade(true, 'Paga no Payflow, a página abre a área sozinha');
   await pg.close();
 
   /* 2b. Já com sessão de outra conta no browser (o /criar partilha o endereço
@@ -72,6 +115,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.fill('#f-escola', 'Escola Nova');
   await pg.fill('#f-nome', 'Ana Exemplo');
   await pg.fill('#f-email', 'nova@exemplo.invalid');
+  await pg.fill('#f-mpesa', '841234567');
   await pg.fill('#f-senha', 'segredo-forte');
   await pg.fill('#f-senha2', 'segredo-forte');
   await pg.click('#btn-conta');
@@ -86,6 +130,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.fill('#f-escola', 'Outra Escola');
   await pg.fill('#f-nome', 'Ana Exemplo');
   await pg.fill('#f-email', 'ana@exemplo.invalid');
+  await pg.fill('#f-mpesa', '841234567');
   await pg.fill('#f-senha', 'segredo-forte');
   await pg.fill('#f-senha2', 'segredo-forte');
   await pg.click('#btn-conta');

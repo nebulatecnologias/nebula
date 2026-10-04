@@ -79,6 +79,24 @@
   .aviso.nota{ background:var(--amber-soft); color:var(--amber-ink); }
   .field input[aria-invalid="true"]{ border-color:var(--red-ink); }
 
+  .com-prefixo{ display:flex; align-items:stretch; }
+  .com-prefixo span{ display:grid; place-items:center; padding:0 14px; border:1px solid var(--line-strong); border-right:0; border-radius:12px 0 0 12px; background:#0e0d0c; color:var(--muted); font-size:15px; }
+  .com-prefixo input{ border-radius:0 12px 12px 0 !important; flex:1; min-width:0; }
+  .validar{ text-align:center; padding:56px 40px 48px; flex:1; display:flex; flex-direction:column; align-items:center; }
+  .validar .sub{ max-width:420px; }
+  .validar-sinal{ width:72px; height:72px; border-radius:50%; display:grid; place-items:center; margin:0 0 20px; background:rgba(255,106,31,.12); color:#ff9a5c; box-shadow:inset 0 0 0 1px rgba(255,106,31,.3); }
+  .validar-sinal.ok{ background:var(--marca); color:#fff; box-shadow:0 16px 34px -14px rgba(242,87,15,.9); }
+  .validar-sinal.falhou{ background:var(--red-soft); color:var(--red-ink); box-shadow:none; }
+  .validar-sinal svg{ width:30px; height:30px; }
+  .roda.grande{ width:28px; height:28px; border-width:3px; }
+  .validar-relogio{ margin:-6px 0 18px; color:var(--muted); font-size:13.5px; font-variant-numeric:tabular-nums; }
+  .validar-accoes{ width:100%; max-width:440px; display:flex; flex-direction:column; gap:22px; margin-top:6px; }
+  .validar-outro{ text-align:left; border-top:1px solid var(--line); padding-top:20px; }
+  .validar-outro label{ display:block; font-size:13.5px; font-weight:500; color:var(--ink-2); margin-bottom:7px; }
+  .validar-outro-linha{ display:flex; gap:10px; }
+  .validar-outro-linha .com-prefixo{ flex:1; }
+  .validar-outro input{ width:100%; min-height:46px; background:#050505; border:1px solid var(--line-strong); color:#fff; padding:0 14px; font-size:15px; }
+  .validar-outro input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
   .pronta{ padding:56px 40px; text-align:center; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
   .pronta .sinal{ width:60px; height:60px; border-radius:50%; display:grid; place-items:center; margin:0 0 18px; background:var(--marca); color:#fff; box-shadow:0 16px 34px -14px rgba(242,87,15,.9); }
   .pronta h2{ font-size:26px; font-weight:500; letter-spacing:-.03em; margin:0 0 8px; }
@@ -182,6 +200,14 @@
                 <input id="f-email" type="email" maxlength="254" autocomplete="email" autocapitalize="off" spellcheck="false" required>
               </div>
             </div>
+            <!-- Moçambique: o número M-Pesa que vai pagar (W4·7) -->
+            <div class="field" id="campo-mpesa">
+              <label for="f-mpesa">Número M-Pesa que vai pagar</label>
+              <div class="com-prefixo"><span aria-hidden="true">+258</span><input id="f-mpesa" type="tel" inputmode="numeric" maxlength="14" autocomplete="tel-national" placeholder="84 123 4567"></div>
+              <p class="hint" id="mpesa-dica">Pedimos MZ 10,00 a este número para validar o pagamento. O valor é descontado na primeira fatura.</p>
+            </div>
+            <!-- Fora de Moçambique: o cartão, na página segura do pagamento -->
+            <p class="aviso nota" id="campo-cartao" hidden>A seguir, valida o cartão com R 18,00 na página segura do pagamento. O valor é descontado na primeira fatura.</p>
             <div class="grelha" id="campos-senha">
               <div class="field">
                 <label for="f-senha">Senha</label>
@@ -202,9 +228,29 @@
                 <p class="hint">Não se lembra? Use «Esqueceu a password?» na página de entrada e volte aqui.</p>
               </div>
             </div>
-            <p class="consentimento">Ao continuar, aceita os <a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> e a <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>. Os pagamentos fazem-se depois, na página Cobrança da sua área de membros; só paga no fim dos 7 dias grátis, e pode cancelar antes.</p>
-            <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-conta">Quero a minha área de membros</button>
+            <p class="consentimento">Ao continuar, aceita os <a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> e a <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>. A validação é descontada na primeira fatura, que fica na página Cobrança da sua área de membros com 7 dias para pagar.</p>
+            <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-conta">Validar e criar a minha área de membros</button>
           </form>
+        </section>
+
+        <!-- A validação do pagamento -->
+        <section class="ficha-form validar" id="painel-validar" hidden aria-live="polite">
+          <div class="validar-sinal" id="validar-sinal" aria-hidden="true"><span class="roda grande"></span></div>
+          <h2 id="validar-titulo">Confirme no seu telemóvel</h2>
+          <p class="sub" id="validar-texto"></p>
+          <p class="validar-relogio" id="validar-relogio" hidden></p>
+          <div class="aviso erro" id="validar-erro" role="alert" hidden></div>
+          <div class="validar-accoes" id="validar-accoes" hidden>
+            <button class="btn btn-primary btn-lg" type="button" id="btn-repetir">Tentar outra vez</button>
+            <form class="validar-outro" id="form-outro" novalidate>
+              <label for="f-outro">Usar outro número</label>
+              <div class="validar-outro-linha">
+                <div class="com-prefixo"><span aria-hidden="true">+258</span><input id="f-outro" type="tel" inputmode="numeric" maxlength="14" placeholder="85 123 4567"></div>
+                <button class="btn btn-secondary" type="submit">Pedir aqui</button>
+              </div>
+            </form>
+          </div>
+          <a class="btn btn-primary btn-lg" id="btn-cartao" hidden target="_blank" rel="noopener">Validar o cartão</a>
         </section>
 
         <!-- Pronta -->
@@ -221,14 +267,14 @@
       <!-- O que o plano inclui e o que acontece a seguir -->
       <aside class="lado" aria-labelledby="lado-titulo">
         <p class="lado-num">7<span> dias</span></p>
-        <p class="lado-sub">grátis, a contar de quando põe o pagamento.</p>
+        <p class="lado-sub">grátis: a primeira fatura tem 7 dias para pagar.</p>
         <h2 id="lado-titulo">O que inclui o plano</h2>
         <ul id="lado-inclui"></ul>
         <hr class="lado-linha">
         <ol>
-          <li><span><b>Cria a conta agora</b>A área de membros fica pronta no momento.</span></li>
-          <li><span><b>Põe a sua marca e os cursos</b>Nome, logótipo, cor e domínio, a partir do painel.</span></li>
-          <li><span><b>Põe o pagamento na Cobrança</b>Os 7 dias grátis começam aí. Cancele antes e não paga nada.</span></li>
+          <li><span><b>Valida o pagamento</b>MZ 10,00 pelo M-Pesa (ou R 18,00 no cartão), descontados na primeira fatura.</span></li>
+          <li><span><b>Põe a sua marca e os cursos</b>A área abre logo a seguir: nome, logótipo, cor e domínio.</span></li>
+          <li><span><b>Paga a primeira fatura em 7 dias</b>Fica na página Cobrança. Depois, uma fatura por mês.</span></li>
         </ol>
         <p class="lado-pe" id="plano-gratis"></p>
       </aside>

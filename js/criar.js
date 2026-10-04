@@ -7,8 +7,10 @@
    Memberkit). Para trocar, «Trocar de plano» volta aos preços do site. Depois:
      1. a conta: nome da área, o nome da pessoa, email, senha (duas vezes);
         se o email já tem conta, pede-se a senha dessa conta e cria-se com ela;
-     2. a área abre-se logo, na página Cobrança (?org=<nome curto>#/cobranca):
-        é lá que se paga, como na referência (decisão do Shelton a 02/10).
+     2. a validação do pagamento (W4·7, decisões do Shelton a 04/10): o número
+        M-Pesa paga MZ 10,00 (o cartão, R 18,00 na página segura do Payflow),
+        descontados na primeira fatura; a área fica fechada até confirmar e
+        depois abre no onboarding (?org=<nome curto>).
    Esta página vai ser o fim do site de vendas, que mostra os planos e manda
    para aqui com ?plano= e ?ciclo=.
 
@@ -70,6 +72,13 @@ function fonteReal(){
       if(error) throw new Error(/invalid/i.test(error.message) ? "A senha não confere com este email." : error.message);
     },
     criarEscola: corpo => invocar("criar-escola", corpo),
+    /* O pedido de PIN: o mesmo mpesa-checkout do Payflow, pela cobrança da
+       validação (o atalho). Espera até ~100 s pela resposta do M-Pesa. */
+    async pedirPin(atalho, msisdn){
+      try { return await invocar("mpesa-checkout", { cobranca:atalho, msisdn }); }
+      catch(e){ if(e.estado === 409) return { ok:false, estado:"a_decorrer", aviso:e.message }; throw e; }
+    },
+    confirmar: org => invocar("criar-escola", { accao:"confirmar", organizacao:org }),
     abrir: endereco => location.assign(endereco),
   };
 }
@@ -90,6 +99,7 @@ function fonteDemo(){
       precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:799, anual:null, simbolo:"R" } } },
   ];
   let contaExiste = q.has("existe");
+  let pago = false;
   return {
     iniciar(){},
     async planos(){
@@ -109,8 +119,18 @@ function fonteDemo(){
       if(sessao && sessao.email !== corpo.email) throw new Error("Entrou com outra conta. Use o email dessa conta ou saia primeiro.");
       if(contaExiste && !sessao){ const e = new Error("Este email já tem conta."); e.estado = 409; e.corpo = { conta:"existe" }; throw e; }
       const slug = corpo.nomeEscola.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao };
+      return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao,
+               validacao:{ metodo:corpo.moeda === "ZAR" ? "cartao" : "mpesa", numero:"KMZ-2026-0001", atalho:"demo123",
+                           valor:corpo.moeda === "ZAR" ? 18 : 10, moeda:corpo.moeda, link:"https://payflow.kingdomcompny.com/c/demo123" } };
     },
+    /* Números de mentira: …0001 sem saldo, …0002 sem resposta; o resto paga. */
+    async pedirPin(atalho, msisdn){
+      await espera(); registo.chamadas.push(["pin", msisdn]);
+      if(msisdn.endsWith("0001")) return { ok:false, estado:"recusada", porque:"Não havia saldo suficiente na sua carteira M-Pesa." };
+      if(msisdn.endsWith("0002")) return { ok:false, estado:"desconhecida", aviso:"Não recebemos resposta a tempo." };
+      pago = true; return { ok:true, estado:"confirmada" };
+    },
+    async confirmar(){ await espera(); registo.chamadas.push(["confirmar"]); return { ok:true, estado: pago || q.has("pago") ? "ativa" : "pendente" }; },
     abrir(endereco){ registo.abriu = endereco; },
   };
 }
@@ -169,6 +189,8 @@ function desenharPlano(){
   $("lado-titulo").textContent = `O que inclui o plano ${p.nome}`;
   $("lado-inclui").innerHTML = INCLUI(p).map(x => `<li>${CHECK}<span>${esc(x)}</span></li>`).join("");
   $("plano-trocar").href = `/site/?moeda=${encodeURIComponent(E.moeda)}#precos`;
+  $("campo-mpesa").hidden = E.moeda !== "MZN";
+  $("campo-cartao").hidden = E.moeda !== "ZAR";
 }
 
 /* ---- passo 1: a conta ---- */
@@ -185,6 +207,7 @@ function validar(){
   if(v("f-escola").length < 2) return ["Escreva o nome da área de membros.", $("f-escola")];
   if(v("f-nome").length < 2) return ["Escreva o seu nome.", $("f-nome")];
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("f-email"))) return ["O email não parece certo.", $("f-email")];
+  if(E.moeda === "MZN" && !msisdn(v("f-mpesa"))) return ["Escreva o número M-Pesa que vai pagar: 84 ou 85, com 9 algarismos.", $("f-mpesa")];
   if(E.existente){
     if(!$("f-senha-existente").value) return ["Escreva a senha da sua conta.", $("f-senha-existente")];
   } else {
@@ -193,6 +216,14 @@ function validar(){
   }
   return null;
 }
+
+/* 84/85 com 9 algarismos, com ou sem 258 — o mesmo que o mpesa-checkout aceita. */
+function msisdn(bruto){
+  const d = String(bruto || "").replace(/\D/g, "");
+  const n = d.length === 12 && d.startsWith("258") ? d : d.length === 9 && d.startsWith("8") ? "258" + d : d.length === 10 && d.startsWith("08") ? "258" + d.slice(1) : "";
+  return /^258(84|85)\d{7}$/.test(n) ? n : null;
+}
+const numeroVisivel = n => `${n.slice(3, 5)} ${n.slice(5, 8)} ${n.slice(8)}`;
 
 function aOcupar(botao, texto){
   if(texto){ botao.dataset.texto = botao.textContent; botao.disabled = true; botao.innerHTML = `<span class="roda" aria-hidden="true"></span> ${esc(texto)}`; }
@@ -218,6 +249,7 @@ async function enviarConta(ev){
   const corpo = {
     nomeEscola:$("f-escola").value.trim(), nome:$("f-nome").value.trim(), email,
     senha:E.existente ? "" : $("f-senha").value, plano:E.plano.id, ciclo:E.ciclo, moeda:E.moeda, aceitouTermos:true,
+    msisdn:E.moeda === "MZN" ? msisdn($("f-mpesa").value) : null,
   };
   aOcupar(btn, E.existente ? "A entrar…" : "A criar…");
   try {
@@ -235,7 +267,8 @@ async function enviarConta(ev){
     }
     if(r.contaNova) await fonte.entrar(email, corpo.senha);
     E.escola = { organizacao:r.organizacao, slug:r.slug, nome:corpo.nomeEscola };
-    aAbrir();
+    E.validacao = r.validacao || null;
+    validarPagamento(corpo.msisdn);
   } catch(e){
     aOcupar(btn);
     if(E.existente) btn.textContent = "Entrar e continuar";
@@ -243,14 +276,108 @@ async function enviarConta(ev){
   }
 }
 
-/* ---- a área criada: abre-se na Cobrança ---- */
+/* ---- a validação do pagamento (W4·7) ----
+   M-Pesa: pede-se o PIN pela cobrança da validação e espera-se pela resposta;
+   confirmado, pergunta-se se a escola já abriu e abre-se. Cartão: a página
+   segura do Payflow abre noutro separador e esta vai perguntando. */
+const SIMBOLO = { MZN:"MZ", ZAR:"R" };
+const ICONES = {
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  falhou:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>',
+  cartao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>'
+};
+function mostraValidar({ sinal, titulo, texto, relogio, erro, accoes, cartao }){
+  $("painel-conta").hidden = true;
+  $("painel-validar").hidden = false;
+  const s = $("validar-sinal");
+  s.className = "validar-sinal" + (sinal === "ok" ? " ok" : sinal === "falhou" ? " falhou" : "");
+  s.innerHTML = ICONES[sinal] || '<span class="roda grande"></span>';
+  $("validar-titulo").textContent = titulo;
+  $("validar-texto").textContent = texto || "";
+  $("validar-relogio").hidden = !relogio;
+  const e = $("validar-erro"); e.textContent = erro || ""; e.hidden = !erro;
+  $("validar-accoes").hidden = !accoes;
+  $("btn-cartao").hidden = !cartao;
+  if(cartao) $("btn-cartao").href = cartao;
+}
+
+let relogio = 0;
+function contar(segundos){
+  clearInterval(relogio);
+  let n = segundos;
+  const pinta = () => { $("validar-relogio").textContent = n > 0 ? `O pedido expira em ${n} s` : "A aguardar a resposta do M-Pesa…"; };
+  pinta(); relogio = setInterval(() => { n--; pinta(); if(n <= 0) clearInterval(relogio); }, 1000);
+}
+
+/* O valor vem do Payflow (a cobrança da validação); antes dela, o de omissão. */
+function valorDaValidacao(){
+  const v = E.validacao;
+  return dinheiro(v ? v.valor : (E.moeda === "ZAR" ? 18 : 10), SIMBOLO[(v && v.moeda) || E.moeda] || "MZ");
+}
+
+function validarPagamento(numero){
+  if(E.validacao && E.validacao.metodo === "cartao") return validarCartao();
+  return pedirPin(numero);
+}
+
+async function pedirPin(numero){
+  E.numero = numero;
+  mostraValidar({ titulo:"Confirme no seu telemóvel",
+    texto:`Enviámos um pedido de ${valorDaValidacao()} para o número ${numeroVisivel(numero)}. Abra a mensagem do M-Pesa e escreva o seu PIN. O valor é descontado na primeira fatura.`,
+    relogio:true });
+  contar(90);
+  let r;
+  try { r = await fonte.pedirPin(E.validacao.atalho, numero); }
+  catch(e){ clearInterval(relogio); return falhou(e.message || "Não foi possível pedir o pagamento."); }
+  clearInterval(relogio);
+  if(r && (r.estado === "confirmada" || r.jaPago)) return aEsperarAbrir();
+  if(r && r.estado === "recusada") return falhou(r.porque || "O M-Pesa não concluiu o pagamento.");
+  /* Sem resposta a tempo, ou já um pedido a decorrer: se a pessoa confirmou
+     o PIN, o pagamento entrou — pergunta-se durante uns minutos. */
+  return aEsperarAbrir(r && r.aviso ? r.aviso : "Não recebemos resposta a tempo. Se confirmou o PIN, o pagamento entrou: estamos a verificar. Não pague outra vez.", 180);
+}
+
+function falhou(motivo){
+  mostraValidar({ sinal:"falhou", titulo:"O pagamento não foi confirmado", erro:motivo,
+    texto:"Nada foi cobrado. Tente outra vez com o mesmo número, ou use outro.", accoes:true });
+}
+
+const pausa = ms => new Promise(res => setTimeout(res, ms));
+
+async function aEsperarAbrir(aviso, segundos){
+  mostraValidar({ sinal: aviso ? null : "ok", titulo: aviso ? "A verificar o pagamento" : "Pagamento confirmado",
+    texto: aviso || "A abrir a sua área de membros…" });
+  const ate = Date.now() + (segundos || 60) * 1000;
+  while(Date.now() < ate){
+    try { const r = await fonte.confirmar(E.escola.organizacao); if(r && r.estado && r.estado !== "pendente") return aAbrir(); }
+    catch(e){ /* tenta outra vez */ }
+    await pausa(3000);
+  }
+  mostraValidar({ sinal:"falhou", titulo:"Ainda não vimos o pagamento",
+    texto:"Se o seu telemóvel pediu o PIN e o confirmou, a área abre sozinha em poucos minutos. Se não, tente outra vez.",
+    accoes:true });
+}
+
+async function validarCartao(){
+  mostraValidar({ sinal:"cartao", titulo:"Valide o cartão",
+    texto:`Abra a página segura do pagamento e pague ${valorDaValidacao()}. O valor é descontado na primeira fatura. Esta página abre a sua área assim que o pagamento entrar.`,
+    cartao:E.validacao.link });
+  for(;;){
+    await pausa(4000);
+    try { const r = await fonte.confirmar(E.escola.organizacao); if(r && r.estado && r.estado !== "pendente") return aAbrir(); }
+    catch(e){ /* tenta outra vez */ }
+  }
+}
+
+/* ---- a área aberta: segue para o onboarding ---- */
 function aAbrir(){
   $("painel-conta").hidden = true;
+  $("painel-validar").hidden = true;
   $("plano-trocar").hidden = true;
   $("painel-pronta").hidden = false;
-  $("pronta-titulo").textContent = `A «${E.escola.nome}» está criada`;
-  $("pronta-texto").textContent = "A abrir a sua área de membros, na página Cobrança…";
-  const endereco = `/?org=${encodeURIComponent(E.escola.slug)}#/cobranca`;
+  $("pronta-titulo").textContent = `A «${E.escola.nome}» está aberta`;
+  $("pronta-texto").textContent = "A abrir a sua área de membros para pôr a marca e os primeiros cursos…";
+  const endereco = `/?org=${encodeURIComponent(E.escola.slug)}`;
   $("btn-entrar").href = endereco;
   fonte.abrir(endereco);
 }
@@ -268,6 +395,13 @@ async function arrancar(){
   escolherPlano(q.get("plano"), q.get("ciclo"), (q.get("moeda") || "").toUpperCase() || (q.get("pais") === "za" ? "ZAR" : q.get("pais") === "mz" ? "MZN" : null));
 
   $("form-conta").addEventListener("submit", enviarConta);
+  $("btn-repetir").addEventListener("click", () => pedirPin(E.numero));
+  $("form-outro").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const n = msisdn($("f-outro").value);
+    if(!n){ $("validar-erro").textContent = "Esse número não parece um M-Pesa: 84 ou 85, com 9 algarismos."; $("validar-erro").hidden = false; return; }
+    pedirPin(n);
+  });
 
 }
 arrancar();
