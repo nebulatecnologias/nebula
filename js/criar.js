@@ -118,14 +118,21 @@ function fonteDemo(){
       await espera(); registo.chamadas.push(["criar-escola", Object.assign({}, corpo, { senha: corpo.senha ? "•" : "" })]);
       if(sessao && sessao.email !== corpo.email) throw new Error("Entrou com outra conta. Use o email dessa conta ou saia primeiro.");
       if(contaExiste && !sessao){ const e = new Error("Este email já tem conta."); e.estado = 409; e.corpo = { conta:"existe" }; throw e; }
+      /* A escola que ficou à espera da validação, já paga: retoma-se e abre. */
+      if(q.has("retomar") && sessao) return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", contaNova:false, retomada:true, aberta:true,
+        slug:corpo.nomeEscola.toLowerCase().replace(/[^a-z0-9]+/g, "-") };
       const slug = corpo.nomeEscola.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
       return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao,
                validacao:{ metodo:corpo.moeda === "ZAR" ? "cartao" : "mpesa", numero:"KMZ-2026-0001", atalho:"demo123",
                            valor:corpo.moeda === "ZAR" ? 18 : 10, moeda:corpo.moeda, link:"https://payflow.kingdomcompny.com/c/demo123" } };
     },
-    /* Números de mentira: …0001 sem saldo, …0002 sem resposta; o resto paga. */
+    /* Números de mentira: …0001 sem saldo, …0002 sem resposta, …0003 a ligação
+       cortada depois de o PIN ser confirmado, …0004 recusado do nosso lado;
+       o resto paga. */
     async pedirPin(atalho, msisdn){
       await espera(); registo.chamadas.push(["pin", msisdn]);
+      if(msisdn.endsWith("0003")){ pago = true; throw new Error("Não foi possível falar com o servidor. Tente outra vez."); }
+      if(msisdn.endsWith("0004")) return { ok:false, estado:"recusada", nosso:true, porque:"Temos um problema do nosso lado no pagamento automático. Não foi nada consigo e nada lhe foi cobrado — pague por transferência ou fale connosco." };
       if(msisdn.endsWith("0001")) return { ok:false, estado:"recusada", porque:"Não havia saldo suficiente na sua carteira M-Pesa." };
       if(msisdn.endsWith("0002")) return { ok:false, estado:"desconhecida", aviso:"Não recebemos resposta a tempo." };
       pago = true; return { ok:true, estado:"confirmada" };
@@ -270,6 +277,8 @@ async function enviarConta(ev){
     }
     if(r.contaNova) await fonte.entrar(email, corpo.senha);
     E.escola = { organizacao:r.organizacao, slug:r.slug, nome:corpo.nomeEscola };
+    /* A escola que ficou à espera da validação e já foi paga: abre-se. */
+    if(r.aberta) return aAbrir();
     E.validacao = r.validacao || null;
     validarPagamento(corpo.msisdn);
   } catch(e){
@@ -332,14 +341,26 @@ async function pedirPin(numero){
   contar(90);
   let r;
   try { r = await fonte.pedirPin(E.validacao.atalho, numero); }
-  catch(e){ clearInterval(relogio); return falhou(e.message || "Não foi possível pedir o pagamento."); }
+  catch(e){
+    clearInterval(relogio);
+    /* Com um erro escrito, o servidor recusou antes de falar com o M-Pesa:
+       nada foi cobrado. Sem resposta nenhuma (a ligação cortada a meio da
+       espera), o PIN pode ter sido confirmado — foi o que aconteceu ao Shelton
+       a 04/10: a página disse «falhou» e os 10 MT tinham entrado. Verifica-se. */
+    if(e.corpo && e.corpo.error) return falhou(e.message);
+    return aEsperarAbrir(VERIFICAR, 180);
+  }
   clearInterval(relogio);
   if(r && (r.estado === "confirmada" || r.jaPago)) return aEsperarAbrir();
+  /* «Nosso» é o M-Pesa a recusar o pedido por uma razão do lado dele ou
+     nosso: o texto do Payflow manda pagar por transferência, que aqui não há. */
+  if(r && r.estado === "recusada" && r.nosso) return falhou("O M-Pesa não aceitou o pedido agora. Tente outra vez daqui a um minuto, ou use outro número.");
   if(r && r.estado === "recusada") return falhou(r.porque || "O M-Pesa não concluiu o pagamento.");
   /* Sem resposta a tempo, ou já um pedido a decorrer: se a pessoa confirmou
      o PIN, o pagamento entrou — pergunta-se durante uns minutos. */
-  return aEsperarAbrir(r && r.aviso ? r.aviso : "Não recebemos resposta a tempo. Se confirmou o PIN, o pagamento entrou: estamos a verificar. Não pague outra vez.", 180);
+  return aEsperarAbrir(r && r.aviso ? r.aviso : VERIFICAR, 180);
 }
+const VERIFICAR = "Não recebemos resposta a tempo. Se confirmou o PIN, o pagamento entrou: estamos a verificar. Não pague outra vez.";
 
 function falhou(motivo){
   mostraValidar({ sinal:"falhou", titulo:"O pagamento não foi confirmado", erro:motivo,
@@ -358,7 +379,7 @@ async function aEsperarAbrir(aviso, segundos){
     await pausa(3000);
   }
   mostraValidar({ sinal:"falhou", titulo:"Ainda não vimos o pagamento",
-    texto:"Se o seu telemóvel pediu o PIN e o confirmou, a área abre sozinha em poucos minutos. Se não, tente outra vez.",
+    texto:"Se o seu telemóvel pediu o PIN e o confirmou, a área abre sozinha em poucos minutos — pode voltar a esta página com o mesmo email e nome, e ela abre. Se não, tente outra vez.",
     accoes:true });
 }
 

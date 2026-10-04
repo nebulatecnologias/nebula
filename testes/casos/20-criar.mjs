@@ -92,6 +92,53 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   verdade(true, 'Outro número paga e a área abre');
   await pg.close();
 
+  /* 2d. A ligação cai a meio da espera pelo PIN, que foi confirmado (o caso
+     do Shelton a 04/10): a página não diz «falhou» — verifica, e abre. */
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial`);
+  await pg.fill('#f-escola', 'Escola Cortada');
+  await pg.fill('#f-nome', 'Ana Exemplo');
+  await pg.fill('#f-email', 'cortada@exemplo.invalid');
+  await pg.fill('#f-mpesa', '840000003');
+  await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 4000 });
+  verdade(true, 'Sem resposta do servidor, verifica o pagamento e a área abre');
+  await pg.close();
+
+  /* 2e. Recusado «do nosso lado»: não manda pagar por transferência. */
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial`);
+  await pg.fill('#f-escola', 'Escola Recusada');
+  await pg.fill('#f-nome', 'Ana Exemplo');
+  await pg.fill('#f-email', 'recusada@exemplo.invalid');
+  await pg.fill('#f-mpesa', '840000004');
+  await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#validar-accoes:not([hidden])', { timeout: 3000 });
+  contem(await pg.textContent('#validar-erro'), 'outro número', 'Recusado do nosso lado: tente outra vez ou outro número');
+  naoContem(await pg.textContent('#validar-erro'), 'transferência', 'sem mandar pagar por transferência');
+  await pg.close();
+
+  /* 2f. Volta à /criar com o email e o nome da escola que ficou à espera, já
+     paga: entra com a senha e a área abre, sem criar outra nem pedir PIN. */
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&existe=1&retomar=1`);
+  await pg.fill('#f-escola', 'Escola Paga');
+  await pg.fill('#f-nome', 'Ana Exemplo');
+  await pg.fill('#f-email', 'paga@exemplo.invalid');
+  await pg.fill('#f-mpesa', '841234567');
+  await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#campos-existente:not([hidden])', { timeout: 3000 });
+  await pg.fill('#f-senha-existente', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 3000 });
+  const retomar = await pg.evaluate(() => window.__criarDemo.chamadas);
+  falso(retomar.some(c => c[0] === 'pin'), 'A escola já paga abre sem pedir o PIN outra vez');
+  igual(await pg.evaluate(() => window.__criarDemo.abriu), '/?org=escola-paga', 'e abre a mesma escola');
+  await pg.close();
+
   /* 2c. Fora de Moçambique: o cartão, na página segura do Payflow. */
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&pago=1`);
   verdade(await pg.isHidden('#campo-mpesa'), 'Em rand não pede número M-Pesa');
