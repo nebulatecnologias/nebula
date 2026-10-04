@@ -42,14 +42,18 @@
   /* Os bónus do Premium. valor: o preço de cada um à venda em separado, se
      existir; sem valor real, fica null e a página não mostra preços de bónus. */
   const BONUS = [
-    { titulo:"Biblioteca de prompts de cinema", valor:null, tom:30,
-      desc:"Prompts testados, organizados por plano, luz, movimento de câmara e estilo. Copie, troque o assunto e gere." },
-    { titulo:"Pack de personagens consistentes", valor:null, tom:280,
-      desc:"Folhas de referência prontas, com o rosto, o perfil e o corpo inteiro, para a personagem ficar igual em todas as cenas." },
-    { titulo:"Kit de anúncios em vídeo", valor:null, tom:15,
-      desc:"Estruturas de anúncio prontas a adaptar: o gancho, a prova, a oferta e a chamada à acção, cena a cena." },
-    { titulo:"Guia: vender vídeos com IA", valor:null, tom:170,
-      desc:"Um modelo de proposta, uma tabela de preços de referência e o guião da primeira conversa com um cliente." }
+    { titulo:"Pack de prompts: cenas de cinema", curto:"cenas de cinema", valor:null, tom:30,
+      desc:"Planos, lentes, luz e movimentos de câmara para cenas com aspecto de filme: pôr do sol, perseguições, interiores, noite e chuva.",
+      exemplo:"Plano geral ao pôr do sol, lente de 35 mm: um pescador puxa o barco para a areia, câmara lenta, luz dourada, grão de película." },
+    { titulo:"Pack de prompts: personagens consistentes", curto:"personagens", valor:null, tom:280,
+      desc:"Para criar uma personagem e mantê-la igual em todas as cenas: rosto, roupa, expressões, ângulos e a mesma pessoa em cenários diferentes.",
+      exemplo:"A mesma mulher de 30 anos, tranças curtas e casaco amarelo, agora a sorrir numa esplanada, plano médio, luz da manhã." },
+    { titulo:"Pack de prompts: anúncios de produto", curto:"anúncios de produto", valor:null, tom:15,
+      desc:"Produto a rodar em estúdio, unboxing, antes e depois, o produto em uso e o plano final com a marca, prontos a trocar pelo seu produto.",
+      exemplo:"Um frasco de perfume a rodar devagar sobre fundo preto, partículas de luz no ar, reflexos suaves no vidro, estética de luxo." },
+    { titulo:"Pack de prompts: Reels e TikTok", curto:"Reels e TikTok", valor:null, tom:330,
+      desc:"Vídeos verticais 9:16 com gancho nos primeiros segundos: transições, estilo UGC, tendências e cortes ao ritmo da música.",
+      exemplo:"Vertical 9:16: uma mão abre a porta de um café e a câmara atravessa até ao balcão num só movimento, cortes ao ritmo da música." }
   ];
   const DORES = [
     "Vê vídeos incríveis feitos com IA e não faz ideia de como foram feitos.",
@@ -109,14 +113,14 @@
     relogio:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     presente:'<rect x="3.5" y="8" width="17" height="12.5" rx="2"/><path d="M3.5 12h17M12 8v12.5M12 8S10.5 3.5 7.8 4.6C5.6 5.5 7 8 12 8zm0 0s1.5-4.5 4.2-3.4C18.4 5.5 17 8 12 8z"/>',
     mais:'<path d="M12 5v14M5 12h14"/>',
-    chev:'<path d="m6 9 6 6 6-6"/>'
+    chev:'<path d="m6 9 6 6 6-6"/>',
+    copiar:'<rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/>'
   };
 
   if(!calmo) document.documentElement.classList.add("anima");
 
   const doBasico = MODULOS.filter(m => m.plano === "basico"), doPremium = MODULOS.filter(m => m.plano === "premium");
   const aulasB = soma(doBasico, "aulas"), aulasP = soma(doPremium, "aulas"), aulasT = soma(MODULOS, "aulas");
-  const nomesBonus = BONUS.map(b => b.titulo);
   const totalBonus = BONUS.every(b => b.valor) ? soma(BONUS, "valor") : 0;
 
   /* ================= Preços, garantia e totais em todo o lado ================= */
@@ -124,7 +128,7 @@
   $$("[data-preco-antes]").forEach(el => { el.textContent = dinheiro(PRECOS[el.dataset.precoAntes].antes); });
   $$("[data-garantia]").forEach(el => { el.textContent = GARANTIA_DIAS; });
   if(!GARANTIA_DIAS) $$("[data-garantia-mostra]").forEach(el => { el.hidden = true; });
-  const TOTAIS = { aulas:`${aulasT} aulas`, bonus:`${BONUS.length} bónus`, "bonus-n":String(BONUS.length) };
+  const TOTAIS = { aulas:`${aulasT} aulas`, bonus:`${BONUS.length} packs de prompts`, "bonus-n":String(BONUS.length) };
   $$("[data-total]").forEach(el => { el.textContent = TOTAIS[el.dataset.total]; });
 
   /* ================= Barra da promoção ================= */
@@ -209,7 +213,7 @@
     { n:MODULOS.length, rot:"Módulos, do zero ao avançado", ico:I.modulos },
     { n:aulasT, rot:"Aulas em vídeo", ico:I.aulas },
     { n:Math.round(soma(MODULOS, "min") / 60), suf:" h", rot:"De aulas práticas", ico:I.relogio },
-    { n:BONUS.length, rot:"Bónus no Premium", ico:I.presente }
+    { n:BONUS.length, rot:"Packs de prompts no Premium", ico:I.presente }
   ];
   $("numeros").innerHTML = NUMEROS.map(x => cartaoRevela("li", "numero cartao",
     `${svg(x.ico)}<b data-conta="${x.n}" data-suf="${x.suf || ""}">${contagem(x.n)}${x.suf || ""}</b><span>${esc(x.rot)}</span>`)).join("");
@@ -238,6 +242,11 @@
      <div class="bonus-corpo">
        <h3>${esc(b.titulo)}</h3>
        <p>${esc(b.desc)}</p>
+       <div class="bonus-exemplo">
+         <span class="bonus-exemplo-rot">Exemplo do pack</span>
+         <p>«${esc(b.exemplo)}»</p>
+         <button type="button" class="bonus-copiar" data-copiar="${i}">${svg(I.copiar)}<span>Copiar o prompt</span></button>
+       </div>
        <div class="bonus-pe">
          <span>${b.valor ? `<s>${esc(dinheiro(b.valor))}</s> de valor` : "Incluído no Premium"}</span>
          <span class="selo selo-verde">Grátis hoje</span>
@@ -260,12 +269,12 @@
     ul.innerHTML = [
       item(`<b>${doPremium.length} módulos avançados</b>, ${aulasP} aulas a mais`),
       ...doPremium.map(m => item(esc(m.titulo))),
-      ...BONUS.map(b => item(`<b>Bónus:</b> ${esc(b.titulo)}`, "presente"))
+      ...BONUS.map(b => item(`<b>Bónus:</b> prompts para ${esc(b.curto)}`, "presente"))
     ].join("");
   });
   $("oto-itens").innerHTML = [
     item(`Os ${doPremium.length} módulos avançados: anúncios, voz e lip-sync, curta-metragem e clientes (${aulasP} aulas a mais)`, "mais"),
-    item(`Os ${BONUS.length} bónus: ${esc(nomesBonus.join(", "))}${totalBonus ? ` (${esc(dinheiro(totalBonus))} de valor)` : ""}`, "mais"),
+    item(`Os ${BONUS.length} packs de prompts: ${esc(BONUS.map(x => x.curto).join(", "))}${totalBonus ? ` (${esc(dinheiro(totalBonus))} de valor)` : ""}`, "mais"),
     item("Tudo o que está no Básico", "check")
   ].join("");
 
@@ -274,7 +283,7 @@
     ["Preciso de saber editar vídeo ou de ter experiência?", "Não. O primeiro módulo parte do zero: o que é cada ferramenta, como se escreve um prompt e como se gera o primeiro vídeo. A montagem também se ensina no curso."],
     ["Preciso de um computador potente?", "Não. A geração de vídeo corre nos servidores das próprias ferramentas, por isso basta um browser, no computador ou no telemóvel, e uma ligação à internet."],
     ["As ferramentas de inteligência artificial são pagas?", "Muitas têm um plano gratuito, com limites. O curso mostra como começar sem gastar e como saber quando vale a pena pagar uma assinatura."],
-    ["Qual é a diferença entre o Básico e o Premium?", `O Básico tem os ${doBasico.length} módulos de base. O Premium junta os ${doPremium.length} módulos avançados (anúncios, voz e lip-sync, curta-metragem e vender a clientes) e os ${BONUS.length} bónus.`],
+    ["Qual é a diferença entre o Básico e o Premium?", `O Básico tem os ${doBasico.length} módulos de base. O Premium junta os ${doPremium.length} módulos avançados (anúncios, voz e lip-sync, curta-metragem e vender a clientes) e os ${BONUS.length} packs de prompts de bónus: ${BONUS.map(x => x.curto).join(", ")}.`],
     ["O pagamento é mensal?", "Não. Paga uma única vez o preço da oferta que escolher, sem assinaturas."],
     GARANTIA_DIAS ? ["Há garantia de devolução do dinheiro?", `Sim. Tem ${GARANTIA_DIAS} dias para experimentar o curso. Se não for para si, peça o reembolso dentro desse prazo, nos termos aplicáveis.`] : null,
     ["Posso partilhar o acesso com outras pessoas?", "Não. O acesso é pessoal: as aulas e os bónus não podem ser partilhados, revendidos nem publicados."]
@@ -434,6 +443,24 @@
   $$("[data-comprar]").forEach(b => b.addEventListener("click", () => {
     if(b.dataset.comprar === "basico") abreOto();
     else pagar(b.dataset.comprar, "cartao_oferta");
+  }));
+
+  /* ================= Copiar o prompt de exemplo de cada pack ================= */
+  $$("[data-copiar]").forEach(btn => btn.addEventListener("click", async () => {
+    const t = BONUS[Number(btn.dataset.copiar)].exemplo;
+    let ok = false;
+    try { await navigator.clipboard.writeText(t); ok = true; }
+    catch(e){
+      const a = document.createElement("textarea");
+      a.value = t; a.setAttribute("readonly", ""); a.style.position = "fixed"; a.style.opacity = "0";
+      document.body.appendChild(a); a.select();
+      try { ok = document.execCommand("copy"); } catch(_){}
+      a.remove();
+    }
+    const rot = btn.querySelector("span");
+    rot.textContent = ok ? "Copiado" : "Seleccione e copie à mão";
+    btn.classList.toggle("feito", ok);
+    setTimeout(() => { rot.textContent = "Copiar o prompt"; btn.classList.remove("feito"); }, 1800);
   }));
 
   /* ================= Perguntas: abrir e fechar com movimento ================= */

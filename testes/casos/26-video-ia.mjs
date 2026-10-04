@@ -25,7 +25,8 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   const nBonus = await pg.locator('#lista-bonus .bonus').count();
   verdade(nBonus >= 4, `Pelo menos quatro bónus no Premium (${nBonus})`);
   igual(await pg.locator('.oferta[data-oferta="premium"] .oferta-itens li', { hasText: 'Bónus:' }).count(), nBonus, 'O cartão do Premium lista todos os bónus');
-  contem(premium, 'Biblioteca de prompts', 'incluindo a biblioteca de prompts');
+  igual(await pg.locator('#lista-bonus .bonus h3', { hasText: 'Pack de prompts' }).count(), nBonus, 'Todos os bónus são packs de prompts, cada um para uma coisa');
+  igual(await pg.locator('#lista-bonus .bonus-copiar').count(), nBonus, 'e cada pack mostra um prompt de exemplo para copiar');
 
   /* Sem data real de fim, não há contagem decrescente (seria urgência falsa). */
   verdade(await pg.isHidden('#promo-relogio'), 'Sem data de fim da promoção, a barra não mostra relógio');
