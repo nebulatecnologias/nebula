@@ -62,6 +62,9 @@ function fonteReal(){
       return data || [];
     },
     async sessao(){ const { data } = await c.auth.getSession(); return data.session ? data.session.user : null; },
+    /* Só neste browser: a sessão de outra conta (a da equipa de uma escola,
+       por exemplo, que partilha este endereço) não pode ir no pedido. */
+    async sair(){ await c.auth.signOut({ scope:"local" }); },
     async entrar(email, senha){
       const { error } = await c.auth.signInWithPassword({ email, password:senha });
       if(error) throw new Error(/invalid/i.test(error.message) ? "A senha não confere com este email." : error.message);
@@ -76,7 +79,7 @@ function fonteReal(){
 function fonteDemo(){
   const q = new URLSearchParams(location.search);
   const registo = window.__criarDemo = { chamadas:[] };
-  let sessao = null;
+  let sessao = q.get("sessao") ? { email:q.get("sessao") } : null;
   const espera = () => new Promise(r => setTimeout(r, 60));
   const planos = [
     { id:"essencial", nome:"Essencial", alunosMax:500, aVenda:true,
@@ -95,6 +98,7 @@ function fonteDemo(){
         precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:null, anual:null, simbolo:"R" } } })) : planos;
     },
     async sessao(){ return sessao; },
+    async sair(){ registo.chamadas.push(["sair", sessao && sessao.email]); sessao = null; },
     async entrar(email, senha){
       await espera(); registo.chamadas.push(["entrar", email]);
       if(senha === "errada-123") throw new Error("A senha não confere com este email.");
@@ -102,6 +106,7 @@ function fonteDemo(){
     },
     async criarEscola(corpo){
       await espera(); registo.chamadas.push(["criar-escola", Object.assign({}, corpo, { senha: corpo.senha ? "•" : "" })]);
+      if(sessao && sessao.email !== corpo.email) throw new Error("Entrou com outra conta. Use o email dessa conta ou saia primeiro.");
       if(contaExiste && !sessao){ const e = new Error("Este email já tem conta."); e.estado = 409; e.corpo = { conta:"existe" }; throw e; }
       const slug = corpo.nomeEscola.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
       return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao };
@@ -216,6 +221,11 @@ async function enviarConta(ev){
   };
   aOcupar(btn, E.existente ? "A entrar…" : "A criar…");
   try {
+    /* Este endereço é o mesmo da área de membros: quem já entrou noutra conta
+       (de uma escola, por exemplo) e cria a área com outro email começa sem
+       essa sessão, senão o servidor recusa («Entrou com outra conta»). */
+    const atual = await fonte.sessao();
+    if(atual && String(atual.email || "").toLowerCase() !== email) await fonte.sair();
     if(E.existente) await fonte.entrar(email, $("f-senha-existente").value);
     let r;
     try { r = await fonte.criarEscola(corpo); }

@@ -65,6 +65,22 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript');
   await pg.close();
 
+  /* 2b. Já com sessão de outra conta no browser (o /criar partilha o endereço
+     da área de membros): sai dessa sessão e cria com o email escrito, em vez
+     de o servidor recusar com «Entrou com outra conta» (achado do Shelton a 04/10). */
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&sessao=equipa@exemplo.invalid`);
+  await pg.fill('#f-escola', 'Escola Nova');
+  await pg.fill('#f-nome', 'Ana Exemplo');
+  await pg.fill('#f-email', 'nova@exemplo.invalid');
+  await pg.fill('#f-senha', 'segredo-forte');
+  await pg.fill('#f-senha2', 'segredo-forte');
+  await pg.click('#btn-conta');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 3000 });
+  const ch2 = await pg.evaluate(() => window.__criarDemo.chamadas.map(c => c[0]));
+  igual(ch2.slice(0, 2).join(','), 'sair,criar-escola', 'Com a sessão de outra conta, sai dela antes de criar');
+  verdade(ch2.includes('entrar'), 'e entra depois com a conta nova');
+  await pg.close();
+
   /* 3. O email já tem conta: pede a senha dessa conta. */
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&existe=1`);
   await pg.fill('#f-escola', 'Outra Escola');
