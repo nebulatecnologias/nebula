@@ -38,6 +38,78 @@
         ],
         "createdAt": "2026-10-03T15:14:07.845Z",
         "reason": "Brilho laranja pinado pela referência Setrex do Shelton (o verde-lima trocado pelo laranja da identidade), 03/10/2026"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.360Z",
+        "reason": "GUIA-SITES-DE-VENDAS.md (pedido do utilizador): efeito pedido pelo guia dos sites de vendas, igual ao /site/; §8.6 regista o brilho laranja como excepção"
+      },
+      {
+        "rule": "radial-spotlight-glow",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.372Z",
+        "reason": "GUIA-SITES-DE-VENDAS.md (pedido do utilizador): efeito pedido pelo guia dos sites de vendas, igual ao /site/; §4 abertura: luz laranja"
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.384Z",
+        "reason": "GUIA-SITES-DE-VENDAS.md (pedido do utilizador): efeito pedido pelo guia dos sites de vendas, igual ao /site/; §4 abertura: grelha fina a desvanecer"
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "video-ia/video-ia.css"
+        ],
+        "createdAt": "2026-10-04T14:56:33.396Z",
+        "reason": "GUIA-SITES-DE-VENDAS.md (pedido do utilizador): efeito pedido pelo guia dos sites de vendas, igual ao /site/; §4 abertura: grelha fina a desvanecer"
+      },
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.407Z",
+        "reason": "GUIA-SITES-DE-VENDAS.md (pedido do utilizador): efeito pedido pelo guia dos sites de vendas, igual ao /site/; §4 faixa sem fim, para com movimento reduzido"
+      },
+      {
+        "rule": "repeating-stripes-gradient",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.418Z",
+        "reason": "Utilizador pediu espaços reservados para imagens e vídeos; as riscas só marcam o espaço vazio e somem com o ficheiro"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.429Z",
+        "reason": "Falso positivo: janela/janela-topo/comparar são molduras de media a toda a largura e .faq é só uma linha divisória"
+      },
+      {
+        "rule": "clipped-overflow-container",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T14:56:33.441Z",
+        "reason": "body overflow-x:hidden de propósito, para o telemóvel não deslizar para o lado (guia §8.4)"
       }
     ]
   }

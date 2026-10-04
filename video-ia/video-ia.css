@@ -284,12 +284,13 @@ button,input,select{ font:inherit; color:inherit; }
   background:linear-gradient(0deg, rgba(0,0,0,.82), rgba(0,0,0,.5) 55%, transparent);
 }
 .obra figcaption b{ font-weight:500; font-size:18px; letter-spacing:-.02em; }
-.obra figcaption span{
-  font-size:14px; color:#e2ddd7; max-width:56ch; text-wrap:pretty;
-  max-height:0; overflow:hidden; opacity:0; transform:translateY(6px);
-  transition:max-height .5s var(--sai), opacity .4s, transform .5s var(--sai);
+.obra-prompt{
+  display:grid; grid-template-rows:0fr; font-size:14px; color:#e2ddd7; max-width:56ch; text-wrap:pretty;
+  opacity:0; transform:translateY(6px);
+  transition:grid-template-rows .5s var(--sai), opacity .4s, transform .5s var(--sai);
 }
-.obra:hover figcaption span, .obra:focus-visible figcaption span{ max-height:6em; opacity:1; transform:none; }
+.obra-prompt > span{ overflow:hidden; min-height:0; }
+.obra:hover .obra-prompt, .obra:focus-visible .obra-prompt{ grid-template-rows:1fr; opacity:1; transform:none; }
 
 /* ---------------- Catálogo de módulos ---------------- */
 .catalogo{ display:grid; grid-template-columns:250px minmax(0, 1fr); gap:44px; align-items:start; }
@@ -696,7 +697,7 @@ dialog{ color:var(--texto); }
   .obra .ph{ aspect-ratio:var(--ar); height:auto; }
   .obra-alta .ph{ aspect-ratio:4/5; }
   .obra figcaption{ position:static; padding:14px 16px 18px; background:none; }
-  .obra figcaption span{ opacity:1; transform:none; max-height:none; color:var(--texto-2); }
+  .obra-prompt{ grid-template-rows:1fr; opacity:1; transform:none; color:var(--texto-2); }
   .hero-nota{ align-items:flex-start; }
   .hero-nota .ponto{ margin-top:6px; }
   .hero-nota-2{ flex-basis:100%; padding-left:16px; }
