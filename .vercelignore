@@ -13,3 +13,5 @@ package.json
 package-lock.json
 .github
 supabase
+# Guias internos, não fazem parte do site.
+docs
