@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#000000">
+<title>Realizador IA · Vídeos de cinema com inteligência artificial</title>
+<meta name="description" content="Aprenda a criar vídeos de cinema, anúncios e conteúdo para redes sociais com inteligência artificial. A partir de R 99,00.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/video-ia/video-ia.css">
+</head>
+<body>
+<!--
+  Página de vendas do curso de vídeo com IA.
+  Nome («Realizador IA»), módulos, durações e bónus são PROVISÓRIOS: confirmar antes de publicar.
+
+  Imagens e vídeos: cada espaço reservado é um <div class="ph" data-src="">.
+  Basta preencher o data-src (ex.: data-src="/video-ia/media/apresentacao.mp4")
+  e a página troca o espaço pelo ficheiro: .mp4/.webm viram vídeo em ciclo,
+  sem som; o resto vira imagem. Se o ficheiro faltar, o espaço reservado fica.
+
+  Links de pagamento: no topo de video-ia.js, em CHECKOUT.
+-->
+<a class="saltar" href="#conteudo">Saltar para o conteúdo</a>
+
+<header class="nav" id="nav">
+  <div class="nav-in">
+    <a class="marca" href="#topo" aria-label="Realizador IA, início">
+      <span class="sinal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11.5" rx="2.5"/><path d="m3.6 9 15.6-4.2M7.4 8l2.1-3.6M12.8 6.6l2.1-3.6"/><path d="M10.2 12.6v4.8l4-2.4z" fill="currentColor"/></svg></span>
+      <span>Realizador IA</span>
+    </a>
+    <nav class="nav-links" aria-label="Secções">
+      <a href="#modulos">Módulos</a>
+      <a href="#metodo">Método</a>
+      <a href="#bonus">Bónus</a>
+      <a href="#ofertas">Ofertas</a>
+      <a href="#perguntas">Perguntas</a>
+    </nav>
+    <a class="btn btn-laranja btn-nav" href="#ofertas">Ver ofertas</a>
+  </div>
+</header>
+
+<main id="conteudo">
+
+<!-- ============ Abertura ============ -->
+<section class="hero" id="topo">
+  <div class="hero-luz" aria-hidden="true"></div>
+  <div class="hero-grelha" aria-hidden="true"></div>
+
+  <div class="hero-in">
+    <nav class="migalhas revela" aria-label="Onde está">
+      <span>Cursos</span><span aria-hidden="true">/</span><b>Vídeo com inteligência artificial</b>
+    </nav>
+    <h1 class="revela">Crie vídeos de cinema com inteligência artificial.</h1>
+    <p class="hero-sub revela">Do primeiro prompt à curta-metragem: aprenda a gerar cenas, personagens e anúncios em vídeo, sem câmara, sem actores e sem estúdio. Passo a passo, em português.</p>
+    <ul class="fichas revela" id="hero-fichas" aria-label="O curso em números">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M9 4v5M15 4v5"/></svg><span data-total="modulos">9 módulos</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg><span data-total="aulas">60 aulas</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span data-total="duracao">7 h de aulas</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V13M12 19V9M19 19V5"/></svg><span>Do iniciante ao avançado</span></li>
+    </ul>
+    <div class="hero-accoes revela">
+      <a class="btn btn-laranja btn-lg" href="#ofertas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span>Começar por <span class="nowrap" data-preco="basico">R&nbsp;99,00</span></span></a>
+      <button type="button" class="btn btn-escuro btn-lg" data-abrir-video>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.8v6.4l5.2-3.2z" fill="currentColor"/></svg>
+        Ver a aula de apresentação</button>
+    </div>
+    <p class="hero-nota revela"><span class="ponto" aria-hidden="true"></span><span>Preço de lançamento: <s data-preco-antes="basico">R&nbsp;199,00</s> <b data-preco="basico">R&nbsp;99,00</b></span><span class="hero-nota-2">Pagamento único, com acesso logo a seguir ao pagamento</span></p>
+  </div>
+
+  <!-- O estúdio, ao vivo: o prompt escreve-se, a cena gera-se -->
+  <div class="hero-palco revela" id="palco">
+    <div class="janela janela-hero" id="janela-hero">
+      <div class="janela-topo" aria-hidden="true">
+        <span class="sem v"></span><span class="sem a"></span><span class="sem d"></span>
+        <span class="janela-url"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg><span>Estúdio · nova cena</span></span>
+      </div>
+      <div class="estudio" aria-hidden="true">
+        <div class="estudio-lado">
+          <p class="estudio-rotulo">Prompt</p>
+          <p class="estudio-prompt"><span id="ger-texto"></span><i class="cursor"></i></p>
+          <div class="estudio-opcoes">
+            <span id="ger-formato">16:9</span><span>8 s</span><span id="ger-estilo">Cinematográfico</span>
+          </div>
+          <span class="estudio-botao" id="ger-botao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5 19.8 18l2.2.8-2.2.8L19 22l-.8-2.4-2.2-.8 2.2-.8z"/></svg>Gerar cena</span>
+          <div class="estudio-hist">
+            <p class="estudio-rotulo">Cenas desta sessão</p>
+            <div class="estudio-hist-lista" id="ger-hist"></div>
+          </div>
+        </div>
+        <div class="estudio-ecra">
+          <div class="estudio-tela" id="ger-tela" data-cena="0">
+            <div class="ph ph-video ph-cena" data-src="" data-rotulo="Vídeo 16:9 · cena gerada (cena-1.mp4)"></div>
+            <div class="estudio-render" id="ger-render">
+              <span class="estudio-ruido"></span>
+              <span class="estudio-pct"><b id="ger-pct">0</b>%</span>
+              <span class="estudio-barra"><span id="ger-barra"></span></span>
+              <small>A gerar a cena…</small>
+            </div>
+            <span class="estudio-legenda" id="ger-legenda">Cena 1</span>
+            <span class="estudio-play"><svg viewBox="0 0 24 24"><path d="M9 7v10l8-5z" fill="currentColor"/></svg></span>
+          </div>
+          <div class="estudio-tl">
+            <span class="tl-quadro"></span><span class="tl-quadro"></span><span class="tl-quadro"></span><span class="tl-quadro"></span><span class="tl-quadro"></span><span class="tl-quadro"></span>
+            <span class="tl-cabeca" id="ger-cabeca"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Faixa ============ -->
+<section class="faixa" aria-label="O que vai aprender a criar">
+  <div class="faixa-trilho">
+    <ul class="faixa-lista">
+      <li>Curtas-metragens</li><li>Anúncios de produto</li><li>Reels e TikTok</li><li>Videoclipes</li><li>Trailers</li><li>Personagens falantes</li><li>Vídeos para clientes</li><li>Conteúdo UGC</li>
+    </ul>
+    <ul class="faixa-lista" aria-hidden="true">
+      <li>Curtas-metragens</li><li>Anúncios de produto</li><li>Reels e TikTok</li><li>Videoclipes</li><li>Trailers</li><li>Personagens falantes</li><li>Vídeos para clientes</li><li>Conteúdo UGC</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Galeria ============ -->
+<section class="bloco" id="galeria" aria-labelledby="t-galeria">
+  <div class="cabeca cabeca-esq">
+    <h2 id="t-galeria" class="revela">Isto sai de uma frase escrita.</h2>
+    <p class="revela">Cenas que vai aprender a fazer no curso. Passe o rato, ou toque, para ver o prompt que as gerou.</p>
+  </div>
+  <div class="galeria">
+    <figure class="obra obra-larga revela" tabindex="0">
+      <div class="ph ph-video" data-src="" data-rotulo="Vídeo 16:9 · galeria-1.mp4" style="--tom:28"></div>
+      <figcaption><b>Curta-metragem</b><span>«Plano geral ao pôr do sol: um pescador puxa o barco para a areia. Câmara lenta, luz dourada, 35 mm.»</span></figcaption>
+    </figure>
+    <figure class="obra obra-alta revela" tabindex="0">
+      <div class="ph ph-video" data-src="" data-rotulo="Vídeo 9:16 · galeria-2.mp4" style="--ar:9/16; --tom:330"></div>
+      <figcaption><b>Reels</b><span>«Vertical, cortes rápidos: uma chef empilha um hambúrguer gigante, vapor, luz de estúdio quente.»</span></figcaption>
+    </figure>
+    <figure class="obra revela" tabindex="0">
+      <div class="ph ph-video" data-src="" data-rotulo="Vídeo 1:1 · galeria-3.mp4" style="--ar:1/1; --tom:200"></div>
+      <figcaption><b>Anúncio de produto</b><span>«Um perfume a rodar devagar sobre fundo preto, partículas de luz, reflexos suaves.»</span></figcaption>
+    </figure>
+    <figure class="obra revela" tabindex="0">
+      <div class="ph ph-video" data-src="" data-rotulo="Vídeo 1:1 · galeria-4.mp4" style="--ar:1/1; --tom:150"></div>
+      <figcaption><b>Personagem falante</b><span>«Close-up de um avô a contar uma história, luz de vela, a voz sincronizada com os lábios.»</span></figcaption>
+    </figure>
+    <figure class="obra obra-cheia revela" tabindex="0">
+      <div class="ph ph-video" data-src="" data-rotulo="Vídeo 16:9 · galeria-5.mp4" style="--tom:260"></div>
+      <figcaption><b>Trailer</b><span>«Travelling aéreo sobre uma cidade à noite, chuva, néons a reflectir no asfalto, tom de thriller.»</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ Módulos (o catálogo) ============ -->
+<section class="bloco" id="modulos" aria-labelledby="t-modulos">
+  <div class="cabeca cabeca-esq">
+    <h2 id="t-modulos" class="revela">Explore os módulos e as aulas</h2>
+    <p class="revela">Do primeiro vídeo de oito segundos à curta-metragem completa. Filtre pelo que quer aprender primeiro.</p>
+  </div>
+
+  <div class="catalogo">
+    <aside class="filtros" id="filtros" aria-label="Filtros">
+      <button type="button" class="filtros-abrir" id="filtros-abrir" aria-expanded="false" aria-controls="filtros-corpo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+        Filtros<span class="filtros-conta" id="filtros-conta" hidden></span>
+      </button>
+      <div class="filtros-corpo" id="filtros-corpo">
+        <fieldset>
+          <legend>Tipo</legend>
+          <label><input type="checkbox" name="tipo" value="Fundamentos"><span>Fundamentos</span></label>
+          <label><input type="checkbox" name="tipo" value="Cinema"><span>Cinema</span></label>
+          <label><input type="checkbox" name="tipo" value="Redes sociais"><span>Redes sociais</span></label>
+          <label><input type="checkbox" name="tipo" value="Anúncios e clientes"><span>Anúncios e clientes</span></label>
+        </fieldset>
+        <fieldset>
+          <legend>Nível</legend>
+          <label><input type="checkbox" name="nivel" value="Iniciante"><span>Iniciante</span></label>
+          <label><input type="checkbox" name="nivel" value="Intermédio"><span>Intermédio</span></label>
+          <label><input type="checkbox" name="nivel" value="Avançado"><span>Avançado</span></label>
+        </fieldset>
+        <fieldset>
+          <legend>Duração</legend>
+          <label><input type="checkbox" name="duracao" value="curto"><span>Menos de 40 minutos</span></label>
+          <label><input type="checkbox" name="duracao" value="medio"><span>40 a 60 minutos</span></label>
+          <label><input type="checkbox" name="duracao" value="longo"><span>Mais de 60 minutos</span></label>
+        </fieldset>
+        <fieldset>
+          <legend>Oferta</legend>
+          <label><input type="checkbox" name="plano" value="basico"><span>No Básico</span></label>
+          <label><input type="checkbox" name="plano" value="premium"><span>Só no Premium</span></label>
+        </fieldset>
+        <button type="button" class="filtros-limpar" id="filtros-limpar" hidden>Limpar os filtros</button>
+      </div>
+    </aside>
+
+    <div class="catalogo-corpo">
+      <div class="catalogo-barra">
+        <label class="procura">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>
+          <span class="sr">Procurar nos módulos</span>
+          <input id="procura" type="search" placeholder="Procurar: anúncios, personagens, voz…" autocomplete="off">
+        </label>
+        <label class="ordenar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M13 6h8M13 11h6M13 16h4"/></svg>
+          <span class="ordenar-rotulo">Ordenar:</span>
+          <select id="ordenar">
+            <option value="curso">Pela ordem do curso</option>
+            <option value="curtos">Mais curtos primeiro</option>
+            <option value="longos">Mais longos primeiro</option>
+          </select>
+        </label>
+      </div>
+      <p class="catalogo-conta" id="modulos-n" aria-live="polite"></p>
+      <ol class="modulos" id="lista-modulos"></ol>
+      <div class="modulos-vazio" id="modulos-vazio" hidden>
+        <p>Nenhum módulo com esses filtros.</p>
+        <button type="button" class="btn btn-escuro" data-limpar>Limpar os filtros</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Método ============ -->
+<section class="bloco" id="metodo" aria-labelledby="t-metodo">
+  <div class="cabeca">
+    <h2 id="t-metodo" class="revela">Do telemóvel à cena de cinema, em quatro passos</h2>
+    <p class="revela">O método que atravessa o curso inteiro. Arraste a linha da imagem para ver o antes e o depois.</p>
+  </div>
+
+  <div class="metodo">
+    <ol class="passos" id="passos">
+      <li class="passo ativo">
+        <span class="passo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></span>
+        <div><b>Escrever como um realizador</b><p>O plano, a lente, a luz e o movimento da câmara, numa frase que a IA entende.</p></div>
+      </li>
+      <li class="passo">
+        <span class="passo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m20.5 16-5-5-8.5 8.5"/></svg></span>
+        <div><b>Gerar a imagem certa</b><p>A personagem, o cenário e o estilo fixados numa imagem de referência.</p></div>
+      </li>
+      <li class="passo">
+        <span class="passo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="12" height="10" rx="2.5"/><path d="m15 11 5-3v8l-5-3"/></svg></span>
+        <div><b>Dar-lhe movimento</b><p>Da imagem ao vídeo, com o movimento de câmara escolhido por si.</p></div>
+      </li>
+      <li class="passo">
+        <span class="passo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="2.6"/><circle cx="6" cy="17" r="2.6"/><path d="M8.2 8.4 20 17M8.2 15.6 20 7"/></svg></span>
+        <div><b>Montar e publicar</b><p>Cortes, música, voz e legendas, exportados no formato de cada rede.</p></div>
+      </li>
+    </ol>
+
+    <div class="comparar revela" id="comparar" style="--corte:50%">
+      <div class="comparar-lado comparar-antes">
+        <div class="ph ph-imagem" data-src="" data-rotulo="Imagem 4:3 · antes.jpg (fotografia do telemóvel)" style="--ar:4/3; --tom:30; --sat:0%"></div>
+        <span class="comparar-tag">Antes · fotografia do telemóvel</span>
+      </div>
+      <div class="comparar-lado comparar-depois">
+        <div class="ph ph-video" data-src="" data-rotulo="Vídeo 4:3 · depois.mp4 (cena gerada)" style="--ar:4/3; --tom:22"></div>
+        <span class="comparar-tag">Depois · cena gerada</span>
+      </div>
+      <span class="comparar-linha" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 7-5 5 5 5M15 7l5 5-5 5"/></svg></span></span>
+      <input type="range" min="0" max="100" value="50" id="comparar-range" aria-label="Comparar o antes e o depois">
+    </div>
+  </div>
+</section>
+
+<!-- ============ Bónus ============ -->
+<section class="bloco" id="bonus" aria-labelledby="t-bonus">
+  <div class="cabeca">
+    <h2 id="t-bonus" class="revela">Cinco bónus que vêm com o Premium</h2>
+    <p class="revela">Ferramentas para trabalhar mais depressa desde a primeira aula. Veja o que fica aberto em cada oferta.</p>
+  </div>
+
+  <div class="interruptor revela" id="int-plano">
+    <span data-lado="0">Básico</span>
+    <button type="button" role="switch" aria-checked="true" aria-label="Ver com o Premium" id="btn-plano"><span></span></button>
+    <span data-lado="1" class="ativo">Premium</span>
+  </div>
+
+  <div class="bonus-grelha" id="bonus-grelha" data-plano="premium">
+    <article class="bonus bonus-prompts revela luz-rato">
+      <div class="bonus-texto">
+        <h3>Biblioteca de prompts de cinema</h3>
+        <p>Prompts testados, organizados por plano, luz, movimento de câmara e estilo. Copie, troque o assunto e gere.</p>
+      </div>
+      <div class="prompts" aria-label="Exemplos da biblioteca">
+        <div class="prompts-abas" role="tablist">
+          <button type="button" role="tab" aria-selected="true" data-p="0">Plano</button>
+          <button type="button" role="tab" aria-selected="false" data-p="1">Luz</button>
+          <button type="button" role="tab" aria-selected="false" data-p="2">Movimento</button>
+          <button type="button" role="tab" aria-selected="false" data-p="3">Estilo</button>
+        </div>
+        <div class="prompts-cartao" role="tabpanel">
+          <p id="prompt-texto"></p>
+          <button type="button" class="prompts-copiar" id="prompt-copiar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></svg>
+            <span>Copiar o prompt</span>
+          </button>
+        </div>
+      </div>
+      <span class="bonus-cadeado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Só no Premium</span>
+    </article>
+
+    <article class="bonus revela luz-rato">
+      <div class="ph ph-imagem" data-src="" data-rotulo="Imagem 4:3 · bonus-personagens.jpg" style="--ar:4/3; --tom:280"></div>
+      <div class="bonus-texto">
+        <h3>Pack de personagens consistentes</h3>
+        <p>Folhas de referência prontas, com o rosto, o perfil e o corpo inteiro, para a personagem ficar igual em todas as cenas.</p>
+      </div>
+      <span class="bonus-cadeado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Só no Premium</span>
+    </article>
+
+    <article class="bonus revela luz-rato">
+      <div class="ph ph-imagem" data-src="" data-rotulo="Imagem 4:3 · bonus-guiao.jpg" style="--ar:4/3; --tom:45"></div>
+      <div class="bonus-texto">
+        <h3>Modelos de guião e storyboard</h3>
+        <p>Do argumento à lista de planos: os mesmos modelos usados na curta-metragem do curso, prontos a preencher.</p>
+      </div>
+      <span class="bonus-cadeado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Só no Premium</span>
+    </article>
+
+    <article class="bonus revela luz-rato">
+      <div class="ph ph-imagem" data-src="" data-rotulo="Imagem 4:3 · bonus-anuncios.jpg" style="--ar:4/3; --tom:15"></div>
+      <div class="bonus-texto">
+        <h3>Kit de anúncios em vídeo</h3>
+        <p>Estruturas de anúncio prontas a adaptar: o gancho, a prova, a oferta e a chamada à acção, cena a cena.</p>
+      </div>
+      <span class="bonus-cadeado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Só no Premium</span>
+    </article>
+
+    <article class="bonus revela luz-rato">
+      <div class="ph ph-imagem" data-src="" data-rotulo="Imagem 4:3 · bonus-clientes.jpg" style="--ar:4/3; --tom:170"></div>
+      <div class="bonus-texto">
+        <h3>Guia: vender vídeos com IA</h3>
+        <p>Um modelo de proposta, uma tabela de preços de referência e o guião da primeira conversa com um cliente.</p>
+      </div>
+      <span class="bonus-cadeado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Só no Premium</span>
+    </article>
+  </div>
+</section>
+
+<!-- ============ Ofertas ============ -->
+<section class="bloco" id="ofertas" aria-labelledby="t-ofertas">
+  <div class="cabeca">
+    <h2 id="t-ofertas" class="revela">Escolha como quer começar</h2>
+    <p class="revela">Preço de lançamento, pago uma única vez. O acesso chega ao seu email logo a seguir ao pagamento.</p>
+  </div>
+
+  <div class="ofertas revela" id="lista-ofertas">
+    <article class="oferta" data-oferta="basico">
+      <div class="oferta-topo">
+        <h3>Básico</h3>
+        <p class="oferta-desc">Para dar os primeiros passos e publicar os primeiros vídeos.</p>
+      </div>
+      <div class="oferta-preco">
+        <s class="oferta-antes" data-preco-antes="basico">R&nbsp;199,00</s>
+        <span class="oferta-valor" data-preco="basico">R&nbsp;99,00</span>
+        <span class="oferta-poupa" data-poupa="basico">Poupa R&nbsp;100,00</span>
+      </div>
+      <button type="button" class="btn btn-escuro btn-lg oferta-btn" data-comprar="basico">Quero o Básico</button>
+      <h4>O que inclui</h4>
+      <ul class="oferta-itens" data-itens="basico"></ul>
+    </article>
+
+    <article class="oferta destaque" data-oferta="premium">
+      <span class="oferta-selo">Recomendado</span>
+      <div class="oferta-topo">
+        <h3>Premium</h3>
+        <p class="oferta-desc">O curso completo, do primeiro prompt aos primeiros clientes.</p>
+      </div>
+      <div class="oferta-preco">
+        <s class="oferta-antes" data-preco-antes="premium">R&nbsp;399,00</s>
+        <span class="oferta-valor" data-preco="premium">R&nbsp;199,00</span>
+        <span class="oferta-poupa" data-poupa="premium">Poupa R&nbsp;200,00</span>
+      </div>
+      <button type="button" class="btn btn-branco btn-lg oferta-btn" data-comprar="premium">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        Quero o Premium</button>
+      <h4>O que inclui</h4>
+      <ul class="oferta-itens" data-itens="premium"></ul>
+    </article>
+  </div>
+
+  <details class="comparar-tabela revela">
+    <summary>Comparar as duas ofertas, módulo a módulo<i aria-hidden="true"></i></summary>
+    <div class="tabela-caixa">
+      <table>
+        <thead><tr><th scope="col">O que recebe</th><th scope="col">Básico</th><th scope="col">Premium</th></tr></thead>
+        <tbody id="tabela-corpo"></tbody>
+      </table>
+    </div>
+  </details>
+  <p class="ofertas-nota revela">O pagamento é feito em rands (R), numa página de pagamento segura.</p>
+</section>
+
+<!-- ============ Para quem é ============ -->
+<section class="bloco" id="para-quem" aria-labelledby="t-para-quem">
+  <div class="cabeca">
+    <h2 id="t-para-quem" class="revela">Para quem é este curso</h2>
+  </div>
+  <div class="quem">
+    <div class="quem-col quem-sim revela">
+      <h3>É para si se…</h3>
+      <ul>
+        <li>cria conteúdo e quer publicar mais, sem filmar todos os dias;</li>
+        <li>tem um negócio e quer anúncios em vídeo sem pagar uma produtora;</li>
+        <li>quer oferecer vídeos com IA como serviço a clientes;</li>
+        <li>sempre quis contar histórias em vídeo e nunca teve equipamento.</li>
+      </ul>
+    </div>
+    <div class="quem-col quem-nao revela">
+      <h3>Não é para si se…</h3>
+      <ul>
+        <li>procura um botão mágico que faz tudo sem praticar;</li>
+        <li>não tem tempo para ver as aulas e repetir os exercícios;</li>
+        <li>já domina a geração de vídeo e só quer novidades soltas.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Quem ensina e depoimentos ============ -->
+<section class="bloco" id="formador" aria-labelledby="t-formador">
+  <div class="formador revela">
+    <div class="ph ph-imagem formador-foto" data-src="" data-rotulo="Fotografia 4:5 · formador.jpg" style="--ar:4/5; --tom:20"></div>
+    <div class="formador-texto">
+      <h2 id="t-formador">Quem ensina</h2>
+      <p class="formador-nome">[Nome do formador]</p>
+      <p>[Duas ou três frases sobre o formador: o que já criou com IA, para quem, e porque decidiu ensinar. Só factos verificáveis.]</p>
+      <ul class="formador-factos">
+        <li><b>[número]</b><span>[facto real, ex.: vídeos entregues a clientes]</span></li>
+        <li><b>[número]</b><span>[facto real, ex.: anos a trabalhar com vídeo]</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cabeca cabeca-depo">
+    <h2 class="revela">O que dizem os alunos</h2>
+    <p class="revela">Espaço reservado para depoimentos em vídeo reais, gravados com autorização de quem os dá.</p>
+  </div>
+  <div class="depoimentos">
+    <figure class="depo revela"><div class="ph ph-video" data-src="" data-rotulo="Vídeo 9:16 · depoimento-1.mp4" style="--ar:9/16; --tom:25"></div><figcaption>Depoimento 1 · por gravar</figcaption></figure>
+    <figure class="depo revela"><div class="ph ph-video" data-src="" data-rotulo="Vídeo 9:16 · depoimento-2.mp4" style="--ar:9/16; --tom:200"></div><figcaption>Depoimento 2 · por gravar</figcaption></figure>
+    <figure class="depo revela"><div class="ph ph-video" data-src="" data-rotulo="Vídeo 9:16 · depoimento-3.mp4" style="--ar:9/16; --tom:320"></div><figcaption>Depoimento 3 · por gravar</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ Perguntas ============ -->
+<section class="bloco" id="perguntas" aria-labelledby="t-perguntas">
+  <div class="cabeca">
+    <h2 id="t-perguntas" class="revela">Perguntas frequentes</h2>
+  </div>
+  <div class="faq revela">
+    <details class="faq-item" open>
+      <summary>Preciso de saber editar vídeo ou de ter experiência?<i aria-hidden="true"></i></summary>
+      <div class="faq-resposta"><div><p>Não. O primeiro módulo parte do zero: o que é cada ferramenta, como se escreve um prompt e como se gera o primeiro vídeo. A montagem também se ensina no curso.</p></div></div>
+    </details>
+    <details class="faq-item">
+      <summary>Preciso de um computador potente?<i aria-hidden="true"></i></summary>
+      <div class="faq-resposta"><div><p>Não. A geração de vídeo corre nos servidores das próprias ferramentas, por isso basta um browser, no computador ou no telemóvel, e uma ligação à internet.</p></div></div>
+    </details>
+    <details class="faq-item">
+      <summary>As ferramentas de inteligência artificial são pagas?<i aria-hidden="true"></i></summary>
+      <div class="faq-resposta"><div><p>Muitas têm um plano gratuito, com limites. O curso mostra como começar sem gastar e como saber quando vale a pena pagar uma assinatura.</p></div></div>
+    </details>
+    <details class="faq-item">
+      <summary>Qual é a diferença entre o Básico e o Premium?<i aria-hidden="true"></i></summary>
+      <div class="faq-resposta"><div><p>O Básico tem os cinco módulos de base: fundamentos, prompts, personagens, redes sociais e montagem. O Premium junta os quatro módulos avançados (anúncios, voz e lip-sync, curta-metragem e vender a clientes) e os cinco bónus.</p></div></div>
+    </details>
+    <details class="faq-item">
+      <summary>Como recebo o acesso?<i aria-hidden="true"></i></summary>
+      <div class="faq-resposta"><div><p>Assim que o pagamento é confirmado, recebe um email com o acesso à área de membros, onde estão as aulas. Basta escolher a sua senha e começar.</p></div></div>
+    </details>
+    <details class="faq-item">
+      <summary>O pagamento é mensal?<i aria-hidden="true"></i></summary>
+      <div class="faq-resposta"><div><p>Não. Paga uma única vez o preço da oferta que escolher.</p></div></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ Fecho ============ -->
+<section class="fecho" aria-labelledby="t-fecho">
+  <canvas class="estrelas" id="estrelas" aria-hidden="true"></canvas>
+  <div class="fecho-luz" aria-hidden="true"></div>
+  <div class="fecho-texto">
+    <h2 id="t-fecho" class="revela">A sua primeira cena está a uma frase de distância.</h2>
+    <p class="revela">Comece hoje pelo preço de lançamento e gere o primeiro vídeo ainda esta semana.</p>
+    <div class="fecho-accoes revela">
+      <a class="btn btn-laranja btn-lg" href="#ofertas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        Ver as ofertas</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="rodape">
+  <div class="rodape-in">
+    <a class="marca" href="#topo" aria-label="Realizador IA, voltar ao início">
+      <span class="sinal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11.5" rx="2.5"/><path d="m3.6 9 15.6-4.2M7.4 8l2.1-3.6M12.8 6.6l2.1-3.6"/><path d="M10.2 12.6v4.8l4-2.4z" fill="currentColor"/></svg></span>
+      <span>Realizador IA</span>
+    </a>
+    <nav class="rodape-links" aria-label="Rodapé">
+      <a href="#modulos">Módulos</a>
+      <a href="#ofertas">Ofertas</a>
+      <a href="/termos/">Termos</a>
+      <a href="/privacidade/">Privacidade</a>
+    </nav>
+    <p class="rodape-nota">Os vídeos de exemplo desta página foram gerados com inteligência artificial.</p>
+  </div>
+</footer>
+
+<!-- Barra do telemóvel: aparece depois da abertura e some nas ofertas -->
+<div class="barra-fixa" id="barra-fixa" aria-hidden="true">
+  <div><small>Preço de lançamento</small><b>Desde <span data-preco="basico">R&nbsp;99,00</span></b></div>
+  <a class="btn btn-laranja" href="#ofertas" tabindex="-1">Ver ofertas</a>
+</div>
+
+<!-- Oferta única: aparece ao escolher o Básico -->
+<dialog class="oto" id="oto" aria-labelledby="oto-titulo" aria-describedby="oto-texto">
+  <button type="button" class="oto-fechar" data-fechar aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="oto-media">
+    <div class="ph ph-imagem" data-src="" data-rotulo="Imagem 16:9 · oferta-unica.jpg (o Premium completo)" style="--ar:16/9; --tom:22"></div>
+    <span class="oto-fita">Oferta única</span>
+  </div>
+  <div class="oto-corpo">
+    <h2 id="oto-titulo">Espere: leve o Premium por <span class="nowrap" data-preco="oto">R&nbsp;147,00</span></h2>
+    <p id="oto-texto">Está a escolher o Básico por <span class="nowrap" data-preco="basico">R&nbsp;99,00</span>. Por mais <span class="nowrap" data-diferenca>R&nbsp;48,00</span> leva o curso completo, em vez de pagar <span class="nowrap" data-preco="premium">R&nbsp;199,00</span> pelo Premium.</p>
+    <ul class="oto-itens">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-oto="modulos">Os 4 módulos avançados: anúncios, voz e lip-sync, curta-metragem e clientes</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Os 5 bónus, com a biblioteca de prompts de cinema</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-oto="aulas">28 aulas a mais</span></li>
+    </ul>
+    <div class="oto-preco">
+      <s data-preco="premium">R&nbsp;199,00</s>
+      <span class="oto-valor"><b id="oto-valor" data-preco="oto">R&nbsp;147,00</b></span>
+    </div>
+    <p class="oto-nota">Esta oferta só aparece aqui, antes de pagar.</p>
+    <button type="button" class="btn btn-laranja btn-lg oto-sim" id="oto-sim">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+      <span>Sim, quero o Premium por <span class="nowrap" data-preco="oto">R&nbsp;147,00</span></span></button>
+    <button type="button" class="oto-nao" id="oto-nao">Não, obrigado. Continuar com o Básico por <span class="nowrap" data-preco="basico">R&nbsp;99,00</span></button>
+  </div>
+</dialog>
+
+<!-- A aula de apresentação -->
+<dialog class="cinema" id="cinema" aria-label="Aula de apresentação">
+  <button type="button" class="oto-fechar" data-fechar aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="ph ph-video" data-src="" data-som data-rotulo="Vídeo 16:9 · apresentacao.mp4 (aula de apresentação)" style="--ar:16/9; --tom:24"></div>
+</dialog>
+
+<div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+<script src="/video-ia/video-ia.js"></script>
+</body>
+</html>
