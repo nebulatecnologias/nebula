@@ -338,7 +338,9 @@
     caixa.querySelectorAll("[data-lado]").forEach(s => { s.style.cursor = "pointer"; s.addEventListener("click", () => troca(s.dataset.lado === "1")); });
     return marca;
   }
-  interruptor("btn-moeda", "int-moeda", ligado => { E.moeda = ligado ? "ZAR" : "MZN"; desenhaPlanos(); });
+  const marcaMoeda = interruptor("btn-moeda", "int-moeda", ligado => { E.moeda = ligado ? "ZAR" : "MZN"; desenhaPlanos(); });
+  /* «Trocar de plano» no /criar volta aqui com a moeda que se estava a ver. */
+  if((new URLSearchParams(location.search).get("moeda") || "").toUpperCase() === "ZAR"){ E.moeda = "ZAR"; marcaMoeda(true); }
   interruptor("btn-ciclo", "int-ciclo", ligado => { E.ciclo = ligado ? "anual" : "mensal"; desenhaPlanos(); });
 
   (async () => {

@@ -1,8 +1,10 @@
 /* ============================================================
    Criar uma área de membros (/criar/) — W4, no molde do Memberkit.
 
-   O plano vem no endereço (?plano=profissional&ciclo=anual) e mostra-se em
-   cima, com a troca de ciclo e de plano. Depois:
+   O plano vem no endereço (?plano=profissional&ciclo=anual&moeda=MZN) e
+   mostra-se em cima, já escolhido: quem carregou num plano no site vem criar
+   esse plano, não escolher outra vez (pedido do Shelton a 04/10, como na
+   Memberkit). Para trocar, «Trocar de plano» volta aos preços do site. Depois:
      1. a conta: nome da área, o nome da pessoa, email, senha (duas vezes);
         se o email já tem conta, pede-se a senha dessa conta e cria-se com ela;
      2. a área abre-se logo, na página Cobrança (?org=<nome curto>#/cobranca):
@@ -141,10 +143,15 @@ function escolherPlano(id, ciclo, moeda){
   desenharPlano();
 }
 
+/* O que o plano inclui: as mesmas linhas do site de vendas. */
+const INCLUI = p => [`Até ${contagem(p.alunosMax)} alunos activos`, "A sua marca e o seu domínio", "Cursos, módulos e certificados",
+  "Encontros ao vivo e comunidades", "Vendas pelo Payflow: M-Pesa e cartão"];
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg>';
+
 function desenharPlano(){
   const p = E.plano, preco = precoDe(p, E.ciclo);
   $("plano-nome").textContent = `Plano ${p.nome}`;
-  $("plano-alunos").textContent = `Até ${contagem(p.alunosMax)} alunos`;
+  $("plano-alunos").textContent = `Até ${contagem(p.alunosMax)} alunos activos`;
   $("plano-valor").textContent = dinheiro(preco, simboloDe(p));
   let por = E.ciclo === "anual" ? "por ano" : "por mês";
   const mensal = precoDe(p, "mensal");
@@ -153,24 +160,10 @@ function desenharPlano(){
     if(poupa > 0) por += ` · poupa ${poupa}%`;
   }
   $("plano-por").textContent = por;
-  document.querySelectorAll("#ciclo button").forEach(b => {
-    const c = b.dataset.ciclo;
-    b.setAttribute("aria-pressed", String(c === E.ciclo));
-    b.hidden = precoDe(p, c) == null;
-  });
-  $("ciclo").hidden = [...document.querySelectorAll("#ciclo button")].filter(b => !b.hidden).length < 2;
-  document.querySelectorAll("#pais button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.moeda === E.moeda)));
-  $("pais").hidden = moedasAVenda().length < 2;
   $("plano-gratis").textContent = `${E.diasTeste} dias grátis. Depois, ${dinheiro(preco, simboloDe(p))} ${E.ciclo === "anual" ? "por ano" : "por mês"}. Pode cancelar antes.`;
-  preencherEscolha();
-}
-
-function preencherEscolha(){
-  const s = $("plano-escolher");
-  s.innerHTML = E.planos.filter(p => vendeEm(p, E.moeda))
-    .map(p => `<option value="${esc(p.id)}">${esc(p.nome)} — até ${esc(contagem(p.alunosMax))} alunos</option>`).join("");
-  s.value = E.plano.id;
-  s.hidden = s.options.length < 2;
+  $("lado-titulo").textContent = `O que inclui o plano ${p.nome}`;
+  $("lado-inclui").innerHTML = INCLUI(p).map(x => `<li>${CHECK}<span>${esc(x)}</span></li>`).join("");
+  $("plano-trocar").href = `/site/?moeda=${encodeURIComponent(E.moeda)}#precos`;
 }
 
 /* ---- passo 1: a conta ---- */
@@ -243,8 +236,7 @@ async function enviarConta(ev){
 /* ---- a área criada: abre-se na Cobrança ---- */
 function aAbrir(){
   $("painel-conta").hidden = true;
-  $("plano-escolhas").hidden = true;
-  $("pais").hidden = true;
+  $("plano-trocar").hidden = true;
   $("painel-pronta").hidden = false;
   $("pronta-titulo").textContent = `A «${E.escola.nome}» está criada`;
   $("pronta-texto").textContent = "A abrir a sua área de membros, na página Cobrança…";
@@ -265,9 +257,6 @@ async function arrancar(){
   const q = new URLSearchParams(location.search);
   escolherPlano(q.get("plano"), q.get("ciclo"), (q.get("moeda") || "").toUpperCase() || (q.get("pais") === "za" ? "ZAR" : q.get("pais") === "mz" ? "MZN" : null));
 
-  $("plano-escolher").addEventListener("change", e => escolherPlano(e.target.value, E.ciclo, E.moeda));
-  document.querySelectorAll("#pais button").forEach(b => b.addEventListener("click", () => escolherPlano(E.plano.id, E.ciclo, b.dataset.moeda)));
-  document.querySelectorAll("#ciclo button").forEach(b => b.addEventListener("click", () => escolherPlano(E.plano.id, b.dataset.ciclo, E.moeda)));
   $("form-conta").addEventListener("submit", enviarConta);
 
 }

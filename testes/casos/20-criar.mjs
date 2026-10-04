@@ -12,27 +12,32 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   const NBSP = / /g;
   const txt = async (pg, s) => (await pg.textContent(s)).replace(NBSP, ' ');
 
-  /* 1. O plano do endereço, com os dois ciclos. */
+  /* 1. O plano vem já escolhido do site: cria-se esse plano, não se escolhe
+     outra vez (pedido do Shelton a 04/10, como na Memberkit). */
   let pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&ciclo=anual&moeda=ZAR`);
   verdade(await pg.isVisible('#ecra-criar'), 'Com planos à venda, a página mostra o formulário');
   igual(await pg.textContent('#plano-nome'), 'Plano Essencial', 'O plano vem do endereço');
-  igual(await txt(pg, '#plano-alunos'), 'Até 500 alunos', 'com o limite de alunos');
+  igual(await txt(pg, '#plano-alunos'), 'Até 500 alunos activos', 'com o limite de alunos');
   igual(await txt(pg, '#plano-valor'), 'R 1 990,00', 'o preço anual, no formato da casa (símbolo, agrupado, vírgula)');
   contem(await pg.textContent('#plano-por'), 'por ano · poupa 17%', 'e quanto se poupa face a doze meses');
-  await pg.click('#ciclo [data-ciclo="mensal"]');
-  igual(await txt(pg, '#plano-valor'), 'R 199,00', 'Mensal muda o preço');
-  verdade(new URL(pg.url()).search.includes('ciclo=mensal'), 'e o endereço acompanha a escolha');
-  contem(await txt(pg, '#plano-gratis'), '7 dias grátis. Depois, R 199,00 por mês', 'Diz quanto se paga depois dos dias grátis');
-  await pg.click('#pais [data-moeda="MZN"]');
-  igual(await txt(pg, '#plano-valor'), 'MZ 3 500,00', 'Moçambique mostra o preço em meticais, com o símbolo da tesouraria');
-  verdade(new URL(pg.url()).search.includes('moeda=MZN'), 'e o endereço guarda a moeda');
-  igual(await pg.locator('#plano-escolher option').count(), 2, 'Em meticais, só os planos com preço em meticais (o Premium não tem)');
-  await pg.click('#pais [data-moeda="ZAR"]');
-  await pg.selectOption('#plano-escolher', 'escala');
-  verdade(await pg.isHidden('#ciclo'), 'Um plano só com preço mensal não mostra a troca de ciclo');
-  igual(await txt(pg, '#plano-alunos'), 'Até 5 000 alunos', 'Os milhares agrupam-se também abaixo de dez mil');
+  contem(await txt(pg, '#plano-gratis'), '7 dias grátis. Depois, R 1 990,00 por ano', 'Diz quanto se paga depois dos dias grátis');
+  igual(await pg.locator('#plano-escolher, #ciclo, #pais').count(), 0, 'Não há escolha de plano, de ciclo nem de país nesta página');
+  igual(await pg.getAttribute('#plano-trocar', 'href'), '/site/?moeda=ZAR#precos', 'Trocar de plano volta aos preços do site, na mesma moeda');
+  contem(await pg.textContent('#lado-titulo'), 'plano Essencial', 'O painel diz o que o plano inclui');
+  contem(await txt(pg, '#lado-inclui'), 'Até 500 alunos activos', 'com o limite de alunos à cabeça');
   const corpo = await pg.textContent('body');
   naoContem(corpo, 'Kingdom', 'A página da plataforma não tem a marca da Kingdom');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=MZN`);
+  igual(await txt(pg, '#plano-valor'), 'MZ 3 500,00', 'Em meticais, o preço com o símbolo da tesouraria');
+  verdade(new URL(pg.url()).search.includes('moeda=MZN') && new URL(pg.url()).search.includes('ciclo=mensal'), 'e o endereço fica com o plano, o ciclo e a moeda');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=premium&moeda=ZAR`);
+  igual(await pg.textContent('#plano-nome'), 'Plano Premium', 'O site pode dizer «premium» pelo plano escala');
+  igual(await txt(pg, '#plano-alunos'), 'Até 5 000 alunos activos', 'Os milhares agrupam-se também abaixo de dez mil');
+  igual(await txt(pg, '#plano-valor'), 'R 799,00', 'Sem preço anual, fica o mensal');
   await pg.close();
 
   /* 2. A conta: validação, depois o cartão, depois pronta. */
