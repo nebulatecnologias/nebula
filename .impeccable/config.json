@@ -110,6 +110,15 @@
         ],
         "createdAt": "2026-10-04T14:56:33.441Z",
         "reason": "body overflow-x:hidden de propósito, para o telemóvel não deslizar para o lado (guia §8.4)"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "video-ia/index.html"
+        ],
+        "createdAt": "2026-10-04T15:09:31.767Z",
+        "reason": "Falso positivo: a janela do estúdio é uma maquete de app; as caixas de dentro são o ecrã do vídeo e o campo do prompt"
       }
     ]
   }
