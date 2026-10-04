@@ -191,6 +191,9 @@ function desenharPlano(){
   $("plano-trocar").href = `/site/?moeda=${encodeURIComponent(E.moeda)}#precos`;
   $("campo-mpesa").hidden = E.moeda !== "MZN";
   $("campo-cartao").hidden = E.moeda !== "ZAR";
+  /* A validação por cartão ainda não existe na página de cobrança do Payflow
+     (só tem M-Pesa): fora de Moçambique, a inscrição espera por ela. */
+  $("btn-conta").disabled = E.moeda === "ZAR" && !CARTAO_PRONTO;
 }
 
 /* ---- passo 1: a conta ---- */
@@ -281,6 +284,7 @@ async function enviarConta(ev){
    confirmado, pergunta-se se a escola já abriu e abre-se. Cartão: a página
    segura do Payflow abre noutro separador e esta vai perguntando. */
 const SIMBOLO = { MZN:"MZ", ZAR:"R" };
+const CARTAO_PRONTO = new URLSearchParams(location.search).has("demo");
 const ICONES = {
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   falhou:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>',
