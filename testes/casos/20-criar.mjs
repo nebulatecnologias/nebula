@@ -148,23 +148,50 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(await pg.evaluate(() => window.__criarDemo.abriu), '/?org=escola-paga', 'e abre a mesma escola');
   await pg.close();
 
-  /* 2c. Fora de Moçambique: o cartão, na página segura do Payflow. */
-  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&pago=1`);
+  /* 2c. Fora de Moçambique: o cartão, na janela segura da Paystack (W4·8·7). */
+  const preencherCabo = async p => {
+    await p.fill('#f-escola', 'Escola do Cabo');
+    await p.fill('#f-nome', 'Ana Exemplo');
+    await p.fill('#f-email', 'cabo@exemplo.invalid');
+    await p.fill('#f-senha', 'segredo-forte');
+    await p.fill('#f-senha2', 'segredo-forte');
+    await p.click('#btn-conta');
+    await p.waitForSelector('#btn-cartao:not([hidden])', { timeout: 3000 });
+  };
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR`);
   verdade(await pg.isHidden('#campo-mpesa'), 'Em rand não pede número M-Pesa');
   contem(await txt(pg, '#campo-cartao'), 'R 18,00', 'e diz que valida o cartão');
+  contem(await txt(pg, '#campo-cartao'), 'Paystack', 'numa janela segura da Paystack');
+  falso(await pg.isDisabled('#btn-conta'), 'A inscrição em rand está aberta (já não diz «abre em breve»)');
+  contem(await txt(pg, '.consentimento'), 'charged automatically', 'O consentimento diz que o cartão é cobrado sozinho até cancelar');
   pg2 = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&lang=pt`);
   igual(await pg2.textContent('#plano-nome'), 'Plano Essencial', 'Com ?lang=pt, a página em rand fica em português');
   await pg2.close();
-  await pg.fill('#f-escola', 'Escola do Cabo');
-  await pg.fill('#f-nome', 'Ana Exemplo');
-  await pg.fill('#f-email', 'cabo@exemplo.invalid');
-  await pg.fill('#f-senha', 'segredo-forte');
-  await pg.fill('#f-senha2', 'segredo-forte');
-  await pg.click('#btn-conta');
-  await pg.waitForSelector('#btn-cartao:not([hidden])', { timeout: 3000 });
-  igual(await pg.getAttribute('#btn-cartao', 'href'), 'https://payflow.kingdomcompny.com/c/demo123', 'O botão abre a cobrança da validação no Payflow');
+  await preencherCabo(pg);
+  contem(await txt(pg, '#validar-texto'), 'charged every month until you cancel', 'Antes de pagar, diz que o cartão fica a pagar o plano');
+  await pg.click('#btn-cartao');
   await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 7000 });
-  verdade(true, 'Paga no Payflow, a página abre a área sozinha');
+  const chamadasCartao = await pg.evaluate(() => window.__criarDemo.chamadas.filter(c => c[0] === 'cartao' || c[0] === 'janela'));
+  igual(chamadasCartao, [['cartao', 'demo123'], ['janela', 'demo123']], 'O botão pede a janela da Paystack pela cobrança da validação');
+  verdade(true, 'Paga na janela, a página abre a área sozinha');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&cartao=desiste`);
+  await preencherCabo(pg);
+  await pg.click('#btn-cartao');
+  await pg.waitForSelector('#validar-erro:not([hidden])', { timeout: 3000 });
+  contem(await txt(pg, '#validar-erro'), 'nothing was charged', 'Quem fecha a janela fica a saber que nada foi cobrado');
+  verdade(await pg.isVisible('#btn-cartao'), 'e pode tentar outra vez');
+  igual(await pg.locator('#validar-accoes:not([hidden])').count(), 0, 'sem o formulário do M-Pesa');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&cartao=semscript&pago=1`);
+  await preencherCabo(pg);
+  await pg.click('#btn-cartao');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 8000 });
+  igual(await pg.evaluate(() => window.__criarDemo.separador), 'https://checkout.paystack.com/demo123',
+    'Sem a janela (o script não veio), abre a página segura da Paystack noutro separador e a área abre na mesma');
+  igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript no caminho do cartão');
   await pg.close();
 
   /* 2b. Já com sessão de outra conta no browser (o /criar partilha o endereço

@@ -72,21 +72,21 @@ function traduzirPagina(){
   pôr("#f-escola + .hint", "Your students see it. You can change it later.");
   pôr('label[for="f-nome"]', "Your name");
   pôr('label[for="f-email"]', "Your email");
-  pôr("#campo-cartao", "Card sign-up for South Africa opens soon: you'll verify your card with R\u00a018,00, deducted from your first invoice.");
+  pôr("#campo-cartao", "Next, you'll verify your card with R\u00a018,00 in a secure Paystack window. It's deducted from your first invoice.");
   pôr('label[for="f-senha"]', "Password");
   pôr("#f-senha + .hint", "At least 8 characters.");
   pôr('label[for="f-senha2"]', "Confirm password");
   pôr("#campos-existente .aviso", "This email already has an account. Enter that account's password to create the members area with it.");
   pôr('label[for="f-senha-existente"]', "Your account password");
   pôr("#f-senha-existente + .hint", "Forgotten it? Use “Forgot password?” on the sign-in page and come back here.");
-  pôr(".consentimento", 'By continuing, you accept the <a href="/termos/" target="_blank" rel="noopener">Terms of use</a> and the <a href="/privacidade/" target="_blank" rel="noopener">Privacy policy</a>. The verification is deducted from your first invoice, which appears on the Billing page of your members area with 7 days to be paid.');
+  pôr(".consentimento", 'By continuing, you accept the <a href="/termos/" target="_blank" rel="noopener">Terms of use</a> and the <a href="/privacidade/" target="_blank" rel="noopener">Privacy policy</a>. The card verification is deducted from your first invoice. After the free days, your card is charged automatically each month (or year) until you cancel on the Billing page of your members area.');
   pôr("#btn-conta", "Verify and create my members area");
   pôr("#btn-repetir", "Try again");
   pôr("#btn-cartao", "Verify my card");
   pôr("#btn-entrar", "Open the members area");
   pôr(".lado-num", "7<span> days</span>");
-  pôr(".lado-sub", "free: your first invoice has 7 days to be paid.");
-  pôr(".lado ol", "<li><span><b>Verify your payment</b>R\u00a018,00 by card, deducted from your first invoice.</span></li><li><span><b>Add your brand and your courses</b>Your area opens right after: name, logo, colour and domain.</span></li><li><span><b>Pay your first invoice within 7 days</b>It's on the Billing page. After that, one invoice per month (or per year).</span></li>");
+  pôr(".lado-sub", "free: your card is only charged when they end.");
+  pôr(".lado ol", "<li><span><b>Verify your payment</b>R\u00a018,00 by card, deducted from your first invoice.</span></li><li><span><b>Add your brand and your courses</b>Your area opens right after: name, logo, colour and domain.</span></li><li><span><b>Your card is charged when the free days end</b>Then once a month (or a year). Cancel any time on the Billing page.</span></li>");
   pôr(".rodape-pagina", '<a href="/termos/">Terms of use</a> · <a href="/privacidade/">Privacy</a>');
 }
 
@@ -144,9 +144,51 @@ function fonteReal(){
       try { return await invocar("mpesa-checkout", { cobranca:atalho, msisdn }); }
       catch(e){ if(e.estado === 409) return { ok:false, estado:"a_decorrer", aviso:e.message }; throw e; }
     },
+    /* O cartão (África do Sul): o mesmo paystack-iniciar do Payflow, pela
+       cobrança da validação (o atalho). Devolve o código da janela da Paystack
+       e, para o plano B, a página segura dela. O valor sai da base. */
+    cartao: (atalho, voltar) => invocar("paystack-iniciar", { cobranca:atalho, voltar }),
+    janelaCartao: codigo => janelaDaPaystack(codigo),
     confirmar: org => invocar("criar-escola", { accao:"confirmar", organizacao:org }),
     abrir: endereco => location.assign(endereco),
   };
+}
+
+/* A janela da Paystack por cima da página, como no checkout do Payflow: o
+   número do cartão fica no iframe dela e nunca passa por código nosso. Responde
+   uma vez só: «pagou» (o formulário dela terminou — quem diz que o dinheiro
+   entrou é o servidor), «desistiu», ou «sem-script» (rede, bloqueador: vai-se
+   à página segura dela). */
+const PAYSTACK_JS = "https://js.paystack.co/v2/inline.js";
+let paystackAPedir = null;
+function carregarPaystack(){
+  if(window.PaystackPop) return Promise.resolve(window.PaystackPop);
+  if(paystackAPedir) return paystackAPedir;
+  paystackAPedir = new Promise((ok, nao) => {
+    const el = document.createElement("script");
+    el.src = PAYSTACK_JS; el.async = true;
+    const prazo = setTimeout(() => nao(new Error("demorou de mais")), 8000);
+    el.onload = () => { clearTimeout(prazo); window.PaystackPop ? ok(window.PaystackPop) : nao(new Error("sem PaystackPop")); };
+    el.onerror = () => { clearTimeout(prazo); nao(new Error("não carregou")); };
+    document.head.appendChild(el);
+  }).catch(e => { paystackAPedir = null; throw e; });
+  return paystackAPedir;
+}
+async function janelaDaPaystack(codigo){
+  if(!codigo) return { ok:false, motivo:"sem-script" };
+  let Pop;
+  try { Pop = await carregarPaystack(); } catch(e){ return { ok:false, motivo:"sem-script" }; }
+  return new Promise(resolve => {
+    let respondeu = false;
+    const uma = r => { if(!respondeu){ respondeu = true; resolve(r); } };
+    try {
+      new Pop().resumeTransaction(codigo, {
+        onSuccess: () => uma({ ok:true }),
+        onCancel: () => uma({ ok:false, motivo:"desistiu" }),
+        onError: () => uma({ ok:false, motivo:"sem-script" }),
+      });
+    } catch(e){ uma({ ok:false, motivo:"sem-script" }); }
+  });
 }
 
 /* ---------------- A demonstração ---------------- */
@@ -214,8 +256,20 @@ function fonteDemo(){
       if(msisdn.endsWith("0002")) return { ok:false, estado:"desconhecida", aviso:"Não recebemos resposta a tempo." };
       pago = true; return { ok:true, estado:"confirmada" };
     },
+    /* ?cartao=desiste fecha a janela; ?cartao=semscript cai na página segura. */
+    async cartao(atalho, voltar){
+      await espera(); registo.chamadas.push(["cartao", atalho]);
+      return { ok:true, url:"https://checkout.paystack.com/demo123", access_code:"demo123", referencia:"KGD-demo", valor:18, moeda:"ZAR" };
+    },
+    async janelaCartao(codigo){
+      await espera(); registo.chamadas.push(["janela", codigo]);
+      if(q.get("cartao") === "desiste") return { ok:false, motivo:"desistiu" };
+      if(q.get("cartao") === "semscript") return { ok:false, motivo:"sem-script" };
+      pago = true; return { ok:true };
+    },
     async confirmar(){ await espera(); registo.chamadas.push(["confirmar"]); return { ok:true, estado: pago || q.has("pago") ? "ativa" : "pendente" }; },
     abrir(endereco){ registo.abriu = endereco; },
+    abrirSeparador(url){ registo.separador = url; },
   };
 }
 
@@ -302,9 +356,13 @@ function desenharPlano(){
   document.querySelector(".ficha-topo .marca").href = siteDe(E.moeda);
   $("campo-mpesa").hidden = E.moeda !== "MZN";
   $("campo-cartao").hidden = E.moeda !== "ZAR";
-  /* A validação por cartão ainda não existe na página de cobrança do Payflow
-     (só tem M-Pesa): fora de Moçambique, a inscrição espera por ela. */
-  $("btn-conta").disabled = E.moeda === "ZAR" && !CARTAO_PRONTO;
+  /* O que se cobra ao cartão ao criar (W4·8·7: a validação na janela da Paystack). */
+  $("campo-cartao").textContent = regras.validacao > 0
+    ? L(`A seguir valida o cartão com ${dinheiro(regras.validacao, simboloDe(p))} numa janela segura da Paystack. O valor é descontado na primeira fatura.`,
+        `Next, you'll verify your card with ${dinheiro(regras.validacao, simboloDe(p))} in a secure Paystack window. It's deducted from your first invoice.`)
+    : regras.diasGratis > 0 ? L("A área abre já. O cartão é cobrado no fim dos dias grátis.", "Your area opens right away. Your card is charged when the free days end.")
+    : L(`A seguir paga ${dinheiro(preco, simboloDe(p))} com o cartão: é o primeiro ${E.ciclo === "anual" ? "ano" : "mês"}.`,
+        `Next, you'll pay ${dinheiro(preco, simboloDe(p))} by card: it's your first ${E.ciclo === "anual" ? "year" : "month"}.`);
 }
 
 /* ---- passo 1: a conta ---- */
@@ -397,7 +455,6 @@ async function enviarConta(ev){
    confirmado, pergunta-se se a escola já abriu e abre-se. Cartão: a página
    segura do Payflow abre noutro separador e esta vai perguntando. */
 const SIMBOLO = { MZN:"MZ", ZAR:"R" };
-const CARTAO_PRONTO = new URLSearchParams(location.search).has("demo");
 const ICONES = {
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   falhou:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>',
@@ -415,7 +472,6 @@ function mostraValidar({ sinal, titulo, texto, relogio, erro, accoes, cartao }){
   const e = $("validar-erro"); e.textContent = erro || ""; e.hidden = !erro;
   $("validar-accoes").hidden = !accoes;
   $("btn-cartao").hidden = !cartao;
-  if(cartao) $("btn-cartao").href = cartao;
 }
 
 let relogio = 0;
@@ -491,19 +547,50 @@ async function aEsperarAbrir(aviso, segundos){
     catch(e){ /* tenta outra vez */ }
     await pausa(3000);
   }
+  /* No cartão, tentar outra vez é a janela da Paystack, não o M-Pesa. */
+  if(E.validacao && E.validacao.metodo === "cartao") return validarCartao(L(
+    "Ainda não vimos o pagamento. Se o banco o aprovou, a área abre sozinha em poucos minutos — pode voltar a esta página com o mesmo email e nome. Se não, tente outra vez.",
+    "We haven't seen the payment yet. If your bank approved it, your area opens by itself in a few minutes — you can come back to this page with the same email and name. If not, try again."));
   mostraValidar({ sinal:"falhou", titulo:L("Ainda não vimos o pagamento", "We haven't seen the payment yet"),
     texto:"Se o seu telemóvel pediu o PIN e o confirmou, a área abre sozinha em poucos minutos — pode voltar a esta página com o mesmo email e nome, e ela abre. Se não, tente outra vez.",
     accoes:true });
 }
 
-async function validarCartao(){
-  mostraValidar({ sinal:"cartao", titulo:L("Valide o cartão", "Verify your card"),
-    texto:L(`Abra a página segura do pagamento e pague ${valorDaValidacao()}. ${doDesconto()} Esta página abre a sua área assim que o pagamento entrar.`,
-            `Open the secure payment page and pay ${valorDaValidacao()}. ${doDesconto()} This page opens your area as soon as the payment comes in.`),
-    cartao:E.validacao.link });
+/* O cartão (W4·8·7): a validação paga-se na janela da Paystack, por cima
+   desta página. Sem a janela (o script não veio), abre-se a página segura
+   dela noutro separador e esta página fica a perguntar. */
+function validarCartao(erro){
+  mostraValidar({ sinal:"cartao", titulo:L("Valide o cartão", "Verify your card"), erro,
+    texto:L(`Pague ${valorDaValidacao()} com o cartão numa janela segura da Paystack. ${doDesconto()} Depois dos dias grátis, o cartão é cobrado todos os ${E.ciclo === "anual" ? "anos" : "meses"} até cancelar.`,
+            `Pay ${valorDaValidacao()} by card in a secure Paystack window. ${doDesconto()} After the free days, your card is charged every ${E.ciclo === "anual" ? "year" : "month"} until you cancel.`),
+    cartao:true });
+}
+
+let aPagarNoCartao = false;
+async function pagarNoCartao(){
+  if(aPagarNoCartao) return;
+  aPagarNoCartao = true;
+  const b = $("btn-cartao"); const rotulo = b.textContent;
+  b.setAttribute("aria-disabled", "true"); b.textContent = L("A abrir o pagamento…", "Opening the payment…");
+  const fim = () => { aPagarNoCartao = false; b.removeAttribute("aria-disabled"); b.textContent = rotulo; };
+  let r;
+  try { r = await fonte.cartao(E.validacao.atalho, location.href); }
+  catch(e){ fim(); return validarCartao(e.message); }
+  if(r && r.jaPago){ fim(); return aEsperarAbrir(); }
+  const j = await fonte.janelaCartao(r && r.access_code);
+  fim();
+  if(j.ok) return aEsperarAbrir(L("O banco está a confirmar o pagamento. Costuma demorar alguns segundos. Não feche esta página.",
+                                  "The bank is confirming the payment. It usually takes a few seconds. Don't close this page."), 180);
+  if(j.motivo === "desistiu") return validarCartao(L("Fechou a janela do pagamento: nada foi cobrado. Tente outra vez quando quiser.",
+                                                     "You closed the payment window: nothing was charged. Try again whenever you're ready."));
+  /* Plano B: a página segura da Paystack noutro separador; esta fica a perguntar. */
+  if(r && r.url) (fonte.abrirSeparador || (u => window.open(u, "_blank", "noopener")))(r.url);
+  mostraValidar({ sinal:null, titulo:L("Pague na página segura", "Pay on the secure page"),
+    texto:L("Abrimos a página segura da Paystack noutro separador. Esta página abre a sua área assim que o pagamento entrar.",
+            "We've opened Paystack's secure page in another tab. This page opens your area as soon as the payment comes in.") });
   for(;;){
     await pausa(4000);
-    try { const r = await fonte.confirmar(E.escola.organizacao); if(r && r.estado && r.estado !== "pendente") return aAbrir(); }
+    try { const c = await fonte.confirmar(E.escola.organizacao); if(c && c.estado && c.estado !== "pendente") return aAbrir(); }
     catch(e){ /* tenta outra vez */ }
   }
 }
@@ -536,6 +623,7 @@ async function arrancar(){
 
   $("form-conta").addEventListener("submit", enviarConta);
   $("btn-repetir").addEventListener("click", () => pedirPin(E.numero));
+  $("btn-cartao").addEventListener("click", ev => { ev.preventDefault(); pagarNoCartao(); });
   $("form-outro").addEventListener("submit", ev => {
     ev.preventDefault();
     const n = msisdn($("f-outro").value);

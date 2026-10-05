@@ -157,6 +157,10 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.click('[data-cobranca="mudar-plano"]');
   await pg.waitForTimeout(150);
   contem(await pg.textContent('body'), 'Fale connosco e mudamos por si', 'Mudar de plano numa assinatura da API diz que é connosco');
+  await pg.click('#cobranca-cartao [data-cobranca="cartao"]');
+  await pg.waitForTimeout(150);
+  contem(await pg.textContent('body'), 'Fale connosco e trocamos por si', 'Trocar o cartão numa assinatura da API também é connosco');
+  igual(await pg.evaluate(() => window.__pedidos.length), 0, 'sem abrir o Payflow');
   await pg.click('[data-cobranca="cancelar"]');
   await pg.waitForTimeout(150);
   contem(await pg.textContent('.modal-overlay .confirm-card'), 'já está pago', 'Cancelar pede confirmação, como sempre');

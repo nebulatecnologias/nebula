@@ -310,6 +310,14 @@ function accaoCobranca(accao){
      gestão: cancela-se aqui mesmo, e o plano muda-se connosco. */
   const pelaApi = !!(((estadoCobranca.info || {}).assinatura || {}).pelaApi);
   if(pelaApi && accao === "mudar-plano"){ mostrarToast(MUDAR_PLANO_CONNOSCO); return; }
+  /* O cartão de uma assinatura da API é o que pagou a validação; trocá-lo
+     ainda é connosco. Pendente, o botão abre a validação que ficou por pagar. */
+  if(pelaApi && accao === "cartao" && !demo){
+    const a = estadoCobranca.info.assinatura, v = (a.links || {}).validacao;
+    if(a.estado === "pendente" && /^https:\/\//.test(v || "")) window.open(v, "_blank", "noopener");
+    else mostrarToast("Trocar o cartão ainda não se faz por aqui. Fale connosco e trocamos por si.");
+    return;
+  }
   if(!demo){
     const destino = { "mudar-plano":"gerir", cancelar: pelaApi ? null : "gerir", retomar:"gerir", pagar:"fatura", cartao:"cartao" }[accao];
     if(destino){ abrirNoPayflow(destino); return; }
