@@ -107,6 +107,33 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   verdade(await c.locator('[data-int-instalada="payflow"]').count() === 1, 'Ligado, aparece nas instaladas');
   await c.click('[data-int-aba="historico"]');
   verdade(await c.locator('.int-historico tbody tr').count() > 0, 'O histórico mostra os eventos do Payflow');
+
+  /* A chave da API (A5, W4·8): a plataforma é cliente do Payflow pela API. */
+  await c.evaluate(() => { location.hash = '#/integracoes/payflow'; });
+  await c.waitForSelector('[data-int-ficha="payflow"]');
+  const ficha = await c.textContent('[data-int-ficha="payflow"]');
+  contem(ficha, 'subscription.*', 'A ficha manda marcar os eventos das assinaturas da API pública');
+  contem(ficha, 'invoice.*', 'e os das faturas');
+  for (const ambito of ['Ler produtos', 'Ler assinaturas', 'Criar e cancelar assinaturas', 'Ler faturas'])
+    contem(ficha, ambito, `e diz que a chave precisa de «${ambito}» (o nome que o Payflow mostra)`);
+  contem(await c.textContent('.int-estado'), 'API por ligar', 'Sem chave, a API está por ligar');
+  await c.fill('#c-int-chave-valor', 'whsec_' + 'Z9y8X7w6'.repeat(4));
+  await c.click('#c-int-chave button[type=submit]');
+  await c.waitForTimeout(200);
+  contem(await c.textContent('#aviso-geral'), 'começa por sk_live_ ou sk_test_', 'O segredo do webhook no lugar da chave é recusado');
+  await c.fill('#c-int-chave-valor', 'sk_test_' + '0a1b2c3d'.repeat(6));
+  await c.click('#c-int-chave button[type=submit]');
+  await c.waitForTimeout(200);
+  contem(await c.textContent('#aviso-geral'), 'Chave ligada', 'Uma chave certa liga a API');
+  const estadoApi = await c.textContent('.int-estado');
+  contem(estadoApi, 'API ligada', 'e a ficha diz que está ligada');
+  contem(estadoApi, 'Teste · chave ····2c3d', 'em modo de teste, e só com o fim da chave à vista');
+  naoContem(await c.content(), '0a1b2c3d0a1b', 'A chave inteira não fica na página');
+  contem(await c.textContent('[data-int-ficha="payflow"]'), 'a área não abre', 'Com a chave de teste, avisa que as escolas novas ficam de teste');
+  c.once('dialog', d => d.accept());
+  await c.click('#c-int-chave-desligar');
+  await c.waitForTimeout(200);
+  contem(await c.textContent('.int-estado'), 'API por ligar', 'Desligar a chave volta a «por ligar»');
   igual(c.errosDeJs.length, 0, 'Sem erros de JavaScript na consola');
   await c.close();
 

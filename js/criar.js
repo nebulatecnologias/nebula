@@ -98,6 +98,12 @@ function fonteDemo(){
     { id:"escala", nome:"Premium", alunosMax:5000, aVenda:true,
       precos:{ MZN:{ mensal:null, anual:null, simbolo:"MZ" }, ZAR:{ mensal:799, anual:null, simbolo:"R" } } },
   ];
+  /* ?payflow=1: os planos como a base os dá com o Payflow ligado (A5) — o
+     preço, a validação e os dias grátis vêm do produto de cada célula. */
+  if(q.has("payflow")){
+    planos[0].regras = { MZN:{ mensal:{ validacao:25, diasGratis:14 }, anual:{ validacao:25, diasGratis:14 } }, ZAR:{ mensal:{ validacao:18, diasGratis:7 } } };
+    planos[1].regras = { MZN:{ mensal:{ validacao:0, diasGratis:0 }, anual:{ validacao:0, diasGratis:0 } } };
+  }
   let contaExiste = q.has("existe");
   let pago = false;
   return {
@@ -122,9 +128,14 @@ function fonteDemo(){
       if(q.has("retomar") && sessao) return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", contaNova:false, retomada:true, aberta:true,
         slug:corpo.nomeEscola.toLowerCase().replace(/[^a-z0-9]+/g, "-") };
       const slug = corpo.nomeEscola.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      /* ?abre=1: um produto sem validação, com dias grátis — a área abre já. */
+      if(q.has("abre")) return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao, aberta:true };
+      const r = (((planos.find(p => p.id === corpo.plano) || {}).regras || {})[corpo.moeda] || {})[corpo.ciclo];
       return { ok:true, organizacao:"00000000-0000-4000-8000-000000000001", slug, contaNova:!sessao,
                validacao:{ metodo:corpo.moeda === "ZAR" ? "cartao" : "mpesa", numero:"KMZ-2026-0001", atalho:"demo123",
-                           valor:corpo.moeda === "ZAR" ? 18 : 10, moeda:corpo.moeda, link:"https://payflow.kingdomcompny.com/c/demo123" } };
+                           valor:r ? (r.validacao || 0) : corpo.moeda === "ZAR" ? 18 : 10, moeda:corpo.moeda,
+                           tipo:r && !r.validacao ? "period" : "setup", teste:q.has("teste"),
+                           link:"https://payflow.kingdomcompny.com/c/demo123" } };
     },
     /* Números de mentira: …0001 sem saldo, …0002 sem resposta, …0003 a ligação
        cortada depois de o PIN ser confirmado, …0004 recusado do nosso lado;
@@ -154,6 +165,13 @@ const precosDe = (p, moeda) => ((p.precos || {})[moeda || E.moeda]) || {};
 const precoDe = (p, ciclo, moeda) => { const v = precosDe(p, moeda)[ciclo]; return v == null ? null : Number(v); };
 const simboloDe = p => precosDe(p).simbolo || E.moeda;
 const vendeEm = (p, moeda) => precoDe(p, "mensal", moeda) != null || precoDe(p, "anual", moeda) != null;
+/* Com o Payflow ligado (A5), a base diz por produto a validação e os dias
+   grátis; sem ele, valem os de origem (MZ 10,00 / R 18,00 e 7 dias). */
+const regrasDe = (p, ciclo, moeda) => {
+  const r = (((p && p.regras) || {})[moeda || E.moeda] || {})[ciclo || E.ciclo];
+  return r ? { validacao:Number(r.validacao || 0), diasGratis:Number(r.diasGratis || 0) }
+           : { validacao:(moeda || E.moeda) === "ZAR" ? 18 : 10, diasGratis:7 };
+};
 const moedasAVenda = () => Object.keys(MOEDAS).filter(m => E.planos.some(p => vendeEm(p, m)));
 
 /* O site de vendas pode dizer o plano pelo nome: «premium» é o «escala». */
@@ -192,7 +210,17 @@ function desenharPlano(){
     if(poupa > 0) por += ` · poupa ${poupa}%`;
   }
   $("plano-por").textContent = por;
-  $("plano-gratis").textContent = `${E.diasTeste} dias grátis. Depois, ${dinheiro(preco, simboloDe(p))} ${E.ciclo === "anual" ? "por ano" : "por mês"}. Pode cancelar antes.`;
+  const regras = regrasDe(p);
+  E.diasTeste = regras.diasGratis;
+  const porCiclo = E.ciclo === "anual" ? "por ano" : "por mês";
+  $("plano-gratis").textContent = regras.diasGratis > 0
+    ? `${regras.diasGratis} ${regras.diasGratis === 1 ? "dia grátis" : "dias grátis"}. Depois, ${dinheiro(preco, simboloDe(p))} ${porCiclo}. Pode cancelar antes.`
+    : `${dinheiro(preco, simboloDe(p))} ${porCiclo}, a começar hoje. Pode cancelar quando quiser.`;
+  /* O que se pede ao número M-Pesa ao criar. */
+  $("mpesa-dica").textContent = regras.validacao > 0
+    ? `Pedimos ${dinheiro(regras.validacao, simboloDe(p))} a este número para validar o pagamento. O valor é descontado na primeira fatura.`
+    : regras.diasGratis > 0 ? "A área abre já. As faturas pedem o pagamento a este número."
+    : `Pedimos ${dinheiro(preco, simboloDe(p))} a este número: é o primeiro ${E.ciclo === "anual" ? "ano" : "mês"}.`;
   $("lado-titulo").textContent = `O que inclui o plano ${p.nome}`;
   $("lado-inclui").innerHTML = INCLUI(p).map(x => `<li>${CHECK}<span>${esc(x)}</span></li>`).join("");
   $("plano-trocar").href = `/site/?moeda=${encodeURIComponent(E.moeda)}#precos`;
@@ -322,11 +350,14 @@ function contar(segundos){
   pinta(); relogio = setInterval(() => { n--; pinta(); if(n <= 0) clearInterval(relogio); }, 1000);
 }
 
-/* O valor vem do Payflow (a cobrança da validação); antes dela, o de omissão. */
+/* O valor vem do Payflow (a cobrança da validação); antes dela, o do produto. */
 function valorDaValidacao(){
   const v = E.validacao;
-  return dinheiro(v ? v.valor : (E.moeda === "ZAR" ? 18 : 10), SIMBOLO[(v && v.moeda) || E.moeda] || "MZ");
+  return dinheiro(v ? v.valor : regrasDe(E.plano).validacao, SIMBOLO[(v && v.moeda) || E.moeda] || "MZ");
 }
+/* A validação desconta-se na primeira fatura; um produto sem validação cobra já o 1.º período. */
+const doDesconto = () => E.validacao && E.validacao.tipo === "period"
+  ? `É o primeiro ${E.ciclo === "anual" ? "ano" : "mês"} do plano.` : "O valor é descontado na primeira fatura.";
 
 function validarPagamento(numero){
   if(E.validacao && E.validacao.metodo === "cartao") return validarCartao();
@@ -335,8 +366,12 @@ function validarPagamento(numero){
 
 async function pedirPin(numero){
   E.numero = numero;
+  /* Uma inscrição feita com a chave de teste do Payflow (sk_test_): a fatura
+     não se paga pelo M-Pesa, por isso não se pede o PIN. */
+  if(E.validacao && E.validacao.teste) return mostraValidar({ sinal:"falhou", titulo:"Inscrição de teste",
+    texto:"O Payflow está ligado com a chave de teste: a fatura não se paga pelo M-Pesa e nada foi cobrado. A área fica fechada até a ligação ser a de produção." });
   mostraValidar({ titulo:"Confirme no seu telemóvel",
-    texto:`Enviámos um pedido de ${valorDaValidacao()} para o número ${numeroVisivel(numero)}. Abra a mensagem do M-Pesa e escreva o seu PIN. O valor é descontado na primeira fatura.`,
+    texto:`Enviámos um pedido de ${valorDaValidacao()} para o número ${numeroVisivel(numero)}. Abra a mensagem do M-Pesa e escreva o seu PIN. ${doDesconto()}`,
     relogio:true });
   contar(90);
   let r;
@@ -385,7 +420,7 @@ async function aEsperarAbrir(aviso, segundos){
 
 async function validarCartao(){
   mostraValidar({ sinal:"cartao", titulo:"Valide o cartão",
-    texto:`Abra a página segura do pagamento e pague ${valorDaValidacao()}. O valor é descontado na primeira fatura. Esta página abre a sua área assim que o pagamento entrar.`,
+    texto:`Abra a página segura do pagamento e pague ${valorDaValidacao()}. ${doDesconto()} Esta página abre a sua área assim que o pagamento entrar.`,
     cartao:E.validacao.link });
   for(;;){
     await pausa(4000);

@@ -64,4 +64,25 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   igual(await pg.locator('#c-ficha-corpo [data-isentar]').count(), 0, 'A Kingdom não tem botão de isentar');
   igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript');
   await pg.close();
+
+  /* Com o Payflow ligado (A5, W4·8): cada célula é um produto do Payflow. */
+  const pf = await abrirPagina(navegador, `${base}/consola/index.html?demo=1&payflow=1#/planos`, { viewport: { width: 1440, height: 900 } });
+  await pf.waitForSelector('#mensalidade[data-payflow="ligado"] select:not([disabled])', { timeout: 4000 });
+  const mp = () => pf.evaluate(() => document.getElementById('mensalidade').innerText.replace(/\u00a0/g, ' '));
+  igual(await pf.locator('#mensalidade tr[data-plano="essencial"] select').count(), 4, 'Quatro produtos por plano: mensal e anual, em cada moeda');
+  igual(await pf.locator('#mensalidade input').count(), 0, 'e já não há preços para escrever: são os do produto');
+  igual(await pf.inputValue('#mensalidade tr[data-plano="essencial"] select[data-moeda="MZN"][data-ciclo="mensal"]'), 'prod_01M4A5ESSMENSMZN0000000000', 'O produto escolhido vem seleccionado');
+  contem(await pf.textContent('#mensalidade tr[data-plano="essencial"] td:nth-child(3)'), 'validação MZ 10,00 · 7 dias grátis'.replace(/ /g, ' '), 'e diz a validação e os dias grátis dele');
+  contem(await mp(), 'O produto não está à venda no Payflow.', 'Um produto arquivado no Payflow diz porque não se vende');
+  const opcoes = await pf.locator('#mensalidade tr[data-plano="essencial"] select[data-moeda="MZN"][data-ciclo="anual"] option').allTextContents();
+  igual(opcoes.length, 2, 'Cada célula só oferece os produtos do ciclo e da moeda dela (e «sem produto»)');
+  contem(opcoes[1], 'Essencial · anual', 'o anual em meticais');
+  await pf.selectOption('#mensalidade tr[data-plano="essencial"] select[data-moeda="MZN"][data-ciclo="anual"]', 'prod_01M4A5ESSANMZN000000000000');
+  await pf.click('#mensalidade [data-guardar-produtos="essencial"]');
+  await pf.waitForTimeout(400);
+  contem(await pf.textContent('#aviso-geral'), 'Produtos guardados', 'Guardar diz que ficou guardado');
+  contem(await pf.textContent('#mensalidade tr[data-plano="essencial"] td:nth-child(4)'), 'validação', 'e a célula nova fica lida, à venda');
+  contem(await pf.textContent('[data-plano-cartao="essencial"]'), 'MZ 699,00'.replace(/ /g, ' '), 'O cartão do plano mostra o preço do produto');
+  igual(pf.errosDeJs.length, 0, 'Sem erros de JavaScript com o Payflow ligado');
+  await pf.close();
 }

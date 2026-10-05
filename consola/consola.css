@@ -335,6 +335,16 @@ body{ background:var(--canvas); }
 .tabela-planos th.grupo{ text-align:center; color:var(--ink-2); border-bottom:1px dashed var(--line); }
 .tabela-planos input{ width:120px; min-height:38px; border:1px solid var(--line-strong); border-radius:var(--r-field); padding:0 12px; font:inherit; font-variant-numeric:tabular-nums; background:var(--surface); color:var(--ink); }
 .tabela-planos input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+/* A5: com o Payflow ligado, cada célula é o produto do Payflow (um select) e
+   o que a API disse dele por baixo. */
+.tabela-produtos td{ vertical-align:top; }
+.tabela-produtos select{ width:100%; min-width:150px; max-width:220px; min-height:38px; border:1px solid var(--line-strong); border-radius:var(--r-field); padding:0 30px 0 10px; font:inherit; font-size:13.5px; background:var(--surface); color:var(--ink);
+  appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%236f6962' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; text-overflow:ellipsis; }
+.tabela-produtos select:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+.tabela-produtos select:disabled{ opacity:.6; }
+.c-celula{ display:block; margin-top:5px; font-size:12px; line-height:1.35; color:var(--muted); max-width:220px; }
+.c-celula-erro{ color:var(--red-ink); }
+.mensalidade .c-seccao{ align-items:flex-start; }
 
 /* ---------- Diálogos ---------- */
 dialog{ border:none; border-radius:var(--r-xl); padding:0; width:min(520px, calc(100vw - 32px)); background:var(--surface); color:var(--ink); box-shadow:var(--shadow-pop); }
@@ -408,6 +418,7 @@ dialog legend{ font-size:13.5px; font-weight:500; color:var(--ink-2); margin:6px
   .tabela-planos td{ border:0; padding:0; }
   .tabela-planos td[data-rotulo]::before{ content:attr(data-rotulo); display:block; font-size:12px; color:var(--muted); margin-bottom:3px; }
   .tabela-planos input{ width:100%; }
+  .tabela-produtos select, .c-celula{ max-width:none; min-width:0; }
 }
 /* No telemóvel, seis meses: as barras ficam largas o bastante para tocar. */
 @media (max-width:480px){

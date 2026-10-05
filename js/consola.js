@@ -143,6 +143,22 @@ function fonteReal(){
     cobranca: () => rpc("consola_cobranca"),
     integracoes: () => rpc("consola_integracoes"),
     guardarPayflow: segredo => rpc("consola_integracao_payflow", { p_segredo: segredo || "" }),
+    /* A5: a Academia é cliente do Payflow pela API. A chave fica cifrada no
+       Vault e só o servidor a lê; a consola vê os quatro últimos. */
+    guardarChavePayflow: chave => rpc("consola_chave_payflow", { p_chave: chave || "" }),
+    /* Os produtos do Payflow, lidos pela API (a criar-escola, com a sessão de
+       quem administra), para escolher o de cada plano. */
+    async produtosPayflow(){
+      const { data, error } = await c.functions.invoke("criar-escola", { body: { accao: "produtos" } });
+      if(error){
+        let detalhe = "";
+        try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* sem corpo */ }
+        throw new Error(detalhe || "O Payflow não respondeu.");
+      }
+      if(data && data.error) throw new Error(data.error);
+      return (data && data.produtos) || [];
+    },
+    guardarProdutos: mapa => rpc("consola_produtos_payflow", { p_mapa: mapa }),
     guardarPlano: (plano, p) => rpc("consola_guardar_plano", { p_plano: plano,
       p_mensal_mzn: p.MZN.mensal, p_anual_mzn: p.MZN.anual, p_mensal_zar: p.ZAR.mensal, p_anual_zar: p.ZAR.anual }),
     isentar: (org, isenta) => rpc("consola_isentar", { p_organizacao: org, p_isenta: isenta }),
@@ -306,7 +322,31 @@ function fonteDemo(){
     eventos.splice(4, 0, { id:"evt_cliente", tipo:"cliente.atualizado", organizacao:"org-horizonte", resultado:"ignorado", recebidoEm:emDias(-3) });
   }
 
-  const integracoes = { payflow: { ligada:false, segredoFim:null, ligadaEm:null, ultimoEvento: eventos[0] ? { tipo:eventos[0].tipo, resultado:eventos[0].resultado, recebidoEm:eventos[0].recebidoEm } : null, eventos: eventos.length } };
+  const integracoes = { payflow: { ligada:false, segredoFim:null, ligadaEm:null, ultimoEvento: eventos[0] ? { tipo:eventos[0].tipo, resultado:eventos[0].resultado, recebidoEm:eventos[0].recebidoEm } : null, eventos: eventos.length,
+    api: pedido.has("payflow") ? { ligada:true, chaveFim:"7d2e", modo:"test", ligadaEm:emDias(-1) } : { ligada:false, chaveFim:null, modo:null, ligadaEm:null } } };
+  /* Os produtos de assinatura que a chave vê (A5), e o de cada célula. */
+  const PRODUTOS_PF = [
+    { id:"prod_01M4A5ESSMENSMZN0000000000", nome:"Essencial · mensal", estado:"active", preco:699, moeda:"MZN", ciclo:"mensal", validacao:10, diasGratis:7 },
+    { id:"prod_01M4A5ESSANMZN000000000000", nome:"Essencial · anual", estado:"active", preco:6990, moeda:"MZN", ciclo:"anual", validacao:10, diasGratis:7 },
+    { id:"prod_01M4A5PRFMENSMZN0000000000", nome:"Profissional · mensal", estado:"active", preco:1350, moeda:"MZN", ciclo:"mensal", validacao:10, diasGratis:7 },
+    { id:"prod_01M4A5ESSMENSZAR0000000000", nome:"Essencial · mensal (rand)", estado:"active", preco:155.33, moeda:"ZAR", ciclo:"mensal", validacao:18, diasGratis:7 },
+    { id:"prod_01M4A5ANTGMENSMZN000000000", nome:"Plano antigo", estado:"archived", preco:500, moeda:"MZN", ciclo:"mensal", validacao:0, diasGratis:0 }
+  ];
+  const mapa = pedido.has("payflow") ? [
+    { plano:"essencial", ciclo:"mensal", moeda:"MZN", produto:"prod_01M4A5ESSMENSMZN0000000000" },
+    { plano:"escala", ciclo:"mensal", moeda:"MZN", produto:"prod_01M4A5ANTGMENSMZN000000000" }
+  ] : [];
+  /* A leitura, como a base a faz (public.plataforma_produtos_lidos). */
+  const lerCelula = m => {
+    const p = PRODUTOS_PF.find(x => x.id === m.produto);
+    const motivo = !p ? "O Payflow não deu este produto: confirme que existe e que a chave o vê."
+      : p.estado !== "active" ? "O produto não está à venda no Payflow."
+      : p.ciclo !== m.ciclo ? `O produto é ${p.ciclo}; esta coluna é ${m.ciclo}.`
+      : p.moeda !== m.moeda ? `O produto cobra em ${p.moeda}; esta coluna é em ${m.moeda}.` : null;
+    return Object.assign(m, { nome:p ? p.nome : null, preco:p ? p.preco : null, validacao:p ? p.validacao : null,
+      diasGratis:p ? p.diasGratis : null, aVenda:!motivo, motivo, lidoEm:new Date().toISOString() });
+  };
+  mapa.forEach(lerCelula);
   const achar = org => { const e = escolas.find(x => x.id === org); if(!e) throw new Error("Escola não encontrada."); return e; };
   const pausa = () => new Promise(r => setTimeout(r, 30));
   const copia = o => JSON.parse(JSON.stringify(o));
@@ -329,6 +369,29 @@ function fonteDemo(){
       integracoes.payflow = segredo ? Object.assign(integracoes.payflow, { ligada:true, segredoFim:segredo.slice(-4), ligadaEm:integracoes.payflow.ligadaEm || new Date().toISOString() })
                                     : Object.assign(integracoes.payflow, { ligada:false, segredoFim:null });
       return { ligada: !!segredo };
+    },
+    async guardarChavePayflow(chave){
+      await pausa();
+      if(chave && !/^sk_(live|test)_[0-9a-f]{48}$/.test(chave)) throw new Error("A chave da API do Payflow começa por sk_live_ ou sk_test_. Copie-a outra vez do Payflow (Integrações › Chaves da API).");
+      integracoes.payflow.api = chave ? { ligada:true, chaveFim:chave.slice(-4), modo:chave.startsWith("sk_live_") ? "live" : "test", ligadaEm:integracoes.payflow.api.ligadaEm || new Date().toISOString() }
+                                      : { ligada:false, chaveFim:null, modo:null, ligadaEm:null };
+      return { ligada:!!chave };
+    },
+    async produtosPayflow(){
+      await pausa();
+      if(!integracoes.payflow.api.ligada) throw new Error("Ponha primeiro a chave da API do Payflow (Integrações › Payflow).");
+      mapa.forEach(lerCelula);
+      return copia(PRODUTOS_PF);
+    },
+    async guardarProdutos(novo){
+      await pausa();
+      for(const m of novo){
+        if(m.produto && !/^prod_[0-9A-HJKMNP-TV-Z]{26}$/.test(m.produto)) throw new Error("O produto do Payflow escreve-se prod_ seguido de 26 letras e números.");
+        const i = mapa.findIndex(x => x.plano === m.plano && x.ciclo === m.ciclo && x.moeda === m.moeda);
+        const celula = { plano:m.plano, ciclo:m.ciclo, moeda:m.moeda, produto:m.produto || null, aVenda:false, motivo:null };
+        if(i >= 0){ if(mapa[i].produto !== celula.produto) mapa[i] = celula; } else mapa.push(celula);
+      }
+      return { ok:true, celulas:novo.length };
     },
     async criar(nome, slug, dominio){
       await pausa();
@@ -359,7 +422,13 @@ function fonteDemo(){
     },
     async cobranca(){
       await pausa();
-      return copia({ planos, definicoes,
+      /* Com o Payflow ligado, o preço de cada plano é o do produto. */
+      const ligado = integracoes.payflow.api.ligada;
+      const planosVistos = !ligado ? planos : planos.map(p => Object.assign({}, p, { precos:Object.fromEntries(["MZN", "ZAR"].map(m => [m,
+        { simbolo:p.precos[m].simbolo, ...Object.fromEntries(["mensal", "anual"].map(c => { const x = mapa.find(y => y.plano === p.id && y.moeda === m && y.ciclo === c);
+            return [c, x && x.aVenda ? x.preco : null]; })) }])) }));
+      return copia({ planos:planosVistos, definicoes,
+        payflow:{ ligado, modo:integracoes.payflow.api.modo, produtos:mapa.filter(m => m.produto) },
         escolas: escolas.map(e => Object.assign({ id:e.id, slug:e.slug, nome:e.nome, kingdom:e.kingdom, temCartao:false,
           alunosAtivos:e.alunos }, contas[e.id] || { estado:null },
           { contaEmDia: ["ativa","teste","isenta"].includes((contas[e.id] || {}).estado) ||
@@ -1304,15 +1373,17 @@ const Consola = {
 
   /* ================= Integrações =================
      No modelo da Memberkit (pedido do Shelton a 02/10/2026). A da consola
-     é o Payflow que cobra a mensalidade das escolas: a plataforma subscreve
-     o academia-receber nos eventos assinatura.* e cola aqui o segredo (fica
-     cifrado no Vault). Cada escola liga o Payflow dela nas Integrações da
+     é o Payflow que cobra a mensalidade das escolas. Desde o A5 (W4·8, 04/10)
+     a plataforma é cliente do Payflow como qualquer empresa: cola aqui a
+     chave da API (cria a assinatura de cada escola) e o segredo do webhook
+     (o academia-receber, nos eventos subscription.* e invoice.*), os dois
+     cifrados no Vault. Cada escola liga o Payflow dela nas Integrações da
      área de membros, para as vendas abrirem os cursos. */
   catalogoDaConsola(){
     const pf = (this.integracoes || {}).payflow || {};
     return [
-      { id:"payflow", nome:"Payflow", categoria:"Mensalidade das escolas", indicada:true, instalada:!!pf.ligada,
-        titulo:`Payflow${pf.segredoFim ? " · ····" + pf.segredoFim : ""}`, descricao:"Recebe as assinaturas, os pagamentos e as faturas das escolas." },
+      { id:"payflow", nome:"Payflow", categoria:"Mensalidade das escolas", indicada:true, instalada:!!(pf.ligada || (pf.api || {}).ligada),
+        titulo:`Payflow${(pf.api || {}).modo === "test" ? " · teste" : ""}${pf.segredoFim ? " · ····" + pf.segredoFim : ""}`, descricao:"Cria a assinatura de cada escola e recebe os pagamentos e as faturas." },
       { id:"resend", nome:"Resend", categoria:"Email transaccional", instalada:false },
       { id:"vercel", nome:"Vercel", categoria:"Domínios das escolas", instalada:false },
       { id:"webhook", nome:"Webhooks", categoria:"Notificações", estado:"em_breve", instalada:false }
@@ -1359,26 +1430,43 @@ const Consola = {
   corpoDaIntegracao(app){
     if(app.id === "payflow"){
       const pf = (this.integracoes || {}).payflow || {};
+      const api = pf.api || {};
       const ult = pf.ultimoEvento;
       const url = `${typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : ""}/functions/v1/academia-receber`;
+      const modo = api.modo === "live" ? "Produção" : api.modo === "test" ? "Teste" : "";
       return `<p class="int-lead">A mensalidade das escolas, cobrada pelo Payflow.</p>
-        <p>O Payflow cobra cada escola (cartão automático, ou fatura por cartão, M-Pesa ou e-Mola) e avisa a plataforma de cada mudança: teste, pagamento, atraso, suspensão, cancelamento. A Academia aplica o que ele diz: abre ou fecha a área de membros da escola e guarda as faturas.</p>
-        <div class="int-estado">${pf.ligada ? `<span class="pill pill-ativo">Ligado</span><span>Segredo <b>····${esc(pf.segredoFim || "")}</b></span>` : `<span class="pill pill-inativo">Por ligar</span>`}
+        <p>A plataforma é cliente do Payflow como qualquer empresa: com a chave da API, cria a assinatura de cada escola nova no plano que ela escolheu; pelo webhook, o Payflow avisa de cada mudança (validação paga, teste, pagamento, atraso, suspensão, cancelamento). A Academia aplica o que ele diz: abre ou fecha a área de membros da escola e guarda as faturas.</p>
+        <div class="int-estado">${api.ligada ? `<span class="pill pill-ativo">API ligada</span><span>${esc(modo)} · chave <b>····${esc(api.chaveFim || "")}</b></span>` : `<span class="pill pill-inativo">API por ligar</span>`}
+          ${pf.ligada ? `<span class="pill pill-ativo">Webhook ligado</span><span>Segredo <b>····${esc(pf.segredoFim || "")}</b></span>` : `<span class="pill pill-inativo">Webhook por ligar</span>`}
           ${ult ? `<span>Último evento: <b>${esc(ult.tipo)}</b>, ${esc(IntegracoesUI.quando(ult.recebidoEm))}</span>` : `<span>Ainda sem eventos.</span>`}</div>
-        <h2>1. Crie a integração no Payflow</h2>
+        ${api.modo === "test" ? `<p class="aviso nota">Com a chave de teste, as escolas novas ficam com assinaturas de teste: a fatura não se paga pelo M-Pesa e a área não abre. Troque pela <code>sk_live_</code> antes de abrir a /criar.</p>` : ""}
+        <h2>1. A chave da API</h2>
         <ol class="passos">
-          <li>No Payflow da plataforma, abra <strong>Integrações › Webhooks › Nova integração</strong>, com o nome «Área de membros».</li>
-          <li>Em <strong>URL que recebe</strong>, cole este endereço:${IntegracoesUI.copiar(url, "Endereço da plataforma")}</li>
-          <li>Em <strong>Eventos</strong>, marque todos os de assinatura (<code>assinatura.*</code>). Grave e copie o segredo, que aparece uma só vez.</li>
+          <li>No Payflow da plataforma, abra <strong>Integrações › Chaves de API › Nova chave</strong>, com o nome «Área de membros».</li>
+          <li>Em <strong>O que pode fazer</strong>, marque <strong>Ler produtos</strong>, <strong>Ler assinaturas</strong>, <strong>Criar e cancelar assinaturas</strong> e <strong>Ler faturas</strong>. Crie e copie a chave, que aparece uma só vez.</li>
         </ol>
-        <h2>2. Cole o segredo</h2>
+        <form class="int-form" id="c-int-chave" novalidate>
+          <div class="field"><label for="c-int-chave-valor">Chave da API do Payflow</label><input id="c-int-chave-valor" type="password" autocomplete="off" spellcheck="false" placeholder="${api.ligada ? "Cole uma nova para a trocar" : "sk_live_…"}">
+            <p class="hint">Fica guardada cifrada e só o servidor a lê. Sem ela, a /criar continua pela ligação antiga.</p></div>
+          <div class="acoes"><button class="btn btn-primary btn-sm" type="submit">${api.ligada ? "Trocar a chave" : "Ligar a chave"}</button>
+            ${api.ligada ? `<button class="btn btn-perigo-suave btn-sm" type="button" id="c-int-chave-desligar">Desligar</button>` : ""}</div>
+        </form>
+        <h2>2. Crie o webhook no Payflow</h2>
+        <ol class="passos">
+          <li>No Payflow, abra <strong>Integrações › Webhooks › Nova integração</strong>, com o nome «Área de membros» e o mesmo modo da chave.</li>
+          <li>Em <strong>URL que recebe</strong>, cole este endereço:${IntegracoesUI.copiar(url, "Endereço da plataforma")}</li>
+          <li>Em <strong>Eventos</strong>, marque os seis das assinaturas e das faturas (<code>subscription.*</code> e <code>invoice.*</code>). Grave e copie o segredo, que aparece uma só vez.</li>
+        </ol>
+        <h2>3. Cole o segredo</h2>
         <form class="int-form" id="c-int-payflow" novalidate>
           <div class="field"><label for="c-int-segredo">Segredo do Payflow</label><input id="c-int-segredo" type="password" autocomplete="off" spellcheck="false" placeholder="${pf.ligada ? "Cole um novo para o trocar" : "whsec_…"}">
             <p class="hint">Fica guardado cifrado. Durante uma troca, o segredo antigo continua a valer se estiver também nos segredos do servidor.</p></div>
           <div class="acoes"><button class="btn btn-primary btn-sm" type="submit">${pf.ligada ? "Trocar o segredo" : "Ligar o Payflow"}</button>
             ${pf.ligada ? `<button class="btn btn-perigo-suave btn-sm" type="button" id="c-int-desligar">Desligar</button>` : ""}</div>
         </form>
-        <h2>3. Experimente</h2>
+        <h2>4. O produto de cada plano</h2>
+        <p>Em <a class="c-ligacao" href="#/planos">Planos e preços</a>, escolha o produto do Payflow de cada plano, ciclo e moeda. O preço, a validação e os dias grátis que o site e a /criar mostram passam a ser os do produto.</p>
+        <h2>5. Experimente</h2>
         <p>Na integração do Payflow, carregue em <strong>Enviar evento de teste</strong>: aparece no <strong>Histórico</strong> como «ignorado» (não é de assinatura), e prova que a ligação funciona.</p>
         <h2>E as vendas das escolas?</h2>
         <p>Cada escola liga o Payflow dela em <strong>Integrações › Payflow</strong>, na própria área de membros: as vendas dela abrem os cursos dela. A consola não precisa de fazer nada.</p>`;
@@ -1403,6 +1491,38 @@ const Consola = {
     } catch(err){ this.aviso(err.message, "erro"); }
   },
 
+  async guardarChavePayflow(chave){
+    try {
+      await this.fonte.guardarChavePayflow(chave);
+      this.produtosPf = undefined;
+      await this.recarregar();
+      this.aviso(chave ? "Chave ligada. Escolha agora o produto de cada plano em Planos e preços." : "Chave desligada: a /criar volta à ligação antiga.", "ok");
+    } catch(err){ this.aviso(err.message, "erro"); }
+  },
+
+  /* Os produtos de assinatura do Payflow (para escolher o de cada célula). A
+     leitura também os guarda na base: o site e a /criar vêem logo o preço. */
+  async lerProdutosPf(avisar){
+    this.produtosPf = null;
+    this.erroProdutosPf = null;
+    if(avisar) this.desenhar();
+    try { this.produtosPf = await this.fonte.produtosPayflow(); }
+    catch(err){ this.produtosPf = []; this.erroProdutosPf = err.message; }
+    try { this.cobranca = await this.fonte.cobranca(); } catch(e){ /* fica a de antes */ }
+    this.desenhar();
+    if(avisar && !this.erroProdutosPf) this.aviso("Produtos lidos do Payflow.", "ok");
+  },
+
+  async guardarProdutosDoPlano(id){
+    const linha = document.querySelector(`#mensalidade tr[data-plano="${CSS.escape(id)}"]`);
+    const mapa = [...linha.querySelectorAll("select[data-moeda]")].map(s => ({ plano:id, ciclo:s.dataset.ciclo, moeda:s.dataset.moeda, produto:s.value || null }));
+    try {
+      await this.fonte.guardarProdutos(mapa);
+      await this.lerProdutosPf(false);
+      this.aviso("Produtos guardados. O site e a /criar já mostram estes preços.", "ok");
+    } catch(err){ this.aviso(err.message, "erro"); }
+  },
+
   /* ================= Planos e preços ================= */
   planosHTML(){
     const c = this.cobranca;
@@ -1422,7 +1542,7 @@ const Consola = {
             <p>Até ${contagem(p.alunosMax)} alunos · ${contagem(orgs)} ${orgs === 1 ? "organização" : "organizações"}</p>
           </article>`; }).join("")}
       </div>
-      <section class="card c-painel mensalidade" id="mensalidade" aria-label="Mensalidade das escolas">
+      ${c.payflow && c.payflow.ligado ? this.produtosDosPlanosHTML(c, sim) : `<section class="card c-painel mensalidade" id="mensalidade" aria-label="Mensalidade das escolas">
         <div class="c-seccao"><div><h2>Mensalidade das escolas</h2>
           <span class="sub">As escolas de Moçambique pagam em meticais, as da África do Sul em rand. Sem preço, o plano não se vende nessa moeda e nesse ciclo.${this.cambio() ? ` Rand pelo câmbio 1 R = ${esc(String(this.cambio()).replace(".", ","))} MT: o rand que ficar vazio calcula-se ao guardar.` : ""}</span></div></div>
         <div class="table-wrap">
@@ -1441,6 +1561,56 @@ const Consola = {
           </table>
         </div>
         <p class="c-nota">Um preço novo vale para as organizações novas e para as próximas cobranças. O Payflow cobra pelo preço que tiver na assinatura de cada escola.</p>
+      </section>`}`;
+  },
+
+  /* Com o Payflow ligado (A5), cada célula é um produto do Payflow: uma oferta
+     recorrente, mensal ou anual, na moeda da coluna. O preço, a validação e os
+     dias grátis são os dele; a base diz quais estão à venda e porquê não. */
+  produtosDosPlanosHTML(c, sim){
+    if(this.produtosPf === undefined) setTimeout(() => this.lerProdutosPf(false), 0);
+    const lista = this.produtosPf || [];
+    const lendo = this.produtosPf == null;
+    const COLUNAS = [["MZN","mensal","Mensal"], ["MZN","anual","Anual"], ["ZAR","mensal","Mensal"], ["ZAR","anual","Anual"]];
+    const celula = (p, m, ciclo) => (c.payflow.produtos || []).find(x => x.plano === p.id && x.moeda === m && x.ciclo === ciclo) || null;
+    const opcoes = (m, ciclo, atual) => {
+      const servem = lista.filter(x => x.moeda === m && x.ciclo === ciclo && x.estado === "active");
+      const ids = new Set(servem.map(x => x.id));
+      const fora = atual && !ids.has(atual.produto) ? [{ id:atual.produto, nome:atual.nome || atual.produto }] : [];
+      return `<option value="">sem produto</option>` + fora.concat(servem).map(x =>
+        `<option value="${esc(x.id)}"${atual && atual.produto === x.id ? " selected" : ""}>${esc(x.nome || x.id)}${x.preco != null ? ` · ${esc(dinheiro(x.preco, sim(m)))}` : ""}</option>`).join("");
+    };
+    const estado = (atual, m) => {
+      if(!atual) return `<small class="c-celula">Não se vende</small>`;
+      if(!atual.lidoEm) return `<small class="c-celula">Por ler</small>`;
+      if(!atual.aVenda) return `<small class="c-celula c-celula-erro">${esc(atual.motivo || "Não está à venda.")}</small>`;
+      const partes = [atual.validacao > 0 ? `validação ${dinheiro(atual.validacao, sim(m))}` : "sem validação",
+                      atual.diasGratis > 0 ? `${contagem(atual.diasGratis)} ${atual.diasGratis === 1 ? "dia grátis" : "dias grátis"}` : "sem dias grátis"];
+      return `<small class="c-celula">${esc(partes.join(" · "))}</small>`;
+    };
+    return `<section class="card c-painel mensalidade" id="mensalidade" aria-label="Mensalidade das escolas" data-payflow="ligado">
+        <div class="c-seccao"><div><h2>Mensalidade das escolas</h2>
+          <span class="sub">Cada plano vende-se pelo produto do Payflow de cada ciclo e moeda: o preço, a validação e os dias grátis são os dele. Sem produto, o plano não se vende nessa moeda e nesse ciclo.${c.payflow.modo === "test" ? " A chave é de teste: os produtos são os mesmos, mas as assinaturas ficam de teste." : ""}</span></div>
+          <button class="btn btn-secondary btn-sm" type="button" data-ler-produtos${lendo ? " disabled" : ""}>${lendo ? "A ler…" : "Ler outra vez"}</button></div>
+        ${this.erroProdutosPf ? `<p class="aviso" role="alert">${esc(this.erroProdutosPf)}</p>` : ""}
+        <div class="table-wrap">
+          <table class="tabela-planos tabela-produtos">
+            <thead>
+              <tr><th rowspan="2">Plano</th><th rowspan="2">Alunos</th><th colspan="2" class="grupo">Meticais (${esc(sim("MZN"))})</th><th colspan="2" class="grupo">Rand (${esc(sim("ZAR"))})</th><th rowspan="2"></th></tr>
+              <tr><th>Mensal</th><th>Anual</th><th>Mensal</th><th>Anual</th></tr>
+            </thead>
+            <tbody>${c.planos.map(p => `
+              <tr data-plano="${esc(p.id)}">
+                <td data-rotulo="Plano"><strong>${esc(p.nome)}</strong></td>
+                <td data-rotulo="Alunos">até ${contagem(p.alunosMax)}</td>
+                ${COLUNAS.map(([m, ciclo, rot]) => { const atual = celula(p, m, ciclo); return `<td data-rotulo="${rot} (${esc(sim(m))})">
+                  <select data-moeda="${m}" data-ciclo="${ciclo}" aria-label="Produto ${rot.toLowerCase()} do ${esc(p.nome)} em ${m === "MZN" ? "meticais" : "rand"}"${lendo ? " disabled" : ""}>${opcoes(m, ciclo, atual)}</select>
+                  ${estado(atual, m)}</td>`; }).join("")}
+                <td><button class="btn btn-secondary btn-sm" type="button" data-guardar-produtos="${esc(p.id)}"${lendo ? " disabled" : ""}>Guardar</button></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>
+        <p class="c-nota">Um produto novo vale para as escolas novas. As que já pagam ficam na assinatura que têm no Payflow.</p>
       </section>`;
   },
 
@@ -1522,6 +1692,9 @@ const Consola = {
         if(b.dataset.intAba){ this.ui.intAba = b.dataset.intAba; this.ir("#/integracoes"); this.desenhar(); return; }
         if(b.dataset.intAbrir){ this.ir(`#/integracoes/${b.dataset.intAbrir}`); return; }
         if(b.hasAttribute("data-int-voltar")){ this.ir("#/integracoes"); return; }
+        if(b.id === "c-int-chave-desligar"){ if(confirm("Desligar a chave da API? As escolas novas voltam a ser criadas pela ligação antiga.")) this.guardarChavePayflow(""); return; }
+        if(b.hasAttribute("data-ler-produtos")){ this.lerProdutosPf(true); return; }
+        if(b.dataset.guardarProdutos){ this.guardarProdutosDoPlano(b.dataset.guardarProdutos); return; }
         if(b.id === "c-int-desligar"){ if(confirm("Desligar o Payflow da plataforma? Os eventos das assinaturas deixam de ser aceites até voltar a ligar.")) this.guardarPayflow(""); return; }
         if(b.dataset.serie){ this.ui.serie = b.dataset.serie; this.ui.barra = null; this.desenhar(); return; }
         if(b.dataset.barra != null){ this.ui.barra = Number(b.dataset.barra); this.posicionarDica(); return; }
@@ -1552,6 +1725,7 @@ const Consola = {
     });
     v.addEventListener("submit", ev => {
       if(ev.target.id === "c-int-payflow"){ ev.preventDefault(); this.guardarPayflow(document.getElementById("c-int-segredo").value.trim()); }
+      if(ev.target.id === "c-int-chave"){ ev.preventDefault(); this.guardarChavePayflow(document.getElementById("c-int-chave-valor").value.trim()); }
     });
     v.addEventListener("keydown", ev => {
       const tr = ev.target.closest && ev.target.closest("#lista-escolas tbody tr[data-escola]");

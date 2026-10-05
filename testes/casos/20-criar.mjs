@@ -194,6 +194,50 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   verdade(true, 'Com a senha certa, cria a área com a conta que já existia');
   await pg.close();
 
+  /* 4b. Com o Payflow ligado (A5, W4·8): a validação e os dias grátis são os do
+     produto de cada plano, e a página diz o que vai acontecer com eles. */
+  const preencher = async (p, escola) => {
+    await p.fill('#f-escola', escola); await p.fill('#f-nome', 'Ana Exemplo'); await p.fill('#f-email', 'ana@exemplo.invalid');
+    await p.fill('#f-mpesa', '84 123 4567'); await p.fill('#f-senha', 'segredo-forte'); await p.fill('#f-senha2', 'segredo-forte');
+    await p.click('#btn-conta');
+  };
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&payflow=1&plano=essencial&moeda=MZN`);
+  contem(await txt(pg, '#plano-gratis'), '14 dias grátis. Depois, MZ 3 500,00 por mês', 'Os dias grátis são os do produto (14), não os 7 de sempre');
+  contem(await txt(pg, '#mpesa-dica'), 'Pedimos MZ 25,00 a este número para validar', 'e a validação também (MZ 25,00)');
+  await preencher(pg, 'Escola Do Produto');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 4000 });
+  igual(JSON.stringify((await pg.evaluate(() => window.__criarDemo.chamadas)).find(c => c[0] === 'pin')), '["pin","258841234567"]', 'Com validação, pede o PIN pela cobrança da validação');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&payflow=1&plano=profissional&moeda=MZN`);
+  contem(await txt(pg, '#plano-gratis'), 'MZ 7 000,00 por mês, a começar hoje', 'Um produto sem dias grátis diz que se paga a partir de hoje');
+  naoContem(await txt(pg, '#plano-gratis'), 'grátis', 'e não promete dias grátis');
+  contem(await txt(pg, '#mpesa-dica'), 'Pedimos MZ 7 000,00 a este número: é o primeiro mês', 'Sem validação, o que se pede é o primeiro mês');
+  await pg.evaluate(() => { window.__textos = []; new MutationObserver(() => window.__textos.push(document.getElementById('validar-texto').textContent))
+    .observe(document.getElementById('validar-texto'), { childList:true, characterData:true, subtree:true }); });
+  await preencher(pg, 'Escola Sem Validacao');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 4000 });
+  const textos = await pg.evaluate(() => window.__textos.join(' | '));
+  contem(textos, 'É o primeiro mês do plano.', 'O pedido de PIN diz que é o primeiro mês, não uma validação');
+  naoContem(textos, 'descontado na primeira fatura', 'e não fala de desconto');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&payflow=1&abre=1&plano=essencial&moeda=MZN`);
+  await preencher(pg, 'Escola Que Abre');
+  await pg.waitForSelector('#painel-pronta:not([hidden])', { timeout: 4000 });
+  falso((await pg.evaluate(() => window.__criarDemo.chamadas)).some(c => c[0] === 'pin'), 'Sem nada a pagar ao criar (só dias grátis), abre sem pedir o PIN');
+  await pg.close();
+
+  pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&payflow=1&teste=1&plano=essencial&moeda=MZN`);
+  await preencher(pg, 'Escola De Teste');
+  await pg.waitForSelector('#painel-validar:not([hidden])', { timeout: 4000 });
+  await pg.waitForTimeout(150);
+  igual(await txt(pg, '#validar-titulo'), 'Inscrição de teste', 'Com a chave de teste do Payflow, diz que é uma inscrição de teste');
+  contem(await txt(pg, '#validar-texto'), 'nada foi cobrado', 'e que nada foi cobrado');
+  falso((await pg.evaluate(() => window.__criarDemo.chamadas)).some(c => c[0] === 'pin'), 'sem pedir o PIN (o M-Pesa recusaria a fatura de teste)');
+  igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript');
+  await pg.close();
+
   /* 5. Fechado: sem preços, não se vende. */
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&fechado=1`);
   verdade(await pg.isVisible('#ecra-fechado'), 'Sem preços, a página diz que ainda não está à venda');
