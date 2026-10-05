@@ -135,4 +135,37 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(links.gerir, 'https://payflow.exemplo/gerir', 'Mudar de plano e cancelar abrem a gestão no Payflow');
   igual(links.semNada, null, 'Sem links ainda, não há para onde ir (e a página diz que o link vem)');
   await pg.close();
+
+  /* 11. A assinatura criada pela API do Payflow (A6), fora da demonstração:
+     não tem link de gestão; cancela-se aqui mesmo (a criar-escola chama
+     POST /v1/subscriptions/{id}/cancel), e o plano e o retomar são connosco.
+     A base e a função ficam simuladas no browser. */
+  pg = await entrarDemo(navegador, base, ADMIN);
+  await estadoDaConta(pg, 'ativa');
+  await pg.waitForTimeout(250);
+  await pg.evaluate(() => {
+    const info = JSON.parse(JSON.stringify(estadoCobranca.info));
+    info.assinatura.pelaApi = true; info.assinatura.links = {};
+    window.__pedidos = [];
+    window.modoDemonstracao = () => false;
+    API.cobrancaDaEscola = async () => JSON.parse(JSON.stringify(info));
+    API.cancelarAssinatura = async () => { window.__pedidos.push('cancelar'); info.assinatura.cancelaNoFim = true; return { ok:true, cancelaNoFim:true }; };
+    window.open = u => { window.__pedidos.push('abriu ' + u); };
+    renderAdminCobranca();
+  });
+  await pg.waitForTimeout(250);
+  await pg.click('[data-cobranca="mudar-plano"]');
+  await pg.waitForTimeout(150);
+  contem(await pg.textContent('body'), 'Fale connosco e mudamos por si', 'Mudar de plano numa assinatura da API diz que é connosco');
+  await pg.click('[data-cobranca="cancelar"]');
+  await pg.waitForTimeout(150);
+  contem(await pg.textContent('.modal-overlay .confirm-card'), 'já está pago', 'Cancelar pede confirmação, como sempre');
+  await pg.click('.modal-overlay [data-confirmar]');
+  await pg.waitForTimeout(400);
+  igual(await pg.evaluate(() => window.__pedidos.join(',')), 'cancelar', 'Confirmado, cancela pela criar-escola, sem abrir o Payflow');
+  igual(await texto(pg, '#cobranca-assinatura .pill'), 'Cancelada no fim do período', 'e a Cobrança, relida, mostra-a cancelada no fim do período');
+  igual(await pg.locator('[data-cobranca="retomar"]').count(), 0, 'Sem botão de retomar (a API ainda não retoma)');
+  contem(await texto(pg, '#cobranca-assinatura'), 'Fale connosco e retomamos a assinatura', 'diz que se retoma connosco');
+  igual(pg.errosDeJs.length, 0, 'Sem erros de JavaScript');
+  await pg.close();
 }

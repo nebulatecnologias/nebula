@@ -347,6 +347,21 @@ const API = {
     const { error } = await this.cliente.rpc("guardar_faturacao", { p_dados: dados });
     if(error) throw new Error(error.message);
   },
+  /* A assinatura criada pela API do Payflow (desde o A5) não tem link de
+     gestão: cancela-se por aqui, no fim do período. A criar-escola fala com o
+     Payflow com a chave da Academia, que nunca chega ao browser. */
+  async cancelarAssinatura(){
+    const { data, error } = await this.cliente.functions.invoke("criar-escola", {
+      body:{ accao:"cancelar", organizacao: this.organizacao ? this.organizacao.id : null }
+    });
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || "Não foi possível cancelar agora. Tente outra vez daqui a um minuto.");
+    }
+    if(data && data.error) throw new Error(data.error);
+    return data;
+  },
   /* Integrações › Payflow da escola (02/10/2026): o segredo da integração no
      Payflow dela (fica cifrado no Vault) e que produto abre que cursos. */
   async integracoesDaEscola(){

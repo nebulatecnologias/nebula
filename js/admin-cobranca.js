@@ -108,7 +108,9 @@ function blocoAssinatura(i){
     texto = "A assinatura terminou. Os alunos não vêem os cursos; a equipa continua a entrar. Fale connosco para a reativar.";
   } else if(a.cancelaNoFim){
     texto = `Cancelada: tudo continua a funcionar até ${dataCobranca(fim)}. Depois disso não há mais cobranças, e os alunos deixam de ver os cursos.`;
-    accoes = `<button class="btn btn-secondary" type="button" data-cobranca="retomar" ${ocupado}>Retomar a assinatura</button>`;
+    /* Retomar uma assinatura da API ainda não se faz por aqui. */
+    if(a.pelaApi) texto += " Mudou de ideias? Fale connosco e retomamos a assinatura.";
+    else accoes = `<button class="btn btn-secondary" type="button" data-cobranca="retomar" ${ocupado}>Retomar a assinatura</button>`;
   } else {
     if(a.estado === "teste") texto = `Os dias grátis vão até ${dataCobranca(a.testeAte)}. A primeira cobrança, de ${formatarPreco(preco, simbolo)}, é nesse dia.`;
     else if(a.estado === "em_atraso") texto = `A última cobrança falhou${a.ultimoErro ? " (" + textoSeguro(a.ultimoErro).replace(/\.$/, "").replace(/^./, l => l.toLowerCase()) + ")" : ""}. Pague a fatura em aberto para não perder o acesso: passados 7 dias, os alunos deixam de ver os cursos até o pagamento entrar.`;
@@ -301,10 +303,15 @@ function abrirNoPayflow(qual){
   else mostrarToast(SEM_LINK);
 }
 
+const MUDAR_PLANO_CONNOSCO = "Mudar de plano ainda não se faz por aqui. Fale connosco e mudamos por si.";
 function accaoCobranca(accao){
   const demo = modoDemonstracao();
+  /* A assinatura criada pela API do Payflow (desde o A5) não tem link de
+     gestão: cancela-se aqui mesmo, e o plano muda-se connosco. */
+  const pelaApi = !!(((estadoCobranca.info || {}).assinatura || {}).pelaApi);
+  if(pelaApi && accao === "mudar-plano"){ mostrarToast(MUDAR_PLANO_CONNOSCO); return; }
   if(!demo){
-    const destino = { "mudar-plano":"gerir", cancelar:"gerir", retomar:"gerir", pagar:"fatura", cartao:"cartao" }[accao];
+    const destino = { "mudar-plano":"gerir", cancelar: pelaApi ? null : "gerir", retomar:"gerir", pagar:"fatura", cartao:"cartao" }[accao];
     if(destino){ abrirNoPayflow(destino); return; }
   }
   if(accao === "mudar-plano"){ estadoCobranca.mudarPlano = true; desenharCobranca(); return; }
@@ -339,7 +346,8 @@ function accaoCobranca(accao){
         : `Tudo continua a funcionar até ${dataCobranca(fim)}, que já está pago. Depois disso não há mais cobranças, e os alunos deixam de ver os cursos.`,
       textoConfirmar: "Cancelar assinatura",
       aoConfirmar: () => comCobrancaOcupada("cancelar", async () => {
-        demoMudar(c => { c.assinatura.cancelaNoFim = true; });
+        if(demo) demoMudar(c => { c.assinatura.cancelaNoFim = true; });
+        else await API.cancelarAssinatura();
         mostrarToast("Assinatura cancelada no fim do período.");
       })
     });
