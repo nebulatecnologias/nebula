@@ -24,6 +24,72 @@
 
 const $ = id => document.getElementById(id);
 
+/* A África do Sul vê a página em inglês (pedido do Shelton a 05/10/2026: um
+   site por mercado, com as regras de cada um): ?lang=en, ou a moeda/país do
+   mercado sul-africano quando a língua não vem dita. */
+const PEDIDO = new URLSearchParams(location.search);
+const EN = PEDIDO.get("lang") === "en" || (!PEDIDO.get("lang") &&
+  ((PEDIDO.get("moeda") || "").toUpperCase() === "ZAR" || PEDIDO.get("pais") === "za"));
+const L = (pt, en) => EN ? en : pt;
+/* O site de cada mercado. */
+const siteDe = moeda => moeda === "ZAR" ? "/site-za/" : "/site-mz/";
+
+/* O que o servidor diz em português, na língua da página. */
+const ERROS_EN = {
+  "Não foi possível falar com o servidor. Tente outra vez.": "We couldn't reach the server. Please try again.",
+  "Não foi possível carregar os planos.": "We couldn't load the plans.",
+  "A senha não confere com este email.": "That password doesn't match this email.",
+  "Entrou com outra conta. Use o email dessa conta ou saia primeiro.": "You're signed in with another account. Use that account's email or sign out first.",
+  "Este email já tem conta.": "This email already has an account.",
+  "Este email já tem conta. Entre com a sua senha para criar a área de membros.": "This email already has an account. Sign in with your password to create the members area.",
+  "Escreva o nome da área de membros.": "Enter the name of your members area.",
+  "Email inválido.": "That email isn't valid.",
+  "Para continuar, aceite os termos.": "To continue, accept the terms.",
+  "A senha tem de ter pelo menos 8 caracteres.": "Your password must be at least 8 characters.",
+  "Esse plano ainda não está à venda.": "That plan isn't on sale yet.",
+  "Já criou várias áreas de membros hoje sem terminar. Termine uma delas primeiro.": "You've started several members areas today without finishing. Finish one of them first.",
+  "O sistema de pagamentos não respondeu. Tente outra vez daqui a um minuto.": "The payment system didn't respond. Please try again in a minute.",
+  "O sistema de pagamentos não respondeu. Tente outra vez.": "The payment system didn't respond. Please try again.",
+};
+const traduzErro = msg => EN ? (ERROS_EN[msg] || msg) : msg;
+
+/* Os textos fixos da página, em inglês. */
+function traduzirPagina(){
+  if(!EN) return;
+  document.documentElement.lang = "en";
+  document.title = "Create your members area";
+  const pôr = (sel, html, attr) => { const el = document.querySelector(sel); if(!el) return; if(attr) el.setAttribute(attr, html); else el.innerHTML = html; };
+  pôr("#a-carregar", "Loading…");
+  pôr("#ecra-fechado h1", "Sign-ups aren't open yet");
+  pôr("#ecra-fechado p", "The plans aren't on sale yet. Please come back soon.");
+  pôr(".ficha-topo .marca", "Members area, back to the site", "aria-label");
+  pôr(".ficha-topo .marca > span:last-child", "Members area");
+  pôr("#plano-trocar", "Change plan");
+  pôr("#painel-conta h2", "Your details");
+  pôr("#painel-conta .sub", "You'll use this email and password to sign in and manage your members area.");
+  pôr('label[for="f-escola"]', "Members area name");
+  pôr("#f-escola", "e.g. Leadership School", "placeholder");
+  pôr("#f-escola + .hint", "Your students see it. You can change it later.");
+  pôr('label[for="f-nome"]', "Your name");
+  pôr('label[for="f-email"]', "Your email");
+  pôr("#campo-cartao", "Card sign-up for South Africa opens soon: you'll verify your card with R\u00a018,00, deducted from your first invoice.");
+  pôr('label[for="f-senha"]', "Password");
+  pôr("#f-senha + .hint", "At least 8 characters.");
+  pôr('label[for="f-senha2"]', "Confirm password");
+  pôr("#campos-existente .aviso", "This email already has an account. Enter that account's password to create the members area with it.");
+  pôr('label[for="f-senha-existente"]', "Your account password");
+  pôr("#f-senha-existente + .hint", "Forgotten it? Use “Forgot password?” on the sign-in page and come back here.");
+  pôr(".consentimento", 'By continuing, you accept the <a href="/termos/" target="_blank" rel="noopener">Terms of use</a> and the <a href="/privacidade/" target="_blank" rel="noopener">Privacy policy</a>. The verification is deducted from your first invoice, which appears on the Billing page of your members area with 7 days to be paid.');
+  pôr("#btn-conta", "Verify and create my members area");
+  pôr("#btn-repetir", "Try again");
+  pôr("#btn-cartao", "Verify my card");
+  pôr("#btn-entrar", "Open the members area");
+  pôr(".lado-num", "7<span> days</span>");
+  pôr(".lado-sub", "free: your first invoice has 7 days to be paid.");
+  pôr(".lado ol", "<li><span><b>Verify your payment</b>R\u00a018,00 by card, deducted from your first invoice.</span></li><li><span><b>Add your brand and your courses</b>Your area opens right after: name, logo, colour and domain.</span></li><li><span><b>Pay your first invoice within 7 days</b>It's on the Billing page. After that, one invoice per month (or per year).</span></li>");
+  pôr(".rodape-pagina", '<a href="/termos/">Terms of use</a> · <a href="/privacidade/">Privacy</a>');
+}
+
 function esc(t){
   return String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
@@ -45,11 +111,11 @@ function fonteReal(){
     if(error){
       let corpo = {};
       try { corpo = await error.context.json(); } catch(e){ /* sem corpo */ }
-      const e = new Error(corpo.error || "Não foi possível falar com o servidor. Tente outra vez.");
+      const e = new Error(traduzErro(corpo.error || "Não foi possível falar com o servidor. Tente outra vez."));
       e.estado = error.context && error.context.status; e.corpo = corpo;
       throw e;
     }
-    if(data && data.error){ const e = new Error(data.error); e.corpo = data; throw e; }
+    if(data && data.error){ const e = new Error(traduzErro(data.error)); e.corpo = data; throw e; }
     return data;
   }
   return {
@@ -60,7 +126,7 @@ function fonteReal(){
     },
     async planos(){
       const { data, error } = await c.schema("public").rpc("planos_da_plataforma");
-      if(error) throw new Error("Não foi possível carregar os planos.");
+      if(error) throw new Error(traduzErro("Não foi possível carregar os planos."));
       return data || [];
     },
     async sessao(){ const { data } = await c.auth.getSession(); return data.session ? data.session.user : null; },
@@ -69,7 +135,7 @@ function fonteReal(){
     async sair(){ await c.auth.signOut({ scope:"local" }); },
     async entrar(email, senha){
       const { error } = await c.auth.signInWithPassword({ email, password:senha });
-      if(error) throw new Error(/invalid/i.test(error.message) ? "A senha não confere com este email." : error.message);
+      if(error) throw new Error(/invalid/i.test(error.message) ? traduzErro("A senha não confere com este email.") : error.message);
     },
     criarEscola: corpo => invocar("criar-escola", corpo),
     /* O pedido de PIN: o mesmo mpesa-checkout do Payflow, pela cobrança da
@@ -194,36 +260,46 @@ function escolherPlano(id, ciclo, moeda){
 }
 
 /* O que o plano inclui: as mesmas linhas do site de vendas. */
-const INCLUI = p => [`Até ${contagem(p.alunosMax)} alunos activos`, "A sua marca e o seu domínio", "Cursos, módulos e certificados",
-  "Encontros ao vivo e comunidades", "Vendas pelo Payflow: M-Pesa e cartão"];
+const INCLUI = p => EN
+  ? [`Up to ${contagem(p.alunosMax)} active students`, "Your brand and your domain", "Courses, modules and certificates",
+     "Live sessions and communities", E.moeda === "ZAR" ? "Sell with Payflow: card payments" : "Sell with Payflow: M-Pesa and card"]
+  : [`Até ${contagem(p.alunosMax)} alunos activos`, "A sua marca e o seu domínio", "Cursos, módulos e certificados",
+     "Encontros ao vivo e comunidades", E.moeda === "ZAR" ? "Vendas pelo Payflow: cartão" : "Vendas pelo Payflow: M-Pesa e cartão"];
+const NOME_EN = { essencial:"Essential", profissional:"Professional", escala:"Premium" };
+const nomeDo = p => EN ? (NOME_EN[p.id] || p.nome) : p.nome;
 const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg>';
 
 function desenharPlano(){
   const p = E.plano, preco = precoDe(p, E.ciclo);
-  $("plano-nome").textContent = `Plano ${p.nome}`;
-  $("plano-alunos").textContent = `Até ${contagem(p.alunosMax)} alunos activos`;
+  $("plano-nome").textContent = L(`Plano ${p.nome}`, `${nomeDo(p)} plan`);
+  $("plano-alunos").textContent = L(`Até ${contagem(p.alunosMax)} alunos activos`, `Up to ${contagem(p.alunosMax)} active students`);
   $("plano-valor").textContent = dinheiro(preco, simboloDe(p));
-  let por = E.ciclo === "anual" ? "por ano" : "por mês";
+  const porCiclo = E.ciclo === "anual" ? L("por ano", "per year") : L("por mês", "per month");
+  let por = porCiclo;
   const mensal = precoDe(p, "mensal");
+  /* O anual dá meses grátis (decisão do Shelton a 05/10: dois). */
   if(E.ciclo === "anual" && mensal){
-    const poupa = Math.round((1 - preco / (mensal * 12)) * 100);
-    if(poupa > 0) por += ` · poupa ${poupa}%`;
+    const desconto = Math.round((mensal * 12 - preco) * 100) / 100;
+    const meses = Math.round(desconto / mensal);
+    if(desconto > 0) por += L(` · ${meses} meses grátis, poupa ${dinheiro(desconto, simboloDe(p))}`, ` · ${meses} months free, save ${dinheiro(desconto, simboloDe(p))}`);
   }
   $("plano-por").textContent = por;
   const regras = regrasDe(p);
   E.diasTeste = regras.diasGratis;
-  const porCiclo = E.ciclo === "anual" ? "por ano" : "por mês";
   $("plano-gratis").textContent = regras.diasGratis > 0
-    ? `${regras.diasGratis} ${regras.diasGratis === 1 ? "dia grátis" : "dias grátis"}. Depois, ${dinheiro(preco, simboloDe(p))} ${porCiclo}. Pode cancelar antes.`
-    : `${dinheiro(preco, simboloDe(p))} ${porCiclo}, a começar hoje. Pode cancelar quando quiser.`;
+    ? L(`${regras.diasGratis} ${regras.diasGratis === 1 ? "dia grátis" : "dias grátis"}. Depois, ${dinheiro(preco, simboloDe(p))} ${porCiclo}. Pode cancelar antes.`,
+        `${regras.diasGratis} ${regras.diasGratis === 1 ? "day" : "days"} free. Then ${dinheiro(preco, simboloDe(p))} ${porCiclo}. You can cancel before.`)
+    : L(`${dinheiro(preco, simboloDe(p))} ${porCiclo}, a começar hoje. Pode cancelar quando quiser.`,
+        `${dinheiro(preco, simboloDe(p))} ${porCiclo}, starting today. You can cancel any time.`);
   /* O que se pede ao número M-Pesa ao criar. */
   $("mpesa-dica").textContent = regras.validacao > 0
     ? `Pedimos ${dinheiro(regras.validacao, simboloDe(p))} a este número para validar o pagamento. O valor é descontado na primeira fatura.`
     : regras.diasGratis > 0 ? "A área abre já. As faturas pedem o pagamento a este número."
     : `Pedimos ${dinheiro(preco, simboloDe(p))} a este número: é o primeiro ${E.ciclo === "anual" ? "ano" : "mês"}.`;
-  $("lado-titulo").textContent = `O que inclui o plano ${p.nome}`;
+  $("lado-titulo").textContent = L(`O que inclui o plano ${p.nome}`, `What the ${nomeDo(p)} plan includes`);
   $("lado-inclui").innerHTML = INCLUI(p).map(x => `<li>${CHECK}<span>${esc(x)}</span></li>`).join("");
-  $("plano-trocar").href = `/site/?moeda=${encodeURIComponent(E.moeda)}#precos`;
+  $("plano-trocar").href = `${siteDe(E.moeda)}#precos`;
+  document.querySelector(".ficha-topo .marca").href = siteDe(E.moeda);
   $("campo-mpesa").hidden = E.moeda !== "MZN";
   $("campo-cartao").hidden = E.moeda !== "ZAR";
   /* A validação por cartão ainda não existe na página de cobrança do Payflow
@@ -242,15 +318,15 @@ function erroConta(msg, campo){
 
 function validar(){
   const v = id => $(id).value.trim();
-  if(v("f-escola").length < 2) return ["Escreva o nome da área de membros.", $("f-escola")];
-  if(v("f-nome").length < 2) return ["Escreva o seu nome.", $("f-nome")];
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("f-email"))) return ["O email não parece certo.", $("f-email")];
+  if(v("f-escola").length < 2) return [L("Escreva o nome da área de membros.", "Enter the name of your members area."), $("f-escola")];
+  if(v("f-nome").length < 2) return [L("Escreva o seu nome.", "Enter your name."), $("f-nome")];
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("f-email"))) return [L("O email não parece certo.", "That email doesn't look right."), $("f-email")];
   if(E.moeda === "MZN" && !msisdn(v("f-mpesa"))) return ["Escreva o número M-Pesa que vai pagar: 84 ou 85, com 9 algarismos.", $("f-mpesa")];
   if(E.existente){
-    if(!$("f-senha-existente").value) return ["Escreva a senha da sua conta.", $("f-senha-existente")];
+    if(!$("f-senha-existente").value) return [L("Escreva a senha da sua conta.", "Enter your account password."), $("f-senha-existente")];
   } else {
-    if($("f-senha").value.length < 8) return ["A senha tem de ter pelo menos 8 caracteres.", $("f-senha")];
-    if($("f-senha").value !== $("f-senha2").value) return ["As duas senhas não são iguais.", $("f-senha2")];
+    if($("f-senha").value.length < 8) return [L("A senha tem de ter pelo menos 8 caracteres.", "Your password must be at least 8 characters."), $("f-senha")];
+    if($("f-senha").value !== $("f-senha2").value) return [L("As duas senhas não são iguais.", "The two passwords don't match."), $("f-senha2")];
   }
   return null;
 }
@@ -272,7 +348,7 @@ function modoExistente(){
   E.existente = true;
   $("campos-senha").hidden = true;
   $("campos-existente").hidden = false;
-  $("btn-conta").textContent = "Entrar e continuar";
+  $("btn-conta").textContent = L("Entrar e continuar", "Sign in and continue");
   $("f-email").readOnly = true;
   $("f-senha-existente").focus();
 }
@@ -289,7 +365,7 @@ async function enviarConta(ev){
     senha:E.existente ? "" : $("f-senha").value, plano:E.plano.id, ciclo:E.ciclo, moeda:E.moeda, aceitouTermos:true,
     msisdn:E.moeda === "MZN" ? msisdn($("f-mpesa").value) : null,
   };
-  aOcupar(btn, E.existente ? "A entrar…" : "A criar…");
+  aOcupar(btn, E.existente ? L("A entrar…", "Signing in…") : L("A criar…", "Creating…"));
   try {
     /* Este endereço é o mesmo da área de membros: quem já entrou noutra conta
        (de uma escola, por exemplo) e cria a área com outro email começa sem
@@ -311,8 +387,8 @@ async function enviarConta(ev){
     validarPagamento(corpo.msisdn);
   } catch(e){
     aOcupar(btn);
-    if(E.existente) btn.textContent = "Entrar e continuar";
-    erroConta(e.message || "Não foi possível criar a área de membros.");
+    if(E.existente) btn.textContent = L("Entrar e continuar", "Sign in and continue");
+    erroConta(e.message || L("Não foi possível criar a área de membros.", "We couldn't create the members area."));
   }
 }
 
@@ -357,7 +433,8 @@ function valorDaValidacao(){
 }
 /* A validação desconta-se na primeira fatura; um produto sem validação cobra já o 1.º período. */
 const doDesconto = () => E.validacao && E.validacao.tipo === "period"
-  ? `É o primeiro ${E.ciclo === "anual" ? "ano" : "mês"} do plano.` : "O valor é descontado na primeira fatura.";
+  ? L(`É o primeiro ${E.ciclo === "anual" ? "ano" : "mês"} do plano.`, `It's the first ${E.ciclo === "anual" ? "year" : "month"} of the plan.`)
+  : L("O valor é descontado na primeira fatura.", "The amount is deducted from your first invoice.");
 
 function validarPagamento(numero){
   if(E.validacao && E.validacao.metodo === "cartao") return validarCartao();
@@ -368,8 +445,9 @@ async function pedirPin(numero){
   E.numero = numero;
   /* Uma inscrição feita com a chave de teste do Payflow (sk_test_): a fatura
      não se paga pelo M-Pesa, por isso não se pede o PIN. */
-  if(E.validacao && E.validacao.teste) return mostraValidar({ sinal:"falhou", titulo:"Inscrição de teste",
-    texto:"O Payflow está ligado com a chave de teste: a fatura não se paga pelo M-Pesa e nada foi cobrado. A área fica fechada até a ligação ser a de produção." });
+  if(E.validacao && E.validacao.teste) return mostraValidar({ sinal:"falhou", titulo:L("Inscrição de teste", "Test sign-up"),
+    texto:L("O Payflow está ligado com a chave de teste: a fatura não se paga pelo M-Pesa e nada foi cobrado. A área fica fechada até a ligação ser a de produção.",
+            "Payflow is connected with the test key: the invoice can't be paid and nothing was charged. The area stays closed until the live connection is in place.") });
   mostraValidar({ titulo:"Confirme no seu telemóvel",
     texto:`Enviámos um pedido de ${valorDaValidacao()} para o número ${numeroVisivel(numero)}. Abra a mensagem do M-Pesa e escreva o seu PIN. ${doDesconto()}`,
     relogio:true });
@@ -405,22 +483,23 @@ function falhou(motivo){
 const pausa = ms => new Promise(res => setTimeout(res, ms));
 
 async function aEsperarAbrir(aviso, segundos){
-  mostraValidar({ sinal: aviso ? null : "ok", titulo: aviso ? "A verificar o pagamento" : "Pagamento confirmado",
-    texto: aviso || "A abrir a sua área de membros…" });
+  mostraValidar({ sinal: aviso ? null : "ok", titulo: aviso ? L("A verificar o pagamento", "Checking the payment") : L("Pagamento confirmado", "Payment confirmed"),
+    texto: aviso || L("A abrir a sua área de membros…", "Opening your members area…") });
   const ate = Date.now() + (segundos || 60) * 1000;
   while(Date.now() < ate){
     try { const r = await fonte.confirmar(E.escola.organizacao); if(r && r.estado && r.estado !== "pendente") return aAbrir(); }
     catch(e){ /* tenta outra vez */ }
     await pausa(3000);
   }
-  mostraValidar({ sinal:"falhou", titulo:"Ainda não vimos o pagamento",
+  mostraValidar({ sinal:"falhou", titulo:L("Ainda não vimos o pagamento", "We haven't seen the payment yet"),
     texto:"Se o seu telemóvel pediu o PIN e o confirmou, a área abre sozinha em poucos minutos — pode voltar a esta página com o mesmo email e nome, e ela abre. Se não, tente outra vez.",
     accoes:true });
 }
 
 async function validarCartao(){
-  mostraValidar({ sinal:"cartao", titulo:"Valide o cartão",
-    texto:`Abra a página segura do pagamento e pague ${valorDaValidacao()}. ${doDesconto()} Esta página abre a sua área assim que o pagamento entrar.`,
+  mostraValidar({ sinal:"cartao", titulo:L("Valide o cartão", "Verify your card"),
+    texto:L(`Abra a página segura do pagamento e pague ${valorDaValidacao()}. ${doDesconto()} Esta página abre a sua área assim que o pagamento entrar.`,
+            `Open the secure payment page and pay ${valorDaValidacao()}. ${doDesconto()} This page opens your area as soon as the payment comes in.`),
     cartao:E.validacao.link });
   for(;;){
     await pausa(4000);
@@ -435,8 +514,8 @@ function aAbrir(){
   $("painel-validar").hidden = true;
   $("plano-trocar").hidden = true;
   $("painel-pronta").hidden = false;
-  $("pronta-titulo").textContent = `A «${E.escola.nome}» está aberta`;
-  $("pronta-texto").textContent = "A abrir a sua área de membros para pôr a marca e os primeiros cursos…";
+  $("pronta-titulo").textContent = L(`A «${E.escola.nome}» está aberta`, `“${E.escola.nome}” is open`);
+  $("pronta-texto").textContent = L("A abrir a sua área de membros para pôr a marca e os primeiros cursos…", "Opening your members area so you can add your brand and first courses…");
   const endereco = `/?org=${encodeURIComponent(E.escola.slug)}`;
   $("btn-entrar").href = endereco;
   fonte.abrir(endereco);
@@ -444,6 +523,7 @@ function aAbrir(){
 
 /* ---- arranque ---- */
 async function arrancar(){
+  traduzirPagina();
   fonte.iniciar();
   try { E.planos = await fonte.planos(); }
   catch(e){ E.planos = []; }

@@ -531,6 +531,7 @@ html{ scrollbar-color:#2a2725 #000; }
 .plano-valor .sim{ font-size:.5em; letter-spacing:-.01em; margin-right:.12em; vertical-align:.32em; }
 .plano-por{ color:var(--texto-2); font-size:15px; }
 .plano-poupa{ flex-basis:100%; font-size:13px; color:var(--laranja-ink); }
+.plano.destaque .plano-poupa{ color:#fff; font-weight:500; }
 .plano h4{ margin:26px 0 0; font-size:19px; font-weight:500; letter-spacing:-.025em; }
 .plano ul{ list-style:none; margin:16px 0 30px; padding:0; display:flex; flex-direction:column; gap:12px; font-size:15px; }
 .plano li{ display:flex; gap:11px; align-items:flex-start; }

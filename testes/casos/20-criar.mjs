@@ -9,6 +9,7 @@ export const nome = 'Criar área de membros (/criar): plano do endereço, conta,
    Paystack. A sério, a página chama criar-escola e plataforma-cartao, que se
    provaram à parte (caso 40 do painel e SQL desfeito). */
 export default async function ({ navegador, base, igual, verdade, falso, contem, naoContem }){
+  let pg2;
   const NBSP = / /g;
   const txt = async (pg, s) => (await pg.textContent(s)).replace(NBSP, ' ');
 
@@ -16,27 +17,35 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
      outra vez (pedido do Shelton a 04/10, como na Memberkit). */
   let pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&ciclo=anual&moeda=ZAR`);
   verdade(await pg.isVisible('#ecra-criar'), 'Com planos à venda, a página mostra o formulário');
-  igual(await pg.textContent('#plano-nome'), 'Plano Essencial', 'O plano vem do endereço');
-  igual(await txt(pg, '#plano-alunos'), 'Até 500 alunos activos', 'com o limite de alunos');
+  /* Em rand é a África do Sul: a página fala inglês (pedido do Shelton a 05/10). */
+  igual(await pg.getAttribute('html', 'lang'), 'en', 'Em rand (África do Sul), a página é em inglês');
+  igual(await pg.textContent('#plano-nome'), 'Essential plan', 'O plano vem do endereço, com o nome em inglês');
+  igual(await txt(pg, '#plano-alunos'), 'Up to 500 active students', 'com o limite de alunos');
   igual(await txt(pg, '#plano-valor'), 'R 1 990,00', 'o preço anual, no formato da casa (símbolo, agrupado, vírgula)');
-  contem(await pg.textContent('#plano-por'), 'por ano · poupa 17%', 'e quanto se poupa face a doze meses');
-  contem(await txt(pg, '#plano-gratis'), '7 dias grátis. Depois, R 1 990,00 por ano', 'Diz quanto se paga depois dos dias grátis');
+  contem(await txt(pg, '#plano-por'), 'per year · 2 months free, save R 398,00', 'O anual diz os 2 meses grátis e quanto se poupa');
+  contem(await txt(pg, '#plano-gratis'), '7 days free. Then R 1 990,00 per year', 'Diz quanto se paga depois dos dias grátis');
   igual(await pg.locator('#plano-escolher, #ciclo, #pais').count(), 0, 'Não há escolha de plano, de ciclo nem de país nesta página');
-  igual(await pg.getAttribute('#plano-trocar', 'href'), '/site/?moeda=ZAR#precos', 'Trocar de plano volta aos preços do site, na mesma moeda');
-  contem(await pg.textContent('#lado-titulo'), 'plano Essencial', 'O painel diz o que o plano inclui');
-  contem(await txt(pg, '#lado-inclui'), 'Até 500 alunos activos', 'com o limite de alunos à cabeça');
+  igual(await pg.getAttribute('#plano-trocar', 'href'), '/site-za/#precos', 'Trocar de plano volta aos preços do site do mercado (África do Sul)');
+  igual(await pg.getAttribute('.ficha-topo .marca', 'href'), '/site-za/', 'e a marca leva ao site desse mercado');
+  contem(await pg.textContent('#lado-titulo'), 'Essential plan', 'O painel diz o que o plano inclui');
+  contem(await txt(pg, '#lado-inclui'), 'Up to 500 active students', 'com o limite de alunos à cabeça');
+  contem(await txt(pg, '#lado-inclui'), 'card payments', 'e, em rand, vende-se por cartão (sem M-Pesa)');
+  naoContem(await pg.textContent('#ecra-criar'), 'Os seus dados', 'Nada fica em português');
+  contem(await pg.textContent('#btn-conta'), 'Verify and create my members area', 'o botão incluído');
   const corpo = await pg.textContent('body');
   naoContem(corpo, 'Kingdom', 'A página da plataforma não tem a marca da Kingdom');
   await pg.close();
 
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=MZN`);
+  igual(await pg.getAttribute('html', 'lang'), 'pt', 'Em meticais (Moçambique), a página é em português');
+  igual(await pg.getAttribute('#plano-trocar', 'href'), '/site-mz/#precos', 'e Trocar de plano volta ao site de Moçambique');
   igual(await txt(pg, '#plano-valor'), 'MZ 3 500,00', 'Em meticais, o preço com o símbolo da tesouraria');
   verdade(new URL(pg.url()).search.includes('moeda=MZN') && new URL(pg.url()).search.includes('ciclo=mensal'), 'e o endereço fica com o plano, o ciclo e a moeda');
   await pg.close();
 
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=premium&moeda=ZAR`);
-  igual(await pg.textContent('#plano-nome'), 'Plano Premium', 'O site pode dizer «premium» pelo plano escala');
-  igual(await txt(pg, '#plano-alunos'), 'Até 5 000 alunos activos', 'Os milhares agrupam-se também abaixo de dez mil');
+  igual(await pg.textContent('#plano-nome'), 'Premium plan', 'O site pode dizer «premium» pelo plano escala');
+  igual(await txt(pg, '#plano-alunos'), 'Up to 5 000 active students', 'Os milhares agrupam-se também abaixo de dez mil');
   igual(await txt(pg, '#plano-valor'), 'R 799,00', 'Sem preço anual, fica o mensal');
   await pg.close();
 
@@ -142,7 +151,10 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   /* 2c. Fora de Moçambique: o cartão, na página segura do Payflow. */
   pg = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&pago=1`);
   verdade(await pg.isHidden('#campo-mpesa'), 'Em rand não pede número M-Pesa');
-  contem(await pg.textContent('#campo-cartao'), 'R 18,00', 'e diz que valida o cartão');
+  contem(await txt(pg, '#campo-cartao'), 'R 18,00', 'e diz que valida o cartão');
+  pg2 = await abrirPagina(navegador, `${base}/criar/index.html?demo=1&plano=essencial&moeda=ZAR&lang=pt`);
+  igual(await pg2.textContent('#plano-nome'), 'Plano Essencial', 'Com ?lang=pt, a página em rand fica em português');
+  await pg2.close();
   await pg.fill('#f-escola', 'Escola do Cabo');
   await pg.fill('#f-nome', 'Ana Exemplo');
   await pg.fill('#f-email', 'cabo@exemplo.invalid');

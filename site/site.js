@@ -1,10 +1,20 @@
 /* ============================================================
    Site de vendas: os efeitos e os preços.
    Os preços vêm da base (public.planos_da_plataforma), os mesmos que
-   a consola edita; sem ligação, os valores decididos a 02/10/2026.
+   a consola edita; sem ligação, os valores decididos a 02/10/2026 (o
+   anual a 05/10: 2 meses grátis, 10 × o mensal).
+
+   Um site por mercado (pedido do Shelton a 05/10/2026): /site-mz/ em
+   português, em meticais e M-Pesa; /site-za/ em inglês, em rand e cartão.
+   Cada página diz o seu no <html data-mercado lang>; este ficheiro serve
+   as duas. Sem data-mercado (o /site/ antigo), mostra as duas moedas.
    ============================================================ */
 (() => {
   const $ = id => document.getElementById(id);
+  const MERCADO = document.documentElement.dataset.mercado || null;
+  const EN = /^en/i.test(document.documentElement.lang || "");
+  /* O texto na língua da página. */
+  const L = (pt, en) => EN ? en : pt;
   const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NBSP = " ";
   const CRIAR = "https://membros.kingdomcompny.com/criar/";
@@ -59,10 +69,10 @@
   };
   const dominio = nome => {
     const s = nome.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-    return `membros.${s || "escolahorizonte"}.com`;
+    return EN ? `members.${s || "horizonacademy"}.com` : `membros.${s || "escolahorizonte"}.com`;
   };
   $("exp-nome").addEventListener("input", e => {
-    const nome = e.target.value.trim() || "Escola Horizonte";
+    const nome = e.target.value.trim() || L("Escola Horizonte", "Horizon Academy");
     $("m-nome").textContent = nome;
     $("m-iniciais").textContent = iniciais(nome);
     $("m-url").textContent = dominio(nome);
@@ -106,7 +116,12 @@
     equipa:'<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="10" r="2.6"/><path d="M7.5 17a4.8 4.8 0 0 1 9 0"/>',
     ecras:'<rect x="2.5" y="4" width="14" height="10" rx="2"/><path d="M6 18h6"/><rect x="17" y="8" width="4.5" height="12" rx="1.3"/>'
   };
-  const DETALHES = [
+  const DETALHES = EN ? [
+    [["certificado", "Certificates", "with your school's name"], ["aoVivo", "Live sessions", "on Zoom and Google Meet"], ["convite", "Invitations that expire", "from 1 to 30 days"],
+     ["globo", "Your own domain", "members.yourschool.com"], ["carta", "Emails with your brand", "invitations and password resets"], ["montra", "Showcase", "the courses a student doesn't have yet"]],
+    [["grupo", "Communities", "one group per programme"], ["trofeu", "Leaderboard and badges", "to keep students coming back"], ["grafico", "Reports", "every student's progress"],
+     ["idioma", "English and Portuguese", "each student chooses"], ["equipa", "Team", "with roles and permissions"], ["ecras", "Phone and computer", "the same area on both"]]
+  ] : [
     [["certificado", "Certificados", "com o nome da sua escola"], ["aoVivo", "Encontros ao vivo", "no Zoom e no Google Meet"], ["convite", "Convites com prazo", "de 1 a 30 dias"],
      ["globo", "Domínio próprio", "membros.suaescola.com"], ["carta", "Emails com a sua marca", "convites e recuperação"], ["montra", "Vitrine", "os cursos que o aluno ainda não tem"]],
     [["grupo", "Comunidades", "um grupo por programa"], ["trofeu", "Ranking e conquistas", "para o aluno voltar"], ["grafico", "Relatórios", "o progresso de cada aluno"],
@@ -120,7 +135,20 @@
   });
 
   /* ---------------- Para quem é: o carrossel ---------------- */
-  const SLIDES = [
+  const SLIDES = EN ? [
+    { tipo:"Music school", ico:'<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>', cor:"#7357e8",
+      escola:"Harmony Music School", dominio:"members.harmonymusic.com", capa:"Violin · Level 2", progresso:40,
+      frase:"Instrument lessons by level, with every student's progress in sight and a certificate at the end of each stage." },
+    { tipo:"Mentoring", ico:'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>', cor:"#0f8f86",
+      escola:"Lighthouse Mentoring", dominio:"members.lighthousementoring.com", capa:"Week 5 of 12", progresso:42,
+      frase:"A twelve-week programme, with one live session a week and a WhatsApp group only for those who signed up." },
+    { tipo:"Professional training", ico:'<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V7M3 12.5h18"/>', cor:"#2f6fe4",
+      escola:"Kairos Institute", dominio:"members.kairosinstitute.com", capa:"Bookkeeping basics", progresso:70,
+      frase:"Courses sold through Payflow by card: when the payment comes in, the student gets access without anyone on the team lifting a finger." },
+    { tipo:"Church and ministry", ico:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5M12 7v6M9.5 9.5h5"/>', cor:"#b3264f",
+      escola:"Living Word Ministry", dominio:"members.livingword.com", capa:"Leadership · Module 1", progresso:25,
+      frase:"Leadership training in English and Portuguese, with invitations that expire and video lessons on YouTube or Vimeo." }
+  ] : [
     { tipo:"Escola de música", ico:'<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>', cor:"#7357e8",
       escola:"Escola de Música Acorde", dominio:"membros.escolaacorde.com", capa:"Violino · Nível 2", progresso:40,
       frase:"Aulas de instrumento por níveis, com o progresso de cada aluno à vista e um certificado no fim de cada etapa." },
@@ -143,7 +171,7 @@
     const aplica = () => {
       $("slide-tipo").textContent = s.tipo;
       $("slide-ico").innerHTML = svg(s.ico);
-      frase.textContent = `«${s.frase}»`;
+      frase.textContent = EN ? `“${s.frase}”` : `«${s.frase}»`;
       $("slide-escola").textContent = s.escola;
       $("slide-dominio").textContent = s.dominio;
       $("slide-n").textContent = atual + 1;
@@ -250,17 +278,23 @@
 
   /* ---------------- Preços ---------------- */
   const DECIDIDOS = [
-    { id:"essencial", nome:"Essencial", aVenda:true, alunosMax:500, precos:{ MZN:{ mensal:699, anual:null, simbolo:"MZ" }, ZAR:{ mensal:155.33, anual:null, simbolo:"R" } } },
-    { id:"profissional", nome:"Profissional", aVenda:true, alunosMax:1500, precos:{ MZN:{ mensal:1350, anual:null, simbolo:"MZ" }, ZAR:{ mensal:300, anual:null, simbolo:"R" } } },
-    { id:"escala", nome:"Premium", aVenda:true, alunosMax:5000, precos:{ MZN:{ mensal:3450, anual:null, simbolo:"MZ" }, ZAR:{ mensal:766.67, anual:null, simbolo:"R" } } }
+    { id:"essencial", nome:"Essencial", aVenda:true, alunosMax:500, precos:{ MZN:{ mensal:699, anual:6990, simbolo:"MZ" }, ZAR:{ mensal:155.33, anual:1553.30, simbolo:"R" } } },
+    { id:"profissional", nome:"Profissional", aVenda:true, alunosMax:1500, precos:{ MZN:{ mensal:1350, anual:13500, simbolo:"MZ" }, ZAR:{ mensal:300, anual:3000, simbolo:"R" } } },
+    { id:"escala", nome:"Premium", aVenda:true, alunosMax:5000, precos:{ MZN:{ mensal:3450, anual:34500, simbolo:"MZ" }, ZAR:{ mensal:766.67, anual:7666.70, simbolo:"R" } } }
   ];
-  const TEXTO = {
+  /* Os nomes dos planos, em inglês. */
+  const NOME_EN = { essencial:"Essential", profissional:"Professional", escala:"Premium" };
+  const TEXTO = EN ? {
+    essencial:   { desc:"For those launching their first courses.", ico:'<path d="M12 20v-8"/><path d="M12 12c0-4 2.5-7 7-7 0 4.5-3 7-7 7z"/><path d="M12 14c0-3-2-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5z"/>' },
+    profissional:{ desc:"For schools with classes growing every month.", ico:'<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2"/><path d="M14.5 4.5c3-1 5-1 5-1s0 2-1 5l-6.5 6.5-4-4z"/><path d="M8 11 5 10.5 7.5 8H11M13 16l.5 3 2.5-2.5V13"/>' },
+    escala:      { desc:"For large schools, with many courses and many students.", ico:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5" opacity=".55"/>' }
+  } : {
     essencial:   { desc:"Para quem está a lançar os primeiros cursos.", ico:'<path d="M12 20v-8"/><path d="M12 12c0-4 2.5-7 7-7 0 4.5-3 7-7 7z"/><path d="M12 14c0-3-2-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5z"/>' },
     profissional:{ desc:"Para escolas com turmas a crescer todos os meses.", ico:'<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2"/><path d="M14.5 4.5c3-1 5-1 5-1s0 2-1 5l-6.5 6.5-4-4z"/><path d="M8 11 5 10.5 7.5 8H11M13 16l.5 3 2.5-2.5V13"/>' },
     escala:      { desc:"Para escolas grandes, com muitos cursos e muitos alunos.", ico:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5" opacity=".55"/>' }
   };
   const CHECK = '<circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/>';
-  const E = { planos:[], moeda:"MZN", ciclo:"mensal" };
+  const E = { planos:[], moeda:MERCADO === "za" ? "ZAR" : "MZN", ciclo:"mensal" };
   const precoDe = (p, ciclo, moeda) => { const v = p.precos && p.precos[moeda] && p.precos[moeda][ciclo]; return v == null ? null : Number(v); };
   const simboloDe = (p, moeda) => (p.precos && p.precos[moeda] && p.precos[moeda].simbolo) || (moeda === "ZAR" ? "R" : "MZ");
   const temAnual = () => E.planos.some(p => precoDe(p, "anual", E.moeda) != null);
@@ -271,6 +305,7 @@
     const u = new URL(CRIAR);
     u.searchParams.set("plano", p.id === "escala" ? "premium" : p.id);
     u.searchParams.set("ciclo", E.ciclo); u.searchParams.set("moeda", E.moeda);
+    if(EN) u.searchParams.set("lang", "en");
     return u.toString();
   };
 
@@ -280,20 +315,25 @@
     const v = precoDe(p, ciclo, E.moeda);
     const destaque = p.id === "profissional";
     const mensal = precoDe(p, "mensal", E.moeda);
-    const poupa = ciclo === "anual" && mensal ? Math.round((1 - v / (mensal * 12)) * 100) : 0;
-    const itens = [`Até ${contagem(p.alunosMax)} alunos activos`, "A sua marca e o seu domínio", "Cursos, módulos e certificados", "Encontros ao vivo e comunidades", "Vendas pelo Payflow: M-Pesa e cartão"];
+    /* O anual dá meses grátis (05/10: dois): diz quantos e quanto se poupa. */
+    const desconto = ciclo === "anual" && mensal ? Math.round((mensal * 12 - v) * 100) / 100 : 0;
+    const mesesGratis = desconto > 0 ? Math.round(desconto / mensal) : 0;
+    const sim = simboloDe(p, E.moeda);
+    const pagamentos = E.moeda === "ZAR" ? L("Vendas pelo Payflow: cartão", "Sell with Payflow: card payments") : L("Vendas pelo Payflow: M-Pesa e cartão", "Sell with Payflow: M-Pesa and card");
+    const itens = EN ? [`Up to ${contagem(p.alunosMax)} active students`, "Your brand and your domain", "Courses, modules and certificates", "Live sessions and communities", pagamentos]
+                     : [`Até ${contagem(p.alunosMax)} alunos activos`, "A sua marca e o seu domínio", "Cursos, módulos e certificados", "Encontros ao vivo e comunidades", pagamentos];
     return `<article class="plano${destaque ? " destaque" : ""}" data-plano="${esc(p.id)}">
-      ${destaque ? `<span class="plano-selo">Recomendado</span>` : ""}
+      ${destaque ? `<span class="plano-selo">${L("Recomendado", "Recommended")}</span>` : ""}
       ${svg(t.ico, 'class="plano-ico"')}
-      <h3>${esc(p.nome)}</h3>
+      <h3>${esc(EN ? (NOME_EN[p.id] || p.nome) : p.nome)}</h3>
       <p class="plano-desc">${esc(t.desc)}</p>
       <div class="plano-preco">
-        ${v == null ? `<span class="plano-valor">Sob consulta</span>` : `<span class="plano-valor" data-valor="${v}">${valorHTML(v, simboloDe(p, E.moeda))}</span><span class="plano-por">/ ${ciclo === "anual" ? "ano" : "mês"}</span>`}
-        ${poupa > 0 ? `<span class="plano-poupa">Poupa ${poupa}% face ao mensal</span>` : ""}
+        ${v == null ? `<span class="plano-valor">${L("Sob consulta", "On request")}</span>` : `<span class="plano-valor" data-valor="${v}">${valorHTML(v, sim)}</span><span class="plano-por">/ ${ciclo === "anual" ? L("ano", "year") : L("mês", "month")}</span>`}
+        ${desconto > 0 ? `<span class="plano-poupa">${EN ? `${mesesGratis} months free · save ${esc(sim)}${NBSP}${valor(desconto)}` : `${mesesGratis} meses grátis · poupa ${esc(sim)}${NBSP}${valor(desconto)}`}</span>` : ""}
       </div>
-      <h4>O que inclui:</h4>
+      <h4>${L("O que inclui:", "What's included:")}</h4>
       <ul>${itens.map(x => `<li>${svg(CHECK)}<span>${esc(x)}</span></li>`).join("")}</ul>
-      <a class="btn ${destaque ? "btn-branco" : "btn-escuro"}" href="${esc(linkCriar(p))}">${svg('<path d="M5 12h14M13 6l6 6-6 6"/>')}Começar 7 dias grátis</a>
+      <a class="btn ${destaque ? "btn-branco" : "btn-escuro"}" href="${esc(linkCriar(p))}">${svg('<path d="M5 12h14M13 6l6 6-6 6"/>')}${L("Começar 7 dias grátis", "Start your 7-day free trial")}</a>
     </article>`;
   }
 
@@ -317,10 +357,11 @@
     const antes = {};
     document.querySelectorAll("#planos .plano-valor[data-valor]").forEach(el => { antes[el.closest(".plano").dataset.plano] = Number(el.dataset.valor); });
     const lista = E.planos.filter(p => p.aVenda !== false && (precoDe(p, "mensal", E.moeda) != null || precoDe(p, "anual", E.moeda) != null));
-    $("planos").innerHTML = lista.length ? lista.map(cartaoPlano).join("") : `<p class="precos-erro">Os planos ainda não estão à venda nesta moeda.</p>`;
+    $("planos").innerHTML = lista.length ? lista.map(cartaoPlano).join("") : `<p class="precos-erro">${L("Os planos ainda não estão à venda nesta moeda.", "Plans are not on sale in this currency yet.")}</p>`;
     $("planos").setAttribute("aria-busy", "false");
     $("int-ciclo").hidden = !temAnual();
-    $("int-moeda").hidden = !(vendeEm("MZN") && vendeEm("ZAR"));
+    /* Num site de mercado a moeda é a do mercado: não se troca. */
+    if($("int-moeda")) $("int-moeda").hidden = !!MERCADO || !(vendeEm("MZN") && vendeEm("ZAR"));
     correNumeros(antes);
     /* Os botões gerais levam ao plano recomendado na moeda escolhida. */
     const rec = lista.find(p => p.id === "profissional") || lista[0];
@@ -338,9 +379,11 @@
     caixa.querySelectorAll("[data-lado]").forEach(s => { s.style.cursor = "pointer"; s.addEventListener("click", () => troca(s.dataset.lado === "1")); });
     return marca;
   }
-  const marcaMoeda = interruptor("btn-moeda", "int-moeda", ligado => { E.moeda = ligado ? "ZAR" : "MZN"; desenhaPlanos(); });
-  /* «Trocar de plano» no /criar volta aqui com a moeda que se estava a ver. */
-  if((new URLSearchParams(location.search).get("moeda") || "").toUpperCase() === "ZAR"){ E.moeda = "ZAR"; marcaMoeda(true); }
+  if($("btn-moeda")){
+    const marcaMoeda = interruptor("btn-moeda", "int-moeda", ligado => { E.moeda = ligado ? "ZAR" : "MZN"; desenhaPlanos(); });
+    /* «Trocar de plano» no /criar volta aqui com a moeda que se estava a ver. */
+    if(!MERCADO && (new URLSearchParams(location.search).get("moeda") || "").toUpperCase() === "ZAR"){ E.moeda = "ZAR"; marcaMoeda(true); }
+  }
   interruptor("btn-ciclo", "int-ciclo", ligado => { E.ciclo = ligado ? "anual" : "mensal"; desenhaPlanos(); });
 
   (async () => {

@@ -2,13 +2,47 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "routes": [
     {
+      "src": "/site/?",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "ZA"
+        }
+      ],
+      "status": 307,
+      "headers": {
+        "Location": "/site-za/",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "src": "/site/?",
+      "status": 307,
+      "headers": {
+        "Location": "/site-mz/",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
       "src": "/(index\\.html)?",
-      "has": [{ "type": "header", "key": "user-agent", "value": ".*(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|SkypeUriPreview|Pinterestbot|redditbot|Iframely|Embedly|vkShare).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|SkypeUriPreview|Pinterestbot|redditbot|Iframely|Embedly|vkShare).*"
+        }
+      ],
       "dest": "/api/partilha"
     },
     {
       "src": "/(index\\.html)?",
-      "has": [{ "type": "query", "key": "partilha" }],
+      "has": [
+        {
+          "type": "query",
+          "key": "partilha"
+        }
+      ],
       "dest": "/api/partilha"
     }
   ]
