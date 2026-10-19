@@ -244,6 +244,7 @@ function renderPainelVideo(painel){
 
   painel.innerHTML = `
     <div class="card painel">
+      ${blocoPanda(provedor, url)}
       <div class="field">
         <label>Código de incorporação (embed)</label>
         <textarea id="a-embed" rows="4" class="campo-codigo" placeholder="Cole aqui o código copiado do ${provedor} — algo como &lt;iframe src=&quot;...&quot;&gt;&lt;/iframe&gt;">${(r.embed||"").replace(/</g,"&lt;")}</textarea>
@@ -265,6 +266,8 @@ function renderPainelVideo(painel){
     </div>
   `;
 
+  ligarBlocoPanda(painel, url);
+
   const campo = document.getElementById("a-embed");
   /* Colar já mostra o resultado, sem ter de sair do campo. */
   campo.addEventListener("change", () => { recolherPainelAtual(); renderPainelVideo(painel); });
@@ -273,6 +276,56 @@ function renderPainelVideo(painel){
   /* A duração vem do leitor, não de quem escreve. */
   const leitor = painel.querySelector("iframe.player-embed");
   if(leitor) medirDuracao(leitor, texto => anotarDuracao(texto));
+}
+
+/* ---------------- Panda Video nativo (19/10/2026) ----------------
+   Com o Panda da escola ligado, o vídeo escolhe-se da biblioteca; colar o
+   código continua a servir, para os outros provedores e para quem prefira. */
+function blocoPanda(provedor, url){
+  const p = Panda.estado;
+  if(!p) return "";                                   // ainda a perguntar; volta a pintar quando souber
+  const doPanda = url && /pandavideo\.com(\.br)?$/i.test((() => { try { return new URL(url).hostname; } catch(e){ return ""; } })());
+  if(p.ligada) return `
+      <div class="panda-escolher">
+        <div><strong>${doPanda ? "Vídeo do Panda ligado" : "A sua biblioteca do Panda"}</strong>
+          <span>${doPanda ? "Pode trocá-lo por outro da biblioteca." : "Escolha o vídeo sem copiar código nenhum."}</span></div>
+        <button class="btn btn-primary btn-sm" type="button" id="btn-panda-biblioteca">${doPanda ? "Trocar vídeo" : "Escolher do Panda"}</button>
+      </div>
+      <p class="separador-ou"><span>ou cole o código de incorporação</span></p>`;
+  if(/panda/i.test(provedor) && p.podeLigar) return `
+      <div class="panda-escolher suave">
+        <div><strong>Escolha os vídeos da biblioteca do Panda</strong>
+          <span>Ligue a sua conta Panda uma vez e deixe de copiar códigos de incorporação.</span></div>
+        <button class="btn btn-secondary btn-sm" type="button" id="btn-panda-ligar">Ligar o Panda</button>
+      </div>`;
+  return "";
+}
+
+function ligarBlocoPanda(painel, url){
+  if(!Panda.estado){
+    Panda.lerEstado().then(() => {
+      if(!painel.isConnected || !document.getElementById("a-embed")) return;
+      recolherPainelAtual(); renderPainelVideo(painel);
+    });
+    return;
+  }
+  const abrir = document.getElementById("btn-panda-biblioteca");
+  if(abrir) abrir.addEventListener("click", () => Panda.abrirBiblioteca({
+    atual: url,
+    aoEscolher: v => {
+      recolherPainelAtual();
+      const r = rascunhoAula();
+      r.embed = v.player;
+      const titulo = document.getElementById("a-titulo");
+      if(titulo && !titulo.value.trim()) titulo.value = v.titulo;
+      renderPainelVideo(painel);
+      const tempo = formatarDuracao(v.duracao);
+      if(tempo) anotarDuracao(tempo);
+      mostrarToast(`Vídeo escolhido: ${v.titulo}. Guarde a aula para o aluno o ver.`);
+    }
+  }));
+  const ligar = document.getElementById("btn-panda-ligar");
+  if(ligar) ligar.addEventListener("click", () => irPara("admin-integracoes"));
 }
 
 /* O campo da duração é só de leitura: guarda o que o vídeo disser. */

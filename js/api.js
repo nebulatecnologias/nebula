@@ -369,6 +369,20 @@ const API = {
     if(error) throw new Error(error.message);
     return data;
   },
+  /* Panda Video da escola (19/10/2026): tudo pela Edge Function panda-video.
+     A chave da API do Panda fica no servidor; aqui só chega a lista. */
+  async panda(accao, dados = {}){
+    const { data, error } = await this.cliente.functions.invoke("panda-video", {
+      body: Object.assign({ accao, escola: organizacaoDoEndereco() }, dados)
+    });
+    if(error){
+      let detalhe = "";
+      try { detalhe = (await error.context.json()).error || ""; } catch(e){ /* resposta sem corpo */ }
+      throw new Error(detalhe || "Não foi possível falar com o Panda agora. Tente daqui a pouco.");
+    }
+    if(data && data.error) throw new Error(data.error);
+    return data;
+  },
   async guardarPayflowEscola(segredo){
     const { error } = await this.cliente.rpc("integracao_payflow_guardar", { p_segredo: segredo || "" });
     if(error) throw new Error(error.message);
