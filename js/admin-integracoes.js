@@ -10,6 +10,9 @@
      recetor é a Edge Function academia-vendas).
    - Vídeo (Panda, YouTube, Vimeo, Bunny): pelo código de incorporação
      de cada aula; aqui escolhe-se onde estão os vídeos.
+   - Panda Video nativo (19/10/2026): a escola cola aqui a chave da API do
+     Panda dela e o editor da aula passa a abrir a biblioteca inteira
+     (js/panda.js, Edge Function panda-video).
    - Aulas ao vivo (Zoom, Google Meet): pelo link de cada evento.
    - WhatsApp (canal de apoio) e respostas aos emails.
    - Webhooks de saída: em breve.
@@ -45,6 +48,7 @@ function integracoesDaDemonstracao(){
 }
 
 async function carregarIntegracoes(){
+  await Panda.lerEstado(true);
   if(modoDemonstracao()){ estadoInt.dados = integracoesDaDemonstracao(); estadoInt.carregado = true; return; }
   try { estadoInt.dados = await API.integracoesDaEscola(); }
   catch(e){ estadoInt.dados = null; estadoInt.aviso = { tom: "erro", texto: "Não foi possível ler as integrações: " + e.message }; }
@@ -67,7 +71,7 @@ function catalogoDaEscola(){
       titulo: `Payflow${pf.segredoFim ? " · ····" + pf.segredoFim : ""}`,
       descricao: (d.produtos || []).length ? `As vendas abrem os cursos sozinhas · ${(d.produtos || []).length} ${(d.produtos || []).length === 1 ? "produto ligado" : "produtos ligados"}` : "Ligado, mas ainda sem produtos ligados a cursos.",
       tom: (d.produtos || []).length ? "" : "aviso", estadoTexto: (d.produtos || []).length ? "Ativo" : "Falta ligar produtos" },
-    video("panda", "Panda Video", "Panda Video"),
+    pandaNoCatalogo(video("panda", "Panda Video", "Panda Video")),
     video("youtube", "YouTube", "YouTube"),
     video("vimeo", "Vimeo", "Vimeo"),
     Object.assign(video("bunny", "Bunny Stream", "Bunny Stream"), {}),
@@ -79,6 +83,15 @@ function catalogoDaEscola(){
       titulo: `Respostas aos emails · ${respostas}`, descricao: "Quem responde a um email da academia escreve para aqui." },
     { id: "webhook", nome: "Webhooks", categoria: "Notificações", estado: "em_breve", instalada: false }
   ];
+}
+
+/* O Panda liga-se de verdade (a biblioteca inteira no editor da aula); os
+   outros provedores continuam pelo código de incorporação. */
+function pandaNoCatalogo(app){
+  const p = Panda.estado || {};
+  if(!p.ligada) return Object.assign(app, { descricao: "Ligue a sua conta e escolha os vídeos da biblioteca, sem copiar códigos" });
+  return Object.assign(app, { instalada: true, titulo: `Panda Video${p.chaveFim ? " · ····" + p.chaveFim : ""}`,
+    descricao: `A biblioteca inteira no editor das aulas · ${aulasComVideo().length} ${aulasComVideo().length === 1 ? "aula ligada" : "aulas ligadas"}`, estadoTexto: "Ligado" });
 }
 
 /* ---------------- O ecrã ---------------- */
@@ -189,6 +202,7 @@ function corpoDaFicha(app){
       <h2>4. Experimente</h2>
       <p>Na integração do Payflow, carregue em <strong>Enviar evento de teste</strong>. Aparece no <strong>Histórico</strong> destas Integrações como «Teste recebido».</p>`;
   }
+  if(app.id === "panda") return corpoDoPanda(app);
   if(app.categoria === "Plataforma de vídeo"){
     const ONDE = {
       panda: "abra o vídeo na biblioteca, carregue em <strong>Compartilhar › Embed</strong> e copie o bloco inteiro.",
@@ -235,6 +249,59 @@ function corpoDaFicha(app){
     <p>Um aluno entrou, concluiu um curso, recebeu um certificado: a academia envia o evento, assinado, para o endereço que indicar. Está em preparação.</p>`;
 }
 
+function corpoDoPanda(app){
+  const esc = IntegracoesUI.esc;
+  const p = Panda.estado || {};
+  const provedor = (DB.config.integracoes || {}).player;
+  const estado = p.ligada
+    ? `<span class="pill pill-ativo">Ligado</span>${p.chaveFim ? `<span>Chave <b>····${esc(p.chaveFim)}</b></span>` : ""}${p.ligadaEm ? `<span>desde ${esc(IntegracoesUI.quando(p.ligadaEm))}</span>` : ""}`
+    : `<span class="pill pill-inativo">Por ligar</span>`;
+  const formulario = p.podeLigar ? `
+      <form class="int-form" id="int-form-panda" novalidate>
+        <div class="field"><label for="int-panda-chave">Chave da API do Panda</label>
+          <input id="int-panda-chave" type="password" autocomplete="off" spellcheck="false" placeholder="${p.ligada ? "Cole uma nova para a trocar" : "panda-…"}">
+          <p class="hint">Antes de a guardar, perguntamos ao Panda se a aceita. Fica guardada cifrada e nunca aparece no browser: depois de guardada, vê-se só o fim.</p></div>
+        <div class="acoes"><button class="btn btn-primary btn-sm" type="submit" id="int-panda-ligar">${p.ligada ? "Trocar a chave" : "Ligar o Panda"}</button>
+          ${p.ligada ? `<button class="btn btn-perigo-suave btn-sm" type="button" id="int-panda-desligar">Desligar</button>` : ""}</div>
+      </form>`
+    : `<div class="int-aviso">Só a administração da escola liga ou desliga o Panda.${p.erro ? " " + esc(p.erro) : ""}</div>`;
+  return `<p class="int-lead">A sua biblioteca do Panda, dentro da academia.</p>
+      <p>Com o Panda ligado, o separador <strong>Vídeo</strong> de cada aula abre a sua biblioteca inteira, com as pastas, a procura e as miniaturas. Escolhe o vídeo e a aula fica ligada, já com a duração. Os vídeos continuam no Panda: nada é copiado nem enviado outra vez.</p>
+      <div class="int-estado">${estado}</div>
+      <h2>1. Copie a chave no Panda</h2>
+      <ol class="passos">
+        <li>No painel do Panda Video, abra <strong>Configurações › Avançado › Chave da API</strong>.</li>
+        <li>Copie a chave. Ela dá acesso à sua conta: guarde-a como uma password.</li>
+      </ol>
+      <h2>2. Cole-a aqui</h2>
+      ${formulario}
+      <h2>3. Escolha os vídeos</h2>
+      <p>Em Conteúdos › o curso › a aula › <strong>Vídeo</strong>, carregue em <strong>Escolher do Panda</strong>. Cada escola liga a sua própria conta: ninguém vê a biblioteca de outra.</p>
+      ${p.ligada && provedor !== app.valor ? `<div class="int-aviso">O provedor de vídeo desta academia está como ${esc(provedor || "—")}. Use o botão acima para passar ao Panda.</div>` : ""}`;
+}
+
+async function ligarPanda(chave){
+  try {
+    if(!chave) throw new Error("Cole a chave da API do Panda.");
+    await Panda.ligar(chave);
+    /* Quem liga o Panda passa a tê-lo como provedor. */
+    if((DB.config.integracoes || {}).player !== "Panda Video"){
+      DB.config.integracoes.player = "Panda Video";
+      await salvarIntegracoes();
+    }
+    estadoInt.aviso = { tom: "ok", texto: "Panda ligado. Já pode escolher os vídeos no separador Vídeo de cada aula." };
+  } catch(e){ estadoInt.aviso = { tom: "erro", texto: e.message }; }
+  renderAdminIntegracoes();
+}
+
+async function desligarPanda(){
+  try {
+    await Panda.desligar();
+    estadoInt.aviso = { tom: "ok", texto: "Panda desligado. As aulas já ligadas continuam a mostrar os vídeos." };
+  } catch(e){ estadoInt.aviso = { tom: "erro", texto: e.message }; }
+  renderAdminIntegracoes();
+}
+
 /* ---------------- Os botões ---------------- */
 function ligarIntegracoes(raiz){
   IntegracoesUI.ligarCopiar(raiz);
@@ -265,6 +332,20 @@ function ligarIntegracoes(raiz){
     if(desl) desl.addEventListener("click", () => confirmarAcao({
       titulo: "Desligar o Payflow?", mensagem: "As vendas deixam de abrir os cursos até voltar a ligar. Os acessos já dados ficam.",
       textoConfirmar: "Desligar", aoConfirmar: () => guardarSegredoPayflow("")
+    }));
+  }
+  const fPanda = raiz.querySelector("#int-form-panda");
+  if(fPanda){
+    fPanda.addEventListener("submit", ev => {
+      ev.preventDefault();
+      const b = document.getElementById("int-panda-ligar");
+      b.disabled = true; b.textContent = "A confirmar com o Panda…";
+      ligarPanda(document.getElementById("int-panda-chave").value.trim());
+    });
+    const desl = raiz.querySelector("#int-panda-desligar");
+    if(desl) desl.addEventListener("click", () => confirmarAcao({
+      titulo: "Desligar o Panda?", mensagem: "Deixa de poder escolher vídeos da biblioteca. As aulas já ligadas continuam a mostrar os vídeos.",
+      textoConfirmar: "Desligar", aoConfirmar: desligarPanda
     }));
   }
   const fProd = raiz.querySelector("#int-form-produto");
