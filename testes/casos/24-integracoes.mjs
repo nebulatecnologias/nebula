@@ -66,6 +66,19 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   await pg.waitForTimeout(150);
   igual(await pg.locator('[data-produto="prod_TESTE01"]').count(), 0, 'e tira-se');
 
+  /* A escola de origem liga o Payflow como as outras (24/10/2026): os
+     produtos que ainda abrem pela ligação de origem aparecem, com o caminho
+     para os passar. */
+  await pg.evaluate(() => { DB.integracoesDemo.pelaPonte = [{ produto: 'prod_01TESTEPONTE', nome: 'Oferta de origem' }]; estadoInt.carregado = false; renderAdminIntegracoes(); });
+  await pg.waitForTimeout(250);
+  verdade(await pg.isVisible('#int-form-segredo'), 'Uma escola com ligação de origem também liga o Payflow aqui');
+  contem(await pg.textContent('.int-ponte'), 'Oferta de origem', 'e vê que produtos ainda abrem os cursos pela ligação de origem');
+  contem(await pg.textContent('.int-ponte'), '«Nada»', 'e como os passar para esta integração');
+  naoContem(await pg.textContent('[data-int-ficha="payflow"]'), 'escolas novas', 'Já não diz que a ligação é só para as escolas novas');
+  await pg.evaluate(() => { DB.integracoesDemo.pelaPonte = []; estadoInt.carregado = false; renderAdminIntegracoes(); });
+  await pg.waitForTimeout(250);
+  igual(await pg.locator('.int-ponte').count(), 0, 'Sem produtos pela ligação de origem, não há aviso');
+
   /* Vídeo: escolher o provedor. */
   await pg.click('[data-int-voltar]');
   await pg.click('[data-int-aba="disponiveis"]');

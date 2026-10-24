@@ -34,7 +34,8 @@ function integracoesDaDemonstracao(){
     const agora = Date.now();
     const h = d => new Date(agora - d * 36e5).toISOString();
     DB.integracoesDemo = {
-      organizacao: { id: "00000000-0000-4000-8000-0000000000de", slug: "demo", vendasPelaPonte: false },
+      organizacao: { id: "00000000-0000-4000-8000-0000000000de", slug: "demo" },
+      pelaPonte: [],
       payflow: { ligada: true, segredoFim: "x9Qk", ligadaEm: h(240), ultimoEvento: { tipo: "order.paid", resultado: "aplicado", recebidoEm: h(3) } },
       produtos: DB.cursos.length ? [{ produto: "prod_01JDEMO7K2QF", nome: "Oferta de lançamento", cursos: [DB.cursos[0].id] }] : [],
       historico: [
@@ -166,8 +167,14 @@ function corpoDaFicha(app){
     const pf = d.payflow || {};
     const org = d.organizacao || {};
     const ult = pf.ultimoEvento;
-    if(org.vendasPelaPonte) return `<p class="int-lead">As vendas abrem os cursos sozinhas.</p>
-      <div class="int-aviso">Nesta escola, as vendas do Payflow já chegam pela ligação de origem, até à migração dos alunos. Esta ligação é para as escolas novas.</div>`;
+    /* Os produtos que ainda abrem os cursos pela ligação de origem (24/10/2026):
+       passam para aqui um a um, mudando a entrega no Payflow para «Nada». */
+    const ponte = d.pelaPonte || [];
+    const avisoPonte = ponte.length ? `<div class="int-aviso int-ponte">
+        <p><strong>${ponte.length === 1 ? "Este produto ainda abre" : "Estes produtos ainda abrem"} os cursos pela ligação de origem:</strong></p>
+        <ul>${ponte.map(p => `<li>${esc(p.nome)} <code>${esc(p.produto)}</code></li>`).join("")}</ul>
+        <p>Continuam a funcionar como hoje. Para passar um deles para esta integração, no Payflow mude a <strong>entrega</strong> da oferta para «Nada» e ligue-o aqui aos cursos. Uma compra nunca abre os cursos duas vezes.</p>
+      </div>` : "";
     const cursos = DB.cursos;
     return `<p class="int-lead">As vendas abrem os cursos sozinhas.</p>
       <p>Quando alguém compra um produto seu no Payflow, a pessoa recebe os cursos ligados a esse produto: quem já tem conta entra logo; quem não tem recebe um convite com a marca da sua escola. Um reembolso total fecha o acesso.</p>
@@ -189,6 +196,7 @@ function corpoDaFicha(app){
       </form>
       <h2>3. Ligue cada produto aos cursos</h2>
       <p>No Payflow, em <strong>Integrações › IDs dos produtos</strong>, copie o <code>prod_…</code> de cada oferta. Esse ID nunca muda, mesmo que o nome ou o preço mudem.</p>
+      ${avisoPonte}
       <div class="int-produtos">${(d.produtos || []).map(p => `<div class="int-produto" data-produto="${esc(p.produto)}">
           <div><strong>${esc(p.nome || p.produto)}</strong><span><code>${esc(p.produto)}</code> · ${esc((p.cursos || []).map(c => (cursos.find(k => k.id === c) || {}).titulo || c).join(", "))}</span></div>
           <button class="btn btn-texto btn-sm" type="button" data-int-tirar="${esc(p.produto)}">Tirar</button></div>`).join("") || `<p class="hint">Ainda nenhum produto ligado.</p>`}</div>
