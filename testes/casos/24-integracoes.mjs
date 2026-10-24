@@ -58,7 +58,10 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   contem(await pg.textContent('.int-aviso'), 'pelo menos um curso', 'Sem cursos, o produto não se liga');
   await pg.fill('#int-produto', 'prod_TESTE01');
   await pg.fill('#int-produto-nome', 'Produto de teste');
-  await pg.check('.int-cursos input >> nth=0');
+  igual(await pg.textContent('.int-cursos-conta'), 'Nenhum escolhido', 'Os cursos aparecem em cartões, ainda sem nenhum escolhido');
+  await pg.click('.int-curso >> nth=0');
+  verdade(await pg.isChecked('.int-curso >> nth=0 >> input'), 'Tocar no cartão escolhe o curso');
+  igual(await pg.textContent('.int-cursos-conta'), '1 escolhido', 'e a contagem acompanha');
   await pg.click('#int-ligar-produto');
   await pg.waitForTimeout(150);
   verdade(await pg.locator('[data-produto="prod_TESTE01"]').count() === 1, 'O produto fica ligado aos cursos');

@@ -203,9 +203,8 @@ function corpoDaFicha(app){
       <form class="int-form" id="int-form-produto" novalidate>
         <div class="field"><label for="int-produto">ID do produto</label><input id="int-produto" autocomplete="off" spellcheck="false" placeholder="prod_01J…"></div>
         <div class="field"><label for="int-produto-nome">Nome (para se reconhecer aqui)</label><input id="int-produto-nome" maxlength="120" placeholder="ex: Oferta de lançamento"></div>
-        <div class="field"><span class="field-rotulo">Cursos que abre</span>
-          <div class="int-cursos">${cursos.length ? cursos.map(c => `<label><input type="checkbox" value="${esc(c.id)}"> ${esc(c.titulo)}</label>`).join("") : `<p class="hint">Crie primeiro um curso em Conteúdos.</p>`}</div></div>
-        <div class="acoes"><button class="btn btn-secondary btn-sm" type="submit" id="int-ligar-produto">Ligar produto</button></div>
+        <div class="field">${cursosParaEscolherHTML(cursos)}</div>
+        <div class="acoes"><button class="btn btn-primary btn-sm" type="submit" id="int-ligar-produto">Ligar produto</button></div>
       </form>
       <h2>4. Experimente</h2>
       <p>Na integração do Payflow, carregue em <strong>Enviar evento de teste</strong>. Aparece no <strong>Histórico</strong> destas Integrações como «Teste recebido».</p>`;
@@ -255,6 +254,47 @@ function corpoDaFicha(app){
   }
   return `<p class="int-lead">Avise o seu sistema quando algo acontece na academia.</p>
     <p>Um aluno entrou, concluiu um curso, recebeu um certificado: a academia envia o evento, assinado, para o endereço que indicar. Está em preparação.</p>`;
+}
+
+/* Os cursos que um produto abre, em cartões (24/10/2026): a capa ou as
+   iniciais, quantas aulas tem e se ainda é rascunho, e a marca da cor de
+   destaque. A caixa de verdade continua lá dentro, para o teclado e para o
+   formulário; o cartão inteiro é a etiqueta dela. */
+function cursosParaEscolherHTML(cursos){
+  const esc = IntegracoesUI.esc;
+  if(!cursos.length) return `<span class="field-rotulo">Cursos que abre</span><p class="hint">Crie primeiro um curso em Conteúdos.</p>`;
+  return `<div class="int-cursos-topo"><span class="field-rotulo" id="int-cursos-rotulo">Cursos que abre</span>
+      <span class="int-cursos-conta" aria-live="polite">Nenhum escolhido</span>
+      <button class="btn-texto-link" type="button" data-int-cursos-todos>Escolher todos</button></div>
+    <div class="int-cursos" role="group" aria-labelledby="int-cursos-rotulo">${cursos.map(c => {
+      const aulas = (c.modulos || []).reduce((n, m) => n + (m.aulas || []).length, 0);
+      return `<label class="int-curso">
+        <input type="checkbox" value="${esc(c.id)}">
+        <span class="int-curso-capa" style="--field:${campoDoCurso(c.id)};${c.capa ? `background-image:url(${esc(c.capa)})` : ""}" aria-hidden="true">${c.capa ? "" : esc(iniciais(c.titulo || "?"))}</span>
+        <span class="int-curso-texto"><strong>${esc(c.titulo)}</strong>
+          <span>${aulas} ${aulas === 1 ? "aula" : "aulas"}${c.publicado === false ? ` · <em>Rascunho</em>` : ""}</span></span>
+        <span class="int-curso-marca" aria-hidden="true">${iconeCheck()}</span>
+      </label>`;
+    }).join("")}</div>`;
+}
+
+function ligarCursosParaEscolher(raiz){
+  const caixas = [...raiz.querySelectorAll(".int-curso input")];
+  const conta = raiz.querySelector(".int-cursos-conta");
+  const todos = raiz.querySelector("[data-int-cursos-todos]");
+  if(!caixas.length || !conta) return;
+  const contar = () => {
+    const n = caixas.filter(x => x.checked).length;
+    conta.textContent = n ? `${n} ${n === 1 ? "escolhido" : "escolhidos"}` : "Nenhum escolhido";
+    todos.textContent = n === caixas.length ? "Limpar" : "Escolher todos";
+  };
+  caixas.forEach(x => x.addEventListener("change", contar));
+  todos.addEventListener("click", () => {
+    const marcar = caixas.some(x => !x.checked);
+    caixas.forEach(x => { x.checked = marcar; });
+    contar();
+  });
+  contar();
 }
 
 function corpoDoPanda(app){
@@ -357,6 +397,7 @@ function ligarIntegracoes(raiz){
     }));
   }
   const fProd = raiz.querySelector("#int-form-produto");
+  if(fProd) ligarCursosParaEscolher(fProd);
   if(fProd) fProd.addEventListener("submit", ev => {
     ev.preventDefault();
     const cursos = [...fProd.querySelectorAll(".int-cursos input:checked")].map(x => x.value);
