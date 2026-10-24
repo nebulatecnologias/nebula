@@ -418,6 +418,31 @@ function novoConteudo(curso){
   abrirFormAula(curso.id, curso.modulos[0].id, null);
 }
 
+/* As aulas com vídeo do Panda ligadas antes de a duração vir com a escolha
+   (24/10/2026): a duração pergunta-se ao Panda e fica gravada. Uma vez por
+   aula e por sessão, para não repetir o pedido a cada volta ao editor. */
+const duracoesPedidas = new Set();
+async function completarDuracoes(curso){
+  if(!Panda.estado || !Panda.estado.ligada) return;
+  const faltam = [];
+  curso.modulos.forEach(m => m.aulas.forEach(a => {
+    const id = Panda.idDoLeitor(urlDoVideo(a) || "");
+    if(id && !duracaoLegivel(a) && !duracoesPedidas.has(a.id)){ duracoesPedidas.add(a.id); faltam.push({ a, m, id }); }
+  }));
+  if(!faltam.length) return;
+  let achadas = {};
+  try { achadas = await Panda.duracoes([...new Set(faltam.map(f => f.id))]); }
+  catch(e){ console.warn("Durações do Panda:", e.message); return; }
+  let mudou = false;
+  for(const { a, m, id } of faltam){
+    const texto = formatarDuracao(achadas[id]);
+    if(!texto) continue;
+    a.duracao = texto; mudou = true;
+    await salvar("aula", Object.assign({}, a, { moduloId:m.id }));
+  }
+  if(mudou && document.getElementById("lista-modulos-admin")) renderModulosAdmin(curso);
+}
+
 function renderModulosAdmin(curso){
   const wrap = document.getElementById("lista-modulos-admin");
   if(!wrap) return;
@@ -426,6 +451,10 @@ function renderModulosAdmin(curso){
     return;
   }
   const abertos = estado.modulosAbertos || (estado.modulosAbertos = {});
+  /* Se a biblioteca está ligada só se sabe ao perguntar: o editor volta a
+     pintar quando souber, e acerta as durações que faltam. */
+  if(!Panda.estado) Panda.lerEstado().then(() => { if(wrap.isConnected) renderModulosAdmin(curso); });
+  else completarDuracoes(curso);
 
   wrap.innerHTML = curso.modulos.map((m, i) => {
     const aberto = abertos[m.id] !== false;
@@ -450,7 +479,7 @@ function renderModulosAdmin(curso){
               <span class="titulo">${a.titulo}</span>
               <span class="sub-celula">${etiquetasDaAula(a)}</span>
             </div>
-            <span class="aula-duracao">${duracaoLegivel(a) || "--:--"}</span>
+            ${duracaoNaListaHTML(a)}
             <div class="acoes-linha" data-parar>
               <button class="btn-icone" data-mover-aula="${a.id}" data-modulo="${m.id}" data-dir="-1" ${j===0?"disabled":""} title="Subir"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg></button>
               <button class="btn-icone" data-mover-aula="${a.id}" data-modulo="${m.id}" data-dir="1" ${j===m.aulas.length-1?"disabled":""} title="Descer"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -458,7 +487,10 @@ function renderModulosAdmin(curso){
             </div>
           </div>
         `).join("") : `<div class="empty-note">Nenhuma aula publicada ainda.</div>`}
-        <button class="btn-nova-aula" data-nova-aula="${m.id}">+ Nova aula neste módulo</button>
+        <div class="modulo-novas">
+          <button class="btn-nova-aula" data-nova-aula="${m.id}">+ Nova aula neste módulo</button>
+          ${Panda.provedoresLigados().length ? `<button class="btn-nova-aula" data-aulas-biblioteca="${m.id}">+ Várias aulas da biblioteca de vídeos</button>` : ""}
+        </div>
       </div>
     </div>`;
   }).join("");
@@ -486,6 +518,26 @@ function renderModulosAdmin(curso){
   }));
 
   wrap.querySelectorAll("[data-nova-aula]").forEach(b => b.addEventListener("click", () => abrirFormAula(curso.id, b.getAttribute("data-nova-aula"), null)));
+  /* Várias aulas de uma vez, a partir da biblioteca do provedor ligado (24/10/2026). */
+  wrap.querySelectorAll("[data-aulas-biblioteca]").forEach(b => b.addEventListener("click", () => {
+    const destino = mod(b.getAttribute("data-aulas-biblioteca"));
+    const janela = Panda.abrirBiblioteca({
+      titulo: "Aulas a partir da biblioteca",
+      subtitulo: `Escolha os vídeos pela ordem das aulas. Cada um dá uma aula em ${destino ? destino.titulo : "este módulo"}.`,
+      emVarios: true,
+      varios: {
+        modulos: curso.modulos.map(m => ({ id:m.id, titulo:m.titulo })),
+        modulo: destino && destino.id,
+        aoCriar: async (videos, moduloId) => {
+          const m = await criarAulasDosVideos(curso, moduloId, videos);
+          janela.fechar();
+          abertos[m.id] = true;
+          renderModulosAdmin(curso);
+          mostrarToast(`${videos.length === 1 ? "1 aula criada" : videos.length + " aulas criadas"} em ${m.titulo}.`);
+        }
+      }
+    });
+  }));
   wrap.querySelectorAll(".aula-linha").forEach(l => l.addEventListener("click", e => {
     if(e.target.closest("[data-parar]")) return;
     abrirFormAula(curso.id, l.getAttribute("data-modulo"), l.getAttribute("data-editar-aula"));

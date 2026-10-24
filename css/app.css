@@ -1665,23 +1665,42 @@ button.back-link:hover{ color:var(--ink); }
 }
 
 /* ============================================================
-   Panda Video nativo (19/10/2026): o atalho no separador Vídeo da aula
-   e a janela da biblioteca (js/panda.js).
+   Biblioteca de vídeos (Panda Video nativo, 19/10/2026; aberta no
+   separador Vídeo e com seleção de vários, 24/10/2026) — js/panda.js.
    ============================================================ */
-.panda-escolher{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:14px 16px; border-radius:var(--r-lg); background:var(--accent-soft); border:1px solid var(--accent-line); margin:0 0 6px; }
-.panda-escolher div{ display:grid; gap:2px; min-width:0; }
-.panda-escolher strong{ font-weight:500; color:var(--ink); font-size:15px; }
-.panda-escolher span{ font-size:13.5px; color:var(--ink-2); }
-.panda-escolher.suave{ background:var(--surface-2); border-color:var(--line); margin-bottom:18px; }
-.separador-ou{ display:flex; align-items:center; gap:12px; margin:14px 0 12px; font-size:12.5px; color:var(--muted); }
-.separador-ou::before,.separador-ou::after{ content:""; flex:1; height:1px; background:var(--line); }
 
-.panda-janela{ width:min(1040px,100%); height:min(720px,calc(100dvh - 32px)); display:flex; flex-direction:column; padding:0; border-radius:var(--r-xl); box-shadow:var(--shadow-pop); background:var(--surface); overflow:hidden; animation:subir .28s var(--ease); }
-.panda-topo{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px 22px 16px; border-bottom:1px solid var(--line); }
-.panda-topo h2{ font-size:20px; font-weight:500; letter-spacing:-.015em; margin:0 0 2px; }
-.panda-topo p{ margin:0; font-size:13.5px; color:var(--muted); }
-.panda-corpo{ flex:1; min-height:0; display:grid; grid-template-columns:240px minmax(0,1fr); }
-.panda-pastas{ overflow-y:auto; padding:12px 10px; border-right:1px solid var(--line); background:var(--surface-2); display:flex; flex-direction:column; gap:2px; }
+/* O vídeo já ligado à aula, por cima da biblioteca. */
+.video-atual{ display:grid; grid-template-columns:minmax(0,280px) minmax(0,1fr); gap:18px; align-items:center; padding:0 0 18px; margin:0 0 18px; border-bottom:1px solid var(--line); }
+.video-atual .player-wrap{ margin:0; }
+.video-atual-info{ display:grid; gap:4px; justify-items:start; min-width:0; }
+.video-atual-info .rotulo-solto{ margin:0; }
+.video-atual-info strong{ font-weight:500; font-size:16px; color:var(--ink); overflow-wrap:anywhere; }
+.video-atual-info .btn{ margin-top:6px; margin-left:-10px; }
+.video-sem-biblioteca{ display:grid; gap:8px; padding:22px; border-radius:var(--r-lg); background:var(--surface-2); border:1px dashed var(--line-strong); }
+.video-sem-biblioteca strong{ font-weight:500; font-size:16px; color:var(--ink); }
+.video-sem-biblioteca p{ margin:0; font-size:14px; color:var(--ink-2); }
+.video-sem-biblioteca .acoes{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.painel-biblioteca{ padding:18px; }
+
+.panda-bib{ display:flex; flex-direction:column; min-height:0; }
+.panda-bib.em-janela{ height:100%; }
+.panda-barra{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:0 0 14px; }
+.panda-bib.em-janela .panda-barra{ padding:14px 22px; border-bottom:1px solid var(--line); }
+.panda-procura{ position:relative; display:block; flex:1; min-width:200px; }
+.panda-procura svg{ position:absolute; left:13px; top:50%; width:16px; height:16px; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+.panda-procura input{ width:100%; height:40px; border-radius:999px; border:1px solid var(--line); background:var(--surface); padding:0 14px 0 38px; font:inherit; font-size:14.5px; color:var(--ink); }
+.panda-procura input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+.panda-provedores{ display:inline-flex; padding:4px; gap:4px; background:var(--sunken); border-radius:999px; }
+.panda-provedores button{ border:0; background:transparent; border-radius:999px; padding:6px 14px; font:inherit; font-size:13.5px; font-weight:500; color:var(--muted); cursor:pointer; }
+.panda-provedores button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(28,22,16,.12); }
+.panda-provedores button:focus-visible{ outline:none; box-shadow:var(--ring); }
+.panda-varios{ display:inline-flex; align-items:center; gap:7px; }
+.panda-varios svg{ width:16px; height:16px; }
+.panda-varios[aria-pressed="true"]{ background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent-line); }
+
+.panda-corpo{ display:grid; grid-template-columns:230px minmax(0,1fr); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; height:min(620px,70vh); }
+.panda-bib.em-janela .panda-corpo{ flex:1; height:auto; min-height:0; border:0; border-radius:0; }
+.panda-pastas{ overflow-y:auto; padding:10px 8px; border-right:1px solid var(--line); background:var(--surface-2); display:flex; flex-direction:column; gap:2px; }
 .panda-pastas button{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; border:0; background:transparent; border-radius:var(--r-sm); padding:8px 10px 8px calc(10px + var(--nivel,0) * 14px); font:inherit; font-size:14px; color:var(--ink-2); cursor:pointer; }
 .panda-pastas button:hover{ background:var(--sunken); color:var(--ink); }
 .panda-pastas button[aria-current="true"]{ background:var(--accent-soft); color:var(--accent-ink); font-weight:500; }
@@ -1689,23 +1708,23 @@ button.back-link:hover{ color:var(--ink); }
 .panda-pastas svg{ width:16px; height:16px; flex-shrink:0; opacity:.75; }
 .panda-pastas span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .panda-pastas small{ font-size:12px; color:var(--muted); }
-.panda-lado{ min-height:0; overflow-y:auto; padding:16px 18px 20px; }
-.panda-procura{ position:relative; display:block; margin:0 0 14px; }
-.panda-procura svg{ position:absolute; left:13px; top:50%; width:16px; height:16px; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
-.panda-procura input{ width:100%; height:40px; border-radius:999px; border:1px solid var(--line); background:var(--surface); padding:0 14px 0 38px; font:inherit; font-size:14.5px; color:var(--ink); }
-.panda-procura input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+.panda-lado{ min-height:0; overflow-y:auto; padding:14px 16px 18px; }
 .panda-pasta-movel{ display:none; }
-.panda-grelha{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; }
-.panda-video{ display:flex; flex-direction:column; gap:8px; text-align:left; border:1px solid var(--line); background:var(--card-bg); border-radius:var(--r-lg); padding:8px 8px 12px; font:inherit; color:inherit; cursor:pointer; transition:border-color .15s, box-shadow .15s, transform .15s var(--ease); }
+.panda-dica{ margin:0 0 12px; font-size:13.5px; color:var(--muted); }
+.panda-grelha{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+.panda-video{ position:relative; display:flex; flex-direction:column; gap:8px; text-align:left; border:1px solid var(--line); background:var(--card-bg); border-radius:var(--r-lg); padding:8px 8px 12px; font:inherit; color:inherit; cursor:pointer; transition:border-color .15s, box-shadow .15s, transform .15s var(--ease); }
 .panda-video:hover:not(:disabled){ border-color:var(--accent-line); box-shadow:var(--shadow-1); transform:translateY(-1px); }
 .panda-video:focus-visible{ outline:none; box-shadow:var(--ring); border-color:var(--accent); }
 .panda-video:disabled{ cursor:not-allowed; opacity:.6; }
 .panda-video.escolhido{ border-color:var(--accent); }
+.panda-video.marcado{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; background:var(--accent-soft); }
 .panda-capa{ position:relative; aspect-ratio:16/9; border-radius:var(--r-md); overflow:hidden; background:var(--sunken); display:grid; place-items:center; color:var(--muted); }
 .panda-capa img{ width:100%; height:100%; object-fit:cover; display:block; }
 .panda-capa > svg{ width:26px; height:26px; opacity:.6; }
 .panda-tempo{ position:absolute; right:6px; bottom:6px; padding:2px 7px; border-radius:999px; background:rgba(20,16,12,.78); color:#fff; font-size:12px; font-variant-numeric:tabular-nums; }
 .panda-marca{ position:absolute; left:6px; top:6px; padding:2px 8px; border-radius:999px; background:var(--accent); color:#fff; font-size:11.5px; font-weight:500; }
+.panda-ordem{ position:absolute; left:6px; top:6px; width:26px; height:26px; border-radius:999px; border:2px solid #fff; background:rgba(20,16,12,.35); color:#fff; display:grid; place-items:center; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; box-shadow:0 1px 4px rgba(0,0,0,.25); }
+.panda-video.marcado .panda-ordem{ background:var(--accent); border-color:var(--accent); }
 .panda-nome{ padding:0 4px; font-size:14px; line-height:1.35; color:var(--ink); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .panda-sub{ padding:0 4px; font-size:12.5px; color:var(--amber-ink); }
 .panda-video.esqueleto{ cursor:default; }
@@ -1716,17 +1735,40 @@ button.back-link:hover{ color:var(--ink); }
 .panda-vazio.erro{ color:var(--red-ink); display:grid; gap:12px; justify-items:center; }
 .panda-mais{ display:flex; justify-content:center; margin-top:18px; }
 .panda-mais:empty{ display:none; }
+
+/* A barra de criar as aulas, quando se escolhem vários. */
+.panda-acao{ display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-top:14px; padding:12px 14px; border-radius:var(--r-lg); background:var(--surface); border:1px solid var(--accent-line); box-shadow:var(--shadow-1); }
+.panda-acao[hidden]{ display:none; }
+.panda-bib.em-janela .panda-acao{ margin:0; border-radius:0; border-width:1px 0 0; border-color:var(--line); box-shadow:none; padding:12px 22px; }
+.panda-acao-conta{ font-size:14px; font-weight:500; color:var(--ink); }
+.panda-acao-modulo{ display:flex; align-items:center; gap:8px; margin-left:auto; font-size:13.5px; color:var(--muted); }
+.panda-acao-modulo select{ height:36px; max-width:260px; border-radius:var(--r-field); border:1px solid var(--line); background:var(--surface); padding:0 10px; font:inherit; font-size:14px; color:var(--ink); }
+
+.modulo-novas{ display:flex; flex-wrap:wrap; gap:4px 18px; }
+
+.panda-janela{ width:min(1080px,100%); height:min(760px,calc(100dvh - 32px)); display:flex; flex-direction:column; padding:0; border-radius:var(--r-xl); box-shadow:var(--shadow-pop); background:var(--surface); overflow:hidden; animation:subir .28s var(--ease); }
+.panda-janela-corpo{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.panda-topo{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px 22px 14px; border-bottom:1px solid var(--line); }
+.panda-topo h2{ font-size:20px; font-weight:500; letter-spacing:-.015em; margin:0 0 2px; }
+.panda-topo p{ margin:0; font-size:13.5px; color:var(--muted); }
+
 @media (prefers-reduced-motion: reduce){
   .panda-janela,.panda-video{ animation:none; transition:none; }
   .panda-video.esqueleto .panda-capa{ animation:none; }
 }
 @media (max-width:720px){
+  .video-atual{ grid-template-columns:minmax(0,1fr); }
+  .painel-biblioteca{ padding:14px; }
   .panda-janela{ height:calc(100dvh - 24px); }
   .panda-topo{ padding:16px 16px 12px; }
-  .panda-corpo{ grid-template-columns:minmax(0,1fr); }
+  .panda-bib.em-janela .panda-barra{ padding:12px 14px; }
+  .panda-corpo{ grid-template-columns:minmax(0,1fr); height:min(560px,64vh); }
   .panda-pastas{ display:none; }
   .panda-pasta-movel{ display:block; margin:0 0 12px; }
   .panda-pasta-movel select{ width:100%; height:40px; border-radius:var(--r-field); border:1px solid var(--line); background:var(--surface); padding:0 12px; font:inherit; font-size:14.5px; color:var(--ink); }
-  .panda-lado{ padding:12px 14px 16px; }
+  .panda-lado{ padding:12px 12px 16px; }
   .panda-grelha{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .panda-acao-modulo{ margin-left:0; width:100%; }
+  .panda-acao-modulo select{ flex:1; max-width:none; }
+  .panda-bib.em-janela .panda-acao{ padding:12px 14px; }
 }

@@ -6,7 +6,11 @@
                guarda-a cifrada (public.escola_panda_guardar);
    - desligar  larga a chave;
    - pastas    as pastas da conta Panda (todas: a app monta a árvore);
-   - videos    { pasta | raiz, titulo, pagina } uma página de vídeos.
+   - videos    { pasta | raiz, titulo, pagina } uma página de vídeos;
+   - duracoes  { ids } a duração dos vídeos com estes ids públicos (o ?v= do
+               leitor), para as aulas ligadas antes de a duração vir com a
+               escolha (24/10/2026). Percorre a biblioteca página a página
+               até os encontrar todos.
 
    A escola do pedido é a da base: o `escola` (slug ou domínio, o mesmo que a
    app manda à base em x-organizacao) segue para academia.panda_quem_sou() com
@@ -73,6 +77,7 @@ function video(v: Record<string, unknown>) {
     duracao: Math.max(0, Math.round(Number(v.length) || 0)),
     miniatura: https(v.thumbnail),
     player: https(v.video_player),
+    externo: v.video_external_id ? String(v.video_external_id) : null,
     pasta: v.folder_id ? String(v.folder_id) : null,
     criado: v.created_at ? String(v.created_at) : null,
   };
@@ -97,7 +102,7 @@ Deno.serve(async (req: Request) => {
   try { corpo = await req.json(); } catch { return json({ error: 'Pedido inválido.' }, 400); }
   const accao = String(corpo.accao || '');
   const escola = String(corpo.escola || '').trim().toLowerCase();
-  if (!['estado', 'ligar', 'desligar', 'pastas', 'videos'].includes(accao) || (escola && !/^[a-z0-9.-]{2,253}$/.test(escola))) {
+  if (!['estado', 'ligar', 'desligar', 'pastas', 'videos', 'duracoes'].includes(accao) || (escola && !/^[a-z0-9.-]{2,253}$/.test(escola))) {
     return json({ error: 'Pedido inválido.' }, 400);
   }
 
@@ -144,6 +149,25 @@ Deno.serve(async (req: Request) => {
       if (!r.ok) return erroDoPanda(r);
       const lista = Array.isArray(r.j) ? r.j : ((r.j as { folders?: unknown[] } | null)?.folders ?? []);
       return json({ pastas: (lista as Record<string, unknown>[]).map(pasta).filter(p => p.id) });
+    }
+
+    if (accao === 'duracoes') {
+      const ids = new Set((Array.isArray(corpo.ids) ? corpo.ids : []).map(String)
+        .filter(i => /^[A-Za-z0-9-]{6,64}$/.test(i)).slice(0, 300));
+      const duracoes: Record<string, number> = {};
+      for (let p = 1; p <= 40 && ids.size > Object.keys(duracoes).length; p++) {
+        const r = await panda(String(chave), '/videos', { page: p, limit: 100 });
+        if (!r.ok) return erroDoPanda(r);
+        const lista = ((r.j as { videos?: unknown[] } | null)?.videos ?? []) as Record<string, unknown>[];
+        if (!lista.length) break;
+        for (const v of lista) {
+          let id = v.video_external_id ? String(v.video_external_id) : '';
+          if (!ids.has(id)) { try { id = new URL(String(v.video_player)).searchParams.get('v') || ''; } catch { id = ''; } }
+          const s = Math.round(Number(v.length) || 0);
+          if (ids.has(id) && s > 0) duracoes[id] = s;
+        }
+      }
+      return json({ duracoes });
     }
 
     const pagina = Math.min(Math.max(1, Math.floor(Number(corpo.pagina) || 1)), 1000);
