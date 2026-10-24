@@ -1630,6 +1630,11 @@ button.back-link:hover{ color:var(--ink); }
 .int-aviso{ padding:12px 14px; border-radius:var(--r-md); font-size:14px; margin:0 0 16px; background:var(--blue-soft); color:var(--blue-ink); }
 .int-aviso.erro{ background:var(--red-soft); color:var(--red-ink); }
 .int-aviso.ok{ background:var(--green-soft); color:var(--green-ink); }
+.int-ponte p{ margin:0 0 8px; color:inherit; }
+.int-ponte p:last-child{ margin:0; }
+.int-ponte ul{ margin:0 0 10px; padding-left:20px; }
+.int-ponte li{ margin:3px 0; }
+.int-ponte code{ font-family:var(--mono); font-size:12px; opacity:.85; overflow-wrap:anywhere; }
 
 .int-historico{ padding:0; overflow:hidden; }
 .int-historico .int-hist-topo{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); font-size:13.5px; color:var(--muted); flex-wrap:wrap; }
