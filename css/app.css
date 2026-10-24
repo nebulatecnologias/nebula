@@ -1620,8 +1620,28 @@ button.back-link:hover{ color:var(--ink); }
 .int-form{ display:grid; gap:12px; margin:12px 0 4px; padding:16px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--card-bg); }
 .int-form .field{ margin:0; }
 .int-form .acoes{ display:flex; gap:8px; flex-wrap:wrap; }
-.int-cursos{ display:grid; gap:6px; max-height:220px; overflow:auto; padding:4px 2px; }
-.int-cursos label{ display:flex; align-items:center; gap:9px; font-size:14px; color:var(--ink-2); font-weight:400; margin:0; }
+/* Os cursos que um produto abre: cartões com a capa, como no resto da app. */
+.int-cursos-topo{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin:0 0 10px; }
+.int-cursos-topo .field-rotulo{ margin:0; }
+.int-cursos-conta{ font-size:13px; color:var(--muted); }
+.int-cursos-topo .btn-texto-link{ margin-left:auto; border:0; background:none; padding:0; font:inherit; font-size:13.5px; font-weight:500; color:var(--accent-ink); cursor:pointer; }
+.int-cursos-topo .btn-texto-link:hover{ text-decoration:underline; }
+.int-cursos-topo .btn-texto-link:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:6px; }
+.int-cursos{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
+.int-cursos .int-curso{ position:relative; display:flex; align-items:center; gap:12px; margin:0; font-size:14px; color:var(--ink); padding:10px 12px 10px 10px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); font-weight:400; cursor:pointer; transition:border-color .15s, background .15s, box-shadow .15s; }
+.int-cursos .int-curso:hover{ border-color:var(--line-strong); box-shadow:var(--shadow-1); }
+.int-curso input{ position:absolute; width:1px; height:1px; opacity:0; margin:0; pointer-events:none; }
+.int-curso:has(input:checked){ border-color:var(--accent-line); background:var(--accent-soft); }
+.int-curso:has(input:focus-visible){ border-color:var(--accent); box-shadow:var(--ring); }
+.int-curso-capa{ width:58px; aspect-ratio:16/10; border-radius:8px; background:var(--field, var(--field-apricot)); background-size:cover; background-position:center; display:grid; place-items:center; flex-shrink:0; font-size:13px; font-weight:500; color:var(--art-ink); }
+.int-curso-texto{ display:grid; gap:2px; min-width:0; flex:1; }
+.int-curso-texto strong{ font-size:14.5px; font-weight:500; line-height:1.3; color:var(--ink); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:anywhere; }
+.int-curso-texto > span{ font-size:12.5px; color:var(--muted); }
+.int-curso-texto em{ font-style:normal; color:var(--amber-ink); }
+.int-curso-marca{ width:22px; height:22px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--surface); display:grid; place-items:center; flex-shrink:0; color:transparent; transition:background .15s, border-color .15s; }
+.int-curso-marca .icon{ width:13px; height:13px; }
+.int-curso:has(input:checked) .int-curso-marca{ background:var(--accent); border-color:var(--accent); color:#fff; }
+@media (prefers-reduced-motion: reduce){ .int-curso,.int-curso-marca{ transition:none; } }
 .int-produtos{ display:grid; gap:8px; margin:10px 0; }
 .int-produto{ display:flex; align-items:center; gap:12px; justify-content:space-between; padding:10px 14px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); flex-wrap:wrap; }
 .int-produto strong{ font-weight:500; display:block; }
