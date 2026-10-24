@@ -468,7 +468,7 @@ function renderCurso(cursoId){
       return `<div class="aula-row" data-status="${st}" data-aula="${aula.id}">
         <span class="aula-status">${icon}</span>
         <span class="aula-info"><span class="titulo">${aula.titulo}</span></span>
-        <span class="aula-duracao">${duracaoLegivel(aula)}</span>
+        ${duracaoNaListaHTML(aula)}
         <svg class="icon icon-sm aula-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </div>`;
     }).join("");
@@ -517,7 +517,7 @@ function renderAula(cursoId, aulaId){
             <div class="aula-breadcrumb">${curso.titulo} · ${modulo.titulo}</div>
           </div>
           <div class="aula-actions">
-            <span id="aula-duracao" class="aula-duracao" style="align-self:center;margin-right:4px;">${aula.duracao && aula.duracao !== "00:00" ? aula.duracao : ""}</span>
+            <span id="aula-duracao" class="aula-duracao" style="align-self:center;margin-right:4px;">${duracaoNaLista(aula)}</span>
             <button class="btn btn-secondary" id="btn-concluir" data-done="${concluida}">
               <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
               <span id="btn-concluir-label">${concluida ? t("Aula concluída") : t("Marcar como concluída")}</span>
@@ -601,7 +601,7 @@ function renderAula(cursoId, aulaId){
     const st = estadoDaAula(curso.id, a.id);
     const icon = st==="concluida" ? iconeCheck() : "";
     return `<div class="mini-aula ${a.id===aula.id?"active":""}" data-status="${st}" data-aula="${a.id}">
-      <span class="mini-status">${icon}</span><span class="mini-titulo">${a.titulo}</span><span class="mini-dur">${a.duracao}</span>
+      <span class="mini-status">${icon}</span><span class="mini-titulo">${a.titulo}</span>${duracaoNaListaHTML(a, "mini-dur")}
     </div>`;
   }).join("");
   lista.querySelectorAll(".mini-aula").forEach(el => el.addEventListener("click", () => irPara("aula", curso.id, el.getAttribute("data-aula"))));

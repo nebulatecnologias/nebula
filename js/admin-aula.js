@@ -45,20 +45,17 @@ function renderFormAula(){
             <label>Título</label>
             <input type="text" id="a-titulo" value="${(v.titulo||"").replace(/"/g,"&quot;")}" placeholder="ex: A identidade do fundador">
           </div>
-          <div class="campo-linha">
-            <div class="field">
-              <label>Módulo</label>
-              <div class="select-wrap" style="display:block;">
-                <select id="a-modulo" style="width:100%;">
-                  ${curso.modulos.map(m=>`<option value="${m.id}" ${m.id===modulo.id?"selected":""}>${m.titulo}</option>`).join("")}
-                </select>
-              </div>
+          <div class="field">
+            <label for="a-modulo">Módulo</label>
+            <div class="select-wrap" style="display:block;">
+              <select id="a-modulo" style="width:100%;">
+                ${curso.modulos.map(m=>`<option value="${m.id}" ${m.id===modulo.id?"selected":""}>${m.titulo}</option>`).join("")}
+              </select>
             </div>
-            <div class="field">
-              <label>Duração</label>
-              <div class="campo-lido" id="a-duracao" data-duracao="${v.duracao||""}">${v.duracao || "—"}</div>
-              <p class="hint">Vem do próprio vídeo, assim que o leitor o carrega.</p>
-            </div>
+          </div>
+          <div class="field">
+            <label for="a-descricao">Descrição curta</label>
+            <textarea id="a-descricao" rows="2" placeholder="A frase que aparece logo por baixo do título.">${(rascunhoAula().descricao||"").replace(/</g,"&lt;")}</textarea>
           </div>
           ${checkCardHTML("a-semComentarios", !!v.semComentarios, "Desativar comentários neste conteúdo", "O aluno deixa de poder avaliar e comentar esta aula.")}
           ${checkCardHTML("a-semBuscaIA", !!v.semBuscaIA, "Desativar busca por IA neste conteúdo", "O Assistente ignora esta aula ao gerar rascunhos.")}
@@ -71,9 +68,10 @@ function renderFormAula(){
 
       <div class="editor-abas" id="editor-abas">
         <button data-aba="texto" class="${aba==="texto"?"active":""}">${ICONS.book}Texto</button>
-        <button data-aba="video" class="${aba==="video"?"active":""}">${ICONS.plug}Vídeo</button>
+        <button data-aba="video" class="${aba==="video"?"active":""}">${ICONE_VIDEO}Vídeo</button>
         <button data-aba="ficheiros" class="${aba==="ficheiros"?"active":""}">${ICONS.ficheiro}Ficheiros</button>
         <button data-aba="quiz" class="${aba==="quiz"?"active":""}">${ICONS.quiz}Quiz</button>
+        <button data-aba="embed" class="${aba==="embed"?"active":""}">${ICONE_EMBED}Embed</button>
       </div>
       <div id="editor-painel"></div>
 
@@ -92,12 +90,7 @@ function renderFormAula(){
   ligarUploads();
   renderPainelEditor();
 
-  document.querySelectorAll("#editor-abas button").forEach(b => b.addEventListener("click", () => {
-    recolherPainelAtual();
-    estado.abaAulaForm = b.getAttribute("data-aba");
-    document.querySelectorAll("#editor-abas button").forEach(x => x.classList.toggle("active", x===b));
-    renderPainelEditor();
-  }));
+  document.querySelectorAll("#editor-abas button").forEach(b => b.addEventListener("click", () => mudarAbaAula(b.getAttribute("data-aba"))));
 
   document.getElementById("btn-cancelar-aula").addEventListener("click", () => irPara("admin-curso-editor", curso.id));
   document.getElementById("btn-guardar-aula").addEventListener("click", () => guardarFormAula(false));
@@ -105,6 +98,16 @@ function renderFormAula(){
   const btnApagar = document.getElementById("btn-apagar-aula-form");
   if(btnApagar) btnApagar.addEventListener("click", () => apagarAula(curso, modulo, aula));
 }
+
+function mudarAbaAula(aba){
+  recolherPainelAtual();
+  estado.abaAulaForm = aba;
+  document.querySelectorAll("#editor-abas button").forEach(x => x.classList.toggle("active", x.getAttribute("data-aba") === aba));
+  renderPainelEditor();
+}
+
+const ICONE_VIDEO = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5Z" fill="currentColor"/></svg>';
+const ICONE_EMBED = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 7-5 5 5 5"/><path d="m16 7 5 5-5 5"/><path d="m13.5 5-3 14"/></svg>';
 
 /* O painel troca de formato sem perder o que já lá está: antes de
    mudar de aba, o que está no ecrã é recolhido para o rascunho. */
@@ -116,6 +119,8 @@ function rascunhoAula(){
       conteudo: a ? (a.conteudo||"") : "",
       embed: a ? (a.embed||"") : "",
       videoId: a ? (a.videoId||"") : "",
+      duracao: a ? duracaoLegivel(a) : "",
+      videoTitulo: "",
       descricao: a ? (a.descricao||"") : "",
       ficheiros: a ? JSON.parse(JSON.stringify(a.ficheiros||[])) : [],
       quiz: a ? JSON.parse(JSON.stringify(a.quiz||[])) : []
@@ -140,6 +145,7 @@ function renderPainelEditor(){
   if(aba==="texto") return renderPainelTexto(painel);
   if(aba==="video") return renderPainelVideo(painel);
   if(aba==="ficheiros") return renderPainelFicheiros(painel);
+  if(aba==="embed") return renderPainelEmbed(painel);
   return renderPainelQuiz(painel);
 }
 
@@ -234,8 +240,123 @@ function sugerirTextoDaAula(){
   inserirHTML(`<h3>${titulo}</h3><p>Nesta aula do ${ctx.curso.titulo} vamos ver ${titulo.toLowerCase()} — o que é, porque conta e como aplicar já a seguir.</p><ul><li>O ponto de partida</li><li>O erro mais comum</li><li>O que fazer esta semana</li></ul>`);
 }
 
-/* ---------------- Vídeo ---------------- */
+/* ---------------- Vídeo (24/10/2026) ----------------
+   O separador Vídeo é a biblioteca do provedor ligado (hoje o Panda),
+   já aberta: escolher um vídeo liga-o a esta aula; «Selecionar vários»
+   cria uma aula por vídeo no módulo escolhido. Colar um código de
+   incorporação passou para o separador Embed. */
 function renderPainelVideo(painel){
+  const r = rascunhoAula();
+  const url = urlDoVideo({ embed:r.embed });
+  const p = Panda.estado;
+
+  if(!p){
+    painel.innerHTML = `<div class="card painel"><p class="empty-note">A abrir a biblioteca de vídeos…</p></div>`;
+    Panda.lerEstado().then(() => { if(painel.isConnected && estado.abaAulaForm === "video") renderPainelVideo(painel); });
+    return;
+  }
+
+  const atual = url ? `
+      <div class="video-atual">
+        <div class="player-wrap previa">${playerHTML({ embed:r.embed }, "Pré-visualização")}</div>
+        <div class="video-atual-info">
+          <span class="rotulo-solto">Vídeo desta aula</span>
+          <strong>${Panda.esc(r.videoTitulo || nomeDoProvedor(url))}</strong>
+          ${r.duracao ? `<span class="sub-celula">${Panda.esc(r.duracao)}</span>` : ""}
+          <button class="btn btn-texto btn-sm" type="button" id="btn-video-tirar">Tirar o vídeo</button>
+        </div>
+      </div>` : "";
+
+  if(!Panda.provedoresLigados().length){
+    painel.innerHTML = `<div class="card painel">${atual}
+      <div class="video-sem-biblioteca">
+        <strong>${p.podeLigar ? "Ligue a sua biblioteca de vídeos" : "A biblioteca de vídeos ainda não está ligada"}</strong>
+        <p>${p.podeLigar
+          ? "Com o Panda ligado, este separador mostra todos os seus vídeos e escolhe-os sem copiar código nenhum."
+          : "Peça à administração da escola que ligue o Panda em Integrações."} Entretanto, pode colar um código no separador Embed.</p>
+        <div class="acoes">${p.podeLigar ? `<button class="btn btn-primary btn-sm" type="button" id="btn-panda-ligar">Ligar o Panda</button>` : ""}
+          <button class="btn btn-secondary btn-sm" type="button" data-ir-aba="embed">Usar um código (Embed)</button></div>
+      </div></div>`;
+    ligarPainelVideo(painel);
+    return;
+  }
+
+  painel.innerHTML = `<div class="card painel painel-biblioteca">${atual}<div id="biblioteca-video"></div></div>`;
+  const ctx = contextoDaAula();
+  const moduloAtual = (document.getElementById("a-modulo") || {}).value || (ctx.modulo && ctx.modulo.id);
+  Panda.montar(document.getElementById("biblioteca-video"), {
+    atual: url,
+    aoEscolher: v => {
+      recolherPainelAtual();
+      r.embed = v.player;
+      r.duracao = formatarDuracao(v.duracao);
+      r.videoTitulo = v.titulo;
+      const titulo = document.getElementById("a-titulo");
+      if(titulo && !titulo.value.trim()) titulo.value = Panda.tituloDaAula(v.titulo);
+      renderPainelVideo(painel);
+      mostrarToast(`Vídeo escolhido: ${v.titulo}. Guarde a aula para o aluno o ver.`);
+    },
+    varios: {
+      modulos: ctx.curso.modulos.map(m => ({ id:m.id, titulo:m.titulo })),
+      modulo: moduloAtual,
+      aoCriar: async (videos, moduloId) => {
+        const m = await criarAulasDosVideos(ctx.curso, moduloId, videos);
+        mostrarToast(`${videos.length === 1 ? "1 aula criada" : videos.length + " aulas criadas"} em ${m.titulo}.`);
+        /* Uma aula nova ainda em branco não fica: volta-se ao curso, com as aulas criadas. */
+        if(!ctx.aula){ estado.rascunhoAula = null; irPara("admin-curso-editor", ctx.curso.id); }
+      }
+    }
+  });
+  ligarPainelVideo(painel);
+}
+
+function ligarPainelVideo(painel){
+  const r = rascunhoAula();
+  const tirar = document.getElementById("btn-video-tirar");
+  if(tirar) tirar.addEventListener("click", () => {
+    r.embed = ""; r.duracao = ""; r.videoTitulo = "";
+    renderPainelVideo(painel);
+  });
+  const ligar = document.getElementById("btn-panda-ligar");
+  if(ligar) ligar.addEventListener("click", () => irPara("admin-integracoes"));
+  painel.querySelectorAll("[data-ir-aba]").forEach(b => b.addEventListener("click", () => mudarAbaAula(b.dataset.irAba)));
+  /* Um vídeo colado sem duração gravada: pergunta-se ao leitor. */
+  const leitor = painel.querySelector("iframe.player-embed");
+  if(leitor && !r.duracao) medirDuracao(leitor, anotarDuracao);
+}
+
+function nomeDoProvedor(url){
+  try {
+    const h = new URL(url).hostname;
+    if(/pandavideo/i.test(h)) return "Vídeo do Panda";
+    if(/youtube|youtu\.be/i.test(h)) return "Vídeo do YouTube";
+    if(/vimeo/i.test(h)) return "Vídeo do Vimeo";
+    if(/mediadelivery|bunny/i.test(h)) return "Vídeo do Bunny";
+    return h.replace(/^www\./, "");
+  } catch(e){ return "Vídeo ligado"; }
+}
+
+/* Uma aula por vídeo, no fim do módulo, pela ordem em que foram escolhidos. */
+async function criarAulasDosVideos(curso, moduloId, videos){
+  const modulo = moduloPorIdNoCurso(curso, moduloId);
+  if(!modulo) throw new Error("Escolha o módulo onde as aulas ficam.");
+  for(const v of videos){
+    const aula = {
+      id: novoId("aula"), ordem: modulo.aulas.length + 1,
+      titulo: Panda.tituloDaAula(v.titulo), duracao: formatarDuracao(v.duracao) || "00:00",
+      capa: "", semComentarios: false, semBuscaIA: false,
+      conteudo: "", embed: v.player, descricao: "", ficheiros: [], quiz: []
+    };
+    modulo.aulas.push(aula);
+    await salvarAula(aula, modulo.id);
+  }
+  return modulo;
+}
+
+/* ---------------- Embed ----------------
+   Para os vídeos de um provedor sem biblioteca ligada (YouTube, Vimeo,
+   Bunny…) ou para quem prefira colar. */
+function renderPainelEmbed(painel){
   const r = rascunhoAula();
   const provedor = (DB.config.integracoes||{}).player || "Panda Video";
   const aulaFicticia = { embed:r.embed };
@@ -244,9 +365,8 @@ function renderPainelVideo(painel){
 
   painel.innerHTML = `
     <div class="card painel">
-      ${blocoPanda(provedor, url)}
       <div class="field">
-        <label>Código de incorporação (embed)</label>
+        <label for="a-embed">Código de incorporação (embed)</label>
         <textarea id="a-embed" rows="4" class="campo-codigo" placeholder="Cole aqui o código copiado do ${provedor} — algo como &lt;iframe src=&quot;...&quot;&gt;&lt;/iframe&gt;">${(r.embed||"").replace(/</g,"&lt;")}</textarea>
         <p class="hint">Aceita o código completo, ou só o endereço do vídeo. Aproveitamos apenas o endereço: o player é montado por nós, com o estilo da academia.</p>
       </div>
@@ -256,86 +376,32 @@ function renderPainelVideo(painel){
                  : `⚠ Não encontrámos um endereço neste código. Copie o bloco que traz <code>&lt;iframe&gt;</code>.`)
           : `Sem código, a aula mostra o marcador ao aluno.`}
       </div>
-      <div class="field" style="margin-top:18px;">
-        <label>Descrição curta</label>
-        <textarea id="a-descricao" rows="3" placeholder="A frase que aparece logo por baixo do título.">${r.descricao||""}</textarea>
-      </div>
       <label class="rotulo-solto">Como o aluno vai ver</label>
       <div class="player-wrap previa">${playerHTML(aulaFicticia, "Pré-visualização")}</div>
       <p class="hint" style="margin-top:10px;">Onde copiar no ${provedor}: ${ondeCopiar(provedor)}</p>
     </div>
   `;
 
-  ligarBlocoPanda(painel, url);
-
   const campo = document.getElementById("a-embed");
-  /* Colar já mostra o resultado, sem ter de sair do campo. */
-  campo.addEventListener("change", () => { recolherPainelAtual(); renderPainelVideo(painel); });
-  campo.addEventListener("paste", () => setTimeout(() => { recolherPainelAtual(); renderPainelVideo(painel); }, 0));
+  /* Colar já mostra o resultado, sem ter de sair do campo. Um código novo
+     larga a duração do anterior: a nova vem do leitor. */
+  const mudou = () => {
+    const antes = r.embed;
+    recolherPainelAtual();
+    if(r.embed !== antes){ r.duracao = ""; r.videoTitulo = ""; }
+    renderPainelEmbed(painel);
+  };
+  campo.addEventListener("change", mudou);
+  campo.addEventListener("paste", () => setTimeout(mudou, 0));
 
-  /* A duração vem do leitor, não de quem escreve. */
   const leitor = painel.querySelector("iframe.player-embed");
-  if(leitor) medirDuracao(leitor, texto => anotarDuracao(texto));
+  if(leitor && !r.duracao) medirDuracao(leitor, anotarDuracao);
 }
 
-/* ---------------- Panda Video nativo (19/10/2026) ----------------
-   Com o Panda da escola ligado, o vídeo escolhe-se da biblioteca; colar o
-   código continua a servir, para os outros provedores e para quem prefira. */
-function blocoPanda(provedor, url){
-  const p = Panda.estado;
-  if(!p) return "";                                   // ainda a perguntar; volta a pintar quando souber
-  const doPanda = url && /pandavideo\.com(\.br)?$/i.test((() => { try { return new URL(url).hostname; } catch(e){ return ""; } })());
-  if(p.ligada) return `
-      <div class="panda-escolher">
-        <div><strong>${doPanda ? "Vídeo do Panda ligado" : "A sua biblioteca do Panda"}</strong>
-          <span>${doPanda ? "Pode trocá-lo por outro da biblioteca." : "Escolha o vídeo sem copiar código nenhum."}</span></div>
-        <button class="btn btn-primary btn-sm" type="button" id="btn-panda-biblioteca">${doPanda ? "Trocar vídeo" : "Escolher do Panda"}</button>
-      </div>
-      <p class="separador-ou"><span>ou cole o código de incorporação</span></p>`;
-  if(/panda/i.test(provedor) && p.podeLigar) return `
-      <div class="panda-escolher suave">
-        <div><strong>Escolha os vídeos da biblioteca do Panda</strong>
-          <span>Ligue a sua conta Panda uma vez e deixe de copiar códigos de incorporação.</span></div>
-        <button class="btn btn-secondary btn-sm" type="button" id="btn-panda-ligar">Ligar o Panda</button>
-      </div>`;
-  return "";
-}
-
-function ligarBlocoPanda(painel, url){
-  if(!Panda.estado){
-    Panda.lerEstado().then(() => {
-      if(!painel.isConnected || !document.getElementById("a-embed")) return;
-      recolherPainelAtual(); renderPainelVideo(painel);
-    });
-    return;
-  }
-  const abrir = document.getElementById("btn-panda-biblioteca");
-  if(abrir) abrir.addEventListener("click", () => Panda.abrirBiblioteca({
-    atual: url,
-    aoEscolher: v => {
-      recolherPainelAtual();
-      const r = rascunhoAula();
-      r.embed = v.player;
-      const titulo = document.getElementById("a-titulo");
-      if(titulo && !titulo.value.trim()) titulo.value = v.titulo;
-      renderPainelVideo(painel);
-      const tempo = formatarDuracao(v.duracao);
-      if(tempo) anotarDuracao(tempo);
-      mostrarToast(`Vídeo escolhido: ${v.titulo}. Guarde a aula para o aluno o ver.`);
-    }
-  }));
-  const ligar = document.getElementById("btn-panda-ligar");
-  if(ligar) ligar.addEventListener("click", () => irPara("admin-integracoes"));
-}
-
-/* O campo da duração é só de leitura: guarda o que o vídeo disser. */
+/* A duração não se escreve: guarda-se o que o vídeo disser. */
 function anotarDuracao(texto){
-  const campo = document.getElementById("a-duracao");
-  if(!campo || !texto) return;
-  campo.setAttribute("data-duracao", texto);
-  campo.textContent = texto;
   const rascunho = rascunhoAula();
-  if(rascunho) rascunho.duracao = texto;
+  if(rascunho && texto) rascunho.duracao = texto;
 }
 
 function ondeCopiar(provedor){
@@ -470,7 +536,7 @@ function guardarFormAula(criarOutra){
 
   const dados = {
     titulo,
-    duracao: document.getElementById("a-duracao").getAttribute("data-duracao") || "00:00",
+    duracao: urlDoVideo({ embed:r.embed }) ? (r.duracao || "00:00") : "00:00",
     capa: document.getElementById("valor-capaAula").value,
     semComentarios: document.getElementById("a-semComentarios").classList.contains("marcado"),
     semBuscaIA: document.getElementById("a-semBuscaIA").classList.contains("marcado"),

@@ -291,6 +291,15 @@ function urlDoVideo(aula){
 
 function temVideo(aula){ return !!urlDoVideo(aula); }
 
+/* A duração das listas de módulos e aulas (24/10/2026): só quando é
+   conhecida. Uma aula sem vídeo grava-se sem duração (guardarFormAula), por
+   isso não mostra campo vazio nem «--:--». */
+function duracaoNaLista(aula){ return duracaoLegivel(aula); }
+function duracaoNaListaHTML(aula, classe = "aula-duracao"){
+  const d = duracaoNaLista(aula);
+  return d ? `<span class="${classe}">${d}</span>` : "";
+}
+
 /* O player, sempre com a nossa moldura. */
 function playerHTML(aula, titulo){
   const url = urlDoVideo(aula);
