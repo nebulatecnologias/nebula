@@ -284,6 +284,18 @@ const API = {
     DB.convites = linhas.map(deConvite);
   },
 
+  /* A gestão dos membros (28/10/2026): cada ação é uma função da base
+     (academia.membro_*), que confere quem pede e responde em português. */
+  async membro(funcao, argumentos){
+    const { data, error } = await this.cliente.rpc(funcao, argumentos);
+    if(error) throw new Error(error.message || traduzirErroDados(error));
+    return data;
+  },
+
+  async recarregarMembros(){
+    DB.membros = (await lista(this.cliente.rpc("membros_da_organizacao"))).map(deMembro);
+  },
+
   /* Revogar não apaga: o convite fica, parado, e deixa de dar entrada. */
   async revogarConvite(id){
     const { error } = await this.cliente.from("convites")
@@ -774,12 +786,19 @@ function deCertificado(r){
            emitidoEm:r.emitido_em, nome:r.nome || "", cursoTitulo:r.curso_titulo || "" };
 }
 
+/* `funcao` é o papel nesta escola (aluno, colaborador ou admin); `papel` é o
+   que o resto da app sempre leu: aluno ou administrador (a equipa toda). */
 function deMembro(u){
+  const funcao = u.perfil === "admin" || u.perfil === "colaborador" ? u.perfil : "aluno";
+  const planos = Array.isArray(u.planos) ? u.planos : [];
   return { id:u.id, nome:u.nome, email:u.email,
-           papel: u.perfil === "aluno" ? "aluno" : "administrador",
+           papel: funcao === "aluno" ? "aluno" : "administrador", funcao, dono: u.dono === true,
            acesso: u.estado === "Ativo" ? "ativo" : "bloqueado",
            membroDesde:(u.criado_em||"").slice(0,10), leadId:u.lead_id,
-           curso:"—", categoria:"negocios", origem:"—", ultimoAcesso:"—",
+           planos, planoId: planos[0] || null,
+           cursosAbertos: u.cursos == null ? null : Number(u.cursos),
+           ultimoAcesso: u.ultimo_acesso ? tempoRelativo(u.ultimo_acesso) : (u.ultimo_acesso === null ? "nunca" : "—"),
+           curso:"—", categoria:"negocios", origem:"—",
            engajamento:"morno", progresso:0, estagio:"ativo", responsavel:"—" };
 }
 
@@ -795,6 +814,7 @@ function deConvite(c){
     cursos: c.cursos || [],
     idioma: c.idioma || "pt",
     origem: c.origem || "manual",
+    papel: c.papel || "aluno",
     estado: estadoDaLinhaDoConvite(c),
     criadoEm: c.criado_em || "",
     expiraEm: c.expira_em || ""
