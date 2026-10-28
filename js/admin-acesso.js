@@ -33,6 +33,7 @@ function simboloDaMoeda(m){
    Um membro sem plano vê tudo o que está publicado; com plano, vê o que o
    plano leva dentro. */
 function cursosPermitidos(membro){
+  if(membro && Array.isArray(membro.acessos)) return membro.acessos.filter(a => a.ativo).map(a => a.curso);
   const plano = membro && planoPorId(membro.planoId);
   if(!plano) return null;
   return plano.cursos || [];
@@ -45,115 +46,11 @@ function precoDoPlano(plano){
 }
 
 /* ============================================================
-   Membros
+   Membros: em js/admin-membros.js (a lista, a ficha e o adicionar).
+   Aqui ficam só as etiquetas do estado, que os Assinantes também usam.
    ============================================================ */
-const ROTULOS_ACESSO = { ativo:"Ativo", inativo:"Inativo", bloqueado:"Bloqueado" };
+const ROTULOS_ACESSO = { ativo:"Ativo", inativo:"Inativo", bloqueado:"Suspenso" };
 const PILLS_ACESSO = { ativo:"pill-ativo", inativo:"pill-inativo", bloqueado:"pill-quente" };
-
-function renderAdminMembros(){
-  const busca = (estado.buscaMembros||"").trim().toLowerCase();
-  const lista = DB.membros.filter(m => !busca || m.nome.toLowerCase().includes(busca) || (m.email||"").toLowerCase().includes(busca));
-  const ativos = DB.membros.filter(m=>m.acesso==="ativo").length;
-  const admins = DB.membros.filter(m=>m.papel==="administrador").length;
-
-  document.getElementById("content-admin").innerHTML = `
-    ${cabecalhoAdmin({
-      titulo: "Membros",
-      descricao: "Quem tem acesso à academia. O email só pode ser alterado aqui, pelo administrador.",
-      acaoRotulo: "Novo membro",
-      acaoId: "btn-novo-membro"
-    })}
-    <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon accent">${ICONS.people}</div><div class="stat-label">Membros ativos</div><div class="stat-value">${ativos}<span>/ ${DB.membros.length}</span></div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.card}</div><div class="stat-label">Planos em uso</div><div class="stat-value">${new Set(DB.membros.map(m=>m.planoId)).size}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.gear}</div><div class="stat-label">Administradores</div><div class="stat-value">${admins}</div></div>
-    </div>
-    <div class="filter-bar">
-      <div class="search-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="membros-busca" placeholder="Procurar por nome ou email..." value="${estado.buscaMembros||""}"></div>
-    </div>
-    <div class="card table-card">
-      <div class="table-card-head">
-        <h3>Todos os membros</h3>
-        <span class="count">${lista.length} de ${DB.membros.length} registos</span>
-      </div>
-      <div class="table-wrap" tabindex="0">
-        <table class="admin-table">
-          <thead><tr><th>Membro</th><th>Plano</th><th>Papel</th><th>Acesso</th><th>Membro desde</th><th>Último acesso</th><th></th></tr></thead>
-          <tbody>
-            ${lista.length ? lista.map(m => {
-              const plano = planoPorId(m.planoId);
-              return `<tr class="${m.acesso==="bloqueado"?"tint-risco":""}">
-                <td><div class="cell-user"><div class="avatar">${iniciais(m.nome)}</div><div class="meta"><div class="nome">${m.nome}</div><div class="sub">${m.email}</div></div></div></td>
-                <td>${plano ? plano.nome : "<span class='sub-celula'>Sem plano</span>"}</td>
-                <td>${m.papel==="administrador" ? '<span class="pill pill-morno">Administrador</span>' : '<span class="sub-celula">Aluno</span>'}</td>
-                <td><span class="pill ${PILLS_ACESSO[m.acesso]||"pill-inativo"}">${ROTULOS_ACESSO[m.acesso]||"—"}</span></td>
-                <td>${m.membroDesde||"—"}</td>
-                <td>${m.ultimoAcesso||"—"}</td>
-                <td>${acoesLinha(m.id)}</td>
-              </tr>`;
-            }).join("") : `<tr><td colspan="7"><div class="empty-note">Nenhum membro encontrado.</div></td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
-  document.getElementById("btn-novo-membro").addEventListener("click", () => editarMembro(null));
-  document.getElementById("membros-busca").addEventListener("input", e => {
-    estado.buscaMembros = e.target.value;
-    renderAdminMembros();
-  });
-  document.querySelectorAll("#content-admin [data-editar]").forEach(b =>
-    b.addEventListener("click", () => editarMembro(b.getAttribute("data-editar"))));
-  document.querySelectorAll("#content-admin [data-apagar]").forEach(b =>
-    b.addEventListener("click", () => apagarMembro(b.getAttribute("data-apagar"))));
-}
-
-function editarMembro(id){
-  const membro = id ? DB.membros.find(m=>m.id===id) : null;
-  abrirDrawer({
-    titulo: membro ? "Editar membro" : "Novo membro",
-    subtitulo: membro ? membro.email : "O membro entra com este email na área de alunos.",
-    campos: [
-      { nome:"nome", rotulo:"Nome completo", tipo:"texto", obrigatorio:true },
-      { nome:"email", rotulo:"Email", tipo:"texto", obrigatorio:true, dica:"O aluno não pode alterar o próprio email — só aqui." },
-      { nome:"telefone", rotulo:"Telefone", tipo:"texto", placeholder:"+258 ..." },
-      { nome:"planoId", rotulo:"Plano", tipo:"select", opcoes:opcoesPlanos(), dica:"Define os cursos a que este membro tem acesso." },
-      { nome:"papel", rotulo:"Papel", tipo:"select", opcoes:[{valor:"aluno",rotulo:"Aluno"},{valor:"administrador",rotulo:"Administrador"}] },
-      { nome:"acesso", rotulo:"Estado do acesso", tipo:"select", opcoes:[{valor:"ativo",rotulo:"Ativo"},{valor:"inativo",rotulo:"Inativo"},{valor:"bloqueado",rotulo:"Bloqueado"}] },
-      { nome:"membroDesde", rotulo:"Membro desde", tipo:"data" },
-      { nome:"responsavel", rotulo:"Responsável", tipo:"texto", placeholder:"Mentor que acompanha este aluno" }
-    ],
-    valores: membro || { papel:"aluno", acesso:"ativo", planoId:(DB.planos[0]||{}).id, membroDesde:new Date().toISOString().slice(0,10) },
-    aoGuardar: v => {
-      if(soNoCRM("Os membros")) return false;
-      const repetido = DB.membros.find(m => (m.email||"").toLowerCase()===v.email.toLowerCase() && m.id!==(membro||{}).id);
-      if(repetido){ mostrarToast("Já existe um membro com esse email"); return false; }
-      if(membro) Object.assign(membro, v);
-      else DB.membros.push({ id:novoId("membro"), ultimoAcesso:"nunca", engajamento:"morno", progresso:0, estagio:"ativo", categoria:"negocios", origem:"Painel", curso:"—", ...v });
-      guardarDB();
-      if(membro && estado.membroId===membro.id) sincronizarSessaoComMembro(membro);
-      renderAdminMembros();
-      mostrarToast(membro ? "Membro atualizado" : "Membro criado");
-    }
-  });
-}
-
-function apagarMembro(id){
-  if(soNoCRM("Os membros")) return;
-  const membro = DB.membros.find(m=>m.id===id);
-  confirmarAcao({
-    titulo: "Remover membro",
-    mensagem: `"${membro.nome}" perde o acesso à academia. O histórico de progresso deixa de estar associado a uma conta.`,
-    textoConfirmar: "Remover",
-    aoConfirmar: () => {
-      DB.membros = DB.membros.filter(m=>m.id!==id);
-      guardarDB();
-      renderAdminMembros();
-      mostrarToast("Membro removido");
-    }
-  });
-}
 
 /* ============================================================
    Convites
@@ -261,7 +158,7 @@ function linhaDoConvite(c){
       <td class="convite-prazo">${prazoDoConvite(c)}</td>
       <td><span class="estado-convite ${est.classe}"><span class="estado-ponto" aria-hidden="true"></span>${est.rotulo}</span></td>
       <td><div class="acoes-linha">
-        ${vivo || c.estado === "expirado" ? `<button class="btn-icone" type="button" data-reenviar="${c.id}" title="Enviar outra vez" aria-label="Enviar outra vez a ${quem}">${ICONE_REENVIAR}</button>` : ""}
+        ${c.estado !== "aceite" ? `<button class="btn-icone" type="button" data-reenviar="${c.id}" title="Enviar outra vez" aria-label="Enviar outra vez a ${quem}">${ICONE_REENVIAR}</button>` : ""}
         ${vivo ? `<button class="btn-icone" type="button" data-copiar="${c.id}" title="Copiar o link" aria-label="Copiar o link do convite de ${quem}">${ICONE_COPIAR}</button>` : ""}
         ${vivo ? `<button class="btn-icone perigo" type="button" data-revogar="${c.id}" title="Revogar" aria-label="Revogar o convite de ${quem}">${ICONE_REVOGAR}</button>` : ""}
       </div></td>
@@ -355,16 +252,31 @@ function criarConvite(valores){
   });
 }
 
+/* Reenviar serve também a um convite revogado ou expirado (28/10/2026): sai
+   um convite novo, com os mesmos cursos e o mesmo papel. Só um convite ainda
+   vivo é substituído — o revogado já não dá entrada e conta como novo. */
 function reenviarConvite(id){
   const convite = (DB.convites||[]).find(c=>c.id===id);
   if(!convite) return;
+  const vivo = convite.estado === "enviado" || convite.estado === "aberto";
   confirmarAcao({
     titulo: "Enviar o convite outra vez",
-    mensagem: `Mandamos um link novo para "${textoSeguro(convite.email)}", válido por mais 7 dias. O link anterior deixa de servir.`,
+    mensagem: vivo
+      ? `Mandamos um link novo para "${textoSeguro(convite.email)}", válido por mais 7 dias. O link anterior deixa de servir.`
+      : `Mandamos a "${textoSeguro(convite.email)}" um convite novo, com os mesmos cursos, válido por 7 dias.`,
     textoConfirmar: "Enviar",
     aoConfirmar: () => enviarConvite({ email:convite.email, nome:convite.nome, ofertaId:convite.ofertaId,
-                                       cursos:convite.cursos, idioma:convite.idioma, dias:"7", substitui:convite.id })
+                                       cursos:convite.cursos, idioma:convite.idioma, dias:"7", papel:convite.papel,
+                                       substitui: vivo || convite.estado === "expirado" ? convite.id : null })
   });
+}
+
+/* Os convites mudam também a partir da ficha de um membro: redesenha-se o
+   ecrã que estiver aberto, e a ficha, se estiver. */
+function depoisDeMudarConvites(){
+  if(estado.viewAtual === "admin-convites") renderAdminConvites();
+  else if(estado.viewAtual === "admin-membros") renderAdminMembros();
+  if(typeof desenharFicha === "function" && fichaAberta) desenharFicha();
 }
 
 /* O envio é do servidor; aqui só damos notícia do que aconteceu. */
@@ -379,11 +291,11 @@ async function enviarConvite(v){
     DB.convites.unshift({
       id:novoId("cv"), codigo:novoId("cv"), email:v.email.trim().toLowerCase(), nome:v.nome||"",
       ofertaId:v.ofertaId || null, cursos:v.cursos || [], idioma:v.idioma || "pt", origem:"manual",
-      estado:"enviado", criadoEm:new Date().toISOString(),
+      papel:v.papel || "aluno", estado:"enviado", criadoEm:new Date().toISOString(),
       expiraEm:new Date(Date.now() + dias * 864e5).toISOString()
     });
     guardarDB();
-    renderAdminConvites();
+    depoisDeMudarConvites();
     mostrarToast("Convite criado");
     return;
   }
@@ -391,11 +303,12 @@ async function enviarConvite(v){
   try {
     const resposta = await API.convidar({
       email: v.email, nome: v.nome || "", idioma: v.idioma || "pt", dias,
-      ofertaId: v.ofertaId || null, cursos: v.cursos || [], substitui: v.substitui || null
+      ofertaId: v.ofertaId || null, cursos: v.cursos || [], substitui: v.substitui || null,
+      papel: v.papel || "aluno"
     });
     try { await API.recarregarConvites(); }
     catch(e){ if(resposta.convite) DB.convites = [deConvite(resposta.convite)].concat(DB.convites || []); }
-    renderAdminConvites();
+    depoisDeMudarConvites();
     if(resposta.enviado) mostrarToast("Convite enviado para " + v.email);
     else mostrarLinkDoConvite(v.email, resposta.link, resposta.aviso);
   } catch(erro){
@@ -447,7 +360,7 @@ function revogarConvite(id){
       }
       convite.estado = "revogado";
       guardarDB();
-      renderAdminConvites();
+      depoisDeMudarConvites();
       mostrarToast("Convite revogado");
     }
   });
@@ -464,7 +377,8 @@ function aceitarConvitePendente(email){
     nome: convite.nome || email.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g, l=>l.toUpperCase()),
     email,
     telefone: "",
-    papel: "aluno",
+    papel: convite.papel && convite.papel !== "aluno" ? "administrador" : "aluno",
+    funcao: convite.papel || "aluno",
     planoId: (DB.planos[0]||{}).id,
     acesso: "ativo",
     membroDesde: new Date().toISOString().slice(0,10),
@@ -505,7 +419,7 @@ function renderAdminAssinaturas(){
   const btnNovo = document.getElementById("btn-novo-plano");
   if(btnNovo) btnNovo.addEventListener("click", () => editarPlano(null));
   document.querySelectorAll("#content-admin [data-editar]").forEach(b =>
-    b.addEventListener("click", () => aba==="planos" ? editarPlano(b.getAttribute("data-editar")) : editarMembro(b.getAttribute("data-editar"))));
+    b.addEventListener("click", () => aba==="planos" ? editarPlano(b.getAttribute("data-editar")) : abrirMembro(b.getAttribute("data-editar"))));
   document.querySelectorAll("#content-admin [data-apagar]").forEach(b =>
     b.addEventListener("click", () => apagarPlano(b.getAttribute("data-apagar"))));
 }
@@ -562,7 +476,7 @@ function tabelaAssinantesHTML(){
           <thead><tr><th>Membro</th><th>Plano</th><th>Valor</th><th>Desde</th><th>Estado</th><th></th></tr></thead>
           <tbody>
             ${DB.membros.map(m => {
-              const plano = planoPorId(m.planoId);
+              const plano = planoPorId(planosDoMembro(m)[0]);
               return `<tr class="${m.acesso==="bloqueado"?"tint-risco":""}">
                 <td><div class="cell-user"><div class="avatar">${iniciais(m.nome)}</div><div class="meta"><div class="nome">${m.nome}</div><div class="sub">${m.email}</div></div></div></td>
                 <td>${plano ? plano.nome : "<span class='sub-celula'>Sem plano</span>"}</td>
@@ -637,7 +551,6 @@ function apagarPlano(id){
 }
 
 registarViews({
-  "admin-membros": renderAdminMembros,
   "admin-convites": renderAdminConvites,
   "admin-assinaturas": renderAdminAssinaturas
 });

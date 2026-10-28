@@ -183,7 +183,7 @@ function fecharDrawer(imediato){
 /* Confirmação para ações destrutivas (apagar curso, aula, evento...) */
 function confirmarAcao({ titulo, mensagem, textoConfirmar = "Apagar", aoConfirmar }){
   const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
+  overlay.className = "modal-overlay confirmacao";
   overlay.innerHTML = `
     <div class="card confirm-card">
       <h3>${titulo}</h3>

@@ -819,6 +819,8 @@ button.chip{ font:inherit; font-size:14px; }
 
 .modal-overlay{ position:fixed; inset:0; background:var(--scrim); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:16px; animation:esvanecer .2s var(--ease); }
 .modal-overlay.hidden{ display:none; }
+/* Uma confirmação pedida de dentro de uma gaveta (a ficha do membro) fica por cima dela. */
+.modal-overlay.confirmacao{ z-index:170; }
 .modal-close{ position:absolute; top:14px; right:14px; width:36px; height:36px; border-radius:99px; background:var(--surface); border:1px solid var(--line); color:var(--ink-2); display:grid; place-items:center; transition:background .15s; }
 .modal-close:hover{ background:var(--sunken); }
 .confirm-card{ max-width:440px; width:100%; padding:26px; border-radius:var(--r-xl); box-shadow:var(--shadow-pop); animation:subir .28s var(--ease); background:var(--surface); }
@@ -1796,4 +1798,81 @@ button.back-link:hover{ color:var(--ink); }
   .panda-acao-modulo{ margin-left:0; width:100%; }
   .panda-acao-modulo select{ flex:1; max-width:none; }
   .panda-bib.em-janela .panda-acao{ padding:12px 14px; }
+}
+
+/* ============================================================
+   Membros (28/10/2026): a lista no molde dos convites e a ficha de
+   cada membro numa gaveta larga — papel, estado, cursos, planos e
+   convites, cada coisa na sua secção.
+   ============================================================ */
+.membros-tabela tr.linha-clicavel{ cursor:pointer; }
+.membros-tabela tr.linha-clicavel:hover td{ background:var(--surface-2); }
+.membros-tabela .membro-acesso{ white-space:normal; min-width:120px; line-height:1.45; }
+
+.drawer.drawer-membro{ width:min(600px,100%); }
+.membro-topo{ display:flex; align-items:center; gap:16px; min-width:0; }
+.avatar-iniciais.avatar-grande{ width:56px; height:56px; font-size:18px; }
+.membro-quem{ min-width:0; }
+.membro-quem h3{ overflow-wrap:anywhere; }
+.membro-quem .drawer-sub{ overflow-wrap:anywhere; }
+.membro-etiquetas{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; }
+.membro-etiquetas .estado-convite{ height:28px; padding:0 12px; font-size:13px; }
+
+.membro-factos{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin:4px 0 16px; }
+.membro-factos > div{ padding:12px 14px; border-radius:var(--r-md); background:var(--surface-2); border:1px solid var(--line); min-width:0; }
+.membro-factos dt{ font-size:12.5px; color:var(--muted); margin-bottom:4px; }
+.membro-factos dd{ margin:0; font-size:15px; font-weight:500; color:var(--ink); }
+
+.membro-acoes{ display:flex; flex-wrap:wrap; gap:8px; }
+.membro-acoes .btn{ gap:8px; }
+.membro-aviso{ margin:12px 0 0; padding:10px 14px; border-radius:var(--r-md); background:var(--amber-soft); color:var(--amber-ink); font-size:13.5px; line-height:1.45; }
+
+.membro-seccao{ margin-top:24px; padding-top:20px; border-top:1px solid var(--line); }
+.membro-seccao h4{ margin:0 0 10px; font-size:16px; }
+.membro-seccao .hint{ margin:-2px 0 12px; }
+.seccao-cabeca{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.seccao-cabeca h4{ margin:0; }
+
+.papel-opcoes{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.papel-opcao{ position:relative; display:flex; flex-direction:column; gap:4px; padding:12px 14px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface); cursor:pointer; transition:border-color .15s, background .15s; }
+.papel-opcao:hover{ border-color:var(--line-strong); }
+.papel-opcao input{ position:absolute; opacity:0; pointer-events:none; }
+.papel-opcao:focus-within{ outline:2px solid var(--accent); outline-offset:2px; }
+.papel-opcao.escolhido{ background:var(--accent-soft); border-color:var(--accent-line); }
+.papel-opcao.travado{ cursor:default; }
+.papel-opcao.travado:not(.escolhido){ opacity:.55; }
+.papel-nome{ font-weight:600; font-size:14.5px; color:var(--ink); }
+.papel-dica{ font-size:12.5px; line-height:1.4; color:var(--muted); }
+
+.acessos-lista{ display:flex; flex-direction:column; gap:8px; }
+.acesso-linha{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface); }
+.acesso-linha .cartao-mini{ width:42px; height:42px; }
+.acesso-linha.fechado{ background:var(--surface-2); }
+.acesso-linha.fechado .cartao-mini{ filter:grayscale(1); opacity:.7; }
+.acesso-info{ flex:1; min-width:0; }
+.acesso-info .nome{ font-weight:500; overflow-wrap:anywhere; }
+.acesso-info .pill{ margin-left:6px; vertical-align:middle; }
+.acesso-linha .acoes-linha{ gap:2px; }
+.acesso-prazo{ flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding-top:10px; border-top:1px dashed var(--line); }
+.acesso-prazo label{ font-size:13.5px; color:var(--muted); }
+.acesso-prazo input[type=date]{ height:34px; padding:0 10px; border:1px solid var(--line-strong); border-radius:var(--r-field); background:var(--surface); color:var(--ink); }
+.acesso-prazo .select-wrap select, .membro-form-pe .select-wrap select{ height:34px; }
+.acessos-fechados{ margin-top:12px; }
+.acessos-fechados summary{ cursor:pointer; font-size:13.5px; color:var(--muted); padding:4px 0; }
+.acessos-fechados .acesso-linha{ margin-top:8px; }
+
+.membro-form{ margin-bottom:14px; padding:14px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface-2); }
+.membro-form .checklist-cartoes{ max-height:300px; overflow-y:auto; }
+.membro-form-pe{ display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; margin-top:12px; }
+.membro-form-pe .field-rotulo{ margin:0; }
+.membro-form-pe .select-wrap{ margin-right:auto; }
+
+@media (max-width:640px){
+  .membro-factos{ gap:6px; }
+  .membro-factos > div{ padding:10px; }
+  .membro-factos dt{ font-size:11.5px; }
+  .membro-factos dd{ font-size:14px; }
+  .papel-opcoes{ grid-template-columns:1fr; }
+  .membro-topo{ gap:12px; }
+  .avatar-iniciais.avatar-grande{ width:46px; height:46px; font-size:15px; }
 }
