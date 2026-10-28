@@ -160,6 +160,16 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(`${reenviado.email}/${reenviado.estado}`, 'joana.macie@exemplo.co.mz/enviado', 'e sai um convite novo, vivo, para a mesma pessoa');
   contem(await adm.innerText('tr[data-convite="cv1"]'), 'Revogado', 'O revogado fica como estava, no histórico');
 
+  /* Convidar outra vez quem já tem um convite vivo substitui-o: um só link vivo. */
+  await adm.click('#btn-novo-convite');
+  await adm.waitForTimeout(250);
+  await adm.fill('#valor-email', 'Joana.Macie@exemplo.co.mz');
+  await adm.click('#drawer-guardar');
+  await adm.waitForTimeout(400);
+  const daJoana = await adm.evaluate(() => DB.convites.filter(c => c.email.toLowerCase() === 'joana.macie@exemplo.co.mz').map(c => c.estado));
+  igual(daJoana.filter(e => e === 'enviado' || e === 'aberto').length, 1, 'Convidar outra vez deixa um só convite vivo');
+  igual(daJoana.length, 3, 'e os anteriores ficam no histórico, revogados');
+
   /* No telemóvel, a ficha cabe no ecrã. */
   await adm.setViewportSize({ width:390, height:844 });
   await adm.evaluate(() => irPara('admin-membros'));

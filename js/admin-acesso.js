@@ -282,6 +282,14 @@ function depoisDeMudarConvites(){
 /* O envio é do servidor; aqui só damos notícia do que aconteceu. */
 async function enviarConvite(v){
   const dias = PRAZOS_DO_CONVITE.includes(Number(v.dias)) ? Number(v.dias) : 7;
+  /* Um só link vivo por pessoa: convidar outra vez quem tem um convite manual
+     por aceitar substitui-o (os de pagamento ficam, cada um abre a sua compra). */
+  if(!v.substitui){
+    const email = (v.email || "").trim().toLowerCase();
+    const vivo = (DB.convites || []).find(c => (c.email || "").toLowerCase() === email
+      && (c.estado === "enviado" || c.estado === "aberto") && c.origem !== "pagamento");
+    if(vivo) v = Object.assign({}, v, { substitui: vivo.id });
+  }
   if(modoDemonstracao()){
     DB.convites = DB.convites || [];
     if(v.substitui){
