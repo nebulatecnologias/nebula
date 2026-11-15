@@ -523,12 +523,13 @@ input,textarea{ caret-color:var(--accent); }
 .aviso-pre-venda h2{ margin:0 0 4px; font-size:17px; color:inherit; }
 .aviso-pre-venda p{ margin:0; color:inherit; opacity:.9; }
 button.chip{ font:inherit; font-size:14px; }
-/* Painel › Vitrine: as retidas à vista, e a data da pré-venda. */
+/* Painel › Ofertas: as retidas à vista; o nome e o que abre partem a linha,
+   para o interruptor da Vitrine caber sem deslizar a tabela. */
+.admin-table td.oferta-nome{ white-space:normal; min-width:190px; max-width:300px; }
+.admin-table td.oferta-abre{ white-space:normal; min-width:170px; max-width:250px; }
 .aviso-retidas{ padding:18px 22px; margin-bottom:18px; background:var(--amber-soft); border-color:transparent; color:var(--amber-ink); }
 .aviso-retidas h3{ margin:0 0 8px; font-size:15px; color:inherit; }
 .aviso-retidas ul{ margin:0; padding-left:18px; display:grid; gap:4px; font-size:14px; }
-.abre-em{ display:flex; align-items:center; gap:8px; margin-top:8px; font-size:13px; color:var(--muted); }
-.abre-em input{ height:32px; padding:0 8px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px; }
 
 .course-card-acoes{ position:absolute; bottom:10px; right:10px; display:flex; gap:6px; opacity:0; transition:opacity .2s var(--ease); z-index:2; }
 .course-card:hover .course-card-acoes, .course-card-acoes:focus-within{ opacity:1; }

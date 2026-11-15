@@ -89,7 +89,7 @@ function renderEvento(id){
       ? `<a class="btn btn-primary btn-lg" href="${checkout}" target="_blank" rel="noopener" data-comprar>${t("Garantir lugar")} · ${formatarPreco(oferta.preco, oferta.moeda)} ${setaCirculo()}</a>`
       : "";
     nota = checkout
-      ? t("O pagamento abre numa página segura do Payflow. Assim que for confirmado, o link da sala aparece aqui.")
+      ? t("O pagamento abre numa página segura. Assim que for confirmado, o link da sala aparece aqui.")
       : t("Fale com a sua mentoria para garantir o lugar.");
   } else {
     acoes = [
@@ -186,11 +186,11 @@ function renderOferta(id){
       !varios && primeiro.facilitador ? `<span class="rotulo">${t("Com")}</span><strong>${textoSeguro(primeiro.facilitador)}</strong>` : ""
     ].filter(Boolean),
     acoes: o.destino
-      ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} ${o.emBreve ? t("Garantir na pré-venda") : t("Desbloquear")} · ${formatarPreco(o.preco, o.moeda)}${o.mensal ? t("/mês") : ""}</a>`
+      ? `<a class="btn btn-primary btn-lg" href="${o.destino}" target="_blank" rel="noopener" data-desbloquear-pagina>${ICONS.cadeado} ${o.emBreve ? t("Garantir na pré-venda") : t("Desbloquear")} · ${formatarPreco(o.preco, o.moeda)}${periodoDaOferta(o)}</a>`
       : "",
     nota: !o.destino ? t("Fale com a sua mentoria para desbloquear isto.")
-      : preVenda ? `${textoDaPreVenda(o.abreEm)}. ${t("O pagamento abre numa página segura do Payflow; assim que for confirmado, o curso aparece em Meus cursos e as aulas vão aparecendo lá.")}`
-      : t("O pagamento abre numa página segura do Payflow. Assim que for confirmado, o acesso abre-se aqui.")
+      : preVenda ? `${textoDaPreVenda(o.abreEm)}. ${t("O pagamento abre numa página segura; assim que for confirmado, o curso aparece em Meus cursos e as aulas vão aparecendo lá.")}`
+      : t("O pagamento abre numa página segura. Assim que for confirmado, o acesso abre-se aqui.")
   });
   ligarVoltar(raiz);
 }

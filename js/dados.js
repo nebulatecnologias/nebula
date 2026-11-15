@@ -60,7 +60,7 @@ const NAV_ADMIN = [
   ]},
   { grupo:"Conteúdo", itens:[
     { view:"admin-conteudos", label:"Conteúdos", icon:ICONS.book },
-    { view:"admin-vitrine", label:"Vitrine", icon:ICONS.tag },
+    { view:"admin-ofertas", label:"Ofertas", icon:ICONS.tag },
     { view:"admin-turmas", label:"Turmas", icon:ICONS.layers },
     { view:"admin-eventos", label:"Eventos", icon:ICONS.cal },
     { view:"admin-certificados", label:"Certificados", icon:ICONS.cert },
@@ -187,12 +187,34 @@ const CURSOS_PADRAO = [
     ]},
   /* Comprado em pré-venda: ainda sem aulas (ver PRE_VENDA_PADRAO). */
   { id:"lp", facilitador:"Inês Cumbe", categoria:"espiritualidade", titulo:"Liderança com Propósito", subtitulo:"Liderar a partir do que se é, e não do cargo.",
+    modulos:[] },
+  /* À venda em pré-venda (a oferta of3): ainda sem aulas, e fora dos planos. */
+  { id:"ol", facilitador:"Inês Cumbe", categoria:"negocios", titulo:"Oratória para Líderes", subtitulo:"Falar em público sem perder a voz nem o fio.",
     modulos:[] }
 ];
 
 const OFERTAS_PADRAO = [
   { id:"of1", nome:"Kingdom All Access", descricao:"Todos os cursos, mentorias ao vivo e comunidade.", preco:2500,  precoAntes:3500, periodo:"mês",   planoId:"all-access", link:"#", destaque:true,  ativa:true },
   { id:"of2", nome:"Acesso Vitalício",   descricao:"Paga uma vez e fica com tudo, para sempre.",       preco:38000, precoAntes:0,    periodo:"único", planoId:"vitalicio",  link:"#", destaque:false, ativa:true }
+];
+
+/* As ofertas da escola (15/11/2026): o que ela vende, montado em
+   Administração › Ofertas. Com servidor é a tabela academia.ofertas. Os
+   links e os IDs de produto são inventados. */
+const OFERTAS_DA_ESCOLA_PADRAO = [
+  { id:"of1", nome:"Kingdom All Access", chamada:"Todos os cursos, mentorias ao vivo e comunidade.", cursos:["kt","mi"],
+    diasDeAcesso:null, preco:2500, moeda:"MZN", recorrencia:"mes", link:"https://payflow.kingdomcompny.com/all-access",
+    produtos:["prod_01JDEMO7K2QF"], naVitrine:true, destaque:true, emBreve:false, abreEm:null, ativa:true, ordem:1 },
+  { id:"of2", nome:"Hábitos de Elite", chamada:"", cursos:["he"],
+    diasDeAcesso:365, preco:1200, moeda:"MZN", recorrencia:"", link:"https://payflow.kingdomcompny.com/habitos-de-elite",
+    produtos:["prod_01JDEMO9H4EL"], naVitrine:true, destaque:false, emBreve:false, abreEm:null, ativa:true, ordem:2 },
+  { id:"of3", nome:"Oratória para Líderes", chamada:"", cursos:["ol"],
+    diasDeAcesso:null, preco:1800, moeda:"MZN", recorrencia:"", link:"https://payflow.kingdomcompny.com/oratoria",
+    produtos:[], naVitrine:true, destaque:false, emBreve:true, abreEm:diaDaqui(30), ativa:true, ordem:3 },
+  /* Montada, mas ainda fora da Vitrine: nada aparece sem ser mandado. */
+  { id:"of4", nome:"IA Aplicada aos Negócios · 90 dias", chamada:"", cursos:["ia"],
+    diasDeAcesso:90, preco:1500, moeda:"MZN", recorrencia:"", link:"",
+    produtos:[], naVitrine:false, destaque:false, emBreve:false, abreEm:null, ativa:true, ordem:4 }
 ];
 
 /* A Vitrine da demonstração. Com servidor isto vem de vitrine_do_aluno(), já
@@ -446,6 +468,7 @@ function dbPadrao(){
     membros: MEMBROS_PADRAO,
     planos: PLANOS_PADRAO,
     ofertas: OFERTAS_PADRAO,
+    ofertasDaEscola: OFERTAS_DA_ESCOLA_PADRAO,
     vitrine: VITRINE_PADRAO,
     preVenda: PRE_VENDA_PADRAO,
     cursoStats: CURSO_STATS_PADRAO,
@@ -537,6 +560,7 @@ function normalizarDB(){
   if(!Array.isArray(DB.espacos)) DB.espacos = JSON.parse(JSON.stringify(ESPACOS_PADRAO));
   if(!Array.isArray(DB.avaliacoes)) DB.avaliacoes = [];
   if(!Array.isArray(DB.ofertas)) DB.ofertas = JSON.parse(JSON.stringify(OFERTAS_PADRAO));
+  if(!Array.isArray(DB.ofertasDaEscola)) DB.ofertasDaEscola = JSON.parse(JSON.stringify(OFERTAS_DA_ESCOLA_PADRAO));
   if(DB.config.mostrarCursosBloqueados === undefined) DB.config.mostrarCursosBloqueados = true;
   DB.config.gamificacao = Object.assign({}, CONFIG_PADRAO.gamificacao, DB.config.gamificacao || {});
   DB.config.integracoes = Object.assign({}, CONFIG_PADRAO.integracoes, DB.config.integracoes || {});

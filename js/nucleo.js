@@ -198,9 +198,11 @@ try {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(typeof DB !== "undefined") aplicarTema(); });
 } catch(e){ /* browsers antigos: fica o tema do arranque */ }
 
-/* A Vitrine e a Migração vivem das ofertas do Payflow, que até ao F1b só
-   servem a Kingdom: noutra escola não aparecem. */
-const VISTAS_DO_PAYFLOW = new Set(["vitrine", "admin-vitrine", "admin-migracao"]);
+/* O que vive das ofertas do Payflow não aparece numa escola sem ele. A
+   Vitrine já não é disso: lê as ofertas da própria escola (15/11/2026). */
+const VISTAS_DO_PAYFLOW = new Set(["admin-migracao"]);
+/* Um endereço antigo leva ao ecrã que ficou no lugar dele. */
+const VISTAS_MUDADAS = { "admin-vitrine": "admin-ofertas" };
 function semPayflow(){
   return typeof API !== "undefined" && !!API.organizacao && API.organizacao.payflow === false;
 }
@@ -727,6 +729,7 @@ function arrancarNoEndereco(porOmissao){
 }
 
 function irPara(view, a, b){
+  view = VISTAS_MUDADAS[view] || view;
   /* As páginas internas têm um "Voltar": lembra-se aqui de onde se veio. */
   /* Só ecrãs: o curso e a aula precisam de um id para voltar a abrir. */
   if(PAGINAS_COM_MORADA.includes(view) && estado.viewAtual

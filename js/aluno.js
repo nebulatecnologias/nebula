@@ -327,7 +327,7 @@ function cartaoDaVitrine(o){
       ${meta}
       <div class="course-progress-row"><span class="course-legenda">${legenda}</span></div>
       <div class="oferta-linha">
-        <span class="oferta-preco">${ICONS.cadeado}${formatarPreco(o.preco, o.moeda)}${o.mensal ? `<span>${t("/mês")}</span>` : ""}</span>
+        <span class="oferta-preco">${ICONS.cadeado}${formatarPreco(o.preco, o.moeda)}${periodoDaOferta(o) ? `<span>${periodoDaOferta(o)}</span>` : ""}</span>
       </div>
       <button class="btn btn-secondary btn-block btn-sm" data-desbloquear="${o.ofertaId}" tabindex="-1">
         ${o.emBreve ? t("Garantir na pré-venda") : t("Ver como desbloquear")} ${setaCirculo()}</button>
@@ -393,7 +393,7 @@ function renderCurso(cursoId){
         </p>
         ${oferta && oferta.destino
           ? `<a class="btn btn-primary" href="${oferta.destino}" target="_blank" rel="noopener">
-               ${oferta.checkout ? t("Quero este acesso") : t("Ver como ter acesso")} · ${formatarPreco(oferta.preco, oferta.moeda)}${oferta.mensal ? t("/mês") : ""}</a>`
+               ${oferta.checkout ? t("Quero este acesso") : t("Ver como ter acesso")} · ${formatarPreco(oferta.preco, oferta.moeda)}${periodoDaOferta(oferta)}</a>`
           : `<button class="btn btn-secondary" id="btn-ir-vitrine">${t("Ver o que está disponível")}</button>`}
       </div>`;
     const voltar = document.getElementById("btn-voltar-catalogo");

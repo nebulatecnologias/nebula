@@ -147,7 +147,7 @@ export default async function ({ navegador, base, igual, verdade }){
   await aluno.close();
 
   const admin = await entrarDemo(navegador, base, ADMIN);
-  for(const ecra of ['admin-visao', 'admin-conteudos', 'admin-membros', 'admin-convites', 'admin-eventos', 'admin-banners', 'admin-comunidades', 'admin-vitrine', 'admin-integracoes', 'admin-certificados', 'admin-aparencia', 'admin-config']){
+  for(const ecra of ['admin-visao', 'admin-conteudos', 'admin-membros', 'admin-convites', 'admin-eventos', 'admin-banners', 'admin-comunidades', 'admin-ofertas', 'admin-integracoes', 'admin-certificados', 'admin-aparencia', 'admin-config']){
     await admin.evaluate(v => irPara(v), ecra);
     await admin.waitForTimeout(120);
     const texto = await admin.evaluate(() => document.body.innerText);
