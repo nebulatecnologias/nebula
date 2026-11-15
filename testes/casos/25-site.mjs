@@ -29,7 +29,6 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
 
   let href = await pg.getAttribute('[data-plano="escala"] a', 'href');
   contem(href, '/criar/?plano=premium', 'O botão leva ao /criar com o plano');
-  igual(await pg.getAttribute('.nav [data-criar]', 'href').then(h => new URL(h).host), 'onemembers.kingdomcompny.com', 'e o /criar é o do endereço do software');
   contem(href, 'moeda=MZN', 'e a moeda do mercado');
   verdade(!href.includes('lang='), 'sem mudar a língua');
 

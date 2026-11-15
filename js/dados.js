@@ -69,7 +69,6 @@ const NAV_ADMIN = [
   { grupo:"Alunos e Comunidade", itens:[
     { view:"admin-assinaturas", label:"Assinaturas", icon:ICONS.card },
     { view:"admin-convites", label:"Convites", icon:ICONS.mail },
-    { view:"admin-migracao", label:"Migração", icon:ICONS.people },
     { view:"admin-membros", label:"Membros", icon:ICONS.people },
     { view:"admin-comentarios", label:"Comentários", icon:ICONS.chat },
     { view:"admin-comunidades", label:"Comunidades", icon:ICONS.globe },
@@ -77,7 +76,6 @@ const NAV_ADMIN = [
   ]},
   { grupo:"Negócio", itens:[
     { view:"admin-relatorios", label:"Relatórios", icon:ICONS.chart },
-    { view:"admin-ia", label:"Assistente IA", icon:ICONS.spark },
     { view:"admin-integracoes", label:"Integrações", icon:ICONS.plug }
   ]},
   { grupo:"Conta", itens:[
