@@ -138,8 +138,19 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await adm.evaluate(() => irPara('admin-ofertas'));
   await adm.waitForTimeout(250);
   await adm.click('tr[data-oferta-linha="of1"] [data-editar]');
-  await adm.waitForTimeout(300);
-  const direita = await adm.evaluate(() => document.querySelector('#drawer-overlay .drawer').getBoundingClientRect().right);
+  /* A gaveta entra a deslizar: mede-se só depois de ela parar (a mesma
+     posição em duas leituras seguidas), e ao pixel. A meio do caminho a conta
+     dá fracções, como 390,001. */
+  await adm.waitForFunction(() => {
+    const o = document.getElementById('drawer-overlay');
+    const g = o && o.querySelector('.drawer');
+    if(!g || !o.classList.contains('aberto')) return false;
+    const x = g.getBoundingClientRect().right;
+    const parada = window.__direitaAntes === x;
+    window.__direitaAntes = x;
+    return parada;
+  }, null, { polling: 120 });
+  const direita = Math.round(await adm.evaluate(() => document.querySelector('#drawer-overlay .drawer').getBoundingClientRect().right));
   verdade(direita <= 390, `O formulário cabe no telemóvel (${direita}px)`);
   await adm.keyboard.press('Escape');
   await adm.waitForTimeout(250);
