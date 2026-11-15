@@ -1,5 +1,5 @@
 ---
-name: Kingdom Academy
+name: One Members
 description: The Kingdom Library's warm dashboard, turned into a members area where course covers and the student's own progress are the only loud things.
 colors:
   canvas: "#f5f3f0"
@@ -281,13 +281,13 @@ components:
     width: "640px"
 ---
 
-# Design System: Kingdom Academy
+# Design System: One Members
 
 ## Overview
 
 **Creative North Star: "The Warm Dashboard, Loud Progress"**
 
-Kingdom Academy adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on 16px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.
+One Members adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on 16px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.
 
 Density is moderate and dashboard-like. A 264px sidebar sits on a deeper stone. The main column opens with a greeting headline and a muted date lead, then the Continuar card, a KPI row and grids of course cards. Every pressable shape is a full pill, and every container is a large rounded card lifted by warm, diffuse shadows. Type is Google Sans only: weight 500 for everything that names something, 400 for running text, and 700 only in the wordmark.
 

@@ -5,7 +5,7 @@ primary_target: "index.html"
 related_targets: []
 ---
 
-# Kingdom Academy — área de membros (index.html)
+# One Members — área de membros (index.html)
 
 Scope: the whole app — login/arranque, student area (Início, Meus cursos, Vitrine, Curso/Aula, Calendário, Comunidade, Conquistas, Certificados, Definições) and admin panel. Visitor mode: **Operate**.
 

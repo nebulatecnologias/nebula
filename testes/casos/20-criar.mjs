@@ -19,6 +19,8 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   verdade(await pg.isVisible('#ecra-criar'), 'Com planos à venda, a página mostra o formulário');
   /* Em rand é a África do Sul: a página fala inglês (pedido do Shelton a 05/10). */
   igual(await pg.getAttribute('html', 'lang'), 'en', 'Em rand (África do Sul), a página é em inglês');
+  igual((await pg.innerText('.ficha-topo .marca')).trim(), 'One Members', 'A marca da página é a do software, One Members, em qualquer língua');
+  contem(await pg.title(), 'One Members', 'e o título da aba diz o nome dele');
   igual(await pg.textContent('#plano-nome'), 'Essential plan', 'O plano vem do endereço, com o nome em inglês');
   igual(await txt(pg, '#plano-alunos'), 'Up to 500 active students', 'com o limite de alunos');
   igual(await txt(pg, '#plano-valor'), 'R 1 990,00', 'o preço anual, no formato da casa (símbolo, agrupado, vírgula)');

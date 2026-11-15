@@ -681,7 +681,7 @@ const Consola = {
     else if(r.vista === "integracoes"){ v.innerHTML = this.integracoesHTML(r.app); IntegracoesUI.ligarCopiar(v); }
     else v.innerHTML = this.visaoHTML();
     const t = { visao:"Visão geral", organizacoes:"Organizações", pagamentos:"Pagamentos", planos:"Planos e preços", integracoes:"Integrações" }[r.vista];
-    document.title = `${r.slug && this.escolaPorSlug(r.slug) ? this.nomeDe(this.escolaPorSlug(r.slug)) : t} · Consola`;
+    document.title = `${r.slug && this.escolaPorSlug(r.slug) ? this.nomeDe(this.escolaPorSlug(r.slug)) : t} · Consola One Members`;
     this.posicionarDica();
   },
 
@@ -1442,7 +1442,7 @@ const Consola = {
         ${api.modo === "test" ? `<p class="aviso nota">Com a chave de teste, as escolas novas ficam com assinaturas de teste: a fatura não se paga pelo M-Pesa e a área não abre. Troque pela <code>sk_live_</code> antes de abrir a /criar.</p>` : ""}
         <h2>1. A chave da API</h2>
         <ol class="passos">
-          <li>No Payflow da plataforma, abra <strong>Integrações › Chaves de API › Nova chave</strong>, com o nome «Área de membros».</li>
+          <li>No Payflow da plataforma, abra <strong>Integrações › Chaves de API › Nova chave</strong>, com o nome «One Members».</li>
           <li>Em <strong>O que pode fazer</strong>, marque <strong>Ler produtos</strong>, <strong>Ler assinaturas</strong>, <strong>Criar e cancelar assinaturas</strong> e <strong>Ler faturas</strong>. Crie e copie a chave, que aparece uma só vez.</li>
         </ol>
         <form class="int-form" id="c-int-chave" novalidate>
@@ -1453,7 +1453,7 @@ const Consola = {
         </form>
         <h2>2. Crie o webhook no Payflow</h2>
         <ol class="passos">
-          <li>No Payflow, abra <strong>Integrações › Webhooks › Nova integração</strong>, com o nome «Área de membros» e o mesmo modo da chave.</li>
+          <li>No Payflow, abra <strong>Integrações › Webhooks › Nova integração</strong>, com o nome «One Members» e o mesmo modo da chave.</li>
           <li>Em <strong>URL que recebe</strong>, cole este endereço:${IntegracoesUI.copiar(url, "Endereço da plataforma")}</li>
           <li>Em <strong>Eventos</strong>, marque os seis das assinaturas e das faturas (<code>subscription.*</code> e <code>invoice.*</code>). Grave e copie o segredo, que aparece uma só vez.</li>
         </ol>
