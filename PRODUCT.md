@@ -13,7 +13,7 @@ web
 
 ## Product Purpose
 
-Kingdom Academy é a área de membros dos cursos da Kingdom Company, em `membros.kingdomcompny.com`. Junta num só lugar as aulas em vídeo, organizadas em módulos, os encontros ao vivo, os grupos de cada programa, as conquistas e os certificados. O sucesso é o aluno voltar e terminar os cursos, e a equipa conseguir gerir tudo sem sair da plataforma.
+One Members é o software de áreas de membros, aberto a qualquer escola. Kingdom Academy é uma escola dentro dele, a nossa: a área de membros dos cursos da Kingdom, em `membros.kingdomcompny.com`. Junta num só lugar as aulas em vídeo, organizadas em módulos, os encontros ao vivo, os grupos de cada programa, as conquistas e os certificados. O sucesso é o aluno voltar e terminar os cursos, e a equipa conseguir gerir tudo sem sair da plataforma.
 
 ## Positioning
 
@@ -40,7 +40,7 @@ A conversa entre alunos não vive na Academia: vive nos grupos de cada programa 
 ## Brand Commitments
 
 - Família Kingdom: a Academia adopta o design system da **Kingdom Library** (paleta, tipo de letra, ícones, botões, ecrãs e emails), confirmado pelo utilizador.
-- A marca é a coroa laranja da Kingdom com o nome «Kingdom Academy». O logótipo que o administrador carregar em Aparência tem prioridade sobre ela.
+- Na escola Kingdom Academy, a marca é a coroa laranja da Kingdom com o nome «Kingdom Academy». O software, One Members, só se apresenta com o seu nome a quem cria e gere uma escola (site, /criar, consola, termos); os alunos vêem sempre a escola. O logótipo que o administrador carregar em Aparência tem prioridade sobre ela.
 - O tema por omissão segue a Library: claro, e escuro quando o sistema do utilizador está em modo escuro. O botão de tema e a escolha do administrador continuam a mandar.
 
 ## Evidence on Hand

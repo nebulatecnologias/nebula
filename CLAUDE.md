@@ -40,6 +40,11 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
 
 ## Contexto que poupa tempo
 
+- **Nomes (Shelton, 15/11/2026):** o software deste repositório chama-se
+  **One Members** e é aberto ao público. **Kingdom Academy** é o nome de uma
+  escola (a nossa) dentro dele, nunca do software. «Academia», no código, na
+  base (`academia.*`) e nos documentos antigos, quer dizer o software.
+
 - **Três plataformas, uma base de dados** (Supabase `epqfotzxrcyligwpauwk`):
   painel (`dashboard.kingdomcompny.com`), Payflow (`payflow.kingdomcompny.com`)
   e Academia (`membros.kingdomcompny.com`, repositório `nebula`).

@@ -12,6 +12,7 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   const B = `${base}/consola/index.html?demo=1`;
   const pg = await abrirPagina(navegador, B, { viewport: { width: 1440, height: 900 } });
   pg.on('dialog', d => d.accept());
+  contem(await pg.title(), 'Consola One Members', 'A consola é a do software, One Members');
   const ir = async h => { await pg.evaluate(h => { location.hash = h; }, h); await pg.waitForTimeout(150); };
   const texto = sel => pg.evaluate(s => document.querySelector(s).innerText.replace(/ /g, ' '), sel);
 

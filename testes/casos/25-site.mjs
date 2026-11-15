@@ -14,6 +14,10 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   const texto = (p, sel) => p.evaluate(s => document.querySelector(s).innerText.replace(/ /g, ' '), sel);
 
   igual(await pg.getAttribute('html', 'lang'), 'pt', 'O site de Moçambique é em português');
+  /* O software chama-se One Members (Shelton, 15/11/2026); Kingdom Academy é uma escola. */
+  contem(await pg.title(), 'One Members', 'O site apresenta o software pelo nome: One Members');
+  igual((await texto(pg, '.nav .marca')).trim(), 'One Members', 'e a marca no topo é a do software');
+  naoContem(await pg.evaluate(() => document.body.innerText), 'Kingdom Academy', 'O site do software não fala da escola Kingdom Academy');
   igual(await pg.locator('#planos .plano').count(), 3, 'Três planos');
   contem(await texto(pg, '[data-plano="essencial"]'), 'MZ 699,00', 'O preço escreve-se com o símbolo à frente e duas casas');
   contem(await texto(pg, '[data-plano="profissional"]'), 'MZ 1 350,00', 'com os milhares agrupados');
@@ -77,6 +81,7 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   /* ===== África do Sul ===== */
   const za = await abrirPagina(navegador, `${base}/site-za/index.html?demo=1`, { viewport: { width: 1440, height: 900 }, esperar: 700 });
   igual(await za.getAttribute('html', 'lang'), 'en', 'O site da África do Sul é em inglês');
+  igual((await texto(za, '.nav .marca')).trim(), 'One Members', 'com a mesma marca do software');
   igual(await za.locator('#int-moeda').count(), 0, 'sem troca de moeda');
   contem(await texto(za, '[data-plano="essencial"]'), 'R 155,33', 'Os preços em rand, no formato da casa');
   contem(await texto(za, '[data-plano="essencial"]'), 'Essential', 'O plano com o nome em inglês');

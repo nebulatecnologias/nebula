@@ -57,13 +57,12 @@ const traduzErro = msg => EN ? (ERROS_EN[msg] || msg) : msg;
 function traduzirPagina(){
   if(!EN) return;
   document.documentElement.lang = "en";
-  document.title = "Create your members area";
+  document.title = "One Members — Create your members area";
   const pôr = (sel, html, attr) => { const el = document.querySelector(sel); if(!el) return; if(attr) el.setAttribute(attr, html); else el.innerHTML = html; };
   pôr("#a-carregar", "Loading…");
   pôr("#ecra-fechado h1", "Sign-ups aren't open yet");
   pôr("#ecra-fechado p", "The plans aren't on sale yet. Please come back soon.");
-  pôr(".ficha-topo .marca", "Members area, back to the site", "aria-label");
-  pôr(".ficha-topo .marca > span:last-child", "Members area");
+  pôr(".ficha-topo .marca", "One Members, back to the site", "aria-label");
   pôr("#plano-trocar", "Change plan");
   pôr("#painel-conta h2", "Your details");
   pôr("#painel-conta .sub", "You'll use this email and password to sign in and manage your members area.");

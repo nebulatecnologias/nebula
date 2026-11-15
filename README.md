@@ -1,4 +1,6 @@
-# Kingdom Academy — Área de Membros (protótipo)
+# One Members — plataforma de áreas de membros
+
+> **Nomes (15/11/2026):** o software chama-se **One Members** e é aberto a qualquer escola. **Kingdom Academy** é o nome de uma escola (a nossa) dentro dele. Nos documentos e no código mais antigos, «Academia» quer dizer o software.
 
 Protótipo funcional, em HTML/CSS/JS puro (sem build, sem dependências), de uma área de membros para os cursos de mentalidade, IA, marketing e vendas, negócios, espiritualidade e desenvolvimento pessoal.
 

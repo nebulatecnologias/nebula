@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-24T18:47:56+00:00",
-  "title": "Design System: Kingdom Academy",
+  "title": "Design System: One Members",
   "extensions": {
     "colorMeta": {
       "accent": {
@@ -702,7 +702,7 @@
   ],
   "narrative": {
     "northStar": "The Warm Dashboard, Loud Progress",
-    "overview": "Kingdom Academy adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on generous 22px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.\n\nDensity is moderate and dashboard-like. A 264px sidebar sits on a deeper stone. The main column opens with a greeting headline and a muted date lead, then the Continuar card, a KPI row and grids of course cards. Every pressable shape is a full pill, and every container is a large rounded card lifted by warm, diffuse shadows. Type is Google Sans only: weight 500 for everything that names something, 400 for running text, and 700 only in the wordmark.\n\nThe Academy is also white-label within the Kingdom family. In Aparência the admin can change the accent colour, the name, the logo, the default theme and the login copy. The system is built so any accent recolours the single orange voice without touching the stone neutrals, the pastel fields or the status colours. The world rejects the dark \"creator-course\" LMS template: black ground, neon accent and uppercase eyebrows over every heading.",
+    "overview": "One Members adopts the Kingdom Library world whole and bends it toward learning. The chrome is a quiet warm-stone canvas with soft white cards on generous 22px corners and one orange gradient that marks the way forward. Two things get to be loud. The first is the course covers: a pastel field with the course image, or large initials when there is no image. The second is the student's own progress: orange-gradient bars, the Continuar card and the KPI numerals.\n\nDensity is moderate and dashboard-like. A 264px sidebar sits on a deeper stone. The main column opens with a greeting headline and a muted date lead, then the Continuar card, a KPI row and grids of course cards. Every pressable shape is a full pill, and every container is a large rounded card lifted by warm, diffuse shadows. Type is Google Sans only: weight 500 for everything that names something, 400 for running text, and 700 only in the wordmark.\n\nThe Academy is also white-label within the Kingdom family. In Aparência the admin can change the accent colour, the name, the logo, the default theme and the login copy. The system is built so any accent recolours the single orange voice without touching the stone neutrals, the pastel fields or the status colours. The world rejects the dark \"creator-course\" LMS template: black ground, neon accent and uppercase eyebrows over every heading.",
     "keyCharacteristics": [
       "Warm grey-white canvas (`canvas`) with white, barely graded cards (`surface` to `surface-2`).",
       "One accent voice. The sunrise gradient (`cta-glow` to `cta-deep`) is used for the single primary action per view, progress fills, the play disc and brand panels.",

@@ -2,7 +2,7 @@
   "name": "kingdom-academia",
   "private": true,
   "type": "module",
-  "description": "A área de membros da Kingdom. O site não é compilado -- isto existe só para os testes.",
+  "description": "One Members, o software de áreas de membros (a Kingdom Academy é uma escola nele). O site não é compilado -- isto existe só para os testes.",
   "scripts": {
     "test": "node testes/correr.mjs"
   },

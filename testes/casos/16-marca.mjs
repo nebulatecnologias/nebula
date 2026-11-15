@@ -42,6 +42,15 @@ export default async function ({ navegador, base, igual, verdade, contem, naoCon
   corpo.split('\n').forEach((l, i) => { if(/kingdom/i.test(l)) achados.push(`index.html <body>: ${l.trim().slice(0, 90)}`); });
   igual(achados.join('\n      '), '', 'Nenhuma marca da Kingdom no código da app nem no corpo do index.html');
   contem(html.slice(0, html.indexOf('<body')), '<title>Área de Membros</title>', 'O título de origem é neutro');
+  /* O nome do software (One Members) é para quem cria e gere uma escola; a app
+     dos alunos é de cada escola e nunca o mostra (Shelton, 15/11/2026). */
+  const comOSoftware = [];
+  for(const f of await readdir(join(raiz, 'js'))){
+    if(!f.endsWith('.js') || f === 'consola.js' || f === 'criar.js') continue;
+    if(/one members/i.test(await readFile(join(raiz, 'js', f), 'utf8'))) comOSoftware.push(f);
+  }
+  if(/one members/i.test(html)) comOSoftware.push('index.html');
+  igual(comOSoftware.join(', '), '', 'A app dos alunos nunca mostra o nome do software');
 
   /* 2. Os valores de origem são neutros: nada de nome nem assinatura de ninguém. */
   const pg0 = await abrirPagina(navegador, `${base}/index.html?demo=1`);
