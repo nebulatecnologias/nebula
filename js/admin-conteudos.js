@@ -200,7 +200,7 @@ function renderFormCurso(){
               </select>
             </div>
           </div>
-          ${checkCardHTML("f-abertoATodos", !!v.abertoATodos, "Incluir no plano geral", "Qualquer aluno da academia abre este curso, mesmo sem plano ou inscrição que o inclua.")}
+          ${checkCardHTML("f-abertoATodos", !!v.abertoATodos, "Todos os membros da escola abrem este curso", "Desligado, só abre a quem recebeu acesso: por convite, por compra ou dado em Membros.")}
           ${checkCardHTML("f-moderacao", !!v.moderacao, "Ativar moderação de comentários", "Revê manualmente todos os comentários antes da publicação.")}
         </div>
       </div>

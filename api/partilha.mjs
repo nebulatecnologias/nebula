@@ -18,8 +18,10 @@ const SUPABASE_URL = "https://epqfotzxrcyligwpauwk.supabase.co";
 /* A chave publicável é pública por desenho (é a mesma de js/config.js). */
 const SUPABASE_CHAVE = "sb_publishable_Ye3ZkJ8RoqMJuWgfdNclZQ_zdnal69h";
 const DESCRICAO = "Os seus cursos, aulas, encontros ao vivo e comunidade, num só lugar.";
-/* Os endereços da plataforma: neles, ?org= diz a escola. */
-const PLATAFORMA = new Set(["membros.kingdomcompny.com", "localhost", "127.0.0.1"]);
+/* Os endereços da plataforma: neles, ?org= diz a escola. O do software (One
+   Members) é onemembers.; membros. é a escola da Kingdom, e continua a aceitar
+   ?org= para os links antigos. */
+const PLATAFORMA = new Set(["onemembers.kingdomcompny.com", "membros.kingdomcompny.com", "localhost", "127.0.0.1"]);
 
 const escapar = t => String(t ?? "").replace(/[&<>"']/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

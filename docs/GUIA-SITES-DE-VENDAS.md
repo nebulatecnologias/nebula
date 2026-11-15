@@ -1,7 +1,7 @@
 # Guia: como gerar um site de vendas como o da área de membros
 
 Este guia junta tudo o que foi preciso para fazer o site de vendas que está em
-`membros.kingdomcompny.com/site/` (e o `/criar` no mesmo estilo). Serve para pedir
+`onemembers.kingdomcompny.com/site/` (e o `/criar` no mesmo estilo). Serve para pedir
 outro site do mesmo nível, para outro produto, sem começar do zero.
 
 Ficheiros de referência neste repositório:
@@ -250,7 +250,7 @@ não correm.
   ```
 
   Sem ligação, a página usa os valores decididos (iguais aos da base).
-- **Botões:** `https://membros.kingdomcompny.com/criar/?plano=profissional&ciclo=mensal&moeda=MZN`.
+- **Botões:** `https://onemembers.kingdomcompny.com/criar/?plano=profissional&ciclo=mensal&moeda=MZN`.
   O `/criar` entende `premium` como o plano `escala`.
 - **Antes de ter domínio:** `<meta name="robots" content="noindex">`. Quando
   houver domínio, tira-se o `noindex` e aponta-se o domínio para o projecto da

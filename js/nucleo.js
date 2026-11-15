@@ -15,7 +15,7 @@ function sincronizarSessaoComMembro(membro){
 
 /* Os cursos que este aluno pode mesmo abrir.
    Em produção a lista vem do servidor, que é quem sabe: inscrições do
-   CRM, acessos dados por convite e os cursos do plano geral. Um cartão
+   CRM, acessos dados por convite e os cursos abertos a todos os membros. Um cartão
    que o aluno não pode abrir não deve estar aqui — abria sem aulas
    nenhumas, e isso não é um cartão, é uma porta fechada pintada de
    porta aberta. A Vitrine é o lugar desses.
@@ -212,7 +212,14 @@ function cobrancaDisponivel(){
   const conta = API.organizacao && API.organizacao.conta;
   return !!conta && conta.estado !== "isenta";
 }
+/* Saíram do painel a 15/11/2026 (pedido do Shelton): a Migração era o ensaio
+   da passagem dos compradores antigos do Payflow, já sem uso, e o Assistente
+   montava textos fixos no browser, sem IA nenhuma. Um endereço antigo para
+   elas cai na Visão geral. O código sai na limpeza final. */
+const VISTAS_RETIRADAS = new Set(["admin-migracao", "admin-ia"]);
+
 function vistaDisponivel(view){
+  if(VISTAS_RETIRADAS.has(view)) return false;
   if(view === "admin-cobranca") return cobrancaDisponivel();
   return !(semPayflow() && VISTAS_DO_PAYFLOW.has(view));
 }
