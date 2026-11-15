@@ -399,14 +399,6 @@ const API = {
     const { error } = await this.cliente.rpc("integracao_payflow_guardar", { p_segredo: segredo || "" });
     if(error) throw new Error(error.message);
   },
-  async guardarProdutoExterno(produto, nome, cursos){
-    const { error } = await this.cliente.rpc("produto_externo_guardar", { p_produto: produto, p_nome: nome || null, p_cursos: cursos });
-    if(error) throw new Error(error.message);
-  },
-  async tirarProdutoExterno(produto){
-    const { error } = await this.cliente.rpc("produto_externo_tirar", { p_produto: produto });
-    if(error) throw new Error(error.message);
-  },
   /* Os acessos da própria pessoa. Quem paga faz isso NOUTRO separador -- o
      checkout abre-se ao lado -- e por isso a Academia fica parada num ecrã
      que já não corresponde ao que ela tem. Isto trata do caso em que o
@@ -446,11 +438,22 @@ const API = {
     return mudou;
   },
 
-  /* ---------------- A montra, do lado da equipa ---------------- */
-  async vitrineDaEquipa(){
-    const { data, error } = await this.cliente.rpc("vitrine_para_equipa");
-    if(error) throw new Error(traduzirErroDados(error));
-    return data || [];
+  /* ---------------- As ofertas da escola (15/11/2026) ----------------
+     O que a escola vende: a equipa lê, a administração escreve (a base é
+     que o garante). A Vitrine do aluno sai daqui, pela vitrine_do_aluno. */
+  async ofertasDaEscola(){
+    const linhas = await lista(this.cliente.from("ofertas").select("*").is("removido_em", null).order("ordem"));
+    return linhas.map(deOfertaDaEscola);
+  },
+
+  /* Devolve a oferta como ficou gravada: a base arruma o que recebe (só
+     cursos da escola, produtos sem repetidos) e recusa em português o que não
+     pode ficar (um produto que já é de outra oferta). */
+  async guardarOferta(oferta){
+    const { data, error } = await this.cliente.from("ofertas")
+      .upsert(MAPAS.ofertaDaEscola.para(oferta)).select().single();
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
+    return deOfertaDaEscola(data);
   },
 
   /* O ensaio da migração. Só lê — não há nada do outro lado que escreva. */
@@ -458,27 +461,6 @@ const API = {
     const { data, error } = await this.cliente.rpc("ensaio_da_migracao");
     if(error) throw new Error(traduzirErroDados(error));
     return data || { resumo:{}, porOferta:[] };
-  },
-
-  async mostrarNaVitrine(ofertaId, mostrar, extra){
-    const { data, error } = await this.cliente.rpc("vitrine_mostrar", {
-      p_oferta: Number(ofertaId),
-      p_mostrar: !!mostrar,
-      p_destaque: extra && "destaque" in extra ? !!extra.destaque : null,
-      p_chamada: extra && "chamada" in extra ? (extra.chamada || null) : null
-    });
-    if(error) throw new Error(traduzirErroDados(error));
-    return data;
-  },
-
-  /* Pré-venda de uma oferta: só a equipa. Ligá-la não a põe à vista -- isso
-     é o interruptor «Na Vitrine». */
-  async preVendaNaVitrine(ofertaId, emBreve, abreEm){
-    const { data, error } = await this.cliente.rpc("vitrine_pre_venda", {
-      p_oferta: Number(ofertaId), p_em_breve: !!emBreve, p_abre_em: emBreve && abreEm ? abreEm : null
-    });
-    if(error) throw new Error(traduzirErroDados(error));
-    return data;
   },
 
   pararDeOuvir(){
@@ -729,7 +711,8 @@ function deComunidade(r){
            ativa:r.ativa!==false, ordem:r.ordem||0 };
 }
 
-/* A oferta do CRM é a oferta que a Vitrine mostra. */
+/* A oferta do Payflow: os eventos pagos e as comunidades ainda se ligam a
+   ela. O que a escola vende está em deOfertaDaEscola. */
 function deOferta(r){
   return { id:String(r.id), nome:r.nome, preco:Number(r.preco)||0, moeda:r.moeda||"MZN",
            periodo: r.cobranca === "Recorrente mensal" ? "mês" : "único",
@@ -737,19 +720,29 @@ function deOferta(r){
            ativa:r.estado === "Ativa", descricao:"" };
 }
 
+/* Uma oferta da escola, como a administração a montou. */
+function deOfertaDaEscola(r){
+  return {
+    id: r.id, nome: r.nome, chamada: r.chamada || "", cursos: r.cursos || [],
+    diasDeAcesso: r.dias_de_acesso || null, preco: Number(r.preco) || 0, moeda: r.moeda || "MZN",
+    recorrencia: r.recorrencia || "", link: r.link || "", produtos: r.produtos || [],
+    naVitrine: !!r.na_vitrine, destaque: !!r.destaque, emBreve: !!r.em_breve, abreEm: r.abre_em || null,
+    ativa: r.ativa !== false, ordem: r.ordem || 0
+  };
+}
+
 /* Um cartão da Vitrine, já decidido pelo servidor: se chegou aqui é porque
-   passou nas cinco guardas. O destino é o checkout da oferta; a página de
-   vendas só entra quando não há atalho nenhum. */
+   passou nas guardas todas. O destino é o link de pagamento da oferta. */
 function deVitrine(r){
-  const destino = linkCheckout(r.atalho) || linkExterno(r.linkVendas || "") || "";
+  const destino = linkExterno(r.linkVendas || "") || "";
   return {
     ofertaId: String(r.ofertaId), nome: r.nome,
     preco: Number(r.preco) || 0, moeda: r.moeda || "MZN",
-    mensal: r.cobranca === "Recorrente mensal",
+    mensal: r.cobranca === "Recorrente mensal", anual: r.cobranca === "Recorrente anual",
     entrega: r.entrega, destaque: !!r.destaque, chamada: r.chamada || "",
     ordem: r.ordem || 0, aulas: Number(r.aulas) || 0, segundos: Number(r.segundos) || 0,
     emBreve: !!r.emBreve, abreEm: r.abreEm || null,
-    checkout: !!linkCheckout(r.atalho), destino,
+    checkout: !!destino, destino,
     cursos: (r.cursos || []).map(c => ({
       id: c.id, titulo: c.titulo, subtitulo: c.subtitulo || "", sigla: c.sigla || "",
       capa: c.capa || "", categoria: c.categoria,
@@ -952,6 +945,12 @@ const MAPAS = {
   avaliacao:{ tabela:"avaliacoes", para: a => ({ id:a.id, utilizador_id:a.membroId || API.utilizador.id, aula_id:a.aulaId, curso_id:a.cursoId, estrelas:a.estrelas, comentario:a.comentario, oculto:!!a.oculto }) },
   acesso:   { tabela:"acessos", para: a => ({ id:a.id, utilizador_id:a.utilizadorId, curso_id:a.cursoId, origem:a.origem||"manual", expira_em:a.expiraEm||null, nota:a.nota||null }) },
   convite:  { tabela:"convites", para: c => ({ id:c.id, email:c.email, nome:c.nome, oferta_id:c.ofertaId||null, cursos:c.cursos||[] }) },
+  ofertaDaEscola: { tabela:"ofertas", suave:true,
+    para: o => ({ id:o.id, nome:o.nome, chamada:o.chamada||null, cursos:o.cursos||[],
+                  dias_de_acesso:o.diasDeAcesso||null, preco:Number(o.preco)||0, moeda:o.moeda||"MZN",
+                  recorrencia:o.recorrencia||null, link:linkExterno(o.link)||null, produtos:o.produtos||[],
+                  na_vitrine:!!o.naVitrine, destaque:!!o.destaque, em_breve:!!o.emBreve,
+                  abre_em:o.emBreve && o.abreEm ? o.abreEm : null, ativa:o.ativa!==false, ordem:o.ordem||0 }) },
   /* Repara na ausência: oferta_id não vai aqui. Quem liga um plano a uma oferta
      é o Payflow, e uma escrita daqui apagava essa ligação sem ninguém dar por
      ela — o upsert só toca nas colunas que lhe damos. */

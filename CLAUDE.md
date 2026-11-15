@@ -54,6 +54,14 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   de `onemembers@kingdomcompny.com`. `membros.kingdomcompny.com` é a escola
   Kingdom Academy. O endereço e o remetente estão na base
   (`nucleo.definicoes_plataforma` › `enderecos`).
+- **As ofertas são de cada escola (Shelton, 15/11/2026):** montam-se no painel,
+  em Ofertas (`academia.ofertas`): os cursos que abre, o prazo do acesso, o
+  preço, o link de pagamento e os IDs de produto do checkout. A Vitrine do
+  aluno lê daí. O One Members não cobra: o link leva a um checkout de fora (o
+  Payflow ou outro) e a venda volta pelo webhook das Integrações
+  (`academia-vendas` › `public.escola_aplicar_venda`), que abre os cursos da
+  oferta que tem esse produto. `public.ofertas` é do Payflow: só os eventos
+  pagos e as comunidades ainda a leem.
 - `academy.kingdomcompny.com` está **reservado** para o site de vendas futuro.
   A área de membros é `membros.`, nunca `academy.`.
 - HTML/CSS/JS puro, sem compilação. O Vercel serve os ficheiros como estão.
@@ -102,7 +110,7 @@ verificado antes de se mudar.
   `cursos.oferta_id`, `utilizadores.lead_id`. Ao tocar numa tabela, verificar se
   a coluna de ligação está a ser escrita.
 - **As tabelas da Academia têm FORCE ROW LEVEL SECURITY** (todas menos
-  `planos`, `plano_cursos` e `vitrine`). Até uma migração, que corre como
+  `planos`, `plano_cursos`, `vitrine` e `ofertas`). Até uma migração, que corre como
   `postgres`, lê essas tabelas pelas regras de leitura — sem sessão, só vê o
   que um anónimo veria. Uma migração que copie dados de uma tabela para outra
   tem de confirmar a contagem antes e depois; um `insert … select` que não

@@ -5,9 +5,10 @@
    ao abri-lo, as instruções de como a ligar.
 
    - Payflow: as vendas da escola abrem os cursos sozinhas. A escola
-     cria a integração no Payflow dela, cola aqui o segredo e liga cada
-     produto aos cursos (academia.integracoes_da_escola e companhia; o
-     recetor é a Edge Function academia-vendas).
+     cria a integração no Payflow dela e cola aqui o segredo; que produto
+     abre que cursos diz-se em cada oferta, em Ofertas (15/11/2026). As
+     funções são academia.integracoes_da_escola e companhia; o recetor é a
+     Edge Function academia-vendas.
    - Vídeo (Panda, YouTube, Vimeo, Bunny): pelo código de incorporação
      de cada aula; aqui escolhe-se onde estão os vídeos.
    - Panda Video nativo (19/10/2026): a escola cola aqui a chave da API do
@@ -37,7 +38,6 @@ function integracoesDaDemonstracao(){
       organizacao: { id: "00000000-0000-4000-8000-0000000000de", slug: "demo" },
       pelaPonte: [],
       payflow: { ligada: true, segredoFim: "x9Qk", ligadaEm: h(240), ultimoEvento: { tipo: "order.paid", resultado: "aplicado", recebidoEm: h(3) } },
-      produtos: DB.cursos.length ? [{ produto: "prod_01JDEMO7K2QF", nome: "Oferta de lançamento", cursos: [DB.cursos[0].id] }] : [],
       historico: [
         { id: "evt_demo_3", tipo: "order.paid", resultado: "aplicado", pedido: "KG-20261002-7K2QF", email: "ana@exemplo.invalid", cursos: DB.cursos.slice(0, 1).map(c => c.id), modo: "convite", teste: false, recebidoEm: h(3) },
         { id: "evt_demo_2", tipo: "order.paid", resultado: "aplicado", pedido: "KG-20261001-3M8ZD", email: "bruno@exemplo.invalid", cursos: DB.cursos.slice(0, 1).map(c => c.id), modo: "acesso", teste: false, recebidoEm: h(27) },
@@ -45,7 +45,10 @@ function integracoesDaDemonstracao(){
       ]
     };
   }
-  return JSON.parse(JSON.stringify(DB.integracoesDemo));
+  /* Os produtos são os das ofertas da escola, como na base. */
+  const produtos = (DB.ofertasDaEscola || []).filter(o => o.ativa !== false)
+    .flatMap(o => (o.produtos || []).map(produto => ({ produto, nome: o.nome, oferta: o.id, cursos: o.cursos || [] })));
+  return JSON.parse(JSON.stringify(Object.assign({}, DB.integracoesDemo, { produtos })));
 }
 
 async function carregarIntegracoes(){
@@ -70,7 +73,7 @@ function catalogoDaEscola(){
   return [
     { id: "payflow", nome: "Payflow", categoria: "Meio de pagamento", indicada: true, instalada: !!pf.ligada,
       titulo: `Payflow${pf.segredoFim ? " · ····" + pf.segredoFim : ""}`,
-      descricao: (d.produtos || []).length ? `As vendas abrem os cursos sozinhas · ${(d.produtos || []).length} ${(d.produtos || []).length === 1 ? "produto ligado" : "produtos ligados"}` : "Ligado, mas ainda sem produtos ligados a cursos.",
+      descricao: (d.produtos || []).length ? `As vendas abrem os cursos sozinhas · ${(d.produtos || []).length} ${(d.produtos || []).length === 1 ? "produto ligado" : "produtos ligados"}` : "Ligado, mas ainda sem produtos ligados a ofertas.",
       tom: (d.produtos || []).length ? "" : "aviso", estadoTexto: (d.produtos || []).length ? "Ativo" : "Falta ligar produtos" },
     pandaNoCatalogo(video("panda", "Panda Video", "Panda Video")),
     video("youtube", "YouTube", "YouTube"),
@@ -155,7 +158,8 @@ function accoesDaFicha(app){
       : `<button class="btn btn-primary" type="button" data-int-provedor="${IntegracoesUI.esc(app.valor)}">Usar o ${IntegracoesUI.esc(app.nome)}</button>`;
   }
   if(app.id === "zoom" || app.id === "meet") return `<button class="btn btn-secondary" type="button" data-int-ir="admin-eventos">Abrir Eventos</button>`;
-  if(app.id === "payflow") return `<a class="btn btn-secondary" href="https://payflow.kingdomcompny.com/" target="_blank" rel="noopener">Abrir o Payflow</a>`;
+  if(app.id === "payflow") return `<button class="btn btn-secondary" type="button" data-int-ir="admin-ofertas">Abrir Ofertas</button>
+    <a class="btn btn-secondary" href="https://payflow.kingdomcompny.com/" target="_blank" rel="noopener">Abrir o Payflow</a>`;
   return "";
 }
 
@@ -173,11 +177,11 @@ function corpoDaFicha(app){
     const avisoPonte = ponte.length ? `<div class="int-aviso int-ponte">
         <p><strong>${ponte.length === 1 ? "Este produto ainda abre" : "Estes produtos ainda abrem"} os cursos pela ligação de origem:</strong></p>
         <ul>${ponte.map(p => `<li>${esc(p.nome)} <code>${esc(p.produto)}</code></li>`).join("")}</ul>
-        <p>Continuam a funcionar como hoje. Para passar um deles para esta integração, no Payflow mude a <strong>entrega</strong> da oferta para «Nada» e ligue-o aqui aos cursos. Uma compra nunca abre os cursos duas vezes.</p>
+        <p>Continuam a funcionar como hoje. Para passar um deles para esta integração, no Payflow mude a <strong>entrega</strong> da oferta para «Nada» e ponha o ID dele numa oferta, em Ofertas. Uma compra nunca abre os cursos duas vezes.</p>
       </div>` : "";
     const cursos = DB.cursos;
     return `<p class="int-lead">As vendas abrem os cursos sozinhas.</p>
-      <p>Quando alguém compra um produto seu no Payflow, a pessoa recebe os cursos ligados a esse produto: quem já tem conta entra logo; quem não tem recebe um convite com a marca da sua escola. Um reembolso total fecha o acesso.</p>
+      <p>Quando alguém compra um produto seu no Payflow, a pessoa recebe os cursos da oferta que tem esse produto, pelo prazo dela: quem já tem conta entra logo; quem não tem recebe um convite com a marca da sua escola. Um reembolso total fecha o acesso.</p>
       <div class="int-estado">${pf.ligada ? `<span class="pill pill-ativo">Ligado</span><span>Segredo <b>····${esc(pf.segredoFim || "")}</b></span>` : `<span class="pill pill-inativo">Por ligar</span>`}
         ${ult ? `<span>Último evento: <b>${esc(ult.tipo)}</b>, ${esc(IntegracoesUI.quando(ult.recebidoEm))}</span>` : pf.ligada ? `<span>Ainda sem eventos: envie um de teste do Payflow.</span>` : ""}</div>
       <h2>1. Crie a integração no Payflow</h2>
@@ -194,18 +198,12 @@ function corpoDaFicha(app){
         <div class="acoes"><button class="btn btn-primary btn-sm" type="submit" id="int-guardar-segredo">${pf.ligada ? "Trocar o segredo" : "Ligar o Payflow"}</button>
           ${pf.ligada ? `<button class="btn btn-perigo-suave btn-sm" type="button" id="int-desligar">Desligar</button>` : ""}</div>
       </form>
-      <h2>3. Ligue cada produto aos cursos</h2>
-      <p>No Payflow, em <strong>Integrações › IDs dos produtos</strong>, copie o <code>prod_…</code> de cada oferta. Esse ID nunca muda, mesmo que o nome ou o preço mudem.</p>
+      <h2>3. Ponha cada produto na sua oferta</h2>
+      <p>No Payflow, em <strong>Integrações › IDs dos produtos</strong>, copie o <code>prod_…</code> de cada produto. Esse ID nunca muda, mesmo que o nome ou o preço mudem. Aqui, em <strong>Ofertas</strong>, abra a oferta que o vende e cole-o em <strong>IDs de produto do checkout</strong>.</p>
       ${avisoPonte}
       <div class="int-produtos">${(d.produtos || []).map(p => `<div class="int-produto" data-produto="${esc(p.produto)}">
-          <div><strong>${esc(p.nome || p.produto)}</strong><span><code>${esc(p.produto)}</code> · ${esc((p.cursos || []).map(c => (cursos.find(k => k.id === c) || {}).titulo || c).join(", "))}</span></div>
-          <button class="btn btn-texto btn-sm" type="button" data-int-tirar="${esc(p.produto)}">Tirar</button></div>`).join("") || `<p class="hint">Ainda nenhum produto ligado.</p>`}</div>
-      <form class="int-form" id="int-form-produto" novalidate>
-        <div class="field"><label for="int-produto">ID do produto</label><input id="int-produto" autocomplete="off" spellcheck="false" placeholder="prod_01J…"></div>
-        <div class="field"><label for="int-produto-nome">Nome (para se reconhecer aqui)</label><input id="int-produto-nome" maxlength="120" placeholder="ex: Oferta de lançamento"></div>
-        <div class="field">${cursosParaEscolherHTML(cursos)}</div>
-        <div class="acoes"><button class="btn btn-primary btn-sm" type="submit" id="int-ligar-produto">Ligar produto</button></div>
-      </form>
+          <div><strong>${esc(p.nome || p.produto)}</strong><span><code>${esc(p.produto)}</code> · ${esc((p.cursos || []).map(c => (cursos.find(k => k.id === c) || {}).titulo || c).join(", ") || "sem cursos")}</span></div></div>`).join("") || `<p class="hint">Ainda nenhuma oferta tem um produto ligado.</p>`}</div>
+      <div class="acoes"><button class="btn btn-primary btn-sm" type="button" data-int-ir="admin-ofertas">Abrir Ofertas</button></div>
       <h2>4. Experimente</h2>
       <p>Na integração do Payflow, carregue em <strong>Enviar evento de teste</strong>. Aparece no <strong>Histórico</strong> destas Integrações como «Teste recebido».</p>`;
   }
@@ -254,47 +252,6 @@ function corpoDaFicha(app){
   }
   return `<p class="int-lead">Avise o seu sistema quando algo acontece na academia.</p>
     <p>Um aluno entrou, concluiu um curso, recebeu um certificado: a academia envia o evento, assinado, para o endereço que indicar. Está em preparação.</p>`;
-}
-
-/* Os cursos que um produto abre, em cartões (24/10/2026): a capa ou as
-   iniciais, quantas aulas tem e se ainda é rascunho, e a marca da cor de
-   destaque. A caixa de verdade continua lá dentro, para o teclado e para o
-   formulário; o cartão inteiro é a etiqueta dela. */
-function cursosParaEscolherHTML(cursos){
-  const esc = IntegracoesUI.esc;
-  if(!cursos.length) return `<span class="field-rotulo">Cursos que abre</span><p class="hint">Crie primeiro um curso em Conteúdos.</p>`;
-  return `<div class="int-cursos-topo"><span class="field-rotulo" id="int-cursos-rotulo">Cursos que abre</span>
-      <span class="int-cursos-conta" aria-live="polite">Nenhum escolhido</span>
-      <button class="btn-texto-link" type="button" data-int-cursos-todos>Escolher todos</button></div>
-    <div class="int-cursos" role="group" aria-labelledby="int-cursos-rotulo">${cursos.map(c => {
-      const aulas = (c.modulos || []).reduce((n, m) => n + (m.aulas || []).length, 0);
-      return `<label class="int-curso">
-        <input type="checkbox" value="${esc(c.id)}">
-        <span class="int-curso-capa" style="--field:${campoDoCurso(c.id)};${c.capa ? `background-image:url(${esc(c.capa)})` : ""}" aria-hidden="true">${c.capa ? "" : esc(iniciais(c.titulo || "?"))}</span>
-        <span class="int-curso-texto"><strong>${esc(c.titulo)}</strong>
-          <span>${aulas} ${aulas === 1 ? "aula" : "aulas"}${c.publicado === false ? ` · <em>Rascunho</em>` : ""}</span></span>
-        <span class="int-curso-marca" aria-hidden="true">${iconeCheck()}</span>
-      </label>`;
-    }).join("")}</div>`;
-}
-
-function ligarCursosParaEscolher(raiz){
-  const caixas = [...raiz.querySelectorAll(".int-curso input")];
-  const conta = raiz.querySelector(".int-cursos-conta");
-  const todos = raiz.querySelector("[data-int-cursos-todos]");
-  if(!caixas.length || !conta) return;
-  const contar = () => {
-    const n = caixas.filter(x => x.checked).length;
-    conta.textContent = n ? `${n} ${n === 1 ? "escolhido" : "escolhidos"}` : "Nenhum escolhido";
-    todos.textContent = n === caixas.length ? "Limpar" : "Escolher todos";
-  };
-  caixas.forEach(x => x.addEventListener("change", contar));
-  todos.addEventListener("click", () => {
-    const marcar = caixas.some(x => !x.checked);
-    caixas.forEach(x => { x.checked = marcar; });
-    contar();
-  });
-  contar();
 }
 
 function corpoDoPanda(app){
@@ -396,15 +353,6 @@ function ligarIntegracoes(raiz){
       textoConfirmar: "Desligar", aoConfirmar: desligarPanda
     }));
   }
-  const fProd = raiz.querySelector("#int-form-produto");
-  if(fProd) ligarCursosParaEscolher(fProd);
-  if(fProd) fProd.addEventListener("submit", ev => {
-    ev.preventDefault();
-    const cursos = [...fProd.querySelectorAll(".int-cursos input:checked")].map(x => x.value);
-    ligarProduto(document.getElementById("int-produto").value.trim(), document.getElementById("int-produto-nome").value.trim(), cursos);
-  });
-  raiz.querySelectorAll("[data-int-tirar]").forEach(b => b.addEventListener("click", () => tirarProduto(b.dataset.intTirar)));
-
   const fApoio = raiz.querySelector("#int-form-apoio");
   if(fApoio) fApoio.addEventListener("submit", async ev => {
     ev.preventDefault();
@@ -435,31 +383,6 @@ async function guardarSegredoPayflow(segredo){
       guardarDB();
     } else await API.guardarPayflowEscola(segredo);
     estadoInt.aviso = { tom: "ok", texto: segredo ? "Payflow ligado. Envie um evento de teste para confirmar." : "Payflow desligado." };
-    await carregarIntegracoes();
-  } catch(e){ estadoInt.aviso = { tom: "erro", texto: e.message }; }
-  renderAdminIntegracoes();
-}
-
-async function ligarProduto(produto, nome, cursos){
-  try {
-    if(!/^prod_[A-Za-z0-9_]{4,64}$/.test(produto)) throw new Error("O ID do produto começa por prod_. Copie-o do Payflow, em Integrações › IDs dos produtos.");
-    if(!cursos.length) throw new Error("Escolha pelo menos um curso para este produto abrir.");
-    if(modoDemonstracao()){
-      const l = DB.integracoesDemo.produtos.filter(p => p.produto !== produto);
-      l.push({ produto, nome: nome || null, cursos });
-      DB.integracoesDemo.produtos = l; guardarDB();
-    } else await API.guardarProdutoExterno(produto, nome, cursos);
-    estadoInt.aviso = { tom: "ok", texto: "Produto ligado. As próximas vendas dele abrem estes cursos." };
-    await carregarIntegracoes();
-  } catch(e){ estadoInt.aviso = { tom: "erro", texto: e.message }; }
-  renderAdminIntegracoes();
-}
-
-async function tirarProduto(produto){
-  try {
-    if(modoDemonstracao()){ DB.integracoesDemo.produtos = DB.integracoesDemo.produtos.filter(p => p.produto !== produto); guardarDB(); }
-    else await API.tirarProdutoExterno(produto);
-    estadoInt.aviso = { tom: "ok", texto: "Produto tirado. Os acessos já dados ficam." };
     await carregarIntegracoes();
   } catch(e){ estadoInt.aviso = { tom: "erro", texto: e.message }; }
   renderAdminIntegracoes();

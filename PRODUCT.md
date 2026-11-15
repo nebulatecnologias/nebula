@@ -17,7 +17,7 @@ One Members é o software de áreas de membros, aberto a qualquer escola. Kingdo
 
 ## Positioning
 
-É uma das três plataformas que partilham uma única base de dados: o painel (`dashboard.`), o Payflow (`payflow.`, onde se paga) e a Academia (`membros.`). O acesso a um curso nasce de um pagamento ou convite real no sistema da empresa. Não há um checkout paralelo: a Vitrine da Academia envia sempre para o Payflow, e só depois de mostrar a página da oferta dentro da Academia. O que aparece na Vitrine decide-se por oferta, no painel; uma oferta sem aulas só entra em pré-venda, e só quando a equipa a liga.
+É uma das três plataformas que partilham uma única base de dados: o painel (`dashboard.`), o Payflow (`payflow.`, onde se paga) e a Academia (`membros.`). O acesso a um curso nasce de um pagamento ou convite real no sistema da empresa. Não há um checkout cá dentro: cada escola monta as suas ofertas no painel (Ofertas: os cursos que abre, o prazo do acesso, o preço, o link de pagamento e os IDs de produto do checkout), a Vitrine mostra a página da oferta dentro da Academia e só o botão dela leva ao link de pagamento; a venda volta pelo webhook das Integrações e abre os cursos. O que aparece na Vitrine decide-se por oferta; uma oferta sem aulas só entra em pré-venda, e só quando a equipa a liga.
 
 A conversa entre alunos não vive na Academia: vive nos grupos de cada programa (WhatsApp, Telegram). A aba Comunidade lista-os, e cada aluno só vê — e só recebe o link de — os grupos das ofertas em que está inscrito.
 

@@ -77,7 +77,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(pg.errosDeJs.length, 0, `Sem erros: ${pg.errosDeJs.join(' | ')}`);
   await pg.close();
 
-  /* O painel: um só interruptor por oferta, pré-venda com data, retidas à vista. */
+  /* O painel: o curso não decide a Vitrine; a oferta é que decide. */
   const adm = await entrarDemo(navegador, base, ADMIN);
   await adm.evaluate(() => irPara('admin-conteudos'));
   await adm.waitForTimeout(200);
@@ -86,20 +86,29 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   falso(await adm.isVisible('#f-vitrine'), 'O curso já não tem interruptor de Vitrine (é por oferta)');
   falso(await adm.isVisible('#f-urlVendas'), 'Nem o campo da página de vendas, que a Vitrine já não usava');
 
-  await adm.evaluate(() => { ofertasDaVitrine = null; irPara('admin-vitrine'); });
+  /* As ofertas são da escola (15/11/2026): o endereço antigo da Vitrine do
+     painel leva a elas. */
+  await adm.evaluate(() => irPara('admin-vitrine'));
   await adm.waitForTimeout(300);
-  verdade(await adm.isVisible('[data-pre-venda="of3"][aria-checked="true"]'), 'A oferta em pré-venda aparece ligada no painel');
-  verdade(await adm.isVisible('[data-abre-em="of3"]'), 'Com a data de abertura à vista');
+  igual(await adm.evaluate(() => estado.viewAtual), 'admin-ofertas', 'O endereço antigo da Vitrine do painel leva às Ofertas');
+  contem(await adm.innerText('tr[data-oferta-linha="of3"]'), 'Pré-venda: as aulas abrem a', 'A oferta em pré-venda diz quando as aulas abrem');
 
   /* Desligar a pré-venda de uma oferta sem aulas retém-na, e diz porquê em cima. */
-  await adm.click('[data-pre-venda="of3"]');
-  await adm.waitForTimeout(250);
+  const mudarPreVenda = async () => {
+    await adm.click('tr[data-oferta-linha="of3"] [data-editar]');
+    await adm.waitForTimeout(300);
+    await adm.click('#valor-emBreve');
+    await adm.click('#drawer-guardar');
+    await adm.waitForTimeout(400);
+  };
+  await mudarPreVenda();
   const retidas = await adm.innerText('#content-admin .aviso-retidas');
   contem(retidas, 'Oratória para Líderes', 'A oferta retida aparece no aviso de cima');
   contem(retidas, 'não tem nenhuma aula', 'Com o motivo');
-  await adm.click('[data-pre-venda="of3"]');
-  await adm.waitForTimeout(250);
+  falso(await adm.evaluate(() => DB.vitrine.some(v => v.ofertaId === 'of3')), 'e deixa de estar na Vitrine do aluno');
+  await mudarPreVenda();
   falso(await adm.isVisible('#content-admin .aviso-retidas'), 'Com a pré-venda ligada outra vez, deixa de estar retida');
+  verdade(await adm.evaluate(() => DB.vitrine.some(v => v.ofertaId === 'of3')), 'e volta à Vitrine do aluno');
   igual(adm.errosDeJs.length, 0, `Sem erros no painel: ${adm.errosDeJs.join(' | ')}`);
   await adm.close();
 }
