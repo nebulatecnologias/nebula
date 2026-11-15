@@ -30,6 +30,14 @@
 --    por lá acabou. As funções da Vitrine pelo número da oferta do Payflow
 --    saem (vitrine_para_equipa, vitrine_mostrar, vitrine_pre_venda). A tabela
 --    academia.vitrine fica, para a ponte de origem.
+--
+-- Aplicada a 15/11/2026 (versão 20261115225515). Provada antes numa transacção
+-- desfeita, com 24 verificações: o aluno não lê nem escreve a tabela; um
+-- produto só entra numa oferta; a venda de um produto abre os cursos da
+-- oferta pelo prazo dela (conta existente e convite); um reembolso total
+-- fecha; outra escola não vê nada. Contagens iguais antes e depois (23
+-- acessos, 38 convites, 35 membros, 4 cursos; os 18 alunos do Escala
+-- Previsivel mantêm o acesso) e 5 ofertas convertidas na Kingdom Academy.
 
 -- 1 -------------------------------------------------------------------------
 create table academia.ofertas (
