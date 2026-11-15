@@ -64,6 +64,17 @@ export default async function ({ igual, verdade, falso, contem, naoContem }){
   await P.responder(new Request('https://littlemakersmembers.kingdomcompny.com/?org=kingdom'), async (u, o) => { pedido = JSON.parse(o.body).p_endereco; return { ok: true, json: async () => lm }; });
   igual(pedido, 'littlemakersmembers.kingdomcompny.com', 'Num domínio de escola, ?org= não muda de escola');
 
+  /* 4b. O endereço do software (One Members, 15/11/2026): ?org= diz a escola e
+     o link fica nele; sem escola, a raiz é o site de vendas. */
+  await P.responder(new Request('https://onemembers.kingdomcompny.com/?org=teste&partilha'), async (u, o) => { pedido = JSON.parse(o.body).p_endereco; return { ok: true, json: async () => ({ ...lm, dominio: null }) }; });
+  igual(pedido, 'teste', 'Em onemembers.?org=teste pergunta-se pela escola teste');
+  const noSoftware = await pedir('https://onemembers.kingdomcompny.com/?org=teste', { ...lm, dominio: null });
+  contem(noSoftware.html, 'content="https://onemembers.kingdomcompny.com/?org=teste"', 'e o link aponta para o endereço do software com ?org=');
+  const raiz = cfg.routes.find(r => r.has?.[0]?.type === 'host');
+  igual(`${raiz.has[0].value} ${raiz.missing[0].key} ${raiz.status} ${raiz.headers.Location}`, 'onemembers.kingdomcompny.com org 307 /site/',
+    'No endereço do software, a entrada sem ?org= vai para o site de vendas');
+  verdade(cfg.routes.indexOf(raiz) < cfg.routes.indexOf(leitores), 'e isso decide-se antes das etiquetas de partilha');
+
   /* 5. SVG não vai; base em baixo dá neutro. */
   const svg = await pedir('https://x.exemplo/', { ...lm, logoUrl: 'https://exemplo.invalid/logo.svg' });
   naoContem(svg.html, 'og:image', 'Um logótipo SVG não vai (as redes não o mostram)');

@@ -48,6 +48,12 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
 - **Três plataformas, uma base de dados** (Supabase `epqfotzxrcyligwpauwk`):
   painel (`dashboard.kingdomcompny.com`), Payflow (`payflow.kingdomcompny.com`)
   e Academia (`membros.kingdomcompny.com`, repositório `nebula`).
+- **Endereços (Shelton, 15/11/2026, «por enquanto»):** o software, One Members,
+  vive em `onemembers.kingdomcompny.com` (site de vendas, `/criar`, `/consola`,
+  e as escolas sem domínio próprio com `?org=`); os emails dessas escolas saem
+  de `onemembers@kingdomcompny.com`. `membros.kingdomcompny.com` é a escola
+  Kingdom Academy. O endereço e o remetente estão na base
+  (`nucleo.definicoes_plataforma` › `enderecos`).
 - `academy.kingdomcompny.com` está **reservado** para o site de vendas futuro.
   A área de membros é `membros.`, nunca `academy.`.
 - HTML/CSS/JS puro, sem compilação. O Vercel serve os ficheiros como estão.

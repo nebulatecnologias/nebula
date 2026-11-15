@@ -17,7 +17,7 @@
   const L = (pt, en) => EN ? en : pt;
   const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NBSP = " ";
-  const CRIAR = "https://membros.kingdomcompny.com/criar/";
+  const CRIAR = "https://onemembers.kingdomcompny.com/criar/";
   const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   const svg = (d, extra) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra || ""}>${d}</svg>`;
 

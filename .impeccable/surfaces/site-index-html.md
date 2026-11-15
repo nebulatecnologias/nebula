@@ -18,5 +18,5 @@ FORM: pinada pelo utilizador (referência Setrex), sem sorteio.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
 ## Em aberto
-- O nome do produto e o domínio (hoje «Área de membros», servido em membros.kingdomcompny.com/site/, noindex).
+- O nome do produto e o domínio (One Members, servido em onemembers.kingdomcompny.com/site/, noindex).
 - Depoimentos reais: não há; o carrossel mostra exemplos ilustrativos rotulados.

@@ -28,6 +28,26 @@
       "src": "/(index\\.html)?",
       "has": [
         {
+          "type": "host",
+          "value": "onemembers.kingdomcompny.com"
+        }
+      ],
+      "missing": [
+        {
+          "type": "query",
+          "key": "org"
+        }
+      ],
+      "status": 307,
+      "headers": {
+        "Location": "/site/",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "src": "/(index\\.html)?",
+      "has": [
+        {
           "type": "header",
           "key": "user-agent",
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|SkypeUriPreview|Pinterestbot|redditbot|Iframely|Embedly|vkShare).*"
