@@ -292,7 +292,7 @@ function guardarFormCurso(){
     const novo = Object.assign({ id:novoId("curso"), modulos:[], ordem:DB.cursos.length + 1 }, dados);
     DB.cursos.push(novo);
     salvar("curso", novo);
-    mostrarToast("Curso criado. Agora cria o primeiro módulo.");
+    mostrarToast("Curso criado. Crie o primeiro módulo e diga quem tem acesso.");
     irPara("admin-curso-editor", novo.id);
   }
 }
@@ -388,6 +388,7 @@ function renderAdminCursoEditor(cursoId){
         <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
         <span class="curso-resumo-pct">${p.pct}%</span>
         <button class="btn btn-contorno btn-block" id="btn-comecar-agora">${total ? "ver como aluno" : "criar primeira aula"}</button>
+        ${resumoDoAcessoHTML()}
       </div>
 
       <div id="lista-modulos-admin"></div>
@@ -406,6 +407,7 @@ function renderAdminCursoEditor(cursoId){
   });
 
   renderModulosAdmin(curso);
+  carregarResumoDoAcesso(curso.id);
 }
 
 /* Sem módulos não há onde pôr a aula: cria-se o primeiro pelo caminho. */

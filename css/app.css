@@ -915,6 +915,23 @@ button.chip{ font:inherit; font-size:14px; }
 .curso-resumo-meta .cat-ligacao{ font-weight:500; margin-left:8px; color:var(--orange-ink); }
 .curso-resumo-pct{ display:block; text-align:right; font-size:13px; font-weight:500; color:var(--muted); margin:6px 0 16px; font-variant-numeric:tabular-nums; }
 .curso-resumo .btn-block{ width:100%; }
+/* Quem tem acesso, no editor do curso. */
+.curso-acesso{ margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+.curso-acesso h4{ margin:0 0 8px; font-size:15px; }
+.curso-acesso-regra{ margin:0 0 4px; font-size:14px; line-height:1.45; color:var(--ink); }
+.curso-acesso-regra strong{ font-weight:600; }
+.curso-acesso-extra{ margin:0 0 14px; font-size:13px; line-height:1.45; color:var(--muted); }
+.curso-acesso .curso-acesso-regra:last-of-type{ margin-bottom:14px; }
+.membro-seccao.sem-linha{ margin-top:8px; padding-top:0; border-top:0; }
+.papel-opcoes.duas{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.conta-suave{ display:inline-grid; place-items:center; min-width:24px; height:22px; padding:0 7px; margin-left:6px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); font-size:12.5px; font-weight:500; color:var(--muted); vertical-align:middle; }
+.link-pessoa{ padding:0; border:0; background:none; font:inherit; font-weight:500; color:inherit; cursor:pointer; text-align:left; overflow-wrap:anywhere; }
+.link-pessoa:hover{ text-decoration:underline; }
+.acesso-busca{ margin-bottom:10px; }
+.acesso-filtro{ width:100%; height:38px; padding:0 12px; margin-bottom:10px; border:1px solid var(--line-strong); border-radius:var(--r-field); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; }
+.acesso-linha[hidden], .checklist-item[hidden]{ display:none; }
+.membro-form .btn-texto-link{ border:0; background:none; padding:0; font:inherit; font-weight:500; color:var(--accent-ink); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+.membro-form .btn-texto-link:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:6px; }
 
 .modulo-admin{ margin-bottom:14px; overflow:hidden; }
 .modulo-admin-head{ display:flex; align-items:center; gap:16px; padding:16px 20px; flex-wrap:wrap; }
@@ -1873,7 +1890,7 @@ button.back-link:hover{ color:var(--ink); }
   .membro-factos > div{ padding:10px; }
   .membro-factos dt{ font-size:11.5px; }
   .membro-factos dd{ font-size:14px; }
-  .papel-opcoes{ grid-template-columns:1fr; }
+  .papel-opcoes, .papel-opcoes.duas{ grid-template-columns:1fr; }
   .membro-topo{ gap:12px; }
   .avatar-iniciais.avatar-grande{ width:46px; height:46px; font-size:15px; }
 }
