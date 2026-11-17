@@ -1,7 +1,98 @@
 /* ============================================================
    Helpers de dados
    ============================================================ */
-function cursoPorId(id){ return DB.cursos.find(c=>c.id===id); }
+function cursoPorId(id){ return cursoComLiberacao(DB.cursos.find(c=>c.id===id)); }
+
+/* ============================================================
+   Regras de liberação das aulas (17/11/2026)
+   Cada turma diz, por módulo e por aula, quando o conteúdo abre. Com
+   servidor é a base que decide: as aulas ocultas nem chegam, e as
+   bloqueadas chegam só com o título e a razão (aula.bloqueio). Na
+   demonstração faz-se aqui a mesma conta, sobre as regras em memória
+   (DB.regras), para quem não é da equipa: a equipa vê tudo, como a sério.
+   ============================================================ */
+function isoMaisDias(iso, dias){
+  const [a, m, d] = String(iso).slice(0, 10).split("-").map(Number);
+  const x = new Date(Date.UTC(a, m - 1, d + Number(dias)));
+  return x.toISOString().slice(0, 10);
+}
+/* Só na demonstração: a turma e o início que valem para quem está na sessão.
+   A da matrícula ativa; sem ela, a turma padrão e o dia em que entrou. */
+function turmaEfetivaDemo(cursoId){
+  const m = membroAtual();
+  const a = m && Array.isArray(m.acessos) ? m.acessos.find(x => x.curso === cursoId && x.ativo) : null;
+  const padrao = (DB.turmas || []).find(t => t.cursoId === cursoId && t.padrao);
+  return { turma:(a && a.turma) || (padrao && padrao.id) || null,
+           inicio:(a && a.desde) || (m && m.membroDesde) || new Date().toISOString().slice(0, 10) };
+}
+/* O estado que uma regra dá a uma aula, hoje: a mesma conta da base
+   (academia_privado.liberacao_da_aula). */
+function liberacaoPelaRegra(r, inicio){
+  const hoje = new Date().toISOString().slice(0, 10);
+  const feitas = aulas => aulas.length > 0 && aulas.every(a => estado.progresso[a.id]);
+  if(r.regra === "oculto") return { estado:"oculta" };
+  if(r.regra === "bloqueado") return { estado:"bloqueada", regra:"bloqueado" };
+  if(r.regra === "data"){
+    if(hoje < r.abreEm) return { estado:"bloqueada", regra:"data", abreEm:r.abreEm };
+    if(r.fechaEm && hoje > r.fechaEm) return { estado:"bloqueada", regra:"data", fechouEm:r.fechaEm };
+  }
+  if(r.regra === "dias"){
+    const abre = isoMaisDias(inicio, r.dias);
+    if(hoje < abre) return { estado:"bloqueada", regra:"dias", abreEm:abre, dias:r.dias };
+  }
+  if(r.regra === "curso"){
+    const c = DB.cursos.find(x => x.id === r.cursoConcluido);
+    if(!c || !feitas(c.modulos.flatMap(m => m.aulas))) return { estado:"bloqueada", regra:"curso", nome:c ? c.titulo : "" };
+  }
+  if(r.regra === "modulo"){
+    const m = DB.cursos.flatMap(c => c.modulos).find(x => x.id === r.moduloConcluido);
+    if(!m || !feitas(m.aulas)) return { estado:"bloqueada", regra:"modulo", nome:m ? m.titulo : "" };
+  }
+  if(r.regra === "aula"){
+    const a = DB.cursos.flatMap(c => c.modulos).flatMap(m => m.aulas).find(x => x.id === r.aulaConcluida);
+    if(!a || !estado.progresso[a.id]) return { estado:"bloqueada", regra:"aula", nome:a ? a.titulo : "" };
+  }
+  return { estado:"liberada" };
+}
+/* O curso como o aluno o recebe: sem as aulas ocultas, e com as bloqueadas
+   só no título e na razão. Com servidor já vem assim da base. */
+function cursoComLiberacao(curso){
+  if(!curso || !modoDemonstracao() || papelEfetivo() === "administrador") return curso;
+  const e = turmaEfetivaDemo(curso.id);
+  const regras = (e.turma && (DB.regras || {})[e.turma]) || [];
+  if(!regras.length) return curso;
+  const regraDe = (tipo, id) => regras.find(r => r.alvoTipo === tipo && r.alvoId === id);
+  const modulos = curso.modulos.map(m => {
+    const doModulo = regraDe("modulo", m.id);
+    /* Um módulo oculto não aparece, salvo se uma aula dele tiver regra própria. */
+    if(doModulo && doModulo.regra === "oculto" && !m.aulas.some(a => { const r = regraDe("aula", a.id); return r && r.regra !== "oculto"; })) return null;
+    const aulas = m.aulas.map(a => {
+      const r = regraDe("aula", a.id) || doModulo;
+      const l = r ? liberacaoPelaRegra(r, e.inicio) : { estado:"liberada" };
+      if(l.estado === "oculta") return null;
+      if(l.estado === "liberada") return a;
+      return { id:a.id, titulo:a.titulo, duracao:a.duracao, ordem:a.ordem, descricao:"", conteudo:"", embed:"", capa:"",
+               ficheiros:[], quiz:[], bloqueio:{ regra:l.regra, abreEm:l.abreEm || null, fechouEm:l.fechouEm || null, dias:l.dias, nome:l.nome || "" } };
+    }).filter(Boolean);
+    return Object.assign({}, m, { aulas });
+  }).filter(Boolean);
+  return Object.assign({}, curso, { modulos });
+}
+/* A razão de uma aula bloqueada, curta, para a linha dela. */
+function textoDoBloqueio(b){
+  if(!b) return "";
+  if(b.fechouEm) return t("Fechou a {data}", { data:dataCurta(b.fechouEm) });
+  if(b.abreEm) return t("Abre a {data}", { data:dataCurta(b.abreEm) });
+  if(b.regra === "curso") return t("Abre quando concluir o curso «{nome}»", { nome:textoSeguro(b.nome) });
+  if(b.regra === "modulo") return t("Abre quando concluir o módulo «{nome}»", { nome:textoSeguro(b.nome) });
+  if(b.regra === "aula") return t("Abre quando concluir a aula «{nome}»", { nome:textoSeguro(b.nome) });
+  return t("Ainda não disponível");
+}
+/* Abre a aula, ou diz porque é que ainda não se abre. */
+function abrirAulaOuAvisar(cursoId, aula){
+  if(aula && aula.bloqueio){ mostrarToast(t("Esta aula está bloqueada.") + " " + textoDoBloqueio(aula.bloqueio) + "."); return; }
+  irPara("aula", cursoId, aula.id);
+}
 /* O aluno só vê cursos publicados; o administrador vê também os rascunhos. */
 /* Quem está na sessão, segundo o registo de Membros. */
 function membroAtual(){ return estado.membroId ? DB.membros.find(m=>m.id===estado.membroId) : null; }
@@ -21,8 +112,8 @@ function sincronizarSessaoComMembro(membro){
    porta aberta. A Vitrine é o lugar desses.
    Sem servidor (demonstração) vale o plano, como sempre valeu. */
 function cursosVisiveis(){
-  const publicados = DB.cursos.filter(c => c.publicado !== false);
-  if(papelEfetivo() === "administrador") return publicados;
+  if(papelEfetivo() === "administrador") return DB.cursos.filter(c => c.publicado !== false);
+  const publicados = DB.cursos.filter(c => c.publicado !== false).map(cursoComLiberacao);
   if(Array.isArray(DB.meusCursos)){
     const comAcesso = new Set(DB.meusCursos);
     return publicados.filter(c => comAcesso.has(c.id));
@@ -420,11 +511,12 @@ function fundoBanner(b){
     ? `background-image:url(${b.imagem});background-size:cover;background-position:center;`
     : `background:${b.gradiente || "var(--brand-panel)"};`;
 }
-/* Primeira aula de um curso, no formato de localizarAula(). Serve de recurso
-   quando a última aula vista já não existe. */
+/* Primeira aula que se pode abrir num curso, no formato de localizarAula().
+   Serve de recurso quando a última aula vista já não existe ou está bloqueada. */
 function primeiraAulaDoCurso(curso){
   for(const m of curso.modulos){
-    if(m.aulas.length) return { curso, modulo:m, aula:m.aulas[0] };
+    const aula = m.aulas.find(a => !a.bloqueio);
+    if(aula) return { curso, modulo:m, aula };
   }
   return null;
 }
