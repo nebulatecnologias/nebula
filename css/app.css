@@ -915,9 +915,35 @@ button.chip{ font:inherit; font-size:14px; }
 .curso-resumo-pct{ display:block; text-align:right; font-size:13px; font-weight:500; color:var(--muted); margin:6px 0 16px; font-variant-numeric:tabular-nums; }
 .curso-resumo .btn-block{ width:100%; }
 /* Turmas: os números do cartão, a página de edição e a paginação. */
-.turma-card{ cursor:pointer; }
-.turma-numeros{ display:flex; flex-wrap:wrap; gap:4px 14px; margin:2px 0 12px; font-size:13px; color:var(--muted); }
-.turma-numeros strong{ color:var(--ink); font-weight:600; }
+.turmas-cabeca{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; padding-bottom:22px; margin-bottom:22px; border-bottom:1px solid var(--line); }
+.turmas-cabeca .page-head{ margin:0; }
+.turmas-cabeca h1{ margin:0; }
+.turmas-escola{ display:block; margin-bottom:6px; font-size:12.5px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.turmas-acoes{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.turmas-acoes .search-pill{ min-width:240px; }
+.turmas-acoes .search-pill .icon{ left:auto; right:15px; }
+.turmas-acoes .search-pill input{ padding:0 40px 0 16px; }
+.turmas-lista{ display:flex; flex-direction:column; gap:12px; }
+.turma-linha{ display:grid; grid-template-columns:160px minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,1fr); align-items:center; gap:24px; padding:0 24px 0 0; overflow:hidden; cursor:pointer; transition:box-shadow .15s var(--ease), border-color .15s; }
+.turma-linha:hover{ border-color:var(--line-strong); box-shadow:var(--shadow-2, var(--shadow-1)); }
+.turma-linha:focus-visible{ outline:none; box-shadow:var(--ring); }
+.turma-capa{ align-self:stretch; min-height:90px; display:grid; place-items:center; background:var(--field, var(--field-apricot)); background-size:cover; background-position:center; font-size:20px; font-weight:600; letter-spacing:-.02em; color:var(--art-ink); }
+.turma-quem{ min-width:0; padding:16px 0; }
+.turma-quem h3{ margin:0 0 4px; font-size:18px; font-weight:500; overflow-wrap:anywhere; }
+.turma-quem h3 .pill{ margin-left:6px; vertical-align:middle; font-size:12px; }
+.turma-quem p{ margin:0; font-size:15px; color:var(--muted); overflow-wrap:anywhere; }
+.turma-dado{ display:flex; align-items:center; gap:10px; font-size:15px; color:var(--ink-2); white-space:nowrap; }
+.turma-dado .icon{ width:20px; height:20px; color:var(--muted); flex-shrink:0; }
+.turma-progresso{ display:flex; align-items:center; gap:12px; }
+.turma-progresso .progress-track{ flex:1; }
+.turma-progresso .pct{ min-width:38px; text-align:right; font-size:14.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+@media (max-width:900px){
+  .turma-linha{ grid-template-columns:96px minmax(0,1fr); gap:6px 16px; padding:0 16px 14px 0; }
+  .turma-capa{ grid-row:1 / span 4; min-height:0; font-size:17px; }
+  .turma-quem{ padding:14px 0 4px; }
+  .turmas-acoes{ width:100%; }
+  .turmas-acoes .search-pill{ flex:1; min-width:0; }
+}
 .turma-form{ max-width:640px; }
 .campo-com-sufixo{ display:flex; align-items:center; gap:10px; }
 .campo-com-sufixo input{ max-width:180px; }
