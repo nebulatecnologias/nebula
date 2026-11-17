@@ -30,18 +30,28 @@ function acessoDoCursoDemo(cursoId){
     const m = membroDemo(x.id);
     m.acessos.filter(a => a.curso === cursoId).forEach(a => pessoas.push({
       id:m.id, nome:m.nome, email:m.email, papel:funcaoDe(m), suspenso:m.acesso !== "ativo",
-      origem:a.origem, nota:null, plano:a.plano || null, expira:a.expira, desde:a.desde, ativo:a.ativo,
+      origem:a.origem, nota:null, expira:a.expira, desde:a.desde, ativo:a.ativo,
       turma:a.turma, estado:estadoDoAcesso(a)
     }));
   });
   pessoas.sort((x, y) => (y.ativo - x.ativo) || String(y.desde).localeCompare(String(x.desde)));
+  /* Quem abre o curso por uma assinatura ativa, sem matrícula própria ativa. */
+  const assinantes = [];
+  (DB.membros || []).forEach(x => {
+    const m = membroDemo(x.id);
+    const v = viasDeAcesso(m.acessos, m.assinaturas).find(k => k.curso === cursoId && k.via === "assinatura");
+    if(v) assinantes.push({ id:m.id, nome:m.nome, email:m.email, papel:funcaoDe(m), suspenso:m.acesso !== "ativo",
+                            nivel:v.nivel, nivelNome:(nivelPorId(v.nivel) || {}).nome, turma:v.turma, expira:v.expira, desde:v.desde });
+  });
   return {
     curso:cursoId, abertoATodos:c.abertoATodos === true, publicado:c.publicado !== false,
     alunosAtivos:(DB.membros || []).filter(m => funcaoDe(m) === "aluno" && m.acesso === "ativo").length,
     equipa:(DB.membros || []).filter(m => funcaoDe(m) !== "aluno" && m.acesso === "ativo").length,
-    pessoas, payflow:[],
+    pessoas, assinantes, payflow:[],
+    ilimitados:(DB.membros || []).filter(m => m.ilimitado === true && m.acesso === "ativo" && funcaoDe(m) === "aluno").length,
     turmas: turmasDoCurso(cursoId).map(t => ({ id:t.id, nome:t.nome, padrao:!!t.padrao, prazoDias:t.prazoDias || null,
-                                               membros:pessoas.filter(p => p.ativo && p.turma === t.id).length })),
+                                               membros:pessoas.filter(p => p.ativo && p.turma === t.id).length
+                                                     + assinantes.filter(p => p.turma === t.id).length })),
     convites:(DB.convites || []).filter(v => (v.estado === "enviado" || v.estado === "aberto") && (v.cursos || []).includes(cursoId))
       .map(v => ({ id:v.id, email:v.email, nome:v.nome, origem:v.origem, expiraEm:v.expiraEm, acessoDias:v.acessoDias || null, criadoEm:v.criadoEm })),
     ofertas:(DB.ofertasDaEscola || []).filter(o => (o.cursos || []).includes(cursoId))
@@ -55,6 +65,7 @@ function acessoDoCursoDemo(cursoId){
 function alunosComAcesso(d){
   const ids = new Set();
   (d.pessoas || []).forEach(p => { if(p.ativo && !p.suspenso && p.papel === "aluno") ids.add(p.id); });
+  (d.assinantes || []).forEach(p => { if(!p.suspenso && p.papel === "aluno") ids.add(p.id); });
   (d.payflow || []).forEach(p => ids.add(p.id));
   return ids.size;
 }
@@ -161,8 +172,7 @@ async function carregarAcessoDoCurso(){
 }
 
 function origemDoAcesso(p){
-  const plano = p.plano ? planoPorId(p.plano) : null;
-  return plano ? "Plano " + plano.nome : (ORIGENS_DO_ACESSO[p.origem] || "Dado à mão");
+  return ORIGENS_DO_ACESSO[p.origem] || "Dado à mão";
 }
 
 function desenharAcessoDoCurso(){
@@ -174,6 +184,7 @@ function desenharAcessoDoCurso(){
   const abertos = (d.pessoas || []).filter(p => p.ativo);
   const fechados = (d.pessoas || []).filter(p => !p.ativo && !abertos.some(x => x.id === p.id));
   const doPayflow = (d.payflow || []).filter(p => !abertos.some(x => x.id === p.id));
+  const assinantes = (d.assinantes || []).filter(p => !abertos.some(x => x.id === p.id));
   const n = alunosComAcesso(d);
 
   caixa.innerHTML = `
@@ -235,10 +246,12 @@ function desenharAcessoDoCurso(){
             <input type="search" id="acesso-busca" placeholder="Procurar por nome ou email" aria-label="Procurar nas pessoas com acesso"></div>` : ""}
         <div class="acessos-lista" id="acesso-pessoas">
           ${abertos.map(linhaDaPessoaComAcesso).join("")}
+          ${assinantes.map(linhaDaPessoaPelaAssinatura).join("")}
           ${doPayflow.map(linhaDaPessoaPeloPayflow).join("")}
-          ${!abertos.length && !doPayflow.length ? `<div class="empty-note">${d.abertoATodos ? "Ninguém tem um acesso próprio." : "Ainda ninguém recebeu acesso a este curso."}</div>` : ""}
+          ${!abertos.length && !doPayflow.length && !assinantes.length ? `<div class="empty-note">${d.abertoATodos ? "Ninguém tem um acesso próprio." : "Ainda ninguém recebeu acesso a este curso."}</div>` : ""}
         </div>
-        <p class="hint" style="margin:10px 0 0">A equipa (${plural(d.equipa, "pessoa", "pessoas")}) vê todos os cursos da escola.</p>
+        <p class="hint" style="margin:10px 0 0">A equipa (${plural(d.equipa, "pessoa", "pessoas")}) vê todos os cursos da escola.${
+          d.ilimitados && d.publicado ? ` ${plural(d.ilimitados, "membro com acesso ilimitado também o abre", "membros com acesso ilimitado também o abrem")}.` : ""}</p>
         ${fechados.length ? `
           <details class="acessos-fechados">
             <summary>Acessos fechados (${fechados.length})</summary>
@@ -270,6 +283,25 @@ function linhaDaTurmaDoCurso(t){
         <div class="sub-celula">${plural(t.membros, "membro", "membros")} · Acesso ${prazoDaTurmaEmTexto(t)}</div>
       </div>
       ${t.padrao ? `<span class="pill pill-ativo">Padrão</span>` : ""}
+    </div>`;
+}
+
+/* Quem abre o curso por uma assinatura: trata-se na ficha da pessoa (ou no
+   nível), não aqui. */
+function linhaDaPessoaPelaAssinatura(p){
+  const variasTurmas = ((acessoAberto.dados || {}).turmas || []).length > 1;
+  const turma = variasTurmas ? (((acessoAberto.dados.turmas || []).find(t => t.id === p.turma) || {}).nome || "") : "";
+  const quem = textoSeguro(p.nome || p.email || "");
+  return `
+    <div class="acesso-linha" data-pessoa="${p.id}" data-pela-assinatura="${p.nivel}" data-procura="${textoSeguro(((p.nome || "") + " " + (p.email || "")).toLowerCase())}">
+      ${avatarDaPessoa(p)}
+      <div class="acesso-info">
+        <div class="nome"><button class="link-pessoa" type="button" data-ver-membro="${p.id}">${quem}</button>${
+          p.suspenso ? ` <span class="pill pill-quente">Suspenso</span>` : p.papel !== "aluno" ? ` <span class="pill pill-teste">Equipa</span>` : ""}</div>
+        <div class="sub-celula">${[textoSeguro(p.email || ""), turma ? textoSeguro(turma) : "", "Assinatura " + textoSeguro(p.nivelNome || ""),
+          p.expira ? "Até " + dataLegivel(p.expira) : "Sem prazo"].filter(Boolean).join(" · ")}</div>
+      </div>
+      <span class="cartao-etiqueta" title="Este acesso vem de uma assinatura e trata-se na ficha da pessoa.">Assinatura</span>
     </div>`;
 }
 
@@ -356,7 +388,7 @@ function linhaDoConviteDoCurso(v){
 /* Dar acesso: os alunos da escola que ainda não o têm. Quem ainda não é
    membro entra por convite. */
 function formularioDarAcessoAoCurso(d){
-  const jaTem = new Set([...(d.pessoas || []).filter(p => p.ativo).map(p => p.id), ...(d.payflow || []).map(p => p.id)]);
+  const jaTem = new Set([...(d.pessoas || []).filter(p => p.ativo).map(p => p.id), ...(d.assinantes || []).map(p => p.id), ...(d.payflow || []).map(p => p.id)]);
   const candidatos = (DB.membros || []).filter(m => funcaoDe(m) === "aluno" && !jaTem.has(m.id))
     .sort((x, y) => (x.nome || x.email || "").localeCompare(y.nome || y.email || ""));
   return `

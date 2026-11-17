@@ -5,7 +5,7 @@
    mandava para o painel de gestão, que não gere as escolas.
 
    Com servidor, cada ação é uma função da base (academia.membro_*): é
-   ela que confere quem pede — a equipa dá e tira cursos e planos; só a
+   ela que confere quem pede — a equipa dá e tira cursos e assinaturas; só a
    administração muda papéis, suspende e remove; ninguém mexe em si
    próprio nem no dono. Aqui só se mostra e se pergunta. Na
    demonstração, o mesmo em memória.
@@ -75,10 +75,12 @@ function aulasDoCurso(c){ return (c.modulos || []).reduce((n, m) => n + (m.aulas
 const GestaoDeMembros = {
   async ficha(id){
     if(modoDemonstracao()) return fichaDeDemonstracao(id);
-    return API.membro("membro_ficha", { p_utilizador:id });
+    const f = await API.membro("membro_ficha", { p_utilizador:id });
+    f.assinaturas = (f.assinaturas || []).map(x => ({ nivel:x.nivel, estado:x.estado, expira:x.expira || null, desde:x.iniciado || null }));
+    return f;
   },
   async darCursos(id, cursos, expira){
-    if(modoDemonstracao()) return demoDarCursos(id, cursos, expira, null);
+    if(modoDemonstracao()) return demoDarCursos(id, cursos, expira);
     return API.membro("membro_dar_acesso", { p_utilizador:id, p_cursos:cursos, p_expira:expira });
   },
   /* A matrícula de um membro num curso: a turma, o estado e a expiração. Com
@@ -93,7 +95,7 @@ const GestaoDeMembros = {
       let est = o.estado || "ativo";
       if(est === "ativo" && expira && expira < hojeISO()) est = "expirado";
       let a = m.acessos.find(x => x.curso === curso);
-      if(!a){ a = { curso, origem:"manual", plano:null, desde:hojeISO() }; m.acessos.push(a); }
+      if(!a){ a = { curso, origem:"manual", desde:hojeISO() }; m.acessos.push(a); }
       Object.assign(a, { turma:turma.id, estado:est, expira, ativo: est === "ativo" });
       return { curso, turma:turma.id, estado:est, expira };
     }
@@ -117,20 +119,27 @@ const GestaoDeMembros = {
     }
     return API.membro("membro_prazo", { p_utilizador:id, p_curso:curso, p_expira:expira });
   },
-  async darPlano(id, plano, expira){
+  /* A assinatura de um membro num nível: o estado e a expiração. Sem estado,
+     deixa de a ter. */
+  async assinatura(id, nivel, o){
+    o = o || {};
     if(modoDemonstracao()){
-      const p = planoPorId(plano);
-      return demoDarCursos(id, (p && p.cursos) || [], expira, plano);
+      const m = membroDemo(id);
+      if(!o.estado){ m.assinaturas = m.assinaturas.filter(x => x.nivel !== nivel); return { nivel, estado:null }; }
+      let est = o.estado;
+      if(est === "ativo" && o.expira && o.expira < hojeISO()) est = "expirado";
+      let x = m.assinaturas.find(k => k.nivel === nivel);
+      if(!x){ x = { nivel, desde:hojeISO() }; m.assinaturas.push(x); }
+      else if(est === "ativo" && x.estado !== "ativo") x.desde = hojeISO();
+      Object.assign(x, { estado:est, expira:o.expira || null });
+      return { nivel, estado:est, expira:x.expira };
     }
-    return API.membro("membro_dar_plano", { p_utilizador:id, p_plano:plano, p_expira:expira });
+    return API.membro("assinatura_definir", { p_utilizador:id, p_nivel:nivel, p_estado:o.estado || null, p_expira:o.expira || null });
   },
-  async tirarPlano(id, plano){
-    if(modoDemonstracao()){
-      let n = 0;
-      membroDemo(id).acessos.forEach(a => { if(a.plano === plano && a.ativo){ a.ativo = false; a.estado = "desativado"; a.expira = ontemISO(); n++; } });
-      return n;
-    }
-    return API.membro("membro_tirar_plano", { p_utilizador:id, p_plano:plano });
+  /* O acesso ilimitado: abre tudo o que a escola tem publicado. */
+  async ilimitado(id, ligado){
+    if(modoDemonstracao()){ membroDemo(id).ilimitado = !!ligado; return !!ligado; }
+    return API.membro("membro_ilimitado", { p_utilizador:id, p_ligado:!!ligado });
   },
   async papel(id, funcao){
     if(modoDemonstracao()){
@@ -170,22 +179,21 @@ const GestaoDeMembros = {
   /* Depois de mexer: a lista volta a ler-se da base. */
   async recarregar(){
     if(modoDemonstracao()){ guardarDB(); return; }
-    await API.recarregarMembros();
+    await Promise.all([API.recarregarMembros(), API.recarregarAssinaturas()]);
   }
 };
 
 function ontemISO(){ const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); }
 
-/* Na demonstração, os acessos nascem do plano que o membro já tinha. */
-function membroDemo(id){
-  const m = DB.membros.find(x => x.id === id);
-  if(!m) throw new Error("Esta pessoa não é membro desta escola.");
+/* Na demonstração, cada membro nasce com as matrículas próprias e a
+   assinatura com que foi criado (js/dados.js): arruma-se aqui, uma vez. */
+function semearMembroDemo(m){
   if(!Array.isArray(m.acessos)){
-    const plano = planoPorId(m.planoId);
-    m.acessos = ((plano && plano.cursos) || []).map(curso => ({
-      curso, origem:"manual", expira:null, ativo:true, estado:"ativo", plano:plano.id, desde:m.membroDesde || hojeISO()
+    m.acessos = (m.matriculas || []).filter(curso => DB.cursos.some(c => c.id === curso)).map(curso => ({
+      curso, origem:"oferta", expira:null, ativo:true, estado:"ativo", desde:m.membroDesde || hojeISO()
     }));
   }
+  assinaturasDoMembro(m);
   m.acessos.forEach(a => {
     if(a.ativo && a.expira && a.expira < hojeISO()){ a.ativo = false; a.estado = "expirado"; }
     if(!a.turma || !turmaPorId(a.turma)) a.turma = (turmaPadraoDe(a.curso) || {}).id || null;
@@ -193,19 +201,23 @@ function membroDemo(id){
   });
   return m;
 }
+function membroDemo(id){
+  const m = DB.membros.find(x => x.id === id);
+  if(!m) throw new Error("Esta pessoa não é membro desta escola.");
+  return semearMembroDemo(m);
+}
 
-function demoDarCursos(id, cursos, expira, plano){
+function demoDarCursos(id, cursos, expira){
   const m = membroDemo(id);
   let n = 0;
   cursos.forEach(curso => {
-    if(!cursoPorId(curso)) return;
+    if(!DB.cursos.some(c => c.id === curso)) return;
     const a = m.acessos.find(x => x.curso === curso);
     if(a){
-      if(!a.ativo){ a.origem = "manual"; a.plano = plano; }
-      else if(plano && a.origem === "manual") a.plano = plano;
-      a.expira = plano && a.ativo ? (a.expira === null || expira === null ? null : (a.expira > expira ? a.expira : expira)) : expira;
+      if(!a.ativo) a.origem = "manual";
+      a.expira = expira;
       a.ativo = true; a.estado = "ativo";
-    } else m.acessos.push({ curso, origem:"manual", expira, ativo:true, estado:"ativo", plano, desde:hojeISO(),
+    } else m.acessos.push({ curso, origem:"manual", expira, ativo:true, estado:"ativo", desde:hojeISO(),
                             turma:(turmaPadraoDe(curso) || {}).id || null });
     n++;
   });
@@ -222,20 +234,16 @@ function fichaDeDemonstracao(id){
     id:m.id, nome:m.nome, email:m.email, papel:funcaoDe(m), dono:false,
     estado: m.acesso === "ativo" ? "ativo" : "suspenso", contaAtiva:true,
     desde:m.membroDesde, ultimoAcesso:null, ultimoAcessoTexto:m.ultimoAcesso,
-    acessos:m.acessos.map(a => Object.assign({}, a)), payflow:[], concluidas:m.concluidas || {}
+    acessos:m.acessos.map(a => Object.assign({}, a)), assinaturas:m.assinaturas.map(x => Object.assign({}, x)),
+    ilimitado:m.ilimitado === true, payflow:[], concluidas:m.concluidas || {}
   };
 }
 
-/* Os planos que o membro tem abertos, para a lista. */
-function planosDoMembro(m){
-  if(Array.isArray(m.acessos)) return [...new Set(m.acessos.filter(a => a.ativo && a.plano).map(a => a.plano))];
-  return m.planos || (m.planoId ? [m.planoId] : []);
-}
+/* As matrículas próprias abertas de um membro, para a lista. */
 function cursosAbertosDoMembro(m){
   if(Array.isArray(m.acessos)) return m.acessos.filter(a => a.ativo).length;
   if(m.cursosAbertos != null) return m.cursosAbertos;
-  const plano = planoPorId(m.planoId);
-  return plano ? (plano.cursos || []).length : 0;
+  return (m.matriculas || []).length;
 }
 
 /* ============================================================
@@ -252,8 +260,12 @@ function renderAdminMembros(){
     suspensos: m => m.acesso !== "ativo"
   };
   const contagem = Object.fromEntries(FILTROS_DE_MEMBROS.map(f => [f.id, todos.filter(doFiltro[f.id]).length]));
+  /* Vindo das Assinaturas: só quem tem aquele nível, naquele estado. */
+  const fa = estado.filtroAssinatura && nivelPorId(estado.filtroAssinatura.nivel) ? estado.filtroAssinatura : null;
+  if(!fa) estado.filtroAssinatura = null;
   const lista = todos.filter(doFiltro[filtro] || doFiltro.todos).filter(m =>
-    !busca || ((m.nome || "") + " " + (m.email || "")).toLowerCase().includes(busca));
+    !busca || ((m.nome || "") + " " + (m.email || "")).toLowerCase().includes(busca))
+    .filter(m => !fa || estadoDaAssinatura(assinaturasDoMembro(m).find(x => x.nivel === fa.nivel)) === fa.estado);
   const ativos = todos.filter(m => m.acesso === "ativo").length;
 
   document.getElementById("content-admin").innerHTML = `
@@ -281,6 +293,10 @@ function renderAdminMembros(){
           <input type="search" id="membros-busca" placeholder="Procurar por nome ou email" aria-label="Procurar por nome ou email" value="${textoSeguro(estado.buscaMembros || "").replace(/"/g,"&quot;")}">
         </div>
       </div>
+      ${fa ? `<div class="membros-filtro-ativo" id="membros-filtro-assinatura">
+          <span>Assinatura <strong>${textoSeguro(nivelPorId(fa.nivel).nome)}</strong> · ${fa.estado === "pendente" ? "pendentes" : "ativos"} · ${lista.length} ${lista.length === 1 ? "membro" : "membros"}</span>
+          <button class="btn btn-secondary btn-sm" type="button" id="btn-limpar-filtro-assinatura">Ver todos</button>
+        </div>` : ""}
       <div class="table-wrap" tabindex="0">
         <table class="admin-table convites-tabela membros-tabela">
           <thead><tr><th>Membro</th><th>Papel</th><th>Acesso</th><th>Estado</th><th>Membro desde</th><th>Última entrada</th><th><span class="so-leitor">Ações</span></th></tr></thead>
@@ -294,6 +310,7 @@ function renderAdminMembros(){
   `;
 
   document.getElementById("btn-novo-membro").addEventListener("click", () => adicionarMembro());
+  document.getElementById("btn-limpar-filtro-assinatura")?.addEventListener("click", () => { estado.filtroAssinatura = null; renderAdminMembros(); });
   document.querySelectorAll("#content-admin [data-filtro-membros]").forEach(b =>
     b.addEventListener("click", () => { estado.filtroMembros = b.getAttribute("data-filtro-membros"); renderAdminMembros(); }));
   const campoBusca = document.getElementById("membros-busca");
@@ -315,11 +332,14 @@ const ICONE_GERIR = `<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" s
 function linhaDoMembro(m){
   const funcao = funcaoDe(m);
   const quem = textoSeguro(m.email || "");
-  const planos = planosDoMembro(m).map(id => (planoPorId(id) || {}).nome).filter(Boolean);
+  /* O acesso, em poucas palavras: as matrículas próprias e, por baixo, as
+     assinaturas ativas (cada uma abre os cursos que leva). */
+  const niveis = assinaturasDoMembro(m).filter(assinaturaAtiva).map(x => (nivelPorId(x.nivel) || {}).nome).filter(Boolean);
   const n = cursosAbertosDoMembro(m);
   const acesso = funcao !== "aluno"
     ? `<span class="sub-celula">Todos os cursos</span>`
-    : `${n} ${n === 1 ? "curso" : "cursos"}${planos.length ? `<div class="sub-celula">${planos.map(textoSeguro).join(" · ")}</div>` : ""}`;
+    : membroIlimitado(m) ? `Acesso ilimitado`
+    : `${n || !niveis.length ? `${n} ${n === 1 ? "curso" : "cursos"}` : ""}${niveis.length ? `<div class="${n ? "sub-celula" : ""}">${niveis.map(textoSeguro).join(" · ")}</div>` : ""}`;
   return `
     <tr data-membro="${m.id}" class="linha-clicavel ${m.acesso !== "ativo" ? "tint-risco" : ""}">
       <td>
@@ -400,7 +420,7 @@ async function adicionarQuemJaEMembro(membro, v){
 
 /* ============================================================
    A ficha do membro: uma gaveta larga com tudo o que se faz a
-   uma pessoa — papel, estado, cursos, planos e convites.
+   uma pessoa — papel, estado, cursos, assinaturas e convites.
    ============================================================ */
 const ICONE_PRAZO = `<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>`;
 const ICONE_TIRAR = `<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
@@ -460,7 +480,7 @@ function desenharFicha(){
   const admin = souAdminDaEscola();
   const eu = souEu(f.id);
   const podeMexer = admin && !eu && !f.dono;
-  const abertos = (f.acessos || []).filter(a => a.ativo);
+  const abertos = viasDeAcesso(f.acessos, f.assinaturas);
   const ultima = f.ultimoAcesso ? tempoRelativo(f.ultimoAcesso) : (f.ultimoAcessoTexto || "nunca");
 
   caixa.innerHTML = `
@@ -479,7 +499,7 @@ function desenharFicha(){
       <dl class="membro-factos">
         <div><dt>Membro desde</dt><dd>${dataLegivel(f.desde)}</dd></div>
         <div><dt>Última entrada</dt><dd>${textoSeguro(ultima)}</dd></div>
-        <div><dt>Cursos abertos</dt><dd>${funcao === "aluno" ? abertos.length + (f.payflow || []).filter(c => !abertos.some(a => a.curso === c)).length : "Todos"}</dd></div>
+        <div><dt>Cursos abertos</dt><dd>${funcao !== "aluno" ? "Todos" : f.ilimitado ? "Todos os publicados" : abertos.length + (f.payflow || []).filter(c => !abertos.some(a => a.curso === c)).length}</dd></div>
       </dl>
 
       <div class="membro-acoes">
@@ -493,7 +513,7 @@ function desenharFicha(){
 
       ${seccaoPapel(funcao, f, admin, eu)}
       ${seccaoCursos(f, funcao)}
-      ${seccaoPlanos(f)}
+      ${seccaoAssinaturas(f)}
       ${seccaoConvites(f)}
     </div>
   `;
@@ -522,7 +542,11 @@ function seccaoPapel(funcao, f, admin, eu){
 
 function seccaoCursos(f, funcao){
   const acessos = f.acessos || [];
-  const abertos = acessos.filter(a => a.ativo);
+  /* O que abre: as matrículas próprias e, a seguir, os cursos que vêm das
+     assinaturas ativas (sem matrícula própria). */
+  const vias = viasDeAcesso(acessos, f.assinaturas);
+  const abertos = vias.map(v => v.via === "matricula" ? acessos.find(a => a.ativo && a.curso === v.curso)
+    : { curso:v.curso, turma:v.turma, expira:v.expira, ativo:true, nivel:v.nivel });
   const fechados = acessos.filter(a => !a.ativo && !abertos.some(x => x.curso === a.curso));
   const doPayflow = (f.payflow || []).filter(c => cursoPorId(c));
   const semAcesso = (DB.cursos || []).filter(c => !abertos.some(a => a.curso === c.id) && !doPayflow.includes(c.id));
@@ -533,7 +557,8 @@ function seccaoCursos(f, funcao){
         <h4>Cursos</h4>
         ${semAcesso.length ? `<button class="btn btn-secondary btn-sm" type="button" data-abrir="dar" aria-expanded="${!!darAberto}">Dar acesso</button>` : ""}
       </div>
-      ${funcao !== "aluno" ? `<p class="hint">Como ${FUNCOES[funcao].rotulo.toLowerCase()}, vê todos os cursos da escola. Os acessos abaixo valem se voltar a ser aluno.</p>` : ""}
+      ${funcao !== "aluno" ? `<p class="hint">Como ${FUNCOES[funcao].rotulo.toLowerCase()}, vê todos os cursos da escola. Os acessos abaixo valem se voltar a ser aluno.</p>`
+        : f.ilimitado ? `<p class="hint">Tem acesso ilimitado: abre todos os cursos publicados. As matrículas abaixo valem se o acesso ilimitado for retirado, e dizem em que turma está.</p>` : ""}
       ${darAberto ? formularioDarCursos(semAcesso) : ""}
       <div class="acessos-lista">
         ${abertos.map(a => linhaDoAcesso(a, f)).join("")}
@@ -561,23 +586,25 @@ function progressoNoCurso(f, c){
 function linhaDoAcesso(a, f){
   const c = cursoPorId(a.curso);
   if(!c) return "";
-  const plano = a.plano ? planoPorId(a.plano) : null;
-  const origem = plano ? "Plano " + plano.nome : (ORIGENS_DO_ACESSO[a.origem] || "Dado à mão");
+  /* Um curso que vem de uma assinatura não tem matrícula própria: mostra-se
+     de onde vem, e pode dar-se-lhe uma (que passa a valer mais). */
+  const nivel = a.nivel ? nivelPorId(a.nivel) : null;
+  const origem = nivel ? "Assinatura " + nivel.nome : (ORIGENS_DO_ACESSO[a.origem] || "Dado à mão");
   const prazo = a.expira ? "Até " + dataLegivel(a.expira) : "Sem prazo";
   const editando = fichaAberta.abertos.prazo === a.curso;
   /* A turma só se diz quando o curso tem mais de uma: senão é sempre a mesma. */
   const turmas = turmasDoCurso(a.curso);
   const turma = turmas.length > 1 ? (turmaPorId(a.turma) || {}).nome : "";
   return `
-    <div class="acesso-linha" data-acesso="${a.curso}">
+    <div class="acesso-linha" data-acesso="${a.curso}" ${nivel ? `data-pela-assinatura="${nivel.id}"` : ""}>
       ${miniaturaDoCurso(c)}
       <div class="acesso-info">
         <div class="nome">${textoSeguro(c.titulo)}</div>
         <div class="sub-celula">${[turma ? textoSeguro(turma) : "", textoSeguro(origem), prazo, progressoNoCurso(f, c)].filter(Boolean).join(" · ")}</div>
       </div>
       <div class="acoes-linha">
-        <button class="btn-icone" type="button" data-prazo="${a.curso}" title="Mudar a matrícula: turma, estado e prazo" aria-label="Mudar a matrícula em ${textoSeguro(c.titulo)}">${ICONE_PRAZO}</button>
-        <button class="btn-icone perigo" type="button" data-tirar="${a.curso}" title="Tirar o acesso" aria-label="Tirar o acesso a ${textoSeguro(c.titulo)}">${ICONE_TIRAR}</button>
+        <button class="btn-icone" type="button" data-prazo="${a.curso}" title="${nivel ? "Dar uma matrícula própria: turma, estado e prazo" : "Mudar a matrícula: turma, estado e prazo"}" aria-label="${nivel ? "Dar uma matrícula própria em" : "Mudar a matrícula em"} ${textoSeguro(c.titulo)}">${ICONE_PRAZO}</button>
+        ${nivel ? "" : `<button class="btn-icone perigo" type="button" data-tirar="${a.curso}" title="Tirar o acesso" aria-label="Tirar o acesso a ${textoSeguro(c.titulo)}">${ICONE_TIRAR}</button>`}
       </div>
       ${editando ? `
         <div class="acesso-prazo">
@@ -643,38 +670,63 @@ function formularioDarCursos(semAcesso){
     </div>`;
 }
 
-function seccaoPlanos(f){
-  const planos = DB.planos || [];
-  if(!planos.length) return "";
-  const meus = new Set((f.acessos || []).filter(a => a.ativo && a.plano).map(a => a.plano));
-  const aDar = fichaAberta.abertos.plano;
+/* As assinaturas: uma linha por nível que a escola tem, com o estado e a
+   data desta pessoa em cada um; e o acesso ilimitado. */
+function seccaoAssinaturas(f){
+  const niveis = DB.niveis || [];
+  const aberto = fichaAberta.abertos.assinatura;
+  const pill = { ativo:"pill-ativo", pendente:"pill-morno", expirado:"pill-inativo", desativado:"pill-inativo" };
   return `
-    <section class="membro-seccao">
-      <h4>Planos</h4>
-      <p class="hint">Um plano abre de uma vez todos os cursos que leva dentro.</p>
-      <div class="acessos-lista">
-        ${planos.map(p => {
-          const tem = meus.has(p.id);
-          const nomes = (p.cursos || []).map(id => (cursoPorId(id) || {}).titulo).filter(Boolean);
+    <section class="membro-seccao" id="membro-assinaturas">
+      <h4>Assinaturas</h4>
+      <p class="hint">Uma assinatura abre de uma vez os cursos que leva, enquanto estiver ativa. ${niveis.length ? "" : "Ainda não há nenhuma: criam-se em Assinaturas."}</p>
+      ${niveis.length ? `<div class="acessos-lista">
+        ${niveis.map(n => {
+          const x = (f.assinaturas || []).find(k => k.nivel === n.id);
+          const est = estadoDaAssinatura(x);
+          const cursos = cursosDoNivel(n).map(k => (DB.cursos.find(c => c.id === k.cursoId) || {}).titulo).filter(Boolean);
+          const sub = [`${cursos.length} ${cursos.length === 1 ? "curso" : "cursos"}`,
+            est === "ativo" ? (x.expira ? "Até " + dataLegivel(x.expira) : "Sem prazo")
+            : est === "expirado" ? "Expirou a " + dataLegivel(x.expira) : ""].filter(Boolean).join(" · ");
+          const prazos = [
+            n.trialDias ? { valor:"trial", rotulo:`Trial gratuito (${prazoEmDias(n.trialDias)})` } : null,
+            n.extensaoDias ? { valor:"extensao", rotulo:`${prazoEmDias(n.extensaoDias)} (a extensão)` } : null,
+            { valor:"", rotulo:"Sem prazo" }].filter(Boolean);
           return `
-            <div class="acesso-linha" data-plano-linha="${p.id}">
-              <span class="cartao-mini sem-imagem" aria-hidden="true">${textoSeguro(iniciais(p.nome || "?"))}</span>
+            <div class="acesso-linha" data-assinatura="${n.id}">
+              <span class="cartao-mini sem-imagem" aria-hidden="true">${textoSeguro(iniciais(n.nome || "?"))}</span>
               <div class="acesso-info">
-                <div class="nome">${textoSeguro(p.nome)}${tem ? ` <span class="pill pill-ativo">Ativo</span>` : ""}</div>
-                <div class="sub-celula">${nomes.length} ${nomes.length === 1 ? "curso" : "cursos"}${nomes.length ? " · " + nomes.slice(0, 3).map(textoSeguro).join(", ") + (nomes.length > 3 ? "…" : "") : ""}</div>
+                <div class="nome">${textoSeguro(n.nome)}${est ? ` <span class="pill ${pill[est]}">${ESTADOS_DA_ASSINATURA_DO_MEMBRO[est]}</span>` : ""}</div>
+                <div class="sub-celula">${sub}</div>
               </div>
-              ${tem
-                ? `<button class="btn btn-secondary btn-sm" type="button" data-tirar-plano="${p.id}">Tirar</button>`
-                : `<button class="btn btn-secondary btn-sm" type="button" data-abrir-plano="${p.id}" ${nomes.length ? "" : "disabled"}>Dar plano</button>`}
-              ${aDar === p.id ? `
+              <div class="acoes-linha">
+                ${est ? `<button class="btn-icone" type="button" data-editar-assinatura="${n.id}" title="Mudar o estado e a data" aria-label="Mudar a assinatura ${textoSeguro(n.nome)}">${ICONE_PRAZO}</button>` : ""}
+                ${est === "ativo" || est === "pendente" ? `<button class="btn-icone perigo" type="button" data-tirar-assinatura="${n.id}" title="Desativar a assinatura" aria-label="Desativar a assinatura ${textoSeguro(n.nome)}">${ICONE_TIRAR}</button>` : ""}
+                ${est === "ativo" || est === "pendente" ? "" : `<button class="btn btn-secondary btn-sm" type="button" data-abrir-assinatura="${n.id}" ${cursos.length ? "" : "disabled"}>Dar assinatura</button>`}
+              </div>
+              ${aberto === "dar:" + n.id ? `
                 <div class="acesso-prazo">
-                  <label for="plano-prazo">Prazo</label>
-                  <div class="select-wrap"><select id="plano-prazo">${PRAZOS_DE_ACESSO.map(x => `<option value="${x.valor}">${x.rotulo}</option>`).join("")}</select></div>
-                  <button class="btn btn-primary btn-sm" type="button" data-dar-plano="${p.id}">Dar plano</button>
-                  <button class="btn btn-secondary btn-sm" type="button" data-abrir-plano="${p.id}">Cancelar</button>
+                  <label for="assinatura-prazo">Prazo</label>
+                  <div class="select-wrap"><select id="assinatura-prazo">${prazos.map(k => `<option value="${k.valor}">${k.rotulo}</option>`).join("")}</select></div>
+                  <button class="btn btn-primary btn-sm" type="button" data-dar-assinatura="${n.id}">Dar assinatura</button>
+                  <button class="btn btn-secondary btn-sm" type="button" data-abrir-assinatura="${n.id}">Cancelar</button>
+                </div>` : ""}
+              ${aberto === "editar:" + n.id ? `
+                <div class="acesso-prazo">
+                  <label for="assinatura-estado">Estado</label>
+                  <div class="select-wrap"><select id="assinatura-estado">${Object.entries(ESTADOS_DA_ASSINATURA_DO_MEMBRO).map(([v, r]) => `<option value="${v}" ${v === (est === "expirado" ? "ativo" : est) ? "selected" : ""}>${r}</option>`).join("")}</select></div>
+                  <label for="assinatura-expira">Válida até</label>
+                  <input type="date" id="assinatura-expira" value="${x.expira || ""}">
+                  <button class="btn btn-primary btn-sm" type="button" data-guardar-assinatura="${n.id}">Guardar</button>
+                  <button class="btn btn-secondary btn-sm" type="button" data-assinatura-sem-prazo="${n.id}">Sem prazo</button>
                 </div>` : ""}
             </div>`;
         }).join("")}
+      </div>` : ""}
+      <div class="toggle-row membro-ilimitado">
+        <div><div class="t-title">Acesso ilimitado</div>
+          <div class="t-sub">Abre todos os cursos publicados, os de agora e os que vierem.</div></div>
+        <div class="toggle ${f.ilimitado ? "on" : ""}" id="membro-ilimitado" role="switch" aria-checked="${!!f.ilimitado}" aria-label="Acesso ilimitado" tabindex="0"><div class="knob"></div></div>
       </div>
     </section>`;
 }
@@ -843,25 +895,59 @@ function ligarFicha(caixa, f){
   caixa.querySelectorAll("[data-reabrir]").forEach(b => b.addEventListener("click", () =>
     acaoNaFicha(() => GestaoDeMembros.darCursos(id, [b.getAttribute("data-reabrir")], null), "Acesso aberto outra vez")));
 
-  caixa.querySelectorAll("[data-abrir-plano]").forEach(b => b.addEventListener("click", () => {
-    const plano = b.getAttribute("data-abrir-plano");
-    fichaAberta.abertos = fichaAberta.abertos.plano === plano ? {} : { plano };
+  /* As assinaturas. */
+  const nomeDoNivel = nivel => textoSeguro((nivelPorId(nivel) || {}).nome || "");
+  caixa.querySelectorAll("[data-abrir-assinatura]").forEach(b => b.addEventListener("click", () => {
+    const chave = "dar:" + b.getAttribute("data-abrir-assinatura");
+    fichaAberta.abertos = fichaAberta.abertos.assinatura === chave ? {} : { assinatura:chave };
     desenharFicha();
   }));
-  caixa.querySelectorAll("[data-dar-plano]").forEach(b => b.addEventListener("click", () => {
-    const plano = b.getAttribute("data-dar-plano");
-    const expira = dataDaquiA(caixa.querySelector("#plano-prazo").value);
-    acaoNaFicha(() => GestaoDeMembros.darPlano(id, plano, expira), "Plano " + ((planoPorId(plano) || {}).nome || "") + " dado");
+  caixa.querySelectorAll("[data-editar-assinatura]").forEach(b => b.addEventListener("click", () => {
+    const chave = "editar:" + b.getAttribute("data-editar-assinatura");
+    fichaAberta.abertos = fichaAberta.abertos.assinatura === chave ? {} : { assinatura:chave };
+    desenharFicha();
   }));
-  caixa.querySelectorAll("[data-tirar-plano]").forEach(b => b.addEventListener("click", () => {
-    const plano = planoPorId(b.getAttribute("data-tirar-plano")) || {};
+  caixa.querySelectorAll("[data-dar-assinatura]").forEach(b => b.addEventListener("click", () => {
+    const nivel = b.getAttribute("data-dar-assinatura");
+    const n = nivelPorId(nivel) || {};
+    const prazo = caixa.querySelector("#assinatura-prazo").value;
+    const expira = prazo === "trial" ? dataDaquiA(n.trialDias) : prazo === "extensao" ? dataDaquiA(n.extensaoDias) : null;
+    acaoNaFicha(() => GestaoDeMembros.assinatura(id, nivel, { estado:"ativo", expira }), "Assinatura " + nomeDoNivel(nivel) + " dada");
+  }));
+  caixa.querySelectorAll("[data-guardar-assinatura], [data-assinatura-sem-prazo]").forEach(b => b.addEventListener("click", () => {
+    const semPrazo = b.hasAttribute("data-assinatura-sem-prazo");
+    const nivel = b.getAttribute(semPrazo ? "data-assinatura-sem-prazo" : "data-guardar-assinatura");
+    const est = caixa.querySelector("#assinatura-estado").value;
+    const data = semPrazo ? "" : caixa.querySelector("#assinatura-expira").value;
+    if(!semPrazo && est === "ativo" && !data){ mostrarToast("Escolha uma data, ou carregue em «Sem prazo»"); return; }
+    if(est === "ativo" && data && data < hojeISO()){ mostrarToast("Essa data já passou. Para fechar a assinatura, desative-a."); return; }
+    acaoNaFicha(() => GestaoDeMembros.assinatura(id, nivel, { estado:est, expira:data || null }),
+      "Assinatura " + nomeDoNivel(nivel) + ": " + ESTADOS_DA_ASSINATURA_DO_MEMBRO[est].toLowerCase());
+  }));
+  caixa.querySelectorAll("[data-tirar-assinatura]").forEach(b => b.addEventListener("click", () => {
+    const nivel = b.getAttribute("data-tirar-assinatura");
+    const x = (f.assinaturas || []).find(k => k.nivel === nivel) || {};
     confirmarAcao({
-      titulo: "Tirar o plano",
-      mensagem: `Os cursos que vieram do plano <strong>${textoSeguro(plano.nome || "")}</strong> fecham para "${textoSeguro(f.nome || f.email)}". Os que tinha por outra via ficam.`,
-      textoConfirmar: "Tirar",
-      aoConfirmar: () => acaoNaFicha(() => GestaoDeMembros.tirarPlano(id, plano.id), "Plano retirado")
+      titulo: "Desativar a assinatura",
+      mensagem: `Os cursos que <strong>${nomeDoNivel(nivel)}</strong> abre fecham para "${textoSeguro(f.nome || f.email)}". Os que tem por matrícula própria ficam, e o progresso fica guardado.`,
+      textoConfirmar: "Desativar",
+      aoConfirmar: () => acaoNaFicha(() => GestaoDeMembros.assinatura(id, nivel, { estado:"desativado", expira:x.expira || null }), "Assinatura desativada")
     });
   }));
+  const ilimitado = caixa.querySelector("#membro-ilimitado");
+  if(ilimitado){
+    const alternar = () => {
+      if(f.ilimitado) return acaoNaFicha(() => GestaoDeMembros.ilimitado(id, false), "Acesso ilimitado retirado");
+      confirmarAcao({
+        titulo: "Dar acesso ilimitado",
+        mensagem: `"${textoSeguro(f.nome || f.email)}" passa a abrir todos os cursos publicados da escola, os de agora e os que vierem.`,
+        textoConfirmar: "Dar acesso ilimitado",
+        aoConfirmar: () => acaoNaFicha(() => GestaoDeMembros.ilimitado(id, true), "Acesso ilimitado dado")
+      });
+    };
+    ilimitado.addEventListener("click", alternar);
+    ilimitado.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); alternar(); } });
+  }
 
   caixa.querySelectorAll("[data-reenviar-convite]").forEach(b => b.addEventListener("click", () => reenviarConvite(b.getAttribute("data-reenviar-convite"))));
   caixa.querySelectorAll("[data-revogar-convite]").forEach(b => b.addEventListener("click", () => revogarConvite(b.getAttribute("data-revogar-convite"))));

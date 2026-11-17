@@ -7,20 +7,12 @@
 function alunosDoSistema(){ return DB.membros.filter(m => m.papel !== "administrador"); }
 function alunosAtivos(){ return alunosDoSistema().filter(m => m.acesso === "ativo"); }
 
-/* Receita mensal recorrente: só os planos cobrados ao mês contam;
-   um pagamento único não se repete e ficaria a inflacionar o número. */
-function receitaMensal(){
-  return alunosAtivos().reduce((s,m) => {
-    const v = precoDoPlano(planoPorId(m.planoId));
-    return s + (v && v.periodo === "mês" ? (v.preco||0) : 0);
-  }, 0);
+/* As assinaturas ativas de um aluno, pelo nome; e quantos alunos ativos têm
+   pelo menos uma. (O que cada uma rende é da oferta que a vende.) */
+function assinaturasAtivasDe(m){
+  return assinaturasDoMembro(m).filter(assinaturaAtiva).map(x => (nivelPorId(x.nivel) || {}).nome).filter(Boolean);
 }
-function receitaUnica(){
-  return alunosAtivos().reduce((s,m) => {
-    const v = precoDoPlano(planoPorId(m.planoId));
-    return s + (v && v.periodo !== "mês" ? (v.preco||0) : 0);
-  }, 0);
-}
+function assinantesAtivos(){ return alunosAtivos().filter(m => assinaturasAtivasDe(m).length).length; }
 
 function mediaAvaliacoesDoCurso(cursoId){
   const av = (DB.avaliacoes||[]).filter(a => a.cursoId === cursoId && !a.oculto);
@@ -56,14 +48,14 @@ function renderAdminRelatorios(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Relatórios",
-      descricao: "O retrato da academia a partir do que está registado: alunos, planos, cursos e avaliações.",
+      descricao: "O retrato da academia a partir do que está registado: alunos, assinaturas, cursos e avaliações.",
       acaoRotulo: "Exportar CSV",
       acaoId: "btn-exportar-csv"
     })}
 
     <div class="stat-row">
       <div class="card stat-card"><div class="stat-icon accent">${ICONS.people}</div><div class="stat-label">Alunos ativos</div><div class="stat-value">${ativos.length}<span>de ${alunos.length} registados</span></div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.card}</div><div class="stat-label">Receita recorrente</div><div class="stat-value" style="font-size:20px;">${formatarPreco(receitaMensal())}<span>por mês</span></div></div>
+      <div class="card stat-card"><div class="stat-icon">${ICONS.card}</div><div class="stat-label">Assinantes ativos</div><div class="stat-value">${assinantesAtivos()}<span>com uma assinatura ativa</span></div></div>
       <div class="card stat-card"><div class="stat-icon">${ICONS.chart}</div><div class="stat-label">Progresso médio</div><div class="stat-value">${progressoMedio}%<span>nos cursos em curso</span></div></div>
       <div class="card stat-card"><div class="stat-icon">${ICONS.star}</div><div class="stat-label">Nota média das aulas</div><div class="stat-value">${notaMedia ? notaMedia.toFixed(1) : "—"}<span>${avaliacoes.length} avaliações</span></div></div>
     </div>
@@ -95,8 +87,8 @@ function renderAdminRelatorios(){
 
     <div class="relatorio-duplo">
       <div class="card">
-        <div class="table-card-head"><h3>Alunos por plano</h3><span class="count">${formatarPreco(receitaUnica())} em pagamentos únicos</span></div>
-        ${barrasHTML(contarPor(ativos.map(m=>({ plano:(planoPorId(m.planoId)||{nome:"Sem plano"}).nome })), "plano"), ativos.length)}
+        <div class="table-card-head"><h3>Alunos por assinatura</h3><span class="count">${ativos.filter(membroIlimitado).length} com acesso ilimitado</span></div>
+        ${barrasHTML(contarPor(ativos.flatMap(m => { const n = assinaturasAtivasDe(m); return (n.length ? n : ["Sem assinatura"]).map(nome => ({ nivel:nome })); }), "nivel"), ativos.length)}
       </div>
       <div class="card">
         <div class="table-card-head"><h3>Por onde chegaram</h3><span class="count">${ativos.length} alunos</span></div>
@@ -129,9 +121,9 @@ function renderAdminRelatorios(){
 }
 
 function exportarRelatorioCSV(){
-  const linhas = [["Aluno","Email","Plano","Curso","Progresso","Estado","Origem","Ultimo acesso","Membro desde"]];
+  const linhas = [["Aluno","Email","Assinatura","Curso","Progresso","Estado","Origem","Ultimo acesso","Membro desde"]];
   alunosDoSistema().forEach(m => linhas.push([
-    m.nome, m.email, (planoPorId(m.planoId)||{nome:""}).nome, m.curso,
+    m.nome, m.email, assinaturasAtivasDe(m).join(" / "), m.curso,
     (m.progresso||0)+"%", m.acesso, m.origem||"", m.ultimoAcesso||"", m.membroDesde||""
   ]));
   /* Aspas duplicadas para o caso de um nome trazer vírgulas. */

@@ -17,10 +17,13 @@ function isoMaisDias(iso, dias){
   return x.toISOString().slice(0, 10);
 }
 /* Só na demonstração: a turma e o início que valem para quem está na sessão.
-   A da matrícula ativa; sem ela, a turma padrão e o dia em que entrou. */
+   A da matrícula ativa; sem ela, a da assinatura ativa que leva o curso;
+   sem nenhuma, a turma padrão e o dia em que entrou. */
 function turmaEfetivaDemo(cursoId){
   const m = membroAtual();
-  const a = m && Array.isArray(m.acessos) ? m.acessos.find(x => x.curso === cursoId && x.ativo) : null;
+  /* A matrícula própria vale mais; depois a assinatura que leva o curso. */
+  const semeado = m && (Array.isArray(m.acessos) || Array.isArray(m.assinaturas) || m.nivelId || m.matriculas);
+  const a = semeado ? viasDeAcesso(semearMembroDemo(m).acessos, m.assinaturas).find(x => x.curso === cursoId) : null;
   const padrao = (DB.turmas || []).find(t => t.cursoId === cursoId && t.padrao);
   return { turma:(a && a.turma) || (padrao && padrao.id) || null,
            inicio:(a && a.desde) || (m && m.membroDesde) || new Date().toISOString().slice(0, 10) };
@@ -78,6 +81,24 @@ function cursoComLiberacao(curso){
   }).filter(Boolean);
   return Object.assign({}, curso, { modulos });
 }
+/* A assinatura de quem está na sessão, para as Definições: os nomes das
+   ativas, ou «Acesso ilimitado». Com servidor vem da base
+   (academia.minhas_assinaturas); na demonstração, do próprio membro. */
+function minhaAssinaturaEmTexto(){
+  let nomes = [], ilimitado = false;
+  if(modoDemonstracao()){
+    const m = membroAtual();
+    ilimitado = !!(m && m.ilimitado === true);
+    nomes = m ? assinaturasDoMembro(m).filter(assinaturaAtiva).map(x => (nivelPorId(x.nivel) || {}).nome).filter(Boolean) : [];
+  } else {
+    const d = DB.minhasAssinaturas || {};
+    ilimitado = d.ilimitado === true;
+    nomes = (d.assinaturas || []).map(x => x.nome).filter(Boolean);
+  }
+  if(ilimitado) return t("Acesso ilimitado");
+  return nomes.length ? nomes.map(textoSeguro).join(" · ") : t("Sem assinatura");
+}
+
 /* A razão de uma aula bloqueada, curta, para a linha dela. */
 function textoDoBloqueio(b){
   if(!b) return "";

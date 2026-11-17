@@ -1,14 +1,12 @@
 /* ============================================================
-   Administração › Membros, Convites e Assinaturas
+   Administração › Convites
    Quem entra na academia e a que conteúdos tem acesso.
    ============================================================ */
 
-function planoPorId(id){ return (DB.planos||[]).find(p=>p.id===id); }
 function membroPorEmail(email){
   const alvo = (email||"").trim().toLowerCase();
   return (DB.membros||[]).find(m => (m.email||"").toLowerCase() === alvo);
 }
-function opcoesPlanos(){ return (DB.planos||[]).map(p => ({ valor:p.id, rotulo:p.nome })); }
 function opcoesCursos(){ return DB.cursos.map(c => ({ valor:c.id, rotulo:c.titulo })); }
 /* «MZ 1 500,00» — símbolo à frente, duas casas, vírgula decimal, a mesma
    disposição do Payflow e dos relatórios financeiros da empresa. Era
@@ -30,19 +28,16 @@ function simboloDaMoeda(m){
 }
 
 /* Só serve à demonstração: com servidor, quem decide é a base de dados.
-   Um membro sem plano vê tudo o que está publicado; com plano, vê o que o
-   plano leva dentro. */
+   Os cursos que um membro abre: os das matrículas próprias ativas e os das
+   assinaturas ativas. Devolve null para quem abre tudo o que está publicado:
+   quem tem acesso ilimitado, e quem ainda não tem nada definido (a
+   demonstração nasceu assim, e os convidados de ensaio contam com isso). */
 function cursosPermitidos(membro){
-  if(membro && Array.isArray(membro.acessos)) return membro.acessos.filter(a => a.ativo).map(a => a.curso);
-  const plano = membro && planoPorId(membro.planoId);
-  if(!plano) return null;
-  return plano.cursos || [];
-}
-
-/* O que um plano custa é o que custa a oferta que o vende. */
-function precoDoPlano(plano){
-  const o = plano && ofertaDoPlano(plano);
-  return o ? { preco:o.preco, periodo:o.periodo } : null;
+  if(!membro || membro.ilimitado === true) return null;
+  const semeado = Array.isArray(membro.acessos) || Array.isArray(membro.assinaturas) || membro.nivelId || membro.matriculas;
+  if(!semeado) return null;
+  semearMembroDemo(membro);
+  return viasDeAcesso(membro.acessos, membro.assinaturas).map(v => v.curso);
 }
 
 /* ============================================================
@@ -404,7 +399,6 @@ function aceitarConvitePendente(email){
     telefone: "",
     papel: convite.papel && convite.papel !== "aluno" ? "administrador" : "aluno",
     funcao: convite.papel || "aluno",
-    planoId: (DB.planos[0]||{}).id,
     acesso: "ativo",
     membroDesde: new Date().toISOString().slice(0,10),
     curso: "—", categoria:"negocios", origem:"Convite",
@@ -416,166 +410,6 @@ function aceitarConvitePendente(email){
   return membro;
 }
 
-/* ============================================================
-   Assinaturas (planos + assinantes)
-   ============================================================ */
-function renderAdminAssinaturas(){
-  const aba = estado.abaAssinaturas || "planos";
-  document.getElementById("content-admin").innerHTML = `
-    ${cabecalhoAdmin({
-      titulo: "Assinaturas",
-      descricao: "Um plano junta cursos sob um nome; a oferta que o vende, no Payflow, é que diz quanto custa.",
-      acaoRotulo: aba==="planos" ? "Novo plano" : null,
-      acaoId: "btn-novo-plano"
-    })}
-    <div class="filter-bar">
-      <div class="segmented" id="assinaturas-segmented">
-        <button data-aba="planos" class="${aba==="planos"?"active":""}">Planos</button>
-        <button data-aba="assinantes" class="${aba==="assinantes"?"active":""}">Assinantes</button>
-      </div>
-    </div>
-    ${aba==="planos" ? tabelaPlanosHTML() : tabelaAssinantesHTML()}
-  `;
-
-  document.querySelectorAll("#assinaturas-segmented button").forEach(b => b.addEventListener("click", () => {
-    estado.abaAssinaturas = b.getAttribute("data-aba");
-    renderAdminAssinaturas();
-  }));
-  const btnNovo = document.getElementById("btn-novo-plano");
-  if(btnNovo) btnNovo.addEventListener("click", () => editarPlano(null));
-  document.querySelectorAll("#content-admin [data-editar]").forEach(b =>
-    b.addEventListener("click", () => aba==="planos" ? editarPlano(b.getAttribute("data-editar")) : abrirMembro(b.getAttribute("data-editar"))));
-  document.querySelectorAll("#content-admin [data-apagar]").forEach(b =>
-    b.addEventListener("click", () => apagarPlano(b.getAttribute("data-apagar"))));
-}
-
-/* Um plano é um pacote de cursos com nome. Quanto custa e como se cobra é da
-   oferta que o vende, no Payflow — aqui só se diz o que vai dentro. Enquanto
-   nenhuma oferta o vender, o plano existe e não entrega nada a ninguém: é isso
-   que a coluna "Vendido por" serve para mostrar sem se ter de ir lá ver. */
-function ofertaDoPlano(plano){
-  return plano.ofertaId ? (DB.ofertas || []).find(o => String(o.id) === String(plano.ofertaId)) : null;
-}
-
-function tabelaPlanosHTML(){
-  const planos = DB.planos || [];
-  return `
-    <div class="card table-card">
-      <div class="table-card-head">
-        <h3>Planos</h3>
-        <span class="count">${planos.length} ${planos.length === 1 ? "plano" : "planos"} · o preço é o da oferta que o vende</span>
-      </div>
-      <div class="table-wrap" tabindex="0">
-        <table class="admin-table">
-          <thead><tr><th>Plano</th><th>Cursos</th><th>Vendido por</th><th>Preço</th><th></th></tr></thead>
-          <tbody>
-            ${planos.length ? planos.map(p => {
-              const oferta = ofertaDoPlano(p);
-              const dentro = (p.cursos || []).map(id => (DB.cursos.find(c => c.id === id) || {}).titulo).filter(Boolean);
-              const vazios = (p.cursos || []).filter(id => {
-                const c = DB.cursos.find(x => x.id === id);
-                return c && !(c.modulos || []).some(m => (m.aulas || []).length);
-              }).length;
-              return `<tr>
-                <td><div class="nome" style="font-weight:500;">${p.nome}</div>
-                    <div class="sub-celula">${dentro.join(" · ") || "sem cursos"}</div></td>
-                <td class="num">${(p.cursos || []).length}${vazios ? `<div class="sub-celula">${vazios} sem aulas</div>` : ""}</td>
-                <td>${oferta ? oferta.nome : `<span class="sub-celula">ninguém — não entrega nada</span>`}</td>
-                <td class="num">${oferta ? formatarPreco(oferta.preco) + (oferta.periodo === "mês" ? "/mês" : "") : "—"}</td>
-                <td>${acoesLinha(p.id)}</td>
-              </tr>`;
-            }).join("") : `<tr><td colspan="5"><div class="empty-note">Ainda não há planos. Um plano junta vários cursos sob um nome, para uma oferta os vender de uma vez.</div></td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function tabelaAssinantesHTML(){
-  return `
-    <div class="card table-card">
-      <div class="table-card-head"><h3>Assinantes</h3><span class="count">${DB.membros.length} registos</span></div>
-      <div class="table-wrap" tabindex="0">
-        <table class="admin-table">
-          <thead><tr><th>Membro</th><th>Plano</th><th>Valor</th><th>Desde</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            ${DB.membros.map(m => {
-              const plano = planoPorId(planosDoMembro(m)[0]);
-              return `<tr class="${m.acesso==="bloqueado"?"tint-risco":""}">
-                <td><div class="cell-user"><div class="avatar">${iniciais(m.nome)}</div><div class="meta"><div class="nome">${m.nome}</div><div class="sub">${m.email}</div></div></div></td>
-                <td>${plano ? plano.nome : "<span class='sub-celula'>Sem plano</span>"}</td>
-                <td class="num">${(() => { const v = precoDoPlano(plano); return v ? formatarPreco(v.preco) : "—"; })()}</td>
-                <td>${m.membroDesde||"—"}</td>
-                <td><span class="pill ${PILLS_ACESSO[m.acesso]||"pill-inativo"}">${ROTULOS_ACESSO[m.acesso]||"—"}</span></td>
-                <td><div class="acoes-linha"><button class="btn-icone" data-editar="${m.id}" title="Editar"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div></td>
-              </tr>`;
-            }).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-/* Os cursos, com um aviso ao lado dos que não têm nenhuma aula: pôr um curso
-   vazio dentro de um plano é vender uma porta fechada, e já aconteceu. */
-function opcoesCursosDoPlano(){
-  return DB.cursos.map(c => {
-    const aulas = (c.modulos || []).reduce((s,m) => s + (m.aulas || []).length, 0);
-    return { valor:c.id, rotulo: aulas ? c.titulo : `${c.titulo} — ainda sem aulas` };
-  });
-}
-
-function editarPlano(id){
-  const plano = id ? planoPorId(id) : null;
-  const oferta = plano ? ofertaDoPlano(plano) : null;
-  abrirDrawer({
-    titulo: plano ? "Editar plano" : "Novo plano",
-    subtitulo: oferta
-      ? `Vendido pela oferta "${oferta.nome}". O preço e a cobrança são de lá.`
-      : "Junta vários cursos sob um nome. O preço é da oferta que o vender, no Payflow.",
-    campos: [
-      { nome:"nome", rotulo:"Nome do plano", tipo:"texto", obrigatorio:true, placeholder:"ex: Acesso Total" },
-      { nome:"descricao", rotulo:"Descrição", tipo:"texto", placeholder:"Para que serve este pacote." },
-      { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", opcoes:opcoesCursosDoPlano(),
-        dica:"Quem comprar a oferta que vende este plano abre todos estes cursos." }
-    ],
-    valores: plano || { cursos:[] },
-    aoGuardar: async v => {
-      const alvo = plano || { id:null, ordem:(DB.planos || []).length + 1 };
-      Object.assign(alvo, v);
-      alvo.cursos = v.cursos || [];
-      const novoIdDado = await salvarPlano(alvo);
-      if(!plano){ alvo.id = novoIdDado; DB.planos.push(alvo); }
-      renderAdminAssinaturas();
-      mostrarToast(plano ? "Plano atualizado" : "Plano criado");
-    }
-  });
-}
-
-function apagarPlano(id){
-  const plano = planoPorId(id);
-  const oferta = ofertaDoPlano(plano);
-  /* Apagar um plano que uma oferta ainda vende deixa a oferta a cobrar e a não
-     entregar nada. Desliga-se lá primeiro, onde a ligação foi feita. */
-  if(oferta){
-    mostrarToast(`A oferta "${oferta.nome}" ainda vende este plano — desligue-a no Payflow primeiro`);
-    return;
-  }
-  confirmarAcao({
-    titulo: "Apagar plano",
-    mensagem: `O plano "${plano.nome}" deixa de existir. Os cursos ficam onde estão; quem já tem acesso não o perde.`,
-    aoConfirmar: async () => {
-      DB.planos = DB.planos.filter(p=>p.id!==id);
-      await remover("plano", id);
-      renderAdminAssinaturas();
-      mostrarToast("Plano apagado");
-    }
-  });
-}
-
 registarViews({
-  "admin-convites": renderAdminConvites,
-  "admin-assinaturas": renderAdminAssinaturas
+  "admin-convites": renderAdminConvites
 });

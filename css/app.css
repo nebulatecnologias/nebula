@@ -966,6 +966,33 @@ button.chip{ font:inherit; font-size:14px; }
 .toggle.travado{ opacity:.6; cursor:default; }
 .turma-rodape{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
 .turma-rodape-fim{ display:flex; gap:10px; margin-left:auto; }
+/* Assinaturas: a edição de um nível (os prazos lado a lado, e os cursos com
+   a turma de cada um) e o que delas se vê na ficha e na lista dos membros. */
+.nivel-titulo{ margin:0 0 14px; font-size:17px; }
+.nivel-conteudos{ margin-top:16px; }
+.nivel-conteudos > .hint{ margin:-8px 0 14px; max-width:64ch; }
+.nivel-prazos{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }
+.nivel-prazos .field{ margin-bottom:0; }
+.nivel-cursos{ border-top:1px solid var(--line); }
+.nivel-curso{ display:flex; align-items:center; gap:14px; padding:10px 8px; border-bottom:1px solid var(--line); border-radius:var(--r-sm); }
+.nivel-curso:last-child{ border-bottom:none; }
+.nivel-curso.marcado{ background:var(--accent-soft); }
+.nivel-curso-quem{ display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:0; cursor:pointer; }
+.nivel-curso-quem input{ flex:none; width:18px; height:18px; accent-color:var(--accent); }
+.nivel-curso-quem .cartao-nome{ min-width:0; overflow-wrap:anywhere; font-weight:500; }
+.nivel-curso .select-wrap{ flex:none; }
+.nivel-curso .select-wrap select{ max-width:200px; text-overflow:ellipsis; }
+.nivel-curso .select-wrap select:disabled{ opacity:.45; cursor:default; }
+.niveis-tabela td:first-child{ min-width:220px; }
+.membros-filtro-ativo{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin:0 20px 12px; padding:10px 14px; border-radius:var(--r-sm); background:var(--accent-soft); color:var(--accent-ink); font-size:14px; }
+.membro-ilimitado{ margin-top:12px; }
+@media (max-width:700px){
+  .nivel-prazos{ grid-template-columns:1fr; gap:18px 0; }
+  .nivel-curso{ flex-wrap:wrap; }
+  .nivel-curso .select-wrap{ flex:1 1 100%; }
+  .nivel-curso .select-wrap select{ max-width:none; width:100%; }
+}
+
 /* Regras de liberação, na edição da turma: uma linha por módulo (ou por
    aula com regra própria), com o select da regra e os campos que ela pede. */
 .turma-regras-zona{ display:grid; gap:16px; margin-top:16px; max-width:860px; }
