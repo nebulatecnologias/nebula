@@ -174,7 +174,7 @@ function renderOferta(id){
     etiquetas: [
       etiqueta(`${ICONS.cadeado} ${t("Por desbloquear")}`, "bloqueado"),
       o.emBreve ? etiqueta(t("Pré-venda"), "em-breve") : "",
-      varios ? etiqueta(t("Plano"), "") : `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>`
+      o.assinatura ? etiqueta(t("Assinatura"), "") : varios ? etiqueta(t("Plano"), "") : `<span class="cat-tag" style="--c:${cat.cor}">${cat.nome}</span>`
     ].filter(Boolean),
     titulo: varios ? o.nome : (primeiro.titulo || o.nome),
     texto: o.chamada || (varios ? "" : primeiro.subtitulo),

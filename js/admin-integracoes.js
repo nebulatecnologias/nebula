@@ -47,7 +47,8 @@ function integracoesDaDemonstracao(){
   }
   /* Os produtos são os das ofertas da escola, como na base. */
   const produtos = (DB.ofertasDaEscola || []).filter(o => o.ativa !== false)
-    .flatMap(o => (o.produtos || []).map(produto => ({ produto, nome: o.nome, oferta: o.id, cursos: o.cursos || [] })));
+    .flatMap(o => (o.produtos || []).map(produto => ({ produto, nome: o.nome, oferta: o.id, cursos: cursosDaOferta(o).map(c => c.id),
+                                                      assinatura: (nivelPorId(o.nivelId) || {}).nome || null })));
   return JSON.parse(JSON.stringify(Object.assign({}, DB.integracoesDemo, { produtos })));
 }
 
@@ -133,7 +134,11 @@ function historicoHTML(hist){
   const lista = t ? hist.filter(h => String(h.email || "").toLowerCase().includes(t)) : hist;
   const titulos = Object.fromEntries(DB.cursos.map(c => [c.id, c.titulo]));
   const RESULTADO = { aplicado: ["Acesso dado", "pill-ativo"], retirado: ["Acesso retirado", "pill-risco"], teste: ["Teste recebido", "pill-teste"],
-                      sem_cursos: ["Sem cursos ligados", "pill-risco"], recusado: ["Recusado", "pill-quente"], ignorado: ["Ignorado", "pill-inativo"] };
+                      sem_cursos: ["Sem cursos ligados", "pill-risco"], recusado: ["Recusado", "pill-quente"], ignorado: ["Ignorado", "pill-inativo"],
+                      /* Assinaturas com cobrança que se repete (17/11/2026). */
+                      pendente: ["Assinatura pendente", "pill-quente"], reativado: ["Assinatura reaberta", "pill-ativo"],
+                      ate_ao_fim: ["Acaba no fim do período", "pill-inativo"] };
+  const MODO = { convite: "convite enviado", acesso: "já tinha conta", renovacao: "renovação: dias somados" };
   return `<div class="card int-historico">
     <div class="int-hist-topo"><span>${lista.length ? `${lista.length} ${lista.length === 1 ? "notificação recebida" : "notificações recebidas"} do Payflow` : "Sem resultados"}</span>
       <label class="int-procura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="hidden">Procurar por email</span><input type="search" id="int-procura" placeholder="Procurar por email" value="${IntegracoesUI.esc(estadoInt.procura)}"></label></div>
@@ -143,7 +148,7 @@ function historicoHTML(hist){
         <td>${IntegracoesUI.esc(IntegracoesUI.quando(h.recebidoEm))}</td>
         <td class="col-larga">Payflow${h.teste ? `<span class="sub">modo de teste</span>` : ""}</td>
         <td><span class="tipo">${IntegracoesUI.esc(h.tipo)}</span>${h.pedido ? `<span class="sub">${IntegracoesUI.esc(h.pedido)}</span>` : ""}${(h.cursos || []).length ? `<span class="sub">${IntegracoesUI.esc((h.cursos || []).map(c => titulos[c] || c).join(", "))}</span>` : ""}</td>
-        <td>${h.email ? IntegracoesUI.esc(h.email) : "—"}${h.modo ? `<span class="sub">${h.modo === "convite" ? "convite enviado" : "já tinha conta"}</span>` : ""}</td>
+        <td>${h.email ? IntegracoesUI.esc(h.email) : "—"}${MODO[h.modo] ? `<span class="sub">${MODO[h.modo]}</span>` : ""}</td>
         <td><span class="pill ${r[1]}">${IntegracoesUI.esc(r[0])}</span></td>
       </tr>`; }).join("") : `<tr><td colspan="5"><div class="empty-note">${t ? "Nenhuma notificação com esse email." : "Nenhuma notificação recebida do Payflow."}</div></td></tr>`}</tbody>
     </table></div>
@@ -181,7 +186,7 @@ function corpoDaFicha(app){
       </div>` : "";
     const cursos = DB.cursos;
     return `<p class="int-lead">As vendas abrem os cursos sozinhas.</p>
-      <p>Quando alguém compra um produto seu no Payflow, a pessoa recebe os cursos da oferta que tem esse produto, pelo prazo dela: quem já tem conta entra logo; quem não tem recebe um convite com a marca da sua escola. Um reembolso total fecha o acesso.</p>
+      <p>Quando alguém compra um produto seu no Payflow, a pessoa recebe o que a oferta desse produto entrega: os cursos, cada um na sua turma e pelo prazo dela, ou uma assinatura. Quem já tem conta entra logo; quem não tem recebe um convite com a marca da sua escola. Comprar outra vez soma os dias ao que a pessoa já tem. Um reembolso total fecha o acesso.</p>
       <div class="int-estado">${pf.ligada ? `<span class="pill pill-ativo">Ligado</span><span>Segredo <b>····${esc(pf.segredoFim || "")}</b></span>` : `<span class="pill pill-inativo">Por ligar</span>`}
         ${ult ? `<span>Último evento: <b>${esc(ult.tipo)}</b>, ${esc(IntegracoesUI.quando(ult.recebidoEm))}</span>` : pf.ligada ? `<span>Ainda sem eventos: envie um de teste do Payflow.</span>` : ""}</div>
       <h2>1. Crie a integração no Payflow</h2>
@@ -189,6 +194,7 @@ function corpoDaFicha(app){
         <li>No Payflow, abra <strong>Integrações › Webhooks › Nova integração</strong>.</li>
         <li>Em <strong>URL que recebe</strong>, cole este endereço:${IntegracoesUI.copiar(`${URL_VENDAS()}?escola=${org.id || ""}`, "Endereço da sua escola")}</li>
         <li>Em <strong>Eventos</strong>, marque <code>order.paid</code> e <code>order.refunded</code>. Em <strong>Produtos</strong>, marque os que abrem cursos (ou nenhum, para receber todos).</li>
+        <li>Se vende assinaturas com cobrança que se repete, marque também <code>subscription.updated</code> e <code>subscription.canceled</code>: é por eles que a escola sabe de um pagamento em falta (a assinatura fica pendente) e de um cancelamento (acaba no fim do período pago).</li>
         <li>Grave. O Payflow mostra o segredo uma única vez: copie-o.</li>
       </ol>
       <h2>2. Cole o segredo</h2>
@@ -202,7 +208,7 @@ function corpoDaFicha(app){
       <p>No Payflow, em <strong>Integrações › IDs dos produtos</strong>, copie o <code>prod_…</code> de cada produto. Esse ID nunca muda, mesmo que o nome ou o preço mudem. Aqui, em <strong>Ofertas</strong>, abra a oferta que o vende e cole-o em <strong>IDs de produto do checkout</strong>.</p>
       ${avisoPonte}
       <div class="int-produtos">${(d.produtos || []).map(p => `<div class="int-produto" data-produto="${esc(p.produto)}">
-          <div><strong>${esc(p.nome || p.produto)}</strong><span><code>${esc(p.produto)}</code> · ${esc((p.cursos || []).map(c => (cursos.find(k => k.id === c) || {}).titulo || c).join(", ") || "sem cursos")}</span></div></div>`).join("") || `<p class="hint">Ainda nenhuma oferta tem um produto ligado.</p>`}</div>
+          <div><strong>${esc(p.nome || p.produto)}</strong><span><code>${esc(p.produto)}</code> · ${esc([p.assinatura ? "Assinatura " + p.assinatura : "", (p.cursos || []).map(c => (cursos.find(k => k.id === c) || {}).titulo || c).join(", ")].filter(Boolean).join(" · ") || "sem cursos")}</span></div></div>`).join("") || `<p class="hint">Ainda nenhuma oferta tem um produto ligado.</p>`}</div>
       <div class="acoes"><button class="btn btn-primary btn-sm" type="button" data-int-ir="admin-ofertas">Abrir Ofertas</button></div>
       <h2>4. Experimente</h2>
       <p>Na integração do Payflow, carregue em <strong>Enviar evento de teste</strong>. Aparece no <strong>Histórico</strong> destas Integrações como «Teste recebido».</p>`;

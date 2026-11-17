@@ -199,21 +199,22 @@ const OFERTAS_PADRAO = [
 ];
 
 /* As ofertas da escola (15/11/2026): o que ela vende, montado em
-   Administração › Ofertas. Com servidor é a tabela academia.ofertas. Os
-   links e os IDs de produto são inventados. */
+   Administração › Ofertas. Com servidor é a tabela academia.ofertas. Cada
+   uma entrega cursos (cada um numa turma: sem turma escolhida, a padrão) ou
+   uma assinatura (nivelId). Os links e os IDs de produto são inventados. */
 const OFERTAS_DA_ESCOLA_PADRAO = [
   { id:"of1", nome:"Kingdom All Access", chamada:"Todos os cursos, mentorias ao vivo e comunidade.", cursos:["kt","mi"],
-    diasDeAcesso:null, preco:2500, moeda:"MZN", recorrencia:"mes", link:"https://payflow.kingdomcompny.com/all-access",
+    turmas:{}, nivelId:null, preco:2500, moeda:"MZN", recorrencia:"mes", link:"https://payflow.kingdomcompny.com/all-access",
     produtos:["prod_01JDEMO7K2QF"], naVitrine:true, destaque:true, emBreve:false, abreEm:null, ativa:true, ordem:1 },
   { id:"of2", nome:"Hábitos de Elite", chamada:"", cursos:["he"],
-    diasDeAcesso:365, preco:1200, moeda:"MZN", recorrencia:"", link:"https://payflow.kingdomcompny.com/habitos-de-elite",
+    turmas:{}, nivelId:null, preco:1200, moeda:"MZN", recorrencia:"", link:"https://payflow.kingdomcompny.com/habitos-de-elite",
     produtos:["prod_01JDEMO9H4EL"], naVitrine:true, destaque:false, emBreve:false, abreEm:null, ativa:true, ordem:2 },
   { id:"of3", nome:"Oratória para Líderes", chamada:"", cursos:["ol"],
-    diasDeAcesso:null, preco:1800, moeda:"MZN", recorrencia:"", link:"https://payflow.kingdomcompny.com/oratoria",
+    turmas:{}, nivelId:null, preco:1800, moeda:"MZN", recorrencia:"", link:"https://payflow.kingdomcompny.com/oratoria",
     produtos:[], naVitrine:true, destaque:false, emBreve:true, abreEm:diaDaqui(30), ativa:true, ordem:3 },
   /* Montada, mas ainda fora da Vitrine: nada aparece sem ser mandado. */
-  { id:"of4", nome:"IA Aplicada aos Negócios · 90 dias", chamada:"", cursos:["ia"],
-    diasDeAcesso:90, preco:1500, moeda:"MZN", recorrencia:"", link:"",
+  { id:"of4", nome:"IA Aplicada aos Negócios", chamada:"", cursos:["ia"],
+    turmas:{}, nivelId:null, preco:1500, moeda:"MZN", recorrencia:"", link:"",
     produtos:[], naVitrine:false, destaque:false, emBreve:false, abreEm:null, ativa:true, ordem:4 }
 ];
 

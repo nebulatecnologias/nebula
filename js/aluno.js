@@ -253,7 +253,7 @@ function renderCatalogo(){
    As categorias são as dos cursos (decisão do Shelton, 27/09/2026); um pacote
    de vários cursos fica em «Planos». Só aparecem as que têm alguma coisa. */
 function categoriaDaOferta(o){
-  return (o.entrega === "Plano" || o.cursos.length > 1) ? "planos" : ((o.cursos[0] || {}).categoria || "");
+  return (o.assinatura || o.entrega === "Plano" || o.cursos.length > 1) ? "planos" : ((o.cursos[0] || {}).categoria || "");
 }
 
 function renderVitrine(){
@@ -317,7 +317,7 @@ function cartaoDaVitrine(o){
   return `<div class="card course-card bloqueado vitrine" data-oferta="${o.ofertaId}" role="link" tabindex="0" aria-label="${textoSeguro(titulo)}">
     <div class="course-cover ${primeiro.capa?"com-capa":""}" style="--field:${campoDoCurso(primeiro.id || o.ofertaId)};${primeiro.capa?`background-image:url(${primeiro.capa})`:""}">
       ${primeiro.capa ? "" : `<span class="cover-sigla" aria-hidden="true">${primeiro.sigla || (primeiro.titulo||o.nome||"").split(/\s+/).filter(Boolean).map(x=>x[0]).join("").slice(0,3).toUpperCase()}</span>`}
-      <span class="cover-badge" style="--c:${cat.cor}">${varios ? t("Plano") : cat.nome}</span>
+      <span class="cover-badge" style="--c:${cat.cor}">${o.assinatura ? t("Assinatura") : varios ? t("Plano") : cat.nome}</span>
       ${o.emBreve ? `<span class="cover-badge estado em-breve">${t("Em breve")}</span>` : ""}
       <span class="cadeado" aria-label="${t("Por desbloquear")}">${ICONS.cadeado}</span>
     </div>
