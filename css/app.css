@@ -548,7 +548,6 @@ button.chip{ font:inherit; font-size:14px; }
 .curso-hero-desc{ font-size:16px; color:var(--ink-2); margin-bottom:16px; max-width:56ch; }
 .curso-hero-meta{ display:flex; align-items:center; gap:8px 18px; flex-wrap:wrap; font-size:14px; color:var(--muted); margin-bottom:6px; }
 .curso-hero-meta strong{ color:var(--ink); font-weight:500; }
-.curso-hero-turma{ font-size:13.5px; color:var(--muted); margin:6px 0 0; }
 .curso-hero-progresso{ display:flex; align-items:center; gap:14px; margin:20px 0 22px; max-width:440px; }
 .curso-hero-progresso .progress-track{ flex:1; }
 .curso-hero-progresso span{ font-size:13.5px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
@@ -915,6 +914,18 @@ button.chip{ font:inherit; font-size:14px; }
 .curso-resumo-meta .cat-ligacao{ font-weight:500; margin-left:8px; color:var(--orange-ink); }
 .curso-resumo-pct{ display:block; text-align:right; font-size:13px; font-weight:500; color:var(--muted); margin:6px 0 16px; font-variant-numeric:tabular-nums; }
 .curso-resumo .btn-block{ width:100%; }
+/* Turmas: os números do cartão, a página de edição e a paginação. */
+.turma-card{ cursor:pointer; }
+.turma-numeros{ display:flex; flex-wrap:wrap; gap:4px 14px; margin:2px 0 12px; font-size:13px; color:var(--muted); }
+.turma-numeros strong{ color:var(--ink); font-weight:600; }
+.turma-form{ max-width:640px; }
+.campo-com-sufixo{ display:flex; align-items:center; gap:10px; }
+.campo-com-sufixo input{ max-width:180px; }
+.campo-com-sufixo span{ font-size:14.5px; color:var(--muted); }
+.toggle.travado{ opacity:.6; cursor:default; }
+.turma-rodape{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+.turma-rodape-fim{ display:flex; gap:10px; margin-left:auto; }
+.paginacao{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:22px 0 4px; }
 /* Quem tem acesso, no editor do curso. */
 .curso-acesso{ margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
 .curso-acesso h4{ margin:0 0 8px; font-size:15px; }

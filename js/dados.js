@@ -245,10 +245,10 @@ const VITRINE_PADRAO = [
    pre_venda_dos_meus_cursos(). */
 const PRE_VENDA_PADRAO = [{ cursoId:"lp", abreEm:diaDaqui(45) }];
 
-const TURMAS_PADRAO = [
-  { id:"t1", nome:"Kingdom Tracktion · Turma 2", cursoId:"kt", inicio:"2026-09-01", fim:"2026-12-15", membros:["m1","m7"], ativa:true },
-  { id:"t2", nome:"IA Aplicada · Janeiro",       cursoId:"ia", inicio:"2026-01-15", fim:"2026-03-30", membros:["m2"],      ativa:true }
-];
+/* As turmas (17/11/2026): cada curso tem a sua «Turma A», que é a padrão, e
+   pode ter outras, com outro prazo de acesso. Com servidor é academia.turmas. */
+const TURMAS_PADRAO = CURSOS_PADRAO.map(c => ({ id:"t-" + c.id, nome:"Turma A", cursoId:c.id, prazoDias:null, padrao:true }))
+  .concat([{ id:"t-kt-90", nome:"Turma 90 dias", cursoId:"kt", prazoDias:90, padrao:false }]);
 
 /* Um plano é só um nome e os cursos que leva dentro. O preço não está aqui:
    está na oferta que o vende, no Payflow. Enquanto estiveram nos dois sítios,
@@ -531,7 +531,7 @@ function normalizarDB(){
   if(DB.config.bannerIntervalo === undefined) DB.config.bannerIntervalo = 60;
   DB.config.certificado = Object.assign({}, CONFIG_PADRAO.certificado, DB.config.certificado || {});
   if(!Array.isArray(DB.turmas)) DB.turmas = [];
-  DB.turmas.forEach(t => { if(!t.id) t.id = novoId("turma"); if(!Array.isArray(t.membros)) t.membros = []; });
+  DB.turmas = DB.turmas.filter(t => t && t.id && t.cursoId);
   (DB.cursos||[]).forEach(c => {
     if(c.publicado === undefined) c.publicado = true;
     if(c.sigla === undefined) c.sigla = c.titulo.split(/\s+/).map(x=>x[0]).join("").slice(0,3).toUpperCase();
