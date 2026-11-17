@@ -2044,7 +2044,7 @@ button.back-link:hover{ color:var(--ink); }
 .inscricao-topo .brand-mark .wordmark{ color:#fff; }
 .inscricao-topo .brand-mark .wordmark small{ color:rgba(246,241,234,.6); }
 .inscricao-cartao h1{ margin:0 0 10px; font-size:26px; line-height:1.2; letter-spacing:-.02em; color:#fff; }
-.inscricao-descricao, .inscricao-texto{ color:rgba(246,241,234,.78); font-size:15px; line-height:1.55; }
+.inscricao-descricao, .inscricao-texto{ color:rgba(246,241,234,.88); font-size:15px; line-height:1.55; }
 .inscricao-descricao{ margin-bottom:22px; }
 .inscricao-descricao p{ margin:0 0 10px; }
 .inscricao-descricao a{ color:#fff; text-decoration:underline; }
