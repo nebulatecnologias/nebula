@@ -97,6 +97,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.fill('#valor-titulo', 'Tracktion: turma de novembro');
   await guardar();
   contem(await toast(), 'pelo menos um curso', 'e um link de cursos sem cursos também');
+  igual(await pg.locator('#valor-fundo, #valor-fundoMovel').count(), 2, 'O formulário pede duas imagens de fundo: a do computador e a do telemóvel');
   await pg.fill('#valor-limite', '1');
   await pg.fill('#valor-descricao', 'Entre na **turma de novembro**. Veja [o programa](https://exemplo.invalid/programa).');
   await pg.click('#valor-telefoneObrigatorio');
@@ -125,6 +126,19 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   falso(await pg.isVisible('#app-shell') || await pg.isVisible('#view-login'), 'A página pública abre sem a navegação da área de membros');
   const cartao = await pg.innerText('.inscricao-cartao');
   contem(cartao, 'Tracktion: turma de dezembro', 'Mostra o título do link');
+  /* A identidade é a da organização: o nome e o logótipo dela, o cartão no
+     tema dela, e o fundo com a cor dela enquanto não houver imagem. */
+  contem(await pg.innerText('.inscricao-topo .brand-mark'), 'Kingdom Academy', 'A página leva o nome da organização');
+  const visual = await pg.evaluate(() => {
+    const cs = e => getComputedStyle(document.querySelector(e));
+    const prova = document.createElement('div'); prova.style.color = 'var(--ink)'; document.body.appendChild(prova);
+    const tinta = getComputedStyle(prova).color; prova.remove();
+    return { fundo: cs('#view-inscricao').backgroundImage, titulo: cs('.inscricao-cartao h1').color, tinta };
+  });
+  contem(visual.fundo, 'gradient', 'Sem imagem, o fundo é a cor da organização');
+  igual(visual.titulo, visual.tinta, 'e o cartão usa as cores do tema da escola, não umas suas');
+  const margens = () => pg.evaluate(() => { const r = document.querySelector('.inscricao-cartao').getBoundingClientRect(); return Math.abs(Math.round(r.top) - Math.round(innerHeight - r.bottom)); });
+  verdade(await margens() <= 2, 'O cartão fica ao centro do ecrã');
   igual(await pg.innerText('.inscricao-descricao strong'), 'turma de novembro', 'a descrição com o negrito');
   igual(await pg.getAttribute('.inscricao-descricao a', 'href'), 'https://exemplo.invalid/programa', 'e os links');
   igual(await pg.inputValue('#inscricao-pais'), '+258', 'O indicativo começa em Moçambique');
@@ -177,11 +191,32 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await pg.click('#inscricao-idioma [data-idioma="pt"]');
   await pg.waitForTimeout(200);
 
-  /* No telemóvel. */
+  /* No telemóvel: cabe, e o cartão fica ao centro, não encostado ao topo. */
   await pg.setViewportSize({ width:390, height:844 });
   await paginaPublica('GmY4RG');
   const largura = await pg.evaluate(() => Math.max(document.documentElement.scrollWidth, document.getElementById('view-inscricao').scrollWidth));
   verdade(largura <= 390, `A página pública cabe no telemóvel (${largura}px)`);
+  verdade(await margens() <= 2, 'No telemóvel o cartão também fica ao centro, com o mesmo espaço em cima e em baixo');
+
+  /* As duas imagens de fundo: cada ecrã usa a sua; na falta de uma, a outra. */
+  const imagem = cor => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="${cor}"/></svg>`);
+  const LARGA = imagem('navy'), ALTA = imagem('purple');
+  const fundoDaPagina = () => pg.evaluate(() => getComputedStyle(document.getElementById('view-inscricao')).backgroundImage);
+  const porImagens = async (fundo, fundoMovel) => {
+    await pg.evaluate(({ fundo, fundoMovel }) => { Object.assign(DB.linksDeInscricao.find(l => l.id === 'lk1'), { fundo, fundoMovel }); guardarDB(); }, { fundo, fundoMovel });
+    await paginaPublica('GmY4RG');
+  };
+  await porImagens(LARGA, ALTA);
+  contem(await fundoDaPagina(), 'purple', 'Com as duas imagens, o telemóvel usa a do telemóvel');
+  await pg.setViewportSize({ width:1280, height:900 });
+  await paginaPublica('GmY4RG');
+  contem(await fundoDaPagina(), 'navy', 'e o computador usa a do computador');
+  await porImagens('', ALTA);
+  contem(await fundoDaPagina(), 'purple', 'Só com a do telemóvel, o computador usa essa');
+  await pg.setViewportSize({ width:390, height:844 });
+  await porImagens(LARGA, '');
+  contem(await fundoDaPagina(), 'navy', 'Só com a do computador, o telemóvel usa essa');
+  await porImagens('', '');
   await pg.setViewportSize({ width:1280, height:900 });
 
   /* Um código que não existe. */

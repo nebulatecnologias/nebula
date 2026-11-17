@@ -397,7 +397,8 @@ const API = {
   async guardarLink(id, l){
     const linha = { titulo:l.titulo, descricao:l.descricao || null, limite:l.limite || null,
                     telefone_obrigatorio:!!l.telefoneObrigatorio, modalidade:l.modalidade,
-                    cursos:l.cursos || [], turmas:l.turmas || {}, nivel_id:l.nivelId || null, fundo:l.fundo || null };
+                    cursos:l.cursos || [], turmas:l.turmas || {}, nivel_id:l.nivelId || null,
+                    fundo:l.fundo || null, fundo_movel:l.fundoMovel || null };
     const pedido = id ? this.cliente.from("links_de_inscricao").update(linha).eq("id", id)
                       : this.cliente.from("links_de_inscricao").insert(linha);
     const { error } = await pedido;
@@ -924,7 +925,7 @@ function deLinkDeInscricao(l){
     id: l.id, codigo: l.codigo, titulo: l.titulo, descricao: l.descricao || "",
     limite: l.limite || null, telefoneObrigatorio: !!l.telefone_obrigatorio,
     modalidade: l.modalidade, cursos: l.cursos || [], turmas: l.turmas || {}, nivelId: l.nivel_id || null,
-    fundo: l.fundo || "", arquivado: !!l.arquivado_em, criadoEm: l.criado_em || ""
+    fundo: l.fundo || "", fundoMovel: l.fundo_movel || "", arquivado: !!l.arquivado_em, criadoEm: l.criado_em || ""
   };
 }
 

@@ -313,13 +313,13 @@ const LINKS_DE_INSCRICAO_PADRAO = [
   { id:"lk1", codigo:"GmY4RG", titulo:"Aula aberta: Mentalidade Inquebrável",
     descricao:"Inscreva-se e receba **acesso ao curso completo**. As vagas são limitadas.",
     limite:50, telefoneObrigatorio:true, modalidade:"cursos", cursos:["mi"], turmas:{}, nivelId:null,
-    fundo:"", arquivado:false, criadoEm:"2026-11-10T09:00:00Z" },
+    fundo:"", fundoMovel:"", arquivado:false, criadoEm:"2026-11-10T09:00:00Z" },
   { id:"lk2", codigo:"Kp7TnW", titulo:"Experimente o Essencial durante 15 dias", descricao:"",
     limite:null, telefoneObrigatorio:false, modalidade:"assinatura", cursos:[], turmas:{}, nivelId:"essencial",
-    fundo:"", arquivado:false, criadoEm:"2026-11-02T09:00:00Z" },
+    fundo:"", fundoMovel:"", arquivado:false, criadoEm:"2026-11-02T09:00:00Z" },
   { id:"lk3", codigo:"Vx3HbQ", titulo:"Semana da Liderança 2026", descricao:"A campanha de setembro.",
     limite:null, telefoneObrigatorio:false, modalidade:"ilimitado", cursos:[], turmas:{}, nivelId:null,
-    fundo:"", arquivado:true, criadoEm:"2026-09-01T09:00:00Z" }
+    fundo:"", fundoMovel:"", arquivado:true, criadoEm:"2026-09-01T09:00:00Z" }
 ];
 
 const CONVITES_PADRAO = [
