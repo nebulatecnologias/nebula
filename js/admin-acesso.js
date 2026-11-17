@@ -53,7 +53,9 @@ const PILLS_ACESSO = { ativo:"pill-ativo", inativo:"pill-inativo", bloqueado:"pi
    quando o Payflow confirma o pagamento; os outros envia-os a equipa daqui.
    Cada convite tem um prazo: o email leva o token dele, e o servidor só
    deixa entrar enquanto o convite valer (não aceite, não revogado, dentro
-   do prazo). O email sai sempre pelo Resend.
+   do prazo). O email sai sempre pelo Resend. Um convite dá cursos (cada um
+   numa turma), uma assinatura ou acesso ilimitado; os links de inscrição,
+   que são convites abertos, estão em js/admin-links.js.
    ============================================================ */
 const ESTADOS_DO_CONVITE = [
   { id:"todos",    rotulo:"Todos" },
@@ -66,7 +68,11 @@ const ESTADOS_DO_CONVITE = [
 const PRAZOS_DO_CONVITE = [1, 3, 7, 14, 30];
 
 function renderAdminConvites(){
-  const convites = DB.convites || [];
+  /* Dois separadores: os convites por email e os links de inscrição. */
+  if(estado.abaConvites === "links"){ renderLinksDeInscricao(); return; }
+  /* «N inscritos →» num link traz para aqui só os convites que dele nasceram. */
+  const doLink = estado.linkDosConvites ? linkDeInscricaoPorId(estado.linkDosConvites) : null;
+  const convites = (DB.convites || []).filter(c => !doLink || c.linkId === doLink.id);
   const filtro = estado.filtroConvites || "todos";
   const busca = (estado.buscaConvites || "").trim().toLowerCase();
   const contagem = Object.fromEntries(ESTADOS_DO_CONVITE.map(e =>
@@ -82,7 +88,12 @@ function renderAdminConvites(){
       acaoRotulo: "Novo convite",
       acaoId: "btn-novo-convite"
     })}
+    ${abasDosConvites("email")}
     <div class="card table-card convites-card">
+      ${doLink ? `<div class="membros-filtro-ativo" id="convites-filtro-link">
+        <span>Inscritos pelo link <strong>${textoSeguro(doLink.titulo)}</strong></span>
+        <button class="btn btn-secondary btn-sm" type="button" id="btn-limpar-filtro-link">Ver todos os convites</button>
+      </div>` : ""}
       <div class="convites-barra">
         <div class="convites-estados" role="group" aria-label="Filtrar por estado">
           ${ESTADOS_DO_CONVITE.map(e => `
@@ -107,6 +118,9 @@ function renderAdminConvites(){
     </div>
   `;
 
+  ligarAbasDosConvites();
+  const limpar = document.getElementById("btn-limpar-filtro-link");
+  if(limpar) limpar.addEventListener("click", () => { estado.linkDosConvites = null; renderAdminConvites(); });
   document.getElementById("btn-novo-convite").addEventListener("click", () => criarConvite());
   document.querySelectorAll("#content-admin [data-estado-convite]").forEach(b =>
     b.addEventListener("click", () => { estado.filtroConvites = b.getAttribute("data-estado-convite"); renderAdminConvites(); }));
@@ -148,7 +162,7 @@ function linhaDoConvite(c){
       </td>
       <td class="convite-cursos">${resumoDoConvite(c)}</td>
       <td><span class="etiqueta-idioma">${(c.idioma || "pt").toUpperCase()}</span></td>
-      <td class="sub-celula">${c.origem === "pagamento" ? "Pagamento" : "Manual"}</td>
+      <td class="sub-celula">${origemDoConvite(c)}</td>
       <td class="num">${dataCurtaDoConvite(c.criadoEm)}</td>
       <td class="convite-prazo">${prazoDoConvite(c)}</td>
       <td><span class="estado-convite ${est.classe}"><span class="estado-ponto" aria-hidden="true"></span>${est.rotulo}</span></td>
@@ -185,6 +199,17 @@ function dataCurtaDoConvite(iso){
   return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
 }
 
+/* De onde veio o convite: de uma compra, de um link de inscrição (com o
+   título dele) ou da equipa. */
+function origemDoConvite(c){
+  if(c.origem === "pagamento") return "Pagamento";
+  if(c.origem === "link"){
+    const l = (DB.linksDeInscricao || []).find(x => x.id === c.linkId);
+    return "Inscrição" + (l ? `<div class="sub-celula">${textoSeguro(l.titulo)}</div>` : "");
+  }
+  return "Manual";
+}
+
 /* «Expira em 6 dias», «Expira em 5 h», «Expirou a 28/09», ou um traço quando
    o prazo já não conta (aceite ou revogado). */
 function prazoDoConvite(c){
@@ -196,12 +221,25 @@ function prazoDoConvite(c){
   return `Expira em ${dias} dia${dias > 1 ? "s" : ""}`;
 }
 
-/* Os cursos que o convite abre, pelo nome. */
+/* O que o convite dá: acesso ilimitado, uma assinatura, ou cursos (cada um
+   na sua turma). O prazo é o da turma, ou o trial / a extensão do nível; só
+   os convites de antes trazem um prazo próprio. */
 function resumoDoConvite(c){
-  const nomes = (c.cursos||[]).map(id => (DB.cursos.find(x=>x.id===id)||{}).titulo).filter(Boolean).map(textoSeguro);
+  if(c.ilimitado) return `Acesso ilimitado<div class="sub-celula">Tudo o que a escola tem publicado</div>`;
+  const niveis = (c.niveis || []).map(nivelPorId).filter(Boolean);
+  if(niveis.length) return niveis.map(n => {
+    const dias = c.origem === "pagamento" ? n.extensaoDias : (n.trialDias || n.extensaoDias);
+    return `Assinatura ${textoSeguro(n.nome)}<div class="sub-celula">Acesso ${dias ? prazoEmDias(dias) : "sem prazo"}</div>`;
+  }).join("");
+  const cursos = (c.cursos || []).map(id => DB.cursos.find(x => x.id === id)).filter(Boolean);
+  const nomes = cursos.map(k => {
+    const t = turmaDaOferta({ turmas:c.turmas }, k.id);
+    return textoSeguro(k.titulo) + (t && !t.padrao ? ` <span class="sub-celula">(${textoSeguro(t.nome)})</span>` : "");
+  });
   const oferta = (DB.ofertas||[]).find(o => String(o.id) === String(c.ofertaId));
-  /* O prazo do acesso, quando o convite o traz (conta do dia em que entra). */
-  const prazo = c.acessoDias ? `<div class="sub-celula">Acesso ${prazoDaOfertaEmTexto(c.acessoDias)}</div>` : "";
+  const prazos = [...new Set(cursos.map(k => (turmaDaOferta({ turmas:c.turmas }, k.id) || {}).prazoDias || 0))];
+  const prazo = c.acessoDias ? `<div class="sub-celula">Acesso ${prazoDaOfertaEmTexto(c.acessoDias)}</div>`
+    : prazos.some(Boolean) ? `<div class="sub-celula">Acesso ${prazos.length > 1 ? "o prazo de cada turma" : prazoDaTurmaEmTexto({ prazoDias:prazos[0] })}</div>` : "";
   if(nomes.length > 2) return `${nomes.slice(0, 2).join("<br>")}<div class="sub-celula">e mais ${nomes.length - 2}</div>${prazo}`;
   if(nomes.length) return nomes.join("<br>") + prazo;
   if(oferta) return textoSeguro(oferta.nome);
@@ -221,13 +259,23 @@ function cursosParaConvidar(){
   });
 }
 
+/* As três coisas que um convite ou um link de inscrição pode dar. */
+const MODALIDADES_DO_CONVITE = [
+  { valor:"cursos",     rotulo:"Cursos, cada um numa turma" },
+  { valor:"assinatura", rotulo:"Uma assinatura" },
+  { valor:"ilimitado",  rotulo:"Acesso ilimitado" }
+];
+
 function criarConvite(valores){
-  /* O convite diz o que abre: os cursos escolhidos e, se os houver, os que
-     estão abertos a todos os membros. Nada mais (15/11/2026). */
+  /* O convite diz o que dá: cursos (cada um numa turma), uma assinatura ou
+     acesso ilimitado. Já não tem duração própria: o prazo é o da turma, ou
+     o do nível (17/11/2026). */
   const abertos = (DB.cursos || []).filter(c => c.abertoATodos === true && c.publicado !== false).map(c => c.titulo);
+  const niveis = (DB.niveis || []).map(n => ({ valor:n.id, rotulo:n.nome }));
+  const turmasEscolhidas = Object.assign({}, (valores && valores.turmas) || {});
   abrirDrawer({
     titulo: "Novo convite",
-    subtitulo: "Enviamos por email um link pessoal. A pessoa entra e abre só os cursos escolhidos aqui.",
+    subtitulo: "Enviamos por email um link pessoal. A pessoa entra e recebe só o que for escolhido aqui.",
     campos: [
       { nome:"email", rotulo:"Email", tipo:"texto", obrigatorio:true, placeholder:"nome@exemplo.co.mz" },
       { nome:"nome", rotulo:"Nome", tipo:"texto", placeholder:"ex.: Marta Lopes" },
@@ -235,14 +283,16 @@ function criarConvite(valores){
         opcoes:[{ valor:"pt", rotulo:"Português" }, { valor:"en", rotulo:"English" }] },
       { nome:"dias", rotulo:"O link expira após", tipo:"select", meia:true,
         opcoes: PRAZOS_DO_CONVITE.map(n => ({ valor:String(n), rotulo: n === 1 ? "1 dia" : n + " dias" })) },
+      { nome:"modalidade", rotulo:"O que este convite dá", tipo:"select", opcoes:MODALIDADES_DO_CONVITE,
+        dica:"Se este email já tiver conta, recebe-o na próxima vez que a pessoa entrar." },
       { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", cartoes:true,
         opcoes: cursosParaConvidar(),
-        dica: (abertos.length ? `Além destes, abre ${abertos.length === 1 ? "o curso aberto" : "os cursos abertos"} a todos os membros: ${abertos.map(textoSeguro).join(", ")}. ` : "")
-            + "Se este email já tiver conta, os cursos abrem na próxima vez que a pessoa entrar." },
-      { nome:"acessoDias", rotulo:"Duração do acesso aos cursos", tipo:"select", opcoes:PRAZOS_DA_OFERTA,
-        dica:"Conta do dia em que a pessoa entra." }
+        dica: abertos.length ? `Além destes, abre ${abertos.length === 1 ? "o curso aberto" : "os cursos abertos"} a todos os membros: ${abertos.map(textoSeguro).join(", ")}.` : "" },
+      { nome:"nivelId", rotulo:"Assinatura incluída", tipo:"select",
+        opcoes: niveis.length ? niveis : [{ valor:"", rotulo:"Ainda não há assinaturas" }],
+        dica:"Fica ativa pelo trial da assinatura; sem trial, pela extensão dela; sem nenhum dos dois, sem prazo." }
     ],
-    valores: Object.assign({ idioma:"pt", dias:"7", cursos:[], acessoDias:"" }, valores || {}),
+    valores: Object.assign({ idioma:"pt", dias:"7", modalidade:"cursos", cursos:[], nivelId:(niveis[0] || {}).valor || "" }, valores || {}),
     textoGuardar: "Enviar convite",
     aoGuardar: v => {
       if(!/^\S+@\S+\.\S+$/.test(v.email)){ mostrarToast("Esse email não parece válido"); return false; }
@@ -250,9 +300,19 @@ function criarConvite(valores){
       if(membro && membro.papel !== "aluno"){
         mostrarToast("Esse email é de alguém da equipa, que já entra na academia"); return false;
       }
-      enviarConvite(v);
+      if(v.modalidade === "assinatura" && !nivelPorId(v.nivelId)){
+        mostrarToast("Escolha a assinatura que este convite dá. Criam-se em Assinaturas."); return false;
+      }
+      enviarConvite(Object.assign({}, v, {
+        cursos: v.modalidade === "cursos" ? v.cursos : [],
+        turmas: v.modalidade === "cursos" ? turmasParaGuardar(v.cursos, turmasEscolhidas) : {},
+        niveis: v.modalidade === "assinatura" ? [v.nivelId] : [],
+        ilimitado: v.modalidade === "ilimitado"
+      }));
     }
   });
+  ligarEscolhaDoQueSeDa({ seletor:"valor-modalidade", turmasEscolhidas,
+    nota:"O prazo do acesso é o da turma, e conta do dia em que a pessoa entra. Muda-se em Turmas." });
 }
 
 /* Reenviar serve também a um convite revogado ou expirado (28/10/2026): sai
@@ -266,10 +326,11 @@ function reenviarConvite(id){
     titulo: "Enviar o convite outra vez",
     mensagem: vivo
       ? `Mandamos um link novo para "${textoSeguro(convite.email)}", válido por mais 7 dias. O link anterior deixa de servir.`
-      : `Mandamos a "${textoSeguro(convite.email)}" um convite novo, com os mesmos cursos, válido por 7 dias.`,
+      : `Mandamos a "${textoSeguro(convite.email)}" um convite novo, que dá o mesmo, válido por 7 dias.`,
     textoConfirmar: "Enviar",
     aoConfirmar: () => enviarConvite({ email:convite.email, nome:convite.nome, ofertaId:convite.ofertaId,
                                        cursos:convite.cursos, idioma:convite.idioma, dias:"7", papel:convite.papel,
+                                       turmas:convite.turmas || {}, niveis:convite.niveis || [], ilimitado:!!convite.ilimitado,
                                        acessoDias:convite.acessoDias || null,
                                        substitui: vivo || convite.estado === "expirado" ? convite.id : null })
   });
@@ -287,13 +348,16 @@ function depoisDeMudarConvites(){
 /* O envio é do servidor; aqui só damos notícia do que aconteceu. */
 async function enviarConvite(v){
   const dias = PRAZOS_DO_CONVITE.includes(Number(v.dias)) ? Number(v.dias) : 7;
+  /* Só um convite de antes, reenviado, ainda traz um prazo próprio. */
   const acessoDias = Number(v.acessoDias) > 0 ? Number(v.acessoDias) : null;
+  const oQueDa = { turmas:v.turmas || {}, niveis:v.niveis || [], ilimitado:!!v.ilimitado, acessoDias };
   /* Um só link vivo por pessoa: convidar outra vez quem tem um convite manual
-     por aceitar substitui-o (os de pagamento ficam, cada um abre a sua compra). */
+     por aceitar substitui-o (os de pagamento e os das inscrições ficam: cada
+     um dá o que é seu). */
   if(!v.substitui){
     const email = (v.email || "").trim().toLowerCase();
     const vivo = (DB.convites || []).find(c => (c.email || "").toLowerCase() === email
-      && (c.estado === "enviado" || c.estado === "aberto") && c.origem !== "pagamento");
+      && (c.estado === "enviado" || c.estado === "aberto") && (c.origem || "manual") === "manual");
     if(vivo) v = Object.assign({}, v, { substitui: vivo.id });
   }
   if(modoDemonstracao()){
@@ -305,7 +369,8 @@ async function enviarConvite(v){
     DB.convites.unshift({
       id:novoId("cv"), codigo:novoId("cv"), email:v.email.trim().toLowerCase(), nome:v.nome||"",
       ofertaId:v.ofertaId || null, cursos:v.cursos || [], idioma:v.idioma || "pt", origem:"manual",
-      papel:v.papel || "aluno", acessoDias, estado:"enviado", criadoEm:new Date().toISOString(),
+      papel:v.papel || "aluno", turmas:oQueDa.turmas, niveis:oQueDa.niveis, ilimitado:oQueDa.ilimitado,
+      acessoDias, estado:"enviado", criadoEm:new Date().toISOString(),
       expiraEm:new Date(Date.now() + dias * 864e5).toISOString()
     });
     guardarDB();
@@ -320,11 +385,12 @@ async function enviarConvite(v){
       ofertaId: v.ofertaId || null, cursos: v.cursos || [], substitui: v.substitui || null,
       papel: v.papel || "aluno"
     });
-    /* O prazo do acesso grava-se no convite acabado de criar: quem entrar por
-       ele fica com os cursos por esse tempo. */
-    if(acessoDias && resposta.convite && resposta.convite.id){
-      try { await API.prazoDoAcessoDoConvite(resposta.convite.id, acessoDias); }
-      catch(e){ mostrarToast("O convite seguiu, mas o prazo do acesso não ficou gravado: " + (e.message || "")); }
+    /* As turmas, a assinatura e o acesso ilimitado gravam-se no convite
+       acabado de criar: é ele que os dá quando a pessoa entrar. */
+    const leva = Object.keys(oQueDa.turmas).length || oQueDa.niveis.length || oQueDa.ilimitado || acessoDias;
+    if(leva && resposta.convite && resposta.convite.id){
+      try { await API.oQueOConviteDa(resposta.convite.id, oQueDa); }
+      catch(e){ mostrarToast("O convite seguiu, mas não ficou gravado o que ele dá: " + (e.message || "")); }
     }
     try { await API.recarregarConvites(); }
     catch(e){ if(resposta.convite) DB.convites = [deConvite(resposta.convite)].concat(DB.convites || []); }
@@ -390,24 +456,55 @@ function revogarConvite(id){
    um convite pendente numa conta. Em produção isto acontece do lado
    do Supabase, quando a pessoa entra pelo link do email. */
 function aceitarConvitePendente(email){
-  const convite = (DB.convites||[]).find(c => (c.estado==="enviado" || c.estado==="aberto") && (c.email||"").toLowerCase()===email.toLowerCase());
-  if(!convite) return null;
-  const membro = {
-    id: novoId("membro"),
-    nome: convite.nome || email.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g, l=>l.toUpperCase()),
-    email,
-    telefone: "",
-    papel: convite.papel && convite.papel !== "aluno" ? "administrador" : "aluno",
-    funcao: convite.papel || "aluno",
-    acesso: "ativo",
-    membroDesde: new Date().toISOString().slice(0,10),
-    curso: "—", categoria:"negocios", origem:"Convite",
-    ultimoAcesso:"hoje", engajamento:"morno", progresso:0, estagio:"ativo", responsavel:"—"
-  };
-  DB.membros.push(membro);
-  convite.estado = "aceite";
+  const pendentes = (DB.convites||[]).filter(c => (c.estado==="enviado" || c.estado==="aberto") && (c.email||"").toLowerCase()===email.toLowerCase());
+  if(!pendentes.length) return null;
+  const convite = pendentes[0];
+  let membro = membroPorEmail(email);
+  if(!membro){
+    membro = {
+      id: novoId("membro"),
+      nome: convite.nome || email.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g, l=>l.toUpperCase()),
+      email,
+      telefone: "",
+      papel: convite.papel && convite.papel !== "aluno" ? "administrador" : "aluno",
+      funcao: convite.papel || "aluno",
+      acesso: "ativo", matriculas: [],
+      membroDesde: new Date().toISOString().slice(0,10),
+      curso: "—", categoria:"negocios", origem:"Convite",
+      ultimoAcesso:"hoje", engajamento:"morno", progresso:0, estagio:"ativo", responsavel:"—"
+    };
+    DB.membros.push(membro);
+  }
+  pendentes.forEach(c => aplicarConviteDemo(membro, c));
   guardarDB();
   return membro;
+}
+
+/* O que a base faz em aceitar_convite(): cada curso na turma do convite (o
+   prazo é o dela), a assinatura pelo trial ou pela extensão, o acesso
+   ilimitado, e o telefone se o membro ainda não tiver um. Quem a escola
+   suspendeu não reabre por um link de inscrição. */
+function aplicarConviteDemo(membro, c){
+  if(c.origem === "link" && membro.acesso === "bloqueado") return;
+  semearMembroDemo(membro);
+  (c.cursos || []).forEach(curso => {
+    if(!DB.cursos.some(k => k.id === curso) || membro.acessos.some(a => a.curso === curso)) return;
+    const t = turmaDaOferta({ turmas:c.turmas }, curso);
+    const dias = c.acessoDias || (t && t.prazoDias) || null;
+    membro.acessos.push({ curso, origem:"convite", turma:t ? t.id : null, ativo:true, estado:"ativo", desde:hojeISO(),
+                          expira: dias ? isoMaisDias(hojeISO(), dias) : null });
+  });
+  (c.niveis || []).forEach(id => {
+    const n = nivelPorId(id); if(!n) return;
+    const dias = c.origem === "pagamento" ? n.extensaoDias : (n.trialDias || n.extensaoDias);
+    const lista = assinaturasDoMembro(membro), s = lista.find(k => k.nivel === id);
+    const nova = { nivel:id, estado:"ativo", expira: dias ? isoMaisDias(hojeISO(), dias) : null, desde:hojeISO() };
+    if(!s) lista.push(nova);
+    else if(!assinaturaAtiva(s)) Object.assign(s, nova);
+  });
+  if(c.ilimitado) membro.ilimitado = true;
+  if(c.telefone && !membro.telefone) membro.telefone = c.telefone;
+  c.estado = "aceite";
 }
 
 registarViews({

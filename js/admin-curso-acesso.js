@@ -390,7 +390,7 @@ function linhaDoConviteDoCurso(v){
       ${avatarDaPessoa(v)}
       <div class="acesso-info">
         <div class="nome">${textoSeguro(v.nome || v.email)}</div>
-        <div class="sub-celula">${[v.nome ? textoSeguro(v.email) : "", v.origem === "pagamento" ? "Compra" : "Convite", expira,
+        <div class="sub-celula">${[v.nome ? textoSeguro(v.email) : "", v.origem === "pagamento" ? "Compra" : v.origem === "link" ? "Inscrição" : "Convite", expira,
           v.acessoDias ? "Acesso " + prazoDaOfertaEmTexto(v.acessoDias) : ""].filter(Boolean).join(" · ")}</div>
       </div>
     </div>`;

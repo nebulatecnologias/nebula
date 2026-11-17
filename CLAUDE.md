@@ -83,7 +83,23 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   `expirado`, `desativado`) e início. Abre o curso quem tem a matrícula ativa
   e dentro do prazo. Quem escreve acessos à moda antiga (a venda, o convite)
   não fala em estado: o gatilho `matricula_coerente` mantém-no certo. Faltam:
-  convites por link, filtros dos membros, público de eventos e comunidades.
+  filtros dos membros, público de eventos e comunidades.
+- **Convites e links de inscrição (passo 5 da mesma especificação):** um
+  convite dá cursos (cada um numa turma: `convites.turmas`), uma assinatura
+  (`niveis`) ou acesso ilimitado (`ilimitado`). **Já não tem duração
+  própria:** o prazo é o da turma, ou o trial / a extensão do nível
+  (`acesso_dias` só vive nos convites de antes). Um link de inscrição
+  (`academia.links_de_inscricao`, separador em Convites, `js/admin-links.js`)
+  é um convite aberto: a página pública (`?inscricao=<código>`,
+  `js/inscricao.js`) lê `public.link_de_inscricao` e inscreve pela função de
+  servidor `inscricao`, que confere um desafio de cálculo (captcha sem
+  perguntas) e chama `public.inscricao_registar`. **Cada inscrição é um
+  convite com origem `link`**: segue por email, e é ao abri-lo que a conta
+  nasce e que `aceitar_convite()` dá o acesso; assim só o recebe quem é dono
+  do email. O limite conta as inscrições vivas (aceites, ou dentro dos 7 dias
+  do email); um link arquiva-se, não se apaga; quem a escola suspendeu não
+  reabre por um link; a página nunca diz se um email já tem conta. O telefone
+  fica em `academia.perfis.telefone`, só se o perfil ainda não tiver um.
 - **Assinaturas (passo 3 da mesma especificação), no lugar dos Planos:** um
   nível (`academia.niveis`) leva vários cursos, cada um numa turma
   (`nivel_turmas`); a assinatura de um membro (`academia.assinaturas`) liga-o

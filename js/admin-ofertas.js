@@ -32,8 +32,8 @@ const COBRANCAS_DA_OFERTA = [
   { valor:"mes", rotulo:"Todos os meses" },
   { valor:"ano", rotulo:"Todos os anos" }
 ];
-/* Os prazos já não são da oferta. A lista fica para o convite à mão, até ele
-   passar a levar a turma (passo 5 da especificação). */
+/* Os prazos já não são da oferta nem do convite: são da turma. A lista fica
+   para se dizer o prazo dos convites de antes, que ainda o trazem. */
 const PRAZOS_DA_OFERTA = [
   { valor:"",    rotulo:"Sem prazo" },
   { valor:"7",   rotulo:"7 dias" },
@@ -286,11 +286,7 @@ function editarOferta(id){
       const assinatura = v.entrega === "assinatura";
       if(assinatura && !nivelPorId(v.nivelId)){ mostrarToast("Escolha a assinatura que esta oferta entrega. Criam-se em Assinaturas."); return false; }
       /* A turma de cada curso escolhido; a padrão não precisa de se guardar. */
-      const turmas = {};
-      if(!assinatura) v.cursos.forEach(c => {
-        const t = turmaPorId(turmasEscolhidas[c]);
-        if(t && t.cursoId === c && !t.padrao) turmas[c] = t.id;
-      });
+      const turmas = assinatura ? {} : turmasParaGuardar(v.cursos, turmasEscolhidas);
 
       const registo = Object.assign({}, o || { ordem: DB.ofertasDaEscola.reduce((m, x) => Math.max(m, x.ordem || 0), 0) + 1, destaque:false }, {
         nome: v.nome, chamada: v.chamada, cursos: assinatura ? [] : v.cursos, turmas,
@@ -305,27 +301,35 @@ function editarOferta(id){
       return false;
     }
   });
-  ligarEntregaDaOferta(turmasEscolhidas);
+  ligarEscolhaDoQueSeDa({ seletor:"valor-entrega", turmasEscolhidas,
+    nota:"O prazo do acesso é o da turma, e conta do dia em que a pessoa entra. Comprar outra vez soma os dias ao que já tem. Muda-se em Turmas." });
 }
 
-/* O formulário mostra só o que a entrega escolhida pede: os cursos (e, por
-   baixo, a turma de cada um, com o prazo que dela vem) ou a assinatura. */
-function ligarEntregaDaOferta(turmasEscolhidas){
-  const entrega = document.getElementById("valor-entrega");
+/* O formulário mostra só o que a escolha pede: os cursos (e, por baixo, a
+   turma de cada um, com o prazo que dela vem), a assinatura, ou o aviso do
+   acesso ilimitado. Serve à oferta, ao convite e ao link de inscrição. */
+function ligarEscolhaDoQueSeDa({ seletor, turmasEscolhidas, nota }){
+  const escolha = document.getElementById(seletor);
   const lista = document.getElementById("valor-cursos");
   const nivel = document.getElementById("valor-nivelId");
-  if(!entrega || !lista || !nivel) return;
+  if(!escolha || !lista || !nivel) return;
   const campoDosCursos = lista.closest(".field"), campoDoNivel = nivel.closest(".field");
   const zona = document.createElement("div");
   zona.className = "oferta-turmas";
   zona.id = "oferta-turmas";
   campoDosCursos.insertAdjacentElement("afterend", zona);
+  const aviso = document.createElement("p");
+  aviso.className = "aviso-ilimitado";
+  aviso.id = "aviso-ilimitado";
+  aviso.innerHTML = `<strong aria-hidden="true">∞</strong> Acesso a tudo o que a escola tem publicado, incluindo o que vier a publicar.`;
+  campoDoNivel.insertAdjacentElement("afterend", aviso);
 
   const pintar = () => {
-    const assinatura = entrega.value === "assinatura";
-    campoDosCursos.classList.toggle("hidden", assinatura);
-    zona.classList.toggle("hidden", assinatura);
-    campoDoNivel.classList.toggle("hidden", !assinatura);
+    const cursos = escolha.value === "cursos";
+    campoDosCursos.classList.toggle("hidden", !cursos);
+    zona.classList.toggle("hidden", !cursos);
+    campoDoNivel.classList.toggle("hidden", escolha.value !== "assinatura");
+    aviso.classList.toggle("hidden", escolha.value !== "ilimitado");
     const escolhidos = [...lista.querySelectorAll("input:checked")].map(i => i.value);
     zona.innerHTML = escolhidos.length ? `
       <span class="oferta-turmas-rotulo">Turma em que cada curso se entrega</span>
@@ -342,15 +346,26 @@ function ligarEntregaDaOferta(turmasEscolhidas){
           <span class="oferta-turma-prazo">Acesso ${prazoDaTurmaEmTexto(atual)}</span>
         </div>`;
       }).join("")}
-      <p class="hint">O prazo do acesso é o da turma, e conta do dia em que a pessoa entra. Comprar outra vez soma os dias ao que já tem. Muda-se em Turmas.</p>` : "";
+      <p class="hint">${nota}</p>` : "";
     zona.querySelectorAll("[data-oferta-turma]").forEach(sel => sel.addEventListener("change", () => {
       turmasEscolhidas[sel.getAttribute("data-oferta-turma")] = sel.value;
       pintar();
     }));
   };
-  entrega.addEventListener("change", pintar);
+  escolha.addEventListener("change", pintar);
   lista.addEventListener("change", pintar);
   pintar();
+}
+
+/* Do que foi escolhido no formulário, só as turmas dos cursos marcados, e só
+   as que não são a padrão (essa não precisa de se guardar). */
+function turmasParaGuardar(cursos, turmasEscolhidas){
+  const turmas = {};
+  (cursos || []).forEach(c => {
+    const t = turmaPorId((turmasEscolhidas || {})[c]);
+    if(t && t.cursoId === c && !t.padrao) turmas[c] = t.id;
+  });
+  return turmas;
 }
 
 async function guardarOferta(registo, nova){

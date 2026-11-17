@@ -11,7 +11,7 @@ export const nome = 'Idioma: português e inglês — nada por traduzir, e o pai
    o aviso. */
 
 /* Os ficheiros do que o aluno vê. O painel da equipa fica em português. */
-const DO_ALUNO = ['idioma.js', 'nucleo.js', 'componentes.js', 'aluno.js', 'onboarding.js', 'paginas.js', 'api.js', 'app.js'];
+const DO_ALUNO = ['idioma.js', 'nucleo.js', 'componentes.js', 'aluno.js', 'onboarding.js', 'paginas.js', 'api.js', 'app.js', 'inscricao.js'];
 
 /* Português à vista: acentos que o inglês não tem, ou palavras curtas que só
    o português usa. Aplica-se só ao que é interface, nunca ao conteúdo que a

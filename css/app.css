@@ -977,6 +977,18 @@ button.chip{ font:inherit; font-size:14px; }
 @media (max-width:560px){
   .oferta-turma{ grid-template-columns:1fr; gap:6px; padding:10px 0; }
 }
+.aviso-ilimitado{ margin:-6px 0 18px; padding:12px 14px; border-radius:var(--r-sm); background:var(--accent-soft); color:var(--accent-ink); font-size:13.5px; }
+.aviso-ilimitado strong{ font-size:17px; margin-right:6px; }
+/* Links de inscrição: o endereço para copiar, e quantos se inscreveram. */
+.admin-table td.link-chamada{ white-space:normal; min-width:200px; max-width:320px; }
+.admin-table td.link-da{ white-space:normal; min-width:150px; max-width:240px; }
+.link-endereco{ display:flex; align-items:center; gap:6px; min-width:230px; }
+.link-endereco input{ flex:1; min-width:0; height:36px; padding:0 12px; border:1px solid var(--line); border-radius:999px; background:var(--sunken); color:var(--ink-2); font-size:12.5px; }
+.link-endereco input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+.link-endereco .btn-icone.copiado{ color:var(--accent-ink); }
+.link-inscritos{ padding:0; border:0; background:none; color:var(--accent-ink); font:inherit; font-weight:500; cursor:pointer; white-space:nowrap; }
+.link-inscritos:hover{ text-decoration:underline; }
+.link-inscritos:disabled{ color:var(--muted); cursor:default; text-decoration:none; font-weight:400; }
 /* Assinaturas: a edição de um nível (os prazos lado a lado, e os cursos com
    a turma de cada um) e o que delas se vê na ficha e na lista dos membros. */
 .nivel-titulo{ margin:0 0 14px; font-size:17px; }
@@ -2017,4 +2029,53 @@ button.back-link:hover{ color:var(--ink); }
   .papel-opcoes, .papel-opcoes.duas{ grid-template-columns:1fr; }
   .membro-topo{ gap:12px; }
   .avatar-iniciais.avatar-grande{ width:46px; height:46px; font-size:15px; }
+}
+
+/* A página pública de um link de inscrição: a imagem de fundo a ecrã
+   inteiro e um cartão escuro ao centro, sem a navegação da área de membros. */
+.inscricao{ position:fixed; inset:0; z-index:50; overflow-y:auto; display:grid; place-items:center; padding:32px 16px;
+  background:#16130f center / cover no-repeat; color:#f6f1ea; }
+.inscricao:not(.com-fundo){ background-image:radial-gradient(120% 90% at 50% 0%, #3a2c1f 0%, #16130f 70%); }
+.inscricao-veu{ position:fixed; inset:0; background:rgba(12,10,8,.55); pointer-events:none; }
+.inscricao:not(.com-fundo) .inscricao-veu{ display:none; }
+.inscricao-cartao{ position:relative; width:100%; max-width:460px; padding:28px 28px 30px; border-radius:20px;
+  background:rgba(22,19,15,.9); border:1px solid rgba(255,255,255,.1); box-shadow:0 30px 80px -20px rgba(0,0,0,.7); backdrop-filter:blur(10px); }
+.inscricao-topo{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+.inscricao-topo .brand-mark .wordmark{ color:#fff; }
+.inscricao-topo .brand-mark .wordmark small{ color:rgba(246,241,234,.6); }
+.inscricao-cartao h1{ margin:0 0 10px; font-size:26px; line-height:1.2; letter-spacing:-.02em; color:#fff; }
+.inscricao-descricao, .inscricao-texto{ color:rgba(246,241,234,.78); font-size:15px; line-height:1.55; }
+.inscricao-descricao{ margin-bottom:22px; }
+.inscricao-descricao p{ margin:0 0 10px; }
+.inscricao-descricao a{ color:#fff; text-decoration:underline; }
+.inscricao-texto{ margin:0 0 16px; }
+.inscricao-texto strong{ color:#fff; word-break:break-word; }
+.inscricao .field label{ color:rgba(246,241,234,.85); }
+.inscricao .field .opcional{ color:rgba(246,241,234,.55); font-weight:400; }
+.inscricao .field input, .inscricao .select-wrap select{ width:100%; height:46px; padding:0 14px; border-radius:12px; border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06); color:#fff; font-size:15px; box-shadow:none; }
+.inscricao .field input:focus, .inscricao .select-wrap select:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+.inscricao .select-wrap select{ padding-right:34px; font-weight:400; }
+.inscricao .select-wrap select option{ color:#16130f; }
+.inscricao .select-wrap::after{ border-color:rgba(246,241,234,.7); }
+.inscricao-telefone{ display:grid; grid-template-columns:118px minmax(0,1fr); gap:8px; }
+.inscricao-captcha{ display:flex; align-items:center; gap:8px; margin:0 0 16px; font-size:13px; color:rgba(246,241,234,.6); }
+.inscricao-captcha::before{ content:""; width:14px; height:14px; border-radius:50%; border:2px solid rgba(246,241,234,.35); border-top-color:transparent; animation:inscricao-roda .8s linear infinite; }
+.inscricao-captcha.verificado{ color:#8fd6a4; }
+.inscricao-captcha.verificado::before{ animation:none; border:0; width:16px; height:16px; background:#8fd6a4;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat; }
+@keyframes inscricao-roda{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .inscricao-captcha::before{ animation:none; } }
+.inscricao .login-aviso{ margin:0 0 16px; }
+.inscricao .btn-primary{ width:100%; height:48px; font-size:15.5px; }
+.inscricao .btn-secondary{ display:inline-flex; background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.18); color:#fff; }
+.inscricao .seletor-idioma{ background:rgba(255,255,255,.1); }
+.inscricao .seletor-idioma button{ color:rgba(246,241,234,.75); }
+.inscricao .seletor-idioma button:hover{ color:#fff; }
+.inscricao .seletor-idioma button[aria-pressed="true"]{ background:#fff; color:#16130f; }
+@media (max-width:480px){
+  .inscricao{ padding:16px; place-items:start center; }
+  .inscricao-cartao{ padding:22px 20px 24px; }
+  .inscricao-cartao h1{ font-size:22px; }
 }
