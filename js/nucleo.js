@@ -31,7 +31,7 @@ function cursosVisiveis(){
   const doPlano = cursosPermitidos(membro);
   const abertos = publicados.filter(c => c.abertoATodos).map(c => c.id);
   if(!doPlano) return publicados;                    // acesso total
-  const permitidos = new Set([...doPlano, ...cursosPorTurma(membro), ...abertos]);
+  const permitidos = new Set([...doPlano, ...abertos]);
   return publicados.filter(c => permitidos.has(c.id));
 }
 /* O nome das categorias de origem traduz-se; o que a equipa criar fica como escreveu. */

@@ -404,7 +404,6 @@ function renderCurso(cursoId){
   }
   const p = progressoCurso(curso);
   const cat = categoriaDe(curso.categoria);
-  const turmaDoCurso = turmasDoMembro(membroAtual()).find(t => t.cursoId === curso.id);
   const total = contarAulas(curso);
   const duracao = duracaoDoCurso(curso);
   const loc = localizarAula(curso.id, estado.ultimaAulaPorCurso[curso.id]) || primeiraAulaDoCurso(curso);
@@ -418,7 +417,7 @@ function renderCurso(cursoId){
     <div class="card curso-hero ${curso.capa?"com-capa":""}" style="--field:${campoDoCurso(curso.id)};">
       <div class="curso-hero-arte" aria-hidden="true" style="${curso.capa?`background-image:url(${curso.capa})`:""}">${curso.capa ? "" : `<span class="cover-sigla">${curso.sigla || ""}</span>`}</div>
       <div class="curso-hero-conteudo">
-        <span class="eyebrow" style="--c:${cat.cor}">${cat.nome}${turmaDoCurso ? " · " + turmaDoCurso.nome : ""}</span>
+        <span class="eyebrow" style="--c:${cat.cor}">${cat.nome}</span>
         <h1>${curso.titulo}</h1>
         <p class="curso-hero-desc">${curso.subtitulo||""}</p>
         <div class="curso-hero-meta">
@@ -429,7 +428,6 @@ function renderCurso(cursoId){
             ? `<span class="course-facilitador no-hero"><span class="facilitador-foto" ${curso.facilitadorFoto ? `style="background-image:url(${curso.facilitadorFoto})"` : ""}>${curso.facilitadorFoto ? "" : iniciais(curso.facilitador)}</span><strong>${t("Com {nome}", { nome:textoSeguro(curso.facilitador) })}</strong></span>`
             : (assinatura ? `<strong>${t("Originais")} · ${assinatura}</strong>` : "")}
         </div>
-        ${turmaDoCurso ? `<p class="curso-hero-turma">${t("Turma de {inicio} a {fim}.", { inicio:dataCurta(turmaDoCurso.inicio), fim:dataCurta(turmaDoCurso.fim) })}</p>` : ""}
         ${preVenda ? "" : `<div class="curso-hero-progresso">
           <div class="progress-track thin"><div class="progress-fill mini" style="width:${p.pct}%"></div></div>
           <span>${p.pct}%</span>

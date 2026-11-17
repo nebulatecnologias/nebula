@@ -26,6 +26,7 @@ const FUNCOES = {
 
 /* O prazo de um acesso dado à mão, em dias a partir de hoje. */
 const PRAZOS_DE_ACESSO = [
+  { valor:"turma", rotulo:"O prazo da turma" },
   { valor:"",    rotulo:"Sem prazo" },
   { valor:"30",  rotulo:"30 dias" },
   { valor:"90",  rotulo:"90 dias" },
@@ -34,6 +35,10 @@ const PRAZOS_DE_ACESSO = [
 ];
 
 const ORIGENS_DO_ACESSO = { manual:"Dado à mão", convite:"Convite", oferta:"Compra" };
+/* Os estados de uma matrícula (17/11/2026). «Expirada» é também a ativa cujo
+   prazo já passou. */
+const ESTADOS_DA_MATRICULA = { ativo:"Ativa", pendente:"Pendente", expirado:"Expirada", desativado:"Desativada" };
+function estadoDoAcesso(a){ return a.estado || (a.ativo ? "ativo" : "desativado"); }
 
 function funcaoDe(m){ return m.funcao || (m.papel === "administrador" ? "admin" : "aluno"); }
 
@@ -48,7 +53,7 @@ function souEu(id){
 
 /* Uma data a «dias» de hoje, como a base a quer (aaaa-mm-dd); nula sem prazo. */
 function dataDaquiA(dias){
-  if(!dias) return null;
+  if(!dias || isNaN(Number(dias))) return null;
   const d = new Date();
   d.setDate(d.getDate() + Number(dias));
   return d.toISOString().slice(0, 10);
@@ -76,11 +81,30 @@ const GestaoDeMembros = {
     if(modoDemonstracao()) return demoDarCursos(id, cursos, expira, null);
     return API.membro("membro_dar_acesso", { p_utilizador:id, p_cursos:cursos, p_expira:expira });
   },
+  /* A matrícula de um membro num curso: a turma, o estado e a expiração. Com
+     prazoDaTurma, a data é a de hoje mais o prazo da turma. */
+  async matricula(id, curso, o){
+    o = o || {};
+    if(modoDemonstracao()){
+      const m = membroDemo(id);
+      const pedida = turmaPorId(o.turma);
+      const turma = pedida && pedida.cursoId === curso ? pedida : turmaPadraoDe(curso);
+      const expira = o.prazoDaTurma ? expiraPelaTurma(turma) : (o.expira || null);
+      let est = o.estado || "ativo";
+      if(est === "ativo" && expira && expira < hojeISO()) est = "expirado";
+      let a = m.acessos.find(x => x.curso === curso);
+      if(!a){ a = { curso, origem:"manual", plano:null, desde:hojeISO() }; m.acessos.push(a); }
+      Object.assign(a, { turma:turma.id, estado:est, expira, ativo: est === "ativo" });
+      return { curso, turma:turma.id, estado:est, expira };
+    }
+    return API.membro("matricula_definir", { p_utilizador:id, p_curso:curso, p_turma:o.turma || null,
+      p_estado:o.estado || "ativo", p_expira:o.expira || null, p_prazo_da_turma:!!o.prazoDaTurma });
+  },
   async tirarCursos(id, cursos){
     if(modoDemonstracao()){
       const m = membroDemo(id);
       let n = 0;
-      m.acessos.forEach(a => { if(cursos.includes(a.curso) && a.ativo){ a.ativo = false; a.expira = ontemISO(); n++; } });
+      m.acessos.forEach(a => { if(cursos.includes(a.curso) && a.ativo){ a.ativo = false; a.estado = "desativado"; a.expira = ontemISO(); n++; } });
       return { retirados:n, pelo_payflow:[] };
     }
     return API.membro("membro_tirar_acesso", { p_utilizador:id, p_cursos:cursos });
@@ -103,7 +127,7 @@ const GestaoDeMembros = {
   async tirarPlano(id, plano){
     if(modoDemonstracao()){
       let n = 0;
-      membroDemo(id).acessos.forEach(a => { if(a.plano === plano && a.ativo){ a.ativo = false; a.expira = ontemISO(); n++; } });
+      membroDemo(id).acessos.forEach(a => { if(a.plano === plano && a.ativo){ a.ativo = false; a.estado = "desativado"; a.expira = ontemISO(); n++; } });
       return n;
     }
     return API.membro("membro_tirar_plano", { p_utilizador:id, p_plano:plano });
@@ -159,10 +183,14 @@ function membroDemo(id){
   if(!Array.isArray(m.acessos)){
     const plano = planoPorId(m.planoId);
     m.acessos = ((plano && plano.cursos) || []).map(curso => ({
-      curso, origem:"manual", expira:null, ativo:true, plano:plano.id, desde:m.membroDesde || hojeISO()
+      curso, origem:"manual", expira:null, ativo:true, estado:"ativo", plano:plano.id, desde:m.membroDesde || hojeISO()
     }));
   }
-  m.acessos.forEach(a => { if(a.ativo && a.expira && a.expira < hojeISO()) a.ativo = false; });
+  m.acessos.forEach(a => {
+    if(a.ativo && a.expira && a.expira < hojeISO()){ a.ativo = false; a.estado = "expirado"; }
+    if(!a.turma || !turmaPorId(a.turma)) a.turma = (turmaPadraoDe(a.curso) || {}).id || null;
+    if(!a.estado) a.estado = a.ativo ? "ativo" : "desativado";
+  });
   return m;
 }
 
@@ -176,8 +204,9 @@ function demoDarCursos(id, cursos, expira, plano){
       if(!a.ativo){ a.origem = "manual"; a.plano = plano; }
       else if(plano && a.origem === "manual") a.plano = plano;
       a.expira = plano && a.ativo ? (a.expira === null || expira === null ? null : (a.expira > expira ? a.expira : expira)) : expira;
-      a.ativo = true;
-    } else m.acessos.push({ curso, origem:"manual", expira, ativo:true, plano, desde:hojeISO() });
+      a.ativo = true; a.estado = "ativo";
+    } else m.acessos.push({ curso, origem:"manual", expira, ativo:true, estado:"ativo", plano, desde:hojeISO(),
+                            turma:(turmaPadraoDe(curso) || {}).id || null });
     n++;
   });
   return n;
@@ -536,21 +565,28 @@ function linhaDoAcesso(a, f){
   const origem = plano ? "Plano " + plano.nome : (ORIGENS_DO_ACESSO[a.origem] || "Dado à mão");
   const prazo = a.expira ? "Até " + dataLegivel(a.expira) : "Sem prazo";
   const editando = fichaAberta.abertos.prazo === a.curso;
+  /* A turma só se diz quando o curso tem mais de uma: senão é sempre a mesma. */
+  const turmas = turmasDoCurso(a.curso);
+  const turma = turmas.length > 1 ? (turmaPorId(a.turma) || {}).nome : "";
   return `
     <div class="acesso-linha" data-acesso="${a.curso}">
       ${miniaturaDoCurso(c)}
       <div class="acesso-info">
         <div class="nome">${textoSeguro(c.titulo)}</div>
-        <div class="sub-celula">${[textoSeguro(origem), prazo, progressoNoCurso(f, c)].filter(Boolean).join(" · ")}</div>
+        <div class="sub-celula">${[turma ? textoSeguro(turma) : "", textoSeguro(origem), prazo, progressoNoCurso(f, c)].filter(Boolean).join(" · ")}</div>
       </div>
       <div class="acoes-linha">
-        <button class="btn-icone" type="button" data-prazo="${a.curso}" title="Mudar o prazo" aria-label="Mudar o prazo de ${textoSeguro(c.titulo)}">${ICONE_PRAZO}</button>
+        <button class="btn-icone" type="button" data-prazo="${a.curso}" title="Mudar a matrícula: turma, estado e prazo" aria-label="Mudar a matrícula em ${textoSeguro(c.titulo)}">${ICONE_PRAZO}</button>
         <button class="btn-icone perigo" type="button" data-tirar="${a.curso}" title="Tirar o acesso" aria-label="Tirar o acesso a ${textoSeguro(c.titulo)}">${ICONE_TIRAR}</button>
       </div>
       ${editando ? `
         <div class="acesso-prazo">
+          ${turmas.length > 1 ? `<label for="turma-${a.curso}">Turma</label>
+            <div class="select-wrap"><select id="turma-${a.curso}">${turmas.map(t => `<option value="${t.id}" ${t.id === a.turma ? "selected" : ""}>${textoSeguro(t.nome)}</option>`).join("")}</select></div>` : ""}
+          <label for="estado-${a.curso}">Estado</label>
+          <div class="select-wrap"><select id="estado-${a.curso}">${Object.entries(ESTADOS_DA_MATRICULA).map(([v, r]) => `<option value="${v}" ${v === "ativo" ? "selected" : ""}>${r}</option>`).join("")}</select></div>
           <label for="prazo-${a.curso}">Acesso até</label>
-          <input type="date" id="prazo-${a.curso}" min="${hojeISO()}" value="${a.expira || ""}">
+          <input type="date" id="prazo-${a.curso}" value="${a.expira || ""}">
           <button class="btn btn-primary btn-sm" type="button" data-guardar-prazo="${a.curso}">Guardar</button>
           <button class="btn btn-secondary btn-sm" type="button" data-sem-prazo="${a.curso}">Sem prazo</button>
         </div>` : ""}
@@ -578,7 +614,9 @@ function linhaDoAcessoFechado(a){
       ${miniaturaDoCurso(c)}
       <div class="acesso-info">
         <div class="nome">${textoSeguro(c.titulo)}</div>
-        <div class="sub-celula">Fechado desde ${dataLegivel(a.expira)}</div>
+        <div class="sub-celula">${estadoDoAcesso(a) === "pendente" ? "Pendente: ainda não abre"
+          : estadoDoAcesso(a) === "expirado" ? "Expirou a " + dataLegivel(a.expira)
+          : a.expira && a.expira < hojeISO() ? "Fechado desde " + dataLegivel(a.expira) : "Desativada"}</div>
       </div>
       <button class="btn btn-secondary btn-sm" type="button" data-reabrir="${a.curso}">Abrir outra vez</button>
     </div>`;
@@ -690,6 +728,13 @@ function avisoDoPayflow(resposta){
   return ficam.length ? ` Continua com ${ficam.join(", ")} pela inscrição no Payflow.` : "";
 }
 
+/* A turma e o estado escolhidos no editor da matrícula de um curso. */
+function matriculaDoFormulario(caixa, curso){
+  const turma = caixa.querySelector("#turma-" + CSS.escape(curso));
+  const est = caixa.querySelector("#estado-" + CSS.escape(curso));
+  return { turma: turma ? turma.value : null, estado: est ? est.value : "ativo" };
+}
+
 function ligarFicha(caixa, f){
   const id = f.id;
   const titulo = c => textoSeguro((cursoPorId(c) || {}).titulo || "o curso");
@@ -754,8 +799,13 @@ function ligarFicha(caixa, f){
   caixa.querySelector("[data-dar-cursos]")?.addEventListener("click", () => {
     const cursos = [...caixa.querySelectorAll("#form-dar-cursos input:checked")].map(i => i.value);
     if(!cursos.length){ mostrarToast("Escolha pelo menos um curso"); return; }
-    const expira = dataDaquiA(caixa.querySelector("#dar-prazo").value);
-    acaoNaFicha(() => GestaoDeMembros.darCursos(id, cursos, expira),
+    const prazo = caixa.querySelector("#dar-prazo").value;
+    const expira = dataDaquiA(prazo);
+    acaoNaFicha(async () => {
+        /* «O prazo da turma»: cada curso na sua turma padrão, com o prazo dela. */
+        if(prazo === "turma"){ for(const c of cursos) await GestaoDeMembros.matricula(id, c, { estado:"ativo", prazoDaTurma:true }); }
+        else await GestaoDeMembros.darCursos(id, cursos, expira);
+      },
       cursos.length === 1 ? "Acesso dado a " + (cursoPorId(cursos[0]) || {}).titulo : `Acesso dado a ${cursos.length} cursos`);
   });
 
@@ -768,12 +818,18 @@ function ligarFicha(caixa, f){
   caixa.querySelectorAll("[data-guardar-prazo]").forEach(b => b.addEventListener("click", () => {
     const curso = b.getAttribute("data-guardar-prazo");
     const data = caixa.querySelector("#prazo-" + curso).value;
-    if(!data){ mostrarToast("Escolha uma data, ou carregue em «Sem prazo»"); return; }
-    if(data < hojeISO()){ mostrarToast("Esse prazo já passou. Para fechar o acesso, tire o curso."); return; }
-    acaoNaFicha(() => GestaoDeMembros.prazo(id, curso, data), "Acesso até " + dataLegivel(data));
+    const m = matriculaDoFormulario(caixa, curso);
+    if(m.estado === "ativo" && !data){ mostrarToast("Escolha uma data, ou carregue em «Sem prazo»"); return; }
+    if(m.estado === "ativo" && data < hojeISO()){ mostrarToast("Esse prazo já passou. Para fechar o acesso, tire o curso."); return; }
+    acaoNaFicha(() => GestaoDeMembros.matricula(id, curso, { turma:m.turma, estado:m.estado, expira:data || null }),
+      m.estado === "ativo" ? "Acesso até " + dataLegivel(data) : "Matrícula " + ESTADOS_DA_MATRICULA[m.estado].toLowerCase());
   }));
-  caixa.querySelectorAll("[data-sem-prazo]").forEach(b => b.addEventListener("click", () =>
-    acaoNaFicha(() => GestaoDeMembros.prazo(id, b.getAttribute("data-sem-prazo"), null), "O acesso já não tem prazo")));
+  caixa.querySelectorAll("[data-sem-prazo]").forEach(b => b.addEventListener("click", () => {
+    const curso = b.getAttribute("data-sem-prazo");
+    const m = matriculaDoFormulario(caixa, curso);
+    acaoNaFicha(() => GestaoDeMembros.matricula(id, curso, { turma:m.turma, estado:m.estado, expira:null }),
+      m.estado === "ativo" ? "O acesso já não tem prazo" : "Matrícula " + ESTADOS_DA_MATRICULA[m.estado].toLowerCase());
+  }));
 
   caixa.querySelectorAll("[data-tirar]").forEach(b => b.addEventListener("click", () => {
     const curso = b.getAttribute("data-tirar");

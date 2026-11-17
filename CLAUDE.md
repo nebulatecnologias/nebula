@@ -62,6 +62,15 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   (`academia-vendas` › `public.escola_aplicar_venda`), que abre os cursos da
   oferta que tem esse produto. `public.ofertas` é do Payflow: só os eventos
   pagos e as comunidades ainda a leem.
+- **Turmas e matrículas (especificação do Shelton, 17/11/2026, em passos):**
+  uma turma (`academia.turmas`) é uma edição de um curso, com prazo de acesso;
+  todo o curso tem a sua turma padrão («Turma A»). A matrícula é a linha de
+  `academia.acessos` (pessoa + curso): tem turma, estado (`ativo`, `pendente`,
+  `expirado`, `desativado`) e início. Abre o curso quem tem a matrícula ativa
+  e dentro do prazo. Quem escreve acessos à moda antiga (a venda, o convite)
+  não fala em estado: o gatilho `matricula_coerente` mantém-no certo. Faltam:
+  regras de liberação, assinaturas, ofertas e vendas no modelo novo, convites
+  por link, filtros dos membros, público de eventos e comunidades.
 - `academy.kingdomcompny.com` está **reservado** para o site de vendas futuro.
   A área de membros é `membros.`, nunca `academy.`.
 - HTML/CSS/JS puro, sem compilação. O Vercel serve os ficheiros como estão.

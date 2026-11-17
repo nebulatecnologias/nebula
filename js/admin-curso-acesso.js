@@ -30,7 +30,8 @@ function acessoDoCursoDemo(cursoId){
     const m = membroDemo(x.id);
     m.acessos.filter(a => a.curso === cursoId).forEach(a => pessoas.push({
       id:m.id, nome:m.nome, email:m.email, papel:funcaoDe(m), suspenso:m.acesso !== "ativo",
-      origem:a.origem, nota:null, plano:a.plano || null, expira:a.expira, desde:a.desde, ativo:a.ativo
+      origem:a.origem, nota:null, plano:a.plano || null, expira:a.expira, desde:a.desde, ativo:a.ativo,
+      turma:a.turma, estado:estadoDoAcesso(a)
     }));
   });
   pessoas.sort((x, y) => (y.ativo - x.ativo) || String(y.desde).localeCompare(String(x.desde)));
@@ -39,6 +40,8 @@ function acessoDoCursoDemo(cursoId){
     alunosAtivos:(DB.membros || []).filter(m => funcaoDe(m) === "aluno" && m.acesso === "ativo").length,
     equipa:(DB.membros || []).filter(m => funcaoDe(m) !== "aluno" && m.acesso === "ativo").length,
     pessoas, payflow:[],
+    turmas: turmasDoCurso(cursoId).map(t => ({ id:t.id, nome:t.nome, padrao:!!t.padrao, prazoDias:t.prazoDias || null,
+                                               membros:pessoas.filter(p => p.ativo && p.turma === t.id).length })),
     convites:(DB.convites || []).filter(v => (v.estado === "enviado" || v.estado === "aberto") && (v.cursos || []).includes(cursoId))
       .map(v => ({ id:v.id, email:v.email, nome:v.nome, origem:v.origem, expiraEm:v.expiraEm, acessoDias:v.acessoDias || null, criadoEm:v.criadoEm })),
     ofertas:(DB.ofertasDaEscola || []).filter(o => (o.cursos || []).includes(cursoId))
@@ -96,6 +99,7 @@ function textoDoResumo(d){
     : n ? `<strong>${plural(n, "aluno", "alunos")}</strong>, por convite, compra ou acesso dado.`
         : `<strong>Nenhum aluno ainda.</strong> Só a equipa o abre.`;
   const extra = [
+    (d.turmas || []).length > 1 ? plural(d.turmas.length, "turma", "turmas") : "",
     convites ? plural(convites, "convite por aceitar", "convites por aceitar") : "",
     ofertas ? plural(ofertas, "oferta que o vende", "ofertas que o vendem") : "Nenhuma oferta o vende"
   ].filter(Boolean).join(" · ");
@@ -204,6 +208,14 @@ function desenharAcessoDoCurso(){
 
       <section class="membro-seccao">
         <div class="seccao-cabeca">
+          <h4>Turmas deste curso</h4>
+          <button class="btn btn-secondary btn-sm" type="button" data-ir-turmas>Abrir Turmas</button>
+        </div>
+        <div class="acessos-lista">${(d.turmas || []).map(linhaDaTurmaDoCurso).join("")}</div>
+      </section>
+
+      <section class="membro-seccao">
+        <div class="seccao-cabeca">
           <h4>Ofertas que vendem este curso</h4>
           <button class="btn btn-secondary btn-sm" type="button" data-ir-ofertas>Abrir Ofertas</button>
         </div>
@@ -250,8 +262,21 @@ function avatarDaPessoa(p){
   return `<span class="avatar-iniciais" style="--c:${corDaPessoa(p.email)}" aria-hidden="true">${textoSeguro(iniciais(p.nome || p.email || "?"))}</span>`;
 }
 
+function linhaDaTurmaDoCurso(t){
+  return `
+    <div class="acesso-linha" data-turma-do-curso="${t.id}">
+      <div class="acesso-info">
+        <div class="nome">${textoSeguro(t.nome)}</div>
+        <div class="sub-celula">${plural(t.membros, "membro", "membros")} · Acesso ${prazoDaTurmaEmTexto(t)}</div>
+      </div>
+      ${t.padrao ? `<span class="pill pill-ativo">Padrão</span>` : ""}
+    </div>`;
+}
+
 function linhaDaPessoaComAcesso(p){
   const prazo = p.expira ? "Até " + dataLegivel(p.expira) : "Sem prazo";
+  const variasTurmas = ((acessoAberto.dados || {}).turmas || []).length > 1;
+  const turma = variasTurmas ? (((acessoAberto.dados.turmas || []).find(t => t.id === p.turma) || {}).nome || "") : "";
   const quem = textoSeguro(p.nome || p.email || "");
   const editando = acessoAberto.prazo === p.id;
   return `
@@ -260,7 +285,7 @@ function linhaDaPessoaComAcesso(p){
       <div class="acesso-info">
         <div class="nome"><button class="link-pessoa" type="button" data-ver-membro="${p.id}">${quem}</button>${
           p.suspenso ? ` <span class="pill pill-quente">Suspenso</span>` : p.papel !== "aluno" ? ` <span class="pill pill-teste">Equipa</span>` : ""}</div>
-        <div class="sub-celula">${[textoSeguro(p.email || ""), textoSeguro(origemDoAcesso(p)), prazo].filter(Boolean).join(" · ")}</div>
+        <div class="sub-celula">${[textoSeguro(p.email || ""), turma ? textoSeguro(turma) : "", textoSeguro(origemDoAcesso(p)), prazo].filter(Boolean).join(" · ")}</div>
       </div>
       <div class="acoes-linha">
         <button class="btn-icone" type="button" data-prazo-pessoa="${p.id}" title="Mudar o prazo" aria-label="Mudar o prazo de ${quem}">${ICONE_PRAZO}</button>
@@ -294,7 +319,9 @@ function linhaDaPessoaFechada(p){
       ${avatarDaPessoa(p)}
       <div class="acesso-info">
         <div class="nome">${textoSeguro(p.nome || p.email || "")}</div>
-        <div class="sub-celula">${textoSeguro(p.email || "")} · Fechado desde ${dataLegivel(p.expira)}</div>
+        <div class="sub-celula">${textoSeguro(p.email || "")} · ${p.estado === "pendente" ? "Pendente"
+          : p.estado === "expirado" ? "Expirou a " + dataLegivel(p.expira)
+          : p.expira ? "Fechado desde " + dataLegivel(p.expira) : "Desativada"}</div>
       </div>
       <button class="btn btn-secondary btn-sm" type="button" data-reabrir-pessoa="${p.id}">Abrir outra vez</button>
     </div>`;
@@ -347,6 +374,8 @@ function formularioDarAcessoAoCurso(d){
         </div>` : `<div class="empty-note">Todos os alunos da escola já têm este curso.</div>`}
       <p class="hint" style="margin:10px 0 0">A pessoa ainda não é membro? <button class="btn-texto-link" type="button" data-convidar>Convide-a por email</button>, já com este curso.</p>
       <div class="membro-form-pe">
+        ${(d.turmas || []).length > 1 ? `<label class="field-rotulo" for="dar-acesso-turma">Turma</label>
+          <div class="select-wrap"><select id="dar-acesso-turma">${d.turmas.map(t => `<option value="${t.id}" ${t.padrao ? "selected" : ""}>${textoSeguro(t.nome)}</option>`).join("")}</select></div>` : ""}
         <label class="field-rotulo" for="dar-acesso-prazo">Prazo</label>
         <div class="select-wrap"><select id="dar-acesso-prazo">${PRAZOS_DE_ACESSO.map(p => `<option value="${p.valor}">${p.rotulo}</option>`).join("")}</select></div>
         <button class="btn btn-secondary btn-sm" type="button" data-abrir-dar>Cancelar</button>
@@ -401,6 +430,7 @@ function ligarAcessoDoCurso(caixa, d){
     });
   }));
 
+  caixa.querySelectorAll("[data-ir-turmas]").forEach(b => b.addEventListener("click", () => { fecharAcessoDoCurso(true); irPara("admin-turmas"); }));
   caixa.querySelectorAll("[data-ir-ofertas]").forEach(b => b.addEventListener("click", () => { fecharAcessoDoCurso(true); irPara("admin-ofertas"); }));
   caixa.querySelectorAll("[data-convidar]").forEach(b => b.addEventListener("click", () => {
     fecharAcessoDoCurso(true);
@@ -429,8 +459,16 @@ function ligarAcessoDoCurso(caixa, d){
   if(dar) dar.addEventListener("click", () => {
     const ids = [...caixa.querySelectorAll("#dar-acesso-lista input:checked")].map(i => i.value);
     if(!ids.length){ mostrarToast("Escolha pelo menos uma pessoa"); return; }
-    const expira = dataDaquiA(caixa.querySelector("#dar-acesso-prazo").value);
-    acaoNoAcessoDoCurso(async () => { for(const id of ids) await GestaoDeMembros.darCursos(id, [cursoId], expira); },
+    const prazo = caixa.querySelector("#dar-acesso-prazo").value;
+    const turma = (caixa.querySelector("#dar-acesso-turma") || {}).value || null;
+    const expira = dataDaquiA(prazo);
+    acaoNoAcessoDoCurso(async () => {
+        for(const id of ids){
+          /* Numa turma escolhida, ou com o prazo dela, é uma matrícula; senão, o acesso de sempre. */
+          if(prazo === "turma" || turma) await GestaoDeMembros.matricula(id, cursoId, { turma, estado:"ativo", prazoDaTurma:prazo === "turma", expira });
+          else await GestaoDeMembros.darCursos(id, [cursoId], expira);
+        }
+      },
       ids.length === 1 ? "Acesso dado" : `Acesso dado a ${ids.length} pessoas`);
   });
 

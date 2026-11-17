@@ -334,7 +334,6 @@ const EN = {
   "Todas": "All",
   "Todos": "All",
   "Todos os seus programas, mentorias e mastermind num só lugar — {pct}% de progresso geral.": "All your programmes, mentoring and mastermind in one place — {pct}% overall progress.",
-  "Turma de {inicio} a {fim}.": "Cohort from {inicio} to {fim}.",
   "Um ritmo constante, com tempo para aplicar.": "A steady pace, with time to apply it.",
   "Uma alteração não chegou ao servidor — o que vê pode não estar gravado.": "A change didn't reach the server — what you see may not be saved.",
   "Uma aula de cada vez, sem pressa.": "One lesson at a time, no rush.",

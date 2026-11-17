@@ -181,7 +181,7 @@ const API = {
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
-      ofertas, turmas, planos, salas, comunidades
+      ofertas, planos, salas, comunidades
     ] = await Promise.all([
       lista(c.from("categorias").select("*").order("ordem")),
       lista(c.from("cursos").select(`
@@ -203,7 +203,6 @@ const API = {
       um(c.from("perfis").select("*").eq("utilizador_id", eu)),
       lista(c.from("certificados").select("*").eq("utilizador_id", eu)),
       lista(this.pub().from("ofertas").select("id, nome, preco, moeda, cobranca, link_vendas, estado, atalho").is("removido_em", null)),
-      lista(this.pub().from("turmas").select("id, oferta_id, nome, estado, inicio, fim").is("removido_em", null)),
       lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem")),
       /* Só voltam as salas em que esta pessoa pode entrar: num evento pago,
          o link é o que se compra, e o servidor não o dá a quem não pagou. */
@@ -242,7 +241,7 @@ const API = {
     DB.avaliacoes  = avaliacoes.map(deAvaliacao);
     DB.ofertas     = ofertas.map(deOferta);
     DB.planos      = planos.map(dePlano);
-    DB.turmas      = turmas.map(t => deTurma(t, cursos));
+    DB.turmas      = [];
     DB.certificados = certificados.map(deCertificado);
 
     const idsLidas = new Set(lidas.map(l => l.notificacao_id));
@@ -256,11 +255,13 @@ const API = {
 
     /* Quem é da equipa vê também os rascunhos, os membros e os convites. */
     if(ehEquipa()){
-      const [membros, convites, emitidos] = await Promise.all([
+      const [membros, convites, emitidos, turmas] = await Promise.all([
         lista(c.rpc("membros_da_organizacao")),
         lista(c.from("convites").select("*").order("criado_em", { ascending:false })),
-        lista(c.from("certificados").select("*").order("emitido_em", { ascending:false }))
+        lista(c.from("certificados").select("*").order("emitido_em", { ascending:false })),
+        lista(c.rpc("turmas_da_escola"))
       ]);
+      DB.turmas   = turmas;
       DB.membros  = membros.map(deMembro);
       DB.convites = convites.map(deConvite);
       DB.certificadosEmitidos = emitidos.map(deCertificado);
@@ -290,6 +291,27 @@ const API = {
     const { data, error } = await this.cliente.rpc(funcao, argumentos);
     if(error) throw new Error(error.message || traduzirErroDados(error));
     return data;
+  },
+
+  /* As turmas da escola (17/11/2026): a equipa lê os cartões já contados
+     (membros, comentários, progresso) e escreve nome, prazo e padrão; as
+     regras (uma padrão por curso, não apagar com membros) são da base, que
+     responde em português. */
+  async recarregarTurmas(){
+    DB.turmas = await lista(this.cliente.rpc("turmas_da_escola"));
+  },
+  async guardarTurma(t){
+    const linha = { nome:t.nome, prazo_dias:t.prazoDias || null, padrao:!!t.padrao };
+    const pedido = t.id
+      ? this.cliente.from("turmas").update(linha).eq("id", t.id).select().single()
+      : this.cliente.from("turmas").insert(Object.assign({ curso_id:t.cursoId }, linha)).select().single();
+    const { data, error } = await pedido;
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
+    return data.id;
+  },
+  async apagarTurma(id){
+    const { error } = await this.cliente.from("turmas").update({ removido_em:new Date().toISOString() }).eq("id", id);
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
   },
 
   /* O prazo do acesso que um convite dá (dias a contar da entrada). */
@@ -771,12 +793,6 @@ function dePlano(r){
               .map(pc => pc.curso_id),
     ordem: r.ordem || 0
   };
-}
-
-function deTurma(t, cursos){
-  const curso = cursos.find(c => c.oferta_id === t.oferta_id);
-  return { id:String(t.id), nome:t.nome, cursoId:curso ? curso.id : null,
-           inicio:t.inicio, fim:t.fim, ativa:t.estado !== "Concluída", membros:[] };
 }
 
 /* Um certificado gravado: o nome e o título ficam como estavam no dia. */

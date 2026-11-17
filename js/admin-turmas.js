@@ -1,111 +1,289 @@
 /* ============================================================
    Administração › Turmas e Certificados
-   Turmas agrupam alunos num curso com datas próprias e dão acesso
-   a esse curso. Certificados define a regra e o desenho do diploma.
+
+   Uma TURMA é uma edição de um curso (especificação de 17/11/2026): tem um
+   nome, um prazo de acesso e, no passo seguinte, as regras de liberação das
+   aulas. Todo o curso tem pelo menos uma, a «Turma A», que é a padrão dele.
+   Quem tem o curso tem-no numa turma: é a matrícula.
+
+   Até aqui esta aba mostrava as turmas do painel de gestão, só para ler.
+   Agora são da escola: criam-se, editam-se e apagam-se aqui. As regras (uma
+   padrão por curso, não apagar com membros ativos) são da base.
+
+   Certificados define a regra e o desenho do diploma.
    ============================================================ */
 
-function turmaPorId(id){ return (DB.turmas||[]).find(t=>t.id===id); }
-function opcoesMembros(){ return DB.membros.filter(m=>m.papel!=="administrador").map(m=>({ valor:m.id, rotulo:`${m.nome} · ${m.email}` })); }
+const TURMAS_POR_PAGINA = 15;
 
-/* Cursos a que um membro tem acesso por estar inscrito numa turma ativa. */
-function cursosPorTurma(membro){
-  if(!membro) return [];
-  return (DB.turmas||[])
-    .filter(t => t.ativa !== false && (t.membros||[]).includes(membro.id))
-    .map(t => t.cursoId);
+function turmaPorId(id){ return (DB.turmas || []).find(t => t.id === id); }
+
+/* As turmas de um curso, a padrão primeiro. Na demonstração, um curso criado
+   no momento ganha aqui a sua «Turma A», como a base faz a sério. */
+function turmasDoCurso(cursoId){
+  DB.turmas = DB.turmas || [];
+  if(modoDemonstracao() && cursoPorId(cursoId) && !DB.turmas.some(t => t.cursoId === cursoId))
+    DB.turmas.push({ id:"t-" + cursoId, nome:"Turma A", cursoId, prazoDias:null, padrao:true });
+  return DB.turmas.filter(t => t.cursoId === cursoId).sort((x, y) => (y.padrao ? 1 : 0) - (x.padrao ? 1 : 0));
+}
+function turmaPadraoDe(cursoId){
+  const lista = turmasDoCurso(cursoId);
+  return lista.find(t => t.padrao) || lista[0] || null;
+}
+function prazoDaTurmaEmTexto(t){
+  if(!t || !t.prazoDias) return "sem prazo";
+  if(t.prazoDias % 365 === 0) return t.prazoDias === 365 ? "1 ano" : (t.prazoDias / 365) + " anos";
+  return t.prazoDias + (t.prazoDias === 1 ? " dia" : " dias");
+}
+/* A data em que acaba uma matrícula começada hoje nesta turma (nula sem prazo). */
+function expiraPelaTurma(t){
+  if(!t || !t.prazoDias) return null;
+  const d = new Date(); d.setDate(d.getDate() + Number(t.prazoDias));
+  return d.toISOString().slice(0, 10);
 }
 
-function turmasDoMembro(membro){
-  if(!membro) return [];
-  return (DB.turmas||[]).filter(t => (t.membros||[]).includes(membro.id));
+/* Os números do cartão. Com servidor vêm contados da base; na demonstração
+   contam-se pelas matrículas em memória. */
+function numerosDaTurma(t){
+  if(!modoDemonstracao()) return { membros:t.membros || 0, comentarios:t.comentarios || 0, progresso:t.progresso || 0 };
+  const dentro = (DB.membros || []).filter(m => membroDemo(m.id).acessos.some(a => a.turma === t.id && a.ativo));
+  const ids = new Set(dentro.map(m => m.id));
+  return {
+    membros: dentro.length,
+    comentarios: (DB.avaliacoes || []).filter(av => av.cursoId === t.cursoId && (av.comentario || "").trim() && ids.has(av.membroId)).length,
+    progresso: dentro.length ? Math.round(dentro.reduce((s, m) => s + (Number(m.progresso) || 0), 0) / dentro.length) : 0
+  };
 }
 
 /* ============================================================
-   Turmas
+   A lista, em cartões
    ============================================================ */
 function renderAdminTurmas(){
-  const turmas = DB.turmas || [];
-  const ativas = turmas.filter(t=>t.ativa!==false).length;
-  const inscritos = new Set(turmas.flatMap(t=>t.membros||[])).size;
+  DB.cursos.forEach(c => turmasDoCurso(c.id));
+  const busca = (estado.buscaTurmas || "").trim().toLowerCase();
+  const todas = (DB.turmas || []).filter(t => cursoPorId(t.cursoId));
+  const lista = todas.filter(t => !busca || (t.nome + " " + cursoPorId(t.cursoId).titulo).toLowerCase().includes(busca));
+  const paginas = Math.max(1, Math.ceil(lista.length / TURMAS_POR_PAGINA));
+  const pagina = Math.min(Math.max(1, estado.paginaTurmas || 1), paginas);
+  const visiveis = lista.slice((pagina - 1) * TURMAS_POR_PAGINA, pagina * TURMAS_POR_PAGINA);
 
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Turmas",
-      descricao: "Agrupa alunos num curso com datas próprias. Estar numa turma ativa dá acesso ao curso, mesmo fora do plano.",
-      acaoRotulo: "Nova turma",
+      descricao: "Uma turma é uma edição de um curso, com o seu prazo de acesso. Quem tem o curso tem-no numa turma; cada curso tem uma turma padrão.",
+      acaoRotulo: DB.cursos.length ? "Nova turma" : "",
       acaoId: "btn-nova-turma"
     })}
-    <div class="stat-row tres">
-      <div class="card stat-card"><div class="stat-icon accent">${ICONS.layers}</div><div class="stat-label">Turmas ativas</div><div class="stat-value">${ativas}<span>/ ${turmas.length}</span></div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.people}</div><div class="stat-label">Alunos em turmas</div><div class="stat-value">${inscritos}</div></div>
-      <div class="card stat-card"><div class="stat-icon">${ICONS.book}</div><div class="stat-label">Cursos com turma</div><div class="stat-value">${new Set(turmas.map(t=>t.cursoId)).size}</div></div>
+    <div class="filter-bar">
+      <div class="search-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="turmas-busca" placeholder="Pesquisar turma" aria-label="Pesquisar turma" value="${textoSeguro(estado.buscaTurmas || "").replace(/"/g, "&quot;")}"></div>
     </div>
-    <div class="card table-card">
-      <div class="table-card-head"><h3>Todas as turmas</h3><span class="count">${turmas.length} registos</span></div>
-      <div class="table-wrap" tabindex="0">
-        <table class="admin-table">
-          <thead><tr><th>Turma</th><th>Curso</th><th>Período</th><th>Alunos</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            ${turmas.length ? turmas.map(t => {
-              const curso = cursoPorId(t.cursoId);
-              return `<tr>
-                <td><div class="nome" style="font-weight:500;">${t.nome}</div></td>
-                <td>${curso ? curso.titulo : "<span class='sub-celula'>Curso removido</span>"}</td>
-                <td>${t.inicio||"—"} <span class="sub-celula">até</span> ${t.fim||"—"}</td>
-                <td class="num">${(t.membros||[]).length}</td>
-                <td><span class="pill ${t.ativa!==false?"pill-ativo":"pill-inativo"}">${t.ativa!==false?"Ativa":"Encerrada"}</span></td>
-                <td>${acoesLinha(t.id)}</td>
-              </tr>`;
-            }).join("") : `<tr><td colspan="6"><div class="empty-note">Ainda não há turmas.</div></td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    ${visiveis.length ? `
+      <div class="contagem-grelha">${lista.length} de ${todas.length} turma${todas.length === 1 ? "" : "s"}</div>
+      <div class="course-grid" id="turmas-grelha">${visiveis.map(cartaoDaTurma).join("")}</div>
+      ${paginas > 1 ? `<nav class="paginacao" aria-label="Páginas de turmas">
+          <button class="btn btn-secondary btn-sm" type="button" data-pagina="${pagina - 1}" ${pagina === 1 ? "disabled" : ""}>Anterior</button>
+          ${Array.from({ length:paginas }, (_, i) => `<button class="btn btn-sm ${i + 1 === pagina ? "btn-primary" : "btn-secondary"}" type="button" data-pagina="${i + 1}" ${i + 1 === pagina ? 'aria-current="page"' : ""}>${i + 1}</button>`).join("")}
+          <button class="btn btn-secondary btn-sm" type="button" data-pagina="${pagina + 1}" ${pagina === paginas ? "disabled" : ""}>Próximo</button>
+        </nav>` : ""}`
+      : `<div class="card painel"><div class="empty-note">${todas.length ? "Nenhuma turma com esse nome."
+          : DB.cursos.length ? "Ainda não há turmas." : "Crie primeiro um curso, em Conteúdos: ele nasce com a sua Turma A."}</div></div>`}
   `;
 
-  document.getElementById("btn-nova-turma").addEventListener("click", () => editarTurma(null));
-  document.querySelectorAll("#content-admin [data-editar]").forEach(b =>
-    b.addEventListener("click", () => editarTurma(b.getAttribute("data-editar"))));
-  document.querySelectorAll("#content-admin [data-apagar]").forEach(b =>
-    b.addEventListener("click", () => apagarTurma(b.getAttribute("data-apagar"))));
+  const nova = document.getElementById("btn-nova-turma");
+  if(nova) nova.addEventListener("click", () => novaTurma());
+  const campo = document.getElementById("turmas-busca");
+  campo.addEventListener("input", () => {
+    estado.buscaTurmas = campo.value; estado.paginaTurmas = 1;
+    const pos = campo.selectionStart;
+    renderAdminTurmas();
+    const outro = document.getElementById("turmas-busca");
+    outro.focus(); outro.setSelectionRange(pos, pos);
+  });
+  document.querySelectorAll("#content-admin [data-pagina]").forEach(b => b.addEventListener("click", () => {
+    estado.paginaTurmas = Number(b.getAttribute("data-pagina")); renderAdminTurmas(); window.scrollTo(0, 0);
+  }));
+  document.querySelectorAll("#turmas-grelha [data-turma]").forEach(el => {
+    const abrir = () => irPara("admin-turma", el.getAttribute("data-turma"));
+    el.addEventListener("click", abrir);
+    el.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); abrir(); } });
+  });
 }
 
-function editarTurma(id){
-  const turma = id ? turmaPorId(id) : null;
+function cartaoDaTurma(t){
+  const c = cursoPorId(t.cursoId);
+  const n = numerosDaTurma(t);
+  return `<div class="card course-card admin turma-card" data-turma="${t.id}" role="link" tabindex="0" aria-label="${textoSeguro(t.nome)}, ${textoSeguro(c.titulo)}">
+    <div class="course-cover ${c.capa ? "com-capa" : ""}" style="--field:${campoDoCurso(c.id)};${c.capa ? `background-image:url(${c.capa})` : ""}">
+      ${c.capa ? "" : `<span class="cover-sigla" aria-hidden="true">${textoSeguro(c.sigla || iniciais(c.titulo || "?"))}</span>`}
+      ${t.padrao ? `<span class="cover-badge">Padrão</span>` : ""}
+    </div>
+    <div class="course-body">
+      <h3>${textoSeguro(t.nome)}</h3>
+      <p class="course-desc">${textoSeguro(c.titulo)}</p>
+      <div class="turma-numeros">
+        <span><strong>${n.membros}</strong> ${n.membros === 1 ? "membro" : "membros"}</span>
+        <span><strong>${n.comentarios}</strong> ${n.comentarios === 1 ? "comentário" : "comentários"}</span>
+        <span>Acesso ${prazoDaTurmaEmTexto(t)}</span>
+      </div>
+      <div class="course-progress-row"><span class="course-legenda">Progresso médio</span><span class="pct">${n.progresso}%</span></div>
+      <div class="progress-track thin"><div class="progress-fill mini" style="width:${n.progresso}%"></div></div>
+    </div>
+  </div>`;
+}
+
+/* Criar: o nome e o curso. O resto (prazo, padrão e, depois, as regras de
+   liberação) acerta-se na edição, que abre logo a seguir. */
+function novaTurma(cursoId){
   abrirDrawer({
-    titulo: turma ? "Editar turma" : "Nova turma",
-    subtitulo: "Os alunos inscritos passam a ver este curso na sua área.",
+    titulo: "Nova turma",
+    subtitulo: "Uma edição de um curso. O prazo de acesso define-se a seguir.",
     campos: [
-      { nome:"nome", rotulo:"Nome da turma", tipo:"texto", obrigatorio:true, placeholder:"ex: Programa de Liderança · Turma 2" },
-      { nome:"cursoId", rotulo:"Curso", tipo:"select", opcoes:opcoesCursos(), obrigatorio:true },
-      { nome:"inicio", rotulo:"Início", tipo:"data" },
-      { nome:"fim", rotulo:"Fim", tipo:"data" },
-      { nome:"membros", rotulo:"Alunos inscritos", tipo:"checklist", opcoes:opcoesMembros(), dica:"Estar aqui dá acesso ao curso, mesmo que o plano não o inclua." },
-      { nome:"ativa", rotulo:"Turma ativa", tipo:"toggle", padrao:true, dica:"Ao encerrar, os alunos perdem o acesso que vinha da turma." }
+      { nome:"nome", rotulo:"Nome", tipo:"texto", obrigatorio:true, placeholder:"ex.: Mentoria 7A" },
+      { nome:"cursoId", rotulo:"Curso", tipo:"select", opcoes:opcoesCursos() }
     ],
-    valores: turma || { ativa:true, membros:[], cursoId:(DB.cursos[0]||{}).id },
+    valores: { cursoId: cursoId || (DB.cursos[0] || {}).id },
+    textoGuardar: "Criar turma",
     aoGuardar: v => {
-      if(soNoCRM("As turmas")) return false;
-      if(turma) Object.assign(turma, v);
-      else DB.turmas.push({ id:novoId("turma"), ...v });
-      guardarDB();
-      renderAdminTurmas();
-      mostrarToast(turma ? "Turma atualizada" : "Turma criada");
+      if(!cursoPorId(v.cursoId)){ mostrarToast("Escolha o curso desta turma."); return false; }
+      criarTurma({ nome:v.nome, cursoId:v.cursoId, prazoDias:null, padrao:false });
+      return false;
     }
   });
 }
 
-function apagarTurma(id){
-  if(soNoCRM("As turmas")) return;
-  const turma = turmaPorId(id);
-  confirmarAcao({
-    titulo: "Apagar turma",
-    mensagem: `"${turma.nome}" é removida. Os ${(turma.membros||[]).length} aluno(s) perdem o acesso que vinha desta turma.`,
-    aoConfirmar: () => {
-      DB.turmas = DB.turmas.filter(t=>t.id!==id);
+async function criarTurma(t){
+  const botao = document.getElementById("drawer-guardar");
+  if(botao) botao.disabled = true;
+  try {
+    let id;
+    if(modoDemonstracao()){
+      turmasDoCurso(t.cursoId);
+      id = novoId("turma");
+      DB.turmas.push(Object.assign({ id }, t));
       guardarDB();
-      renderAdminTurmas();
-      mostrarToast("Turma apagada");
+    } else {
+      id = await API.guardarTurma(t);
+      await API.recarregarTurmas();
+    }
+    fecharDrawer(true);
+    mostrarToast("Turma criada");
+    irPara("admin-turma", id);
+  } catch(e){
+    mostrarToast(e.message || "Não foi possível criar a turma.");
+    if(botao) botao.disabled = false;
+  }
+}
+
+/* ============================================================
+   Editar uma turma
+   ============================================================ */
+function renderAdminTurma(id){
+  if(id) estado.turmaEditando = id;
+  const t = turmaPorId(estado.turmaEditando);
+  const c = t && cursoPorId(t.cursoId);
+  if(!t || !c){ irPara("admin-turmas"); return; }
+  const n = numerosDaTurma(t);
+  const outras = turmasDoCurso(t.cursoId).filter(x => x.id !== t.id);
+
+  document.getElementById("content-admin").innerHTML = `
+    <div class="back-link" id="btn-voltar-turmas"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar a Turmas</div>
+    <div class="gestao-head">
+      <div>
+        <h2>Editar turma</h2>
+        <p>${textoSeguro(c.titulo)}${outras.length ? ` · ${outras.length === 1 ? "mais 1 turma" : "mais " + outras.length + " turmas"} neste curso` : " · a única turma deste curso"}</p>
+      </div>
+    </div>
+
+    <div class="card painel turma-form">
+      <dl class="membro-factos">
+        <div><dt>Membros</dt><dd>${n.membros}</dd></div>
+        <div><dt>Comentários</dt><dd>${n.comentarios}</dd></div>
+        <div><dt>Progresso médio</dt><dd>${n.progresso}%</dd></div>
+      </dl>
+      <div class="field">
+        <label for="turma-nome">Nome</label>
+        <input id="turma-nome" maxlength="120" value="${textoSeguro(t.nome).replace(/"/g, "&quot;")}">
+      </div>
+      <div class="field">
+        <label for="turma-prazo">Prazo de acesso</label>
+        <div class="campo-com-sufixo"><input id="turma-prazo" type="number" min="1" max="36500" inputmode="numeric" value="${t.prazoDias || ""}" placeholder="Sem prazo"><span>dias</span></div>
+        <p class="hint">A matrícula acaba este número de dias depois de começar. Vazio, o acesso não tem prazo. Mudar o prazo vale para as matrículas novas; as que já existem ficam com a data que têm.</p>
+      </div>
+      <div class="toggle-row" style="border-top:none;padding:10px 0;">
+        <div><div class="t-title">Turma padrão</div>
+          <div class="t-sub">${t.padrao
+            ? "É a turma de quem recebe este curso sem se escolher uma turma. Para mudar, marque outra turma do curso como padrão."
+            : "É a turma de quem recebe este curso sem se escolher uma turma. Marcar esta desmarca a padrão de agora."}</div></div>
+        <div class="toggle ${t.padrao ? "on travado" : ""}" id="turma-padrao" role="switch" aria-checked="${!!t.padrao}" aria-label="Turma padrão" tabindex="0" ${t.padrao ? 'aria-disabled="true"' : ""}><div class="knob"></div></div>
+      </div>
+      <div class="turma-rodape">
+        ${t.padrao ? "" : `<button class="btn btn-perigo-suave" type="button" id="turma-apagar">Excluir</button>`}
+        <span class="turma-rodape-fim">
+          <button class="btn btn-secondary" type="button" id="turma-cancelar">Cancelar</button>
+          <button class="btn btn-primary" type="button" id="turma-guardar">Salvar</button>
+        </span>
+      </div>
+    </div>
+  `;
+
+  const voltar = () => irPara("admin-turmas");
+  document.getElementById("btn-voltar-turmas").addEventListener("click", voltar);
+  document.getElementById("turma-cancelar").addEventListener("click", voltar);
+  const padrao = document.getElementById("turma-padrao");
+  if(!t.padrao){
+    const alternar = () => { const ligado = padrao.classList.toggle("on"); padrao.setAttribute("aria-checked", String(ligado)); };
+    padrao.addEventListener("click", alternar);
+    padrao.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); alternar(); } });
+  }
+  document.getElementById("turma-guardar").addEventListener("click", () => guardarTurma(t));
+  const apagar = document.getElementById("turma-apagar");
+  if(apagar) apagar.addEventListener("click", () => apagarTurma(t));
+}
+
+async function guardarTurma(t){
+  const nome = document.getElementById("turma-nome").value.trim();
+  const bruto = document.getElementById("turma-prazo").value.trim();
+  const prazoDias = bruto === "" ? null : Number(bruto);
+  if(!nome){ mostrarToast("Dê um nome à turma."); return; }
+  if(prazoDias !== null && (!Number.isInteger(prazoDias) || prazoDias < 1 || prazoDias > 36500)){
+    mostrarToast("O prazo é um número de dias, a partir de 1. Vazio é sem prazo."); return;
+  }
+  const padrao = document.getElementById("turma-padrao").classList.contains("on");
+  const botao = document.getElementById("turma-guardar");
+  botao.disabled = true;
+  try {
+    if(modoDemonstracao()){
+      if(padrao) DB.turmas.forEach(x => { if(x.cursoId === t.cursoId) x.padrao = false; });
+      Object.assign(t, { nome, prazoDias, padrao });
+      guardarDB();
+    } else {
+      await API.guardarTurma({ id:t.id, nome, prazoDias, padrao });
+      await API.recarregarTurmas();
+    }
+    mostrarToast("Turma guardada");
+    irPara("admin-turmas");
+  } catch(e){
+    mostrarToast(e.message || "Não foi possível guardar a turma.");
+    botao.disabled = false;
+  }
+}
+
+function apagarTurma(t){
+  const n = numerosDaTurma(t).membros;
+  if(n){
+    mostrarToast(`Esta turma tem ${n === 1 ? "1 membro" : n + " membros"} com a matrícula ativa. Passe-os para outra turma antes de a apagar.`);
+    return;
+  }
+  confirmarAcao({
+    titulo: "Excluir turma",
+    mensagem: `«${textoSeguro(t.nome)}» deixa de existir. Não tem ninguém com a matrícula ativa; as matrículas antigas dela ficam no histórico.`,
+    textoConfirmar: "Excluir",
+    aoConfirmar: async () => {
+      try {
+        if(modoDemonstracao()){ DB.turmas = DB.turmas.filter(x => x.id !== t.id); guardarDB(); }
+        else { await API.apagarTurma(t.id); await API.recarregarTurmas(); }
+        mostrarToast("Turma excluída");
+        irPara("admin-turmas");
+      } catch(e){ mostrarToast(e.message || "Não foi possível excluir a turma."); }
     }
   });
 }
@@ -243,5 +421,6 @@ function editarModeloCertificado(){
 
 registarViews({
   "admin-turmas": renderAdminTurmas,
+  "admin-turma": renderAdminTurma,
   "admin-certificados": renderAdminCertificados
 });
