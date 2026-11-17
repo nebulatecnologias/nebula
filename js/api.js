@@ -292,6 +292,12 @@ const API = {
     return data;
   },
 
+  /* O prazo do acesso que um convite dá (dias a contar da entrada). */
+  async prazoDoAcessoDoConvite(id, dias){
+    const { error } = await this.cliente.from("convites").update({ acesso_dias: dias || null }).eq("id", id);
+    if(error) throw new Error(traduzirErroDados(error));
+  },
+
   async recarregarMembros(){
     DB.membros = (await lista(this.cliente.rpc("membros_da_organizacao"))).map(deMembro);
   },
@@ -808,6 +814,7 @@ function deConvite(c){
     idioma: c.idioma || "pt",
     origem: c.origem || "manual",
     papel: c.papel || "aluno",
+    acessoDias: c.acesso_dias || null,
     estado: estadoDaLinhaDoConvite(c),
     criadoEm: c.criado_em || "",
     expiraEm: c.expira_em || ""

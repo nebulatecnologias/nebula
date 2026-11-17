@@ -205,10 +205,12 @@ function prazoDoConvite(c){
 function resumoDoConvite(c){
   const nomes = (c.cursos||[]).map(id => (DB.cursos.find(x=>x.id===id)||{}).titulo).filter(Boolean).map(textoSeguro);
   const oferta = (DB.ofertas||[]).find(o => String(o.id) === String(c.ofertaId));
-  if(nomes.length > 2) return `${nomes.slice(0, 2).join("<br>")}<div class="sub-celula">e mais ${nomes.length - 2}</div>`;
-  if(nomes.length) return nomes.join("<br>");
+  /* O prazo do acesso, quando o convite o traz (conta do dia em que entra). */
+  const prazo = c.acessoDias ? `<div class="sub-celula">Acesso ${prazoDaOfertaEmTexto(c.acessoDias)}</div>` : "";
+  if(nomes.length > 2) return `${nomes.slice(0, 2).join("<br>")}<div class="sub-celula">e mais ${nomes.length - 2}</div>${prazo}`;
+  if(nomes.length) return nomes.join("<br>") + prazo;
   if(oferta) return textoSeguro(oferta.nome);
-  return `<span class="sub-celula">Só o que vier das inscrições</span>`;
+  return `<span class="sub-celula">Nenhum curso: entra na escola sem abrir cursos</span>`;
 }
 
 /* Os cursos, como cartões com a capa: «Oculto» se ainda não está publicado,
@@ -225,9 +227,12 @@ function cursosParaConvidar(){
 }
 
 function criarConvite(valores){
+  /* O convite diz o que abre: os cursos escolhidos e, se os houver, os que
+     estão abertos a todos os membros. Nada mais (15/11/2026). */
+  const abertos = (DB.cursos || []).filter(c => c.abertoATodos === true && c.publicado !== false).map(c => c.titulo);
   abrirDrawer({
     titulo: "Novo convite",
-    subtitulo: "Enviamos por email um link pessoal para criar conta com estes cursos.",
+    subtitulo: "Enviamos por email um link pessoal. A pessoa entra e abre só os cursos escolhidos aqui.",
     campos: [
       { nome:"email", rotulo:"Email", tipo:"texto", obrigatorio:true, placeholder:"nome@exemplo.co.mz" },
       { nome:"nome", rotulo:"Nome", tipo:"texto", placeholder:"ex.: Marta Lopes" },
@@ -237,9 +242,12 @@ function criarConvite(valores){
         opcoes: PRAZOS_DO_CONVITE.map(n => ({ valor:String(n), rotulo: n === 1 ? "1 dia" : n + " dias" })) },
       { nome:"cursos", rotulo:"Cursos incluídos", tipo:"checklist", cartoes:true,
         opcoes: cursosParaConvidar(),
-        dica:"Se este email já tiver conta, os cursos abrem na próxima vez que a pessoa entrar." }
+        dica: (abertos.length ? `Além destes, abre ${abertos.length === 1 ? "o curso aberto" : "os cursos abertos"} a todos os membros: ${abertos.map(textoSeguro).join(", ")}. ` : "")
+            + "Se este email já tiver conta, os cursos abrem na próxima vez que a pessoa entrar." },
+      { nome:"acessoDias", rotulo:"Duração do acesso aos cursos", tipo:"select", opcoes:PRAZOS_DA_OFERTA,
+        dica:"Conta do dia em que a pessoa entra." }
     ],
-    valores: Object.assign({ idioma:"pt", dias:"7", cursos:[] }, valores || {}),
+    valores: Object.assign({ idioma:"pt", dias:"7", cursos:[], acessoDias:"" }, valores || {}),
     textoGuardar: "Enviar convite",
     aoGuardar: v => {
       if(!/^\S+@\S+\.\S+$/.test(v.email)){ mostrarToast("Esse email não parece válido"); return false; }
@@ -267,6 +275,7 @@ function reenviarConvite(id){
     textoConfirmar: "Enviar",
     aoConfirmar: () => enviarConvite({ email:convite.email, nome:convite.nome, ofertaId:convite.ofertaId,
                                        cursos:convite.cursos, idioma:convite.idioma, dias:"7", papel:convite.papel,
+                                       acessoDias:convite.acessoDias || null,
                                        substitui: vivo || convite.estado === "expirado" ? convite.id : null })
   });
 }
@@ -276,12 +285,14 @@ function reenviarConvite(id){
 function depoisDeMudarConvites(){
   if(estado.viewAtual === "admin-convites") renderAdminConvites();
   else if(estado.viewAtual === "admin-membros") renderAdminMembros();
+  else if(estado.viewAtual === "admin-curso-editor" && estado.cursoEditando) carregarResumoDoAcesso(estado.cursoEditando);
   if(typeof desenharFicha === "function" && fichaAberta) desenharFicha();
 }
 
 /* O envio é do servidor; aqui só damos notícia do que aconteceu. */
 async function enviarConvite(v){
   const dias = PRAZOS_DO_CONVITE.includes(Number(v.dias)) ? Number(v.dias) : 7;
+  const acessoDias = Number(v.acessoDias) > 0 ? Number(v.acessoDias) : null;
   /* Um só link vivo por pessoa: convidar outra vez quem tem um convite manual
      por aceitar substitui-o (os de pagamento ficam, cada um abre a sua compra). */
   if(!v.substitui){
@@ -299,7 +310,7 @@ async function enviarConvite(v){
     DB.convites.unshift({
       id:novoId("cv"), codigo:novoId("cv"), email:v.email.trim().toLowerCase(), nome:v.nome||"",
       ofertaId:v.ofertaId || null, cursos:v.cursos || [], idioma:v.idioma || "pt", origem:"manual",
-      papel:v.papel || "aluno", estado:"enviado", criadoEm:new Date().toISOString(),
+      papel:v.papel || "aluno", acessoDias, estado:"enviado", criadoEm:new Date().toISOString(),
       expiraEm:new Date(Date.now() + dias * 864e5).toISOString()
     });
     guardarDB();
@@ -314,6 +325,12 @@ async function enviarConvite(v){
       ofertaId: v.ofertaId || null, cursos: v.cursos || [], substitui: v.substitui || null,
       papel: v.papel || "aluno"
     });
+    /* O prazo do acesso grava-se no convite acabado de criar: quem entrar por
+       ele fica com os cursos por esse tempo. */
+    if(acessoDias && resposta.convite && resposta.convite.id){
+      try { await API.prazoDoAcessoDoConvite(resposta.convite.id, acessoDias); }
+      catch(e){ mostrarToast("O convite seguiu, mas o prazo do acesso não ficou gravado: " + (e.message || "")); }
+    }
     try { await API.recarregarConvites(); }
     catch(e){ if(resposta.convite) DB.convites = [deConvite(resposta.convite)].concat(DB.convites || []); }
     depoisDeMudarConvites();
