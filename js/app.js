@@ -83,6 +83,8 @@ async function arrancar(){
   if(modoDemonstracao()){
     /* Modo de demonstração: dados de exemplo, sem servidor. */
     aplicarAparencia();
+    const inscricaoDemo = new URLSearchParams(location.search).get("inscricao");
+    if(inscricaoDemo){ await abrirPaginaDeInscricao(inscricaoDemo); return; }
     mostrarEcra("login");
     return;
   }
@@ -106,6 +108,14 @@ async function arrancar(){
      convite ainda vale; se valer, devolve o link de entrada e segue-se
      para ele. Se não, diz-se porquê, aqui mesmo. */
   const pedido = new URLSearchParams(location.search);
+  /* O endereço de um link de inscrição: `?inscricao=<código>`. É uma página
+     pública, sem sessão (js/inscricao.js). */
+  const inscricao = pedido.get("inscricao");
+  if(inscricao){
+    aplicarAparencia();
+    await abrirPaginaDeInscricao(inscricao);
+    return;
+  }
   const token = pedido.get("convite");
   if(token){
     await abrirConviteDoEmail(token);
@@ -244,7 +254,10 @@ document.getElementById("form-login").addEventListener("submit", async e => {
 /* O modo de demonstração mantém o comportamento antigo, para os
    testes automáticos e para mostrar a aplicação sem servidor. */
 function entrarEmDemonstracao(email){
-  let membro = membroPorEmail(email) || aceitarConvitePendente(email);
+  /* Com convites à espera, é ao entrar que eles viram acesso: para quem é
+     novo e para quem já é membro. */
+  let membro = membroPorEmail(email);
+  if(!membro || membro.acesso !== "bloqueado") membro = aceitarConvitePendente(email) || membro;
   if(membro && membro.acesso === "bloqueado"){
     mostrarToast(t("Este acesso está bloqueado. Fale com a sua mentoria."));
     return;

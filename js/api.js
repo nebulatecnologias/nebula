@@ -271,6 +271,8 @@ const API = {
       DB.membros  = membros.map(deMembro);
       DB.convites = convites.map(deConvite);
       DB.certificadosEmitidos = emitidos.map(deCertificado);
+      /* Os links de inscrição: se a leitura falhar, o painel abre na mesma. */
+      try { await this.recarregarLinks(); } catch(e){ DB.linksDeInscricao = []; }
 
       /* Quantas pessoas confirmaram presença em cada encontro. */
       const todas = await lista(c.from("presencas").select("evento_id"));
@@ -280,6 +282,7 @@ const API = {
     } else {
       DB.membros  = [deMembro(this.utilizador)];
       DB.convites = [];
+      DB.linksDeInscricao = [];
       DB.certificadosEmitidos = [];
     }
   },
@@ -376,14 +379,51 @@ const API = {
     if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
   },
 
-  /* O prazo do acesso que um convite dá (dias a contar da entrada). */
-  async prazoDoAcessoDoConvite(id, dias){
-    const { error } = await this.cliente.from("convites").update({ acesso_dias: dias || null }).eq("id", id);
-    if(error) throw new Error(traduzirErroDados(error));
+  /* O que um convite dá além dos cursos: a turma de cada um, a assinatura
+     ou o acesso ilimitado. O prazo próprio (dias) só os convites de antes o
+     trazem. */
+  async oQueOConviteDa(id, { turmas, niveis, ilimitado, acessoDias }){
+    const { error } = await this.cliente.from("convites")
+      .update({ turmas: turmas || {}, niveis: niveis || [], ilimitado: !!ilimitado, acesso_dias: acessoDias || null }).eq("id", id);
+    if(error) throw new Error(traduzirErroAuth(error));
   },
 
-  async recarregarMembros(){
-    DB.membros = (await lista(this.cliente.rpc("membros_da_organizacao"))).map(deMembro);
+  /* Os links de inscrição (17/11/2026): convites abertos, que a escola
+     divulga. Escrevem-se pela tabela, com as regras dela; não se apagam. */
+  async recarregarLinks(){
+    const linhas = await lista(this.cliente.from("links_de_inscricao").select("*").order("criado_em", { ascending:false }));
+    DB.linksDeInscricao = linhas.map(deLinkDeInscricao);
+  },
+  async guardarLink(id, l){
+    const linha = { titulo:l.titulo, descricao:l.descricao || null, limite:l.limite || null,
+                    telefone_obrigatorio:!!l.telefoneObrigatorio, modalidade:l.modalidade,
+                    cursos:l.cursos || [], turmas:l.turmas || {}, nivel_id:l.nivelId || null, fundo:l.fundo || null };
+    const pedido = id ? this.cliente.from("links_de_inscricao").update(linha).eq("id", id)
+                      : this.cliente.from("links_de_inscricao").insert(linha);
+    const { error } = await pedido;
+    if(error) throw new Error(traduzirErroAuth(error));
+  },
+  async arquivarLink(id, arquivar){
+    const { error } = await this.cliente.from("links_de_inscricao")
+      .update({ arquivado_em: arquivar ? new Date().toISOString() : null }).eq("id", id);
+    if(error) throw new Error(traduzirErroAuth(error));
+  },
+  /* A página pública: o que o link mostra, e inscrever-se. Sem sessão. A
+     inscrição passa pela função do servidor, que confere o captcha. */
+  async lerLinkPublico(codigo){
+    const { data, error } = await this.pub().rpc("link_de_inscricao", { p_codigo: codigo });
+    if(error) throw new Error(traduzirErroAuth(error));
+    return data;
+  },
+  async inscricao(corpo){
+    const { data, error } = await this.cliente.functions.invoke("inscricao", { body:corpo });
+    if(error){
+      let detalhe = null;
+      try { detalhe = await error.context.json(); } catch(e){ /* resposta sem corpo */ }
+      if(detalhe && detalhe.estado) return detalhe;
+      throw new Error((detalhe && detalhe.error) || traduzirErroAuth(error));
+    }
+    return data;
   },
 
   /* Revogar não apaga: o convite fica, parado, e deixa de dar entrada. */
@@ -871,9 +911,20 @@ function deConvite(c){
     origem: c.origem || "manual",
     papel: c.papel || "aluno",
     acessoDias: c.acesso_dias || null,
+    turmas: c.turmas || {}, niveis: c.niveis || [], ilimitado: !!c.ilimitado,
+    linkId: c.link_id || null, telefone: c.telefone || "",
     estado: estadoDaLinhaDoConvite(c),
     criadoEm: c.criado_em || "",
     expiraEm: c.expira_em || ""
+  };
+}
+
+function deLinkDeInscricao(l){
+  return {
+    id: l.id, codigo: l.codigo, titulo: l.titulo, descricao: l.descricao || "",
+    limite: l.limite || null, telefoneObrigatorio: !!l.telefone_obrigatorio,
+    modalidade: l.modalidade, cursos: l.cursos || [], turmas: l.turmas || {}, nivelId: l.nivel_id || null,
+    fundo: l.fundo || "", arquivado: !!l.arquivado_em, criadoEm: l.criado_em || ""
   };
 }
 

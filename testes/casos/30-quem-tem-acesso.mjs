@@ -1,6 +1,6 @@
 import { entrarDemo, ADMIN } from '../util.mjs';
 
-export const nome = 'Quem tem acesso: no editor de cada curso, a regra, as ofertas, as pessoas (dar, prazo, tirar) e os convites; o convite leva o prazo';
+export const nome = 'Quem tem acesso: no editor de cada curso, a regra, as ofertas, as pessoas (dar, prazo, tirar) e os convites; o convite leva a turma, e o prazo é o dela';
 
 /* Pedido do Shelton a 15/11/2026: «não consigo dentro do painel definir de
    forma clara quem tem acesso a um curso que acabo de criar». Em demonstração,
@@ -88,23 +88,26 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   await adm.waitForTimeout(250);
   contem(await resumo(), '4 alunos', 'O resumo do editor acompanha o que se fez');
 
-  /* Convidar alguém de fora, já com este curso e com prazo de acesso. */
+  /* Convidar alguém de fora, já com este curso, numa turma com prazo. */
   await adm.click('#btn-gerir-acesso');
   await adm.waitForTimeout(400);
   await adm.click('.seccao-cabeca [data-convidar]');
   await adm.waitForTimeout(300);
   verdade(await adm.isChecked('#valor-cursos input[value="kt"]'), 'O convite abre já com este curso escolhido');
-  contem(await adm.innerText('#drawer-overlay .drawer'), 'abre só os cursos escolhidos aqui', 'e diz que só abre os cursos escolhidos');
+  contem(await adm.innerText('#drawer-overlay .drawer'), 'recebe só o que for escolhido aqui', 'e diz que só dá o que for escolhido');
+  igual(await adm.locator('#valor-acessoDias').count(), 0, 'O convite já não tem duração própria');
   await adm.fill('#valor-email', 'nova.aluna@exemplo.co.mz');
-  await adm.selectOption('#valor-acessoDias', '30');
+  await adm.selectOption('select[data-oferta-turma="kt"]', 't-kt-90');
   await adm.click('#drawer-guardar');
   await adm.waitForTimeout(500);
   const convite = await adm.evaluate(() => DB.convites[0]);
-  igual(`${convite.email}/${convite.cursos.join(',')}/${convite.acessoDias}`, 'nova.aluna@exemplo.co.mz/kt/30', 'O convite leva o curso e o prazo do acesso');
+  igual(`${convite.email}/${convite.cursos.join(',')}/${JSON.stringify(convite.turmas)}/${convite.acessoDias}`, 'nova.aluna@exemplo.co.mz/kt/{"kt":"t-kt-90"}/null', 'O convite leva o curso e a turma, sem prazo próprio');
   contem(await resumo(), '3 convites por aceitar', 'e o resumo do curso conta-o');
   await adm.evaluate(() => irPara('admin-convites'));
   await adm.waitForTimeout(250);
-  contem(await adm.innerText(`tr[data-convite="${convite.id}"]`), 'Acesso 30 dias', 'Na lista, o convite diz por quanto tempo abre os cursos');
+  const linhaDoConvite = await adm.innerText(`tr[data-convite="${convite.id}"]`);
+  contem(linhaDoConvite, 'Turma 90 dias', 'Na lista, o convite diz em que turma entrega');
+  contem(linhaDoConvite, 'Acesso 90 dias', 'e por quanto tempo, que é o prazo dela');
 
   /* Um curso acabado de criar: ninguém, e diz-se. */
   await adm.evaluate(() => irPara('admin-conteudos'));

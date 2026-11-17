@@ -307,6 +307,21 @@ const EVENTOS_PADRAO = [
    contam a partir de hoje, para os prazos lerem sempre como deviam. */
 function _haDias(n){ return new Date(Date.now() - n * 864e5).toISOString(); }
 function _daquiA(n){ return new Date(Date.now() + n * 864e5).toISOString(); }
+/* Os links de inscrição da demonstração: convites abertos, que a escola
+   divulga. Com servidor é a tabela academia.links_de_inscricao. */
+const LINKS_DE_INSCRICAO_PADRAO = [
+  { id:"lk1", codigo:"GmY4RG", titulo:"Aula aberta: Mentalidade Inquebrável",
+    descricao:"Inscreva-se e receba **acesso ao curso completo**. As vagas são limitadas.",
+    limite:50, telefoneObrigatorio:true, modalidade:"cursos", cursos:["mi"], turmas:{}, nivelId:null,
+    fundo:"", arquivado:false, criadoEm:"2026-11-10T09:00:00Z" },
+  { id:"lk2", codigo:"Kp7TnW", titulo:"Experimente o Essencial durante 15 dias", descricao:"",
+    limite:null, telefoneObrigatorio:false, modalidade:"assinatura", cursos:[], turmas:{}, nivelId:"essencial",
+    fundo:"", arquivado:false, criadoEm:"2026-11-02T09:00:00Z" },
+  { id:"lk3", codigo:"Vx3HbQ", titulo:"Semana da Liderança 2026", descricao:"A campanha de setembro.",
+    limite:null, telefoneObrigatorio:false, modalidade:"ilimitado", cursos:[], turmas:{}, nivelId:null,
+    fundo:"", arquivado:true, criadoEm:"2026-09-01T09:00:00Z" }
+];
+
 const CONVITES_PADRAO = [
   { id:"cv1", codigo:"a1".repeat(24), email:"joana.macie@exemplo.co.mz", nome:"Joana Macie", ofertaId:null,
     cursos:["kt"], idioma:"pt", origem:"manual", estado:"enviado", criadoEm:_haDias(1), expiraEm:_daquiA(6) },
@@ -483,6 +498,7 @@ function dbPadrao(){
     notificacoes: NOTIFICACOES_PADRAO,
     conquistas: CONQUISTAS_PADRAO,
     convites: CONVITES_PADRAO,
+    linksDeInscricao: LINKS_DE_INSCRICAO_PADRAO,
     certificados: [],
     certificadosEmitidos: CERTIFICADOS_EMITIDOS_PADRAO,
   }));
