@@ -2,8 +2,8 @@
    Administração › Turmas e Certificados
 
    Uma TURMA é uma edição de um curso (especificação de 17/11/2026): tem um
-   nome, um prazo de acesso e, no passo seguinte, as regras de liberação das
-   aulas. Todo o curso tem pelo menos uma, a «Turma A», que é a padrão dele.
+   nome, um prazo de acesso e as regras de liberação dos módulos e das
+   aulas (quando cada um abre para quem está nela). Todo o curso tem pelo menos uma, a «Turma A», que é a padrão dele.
    Quem tem o curso tem-no numa turma: é a matrícula.
 
    Até aqui esta aba mostrava as turmas do painel de gestão, só para ler.
@@ -133,8 +133,8 @@ function linhaDaTurma(t){
   </div>`;
 }
 
-/* Criar: o nome e o curso. O resto (prazo, padrão e, depois, as regras de
-   liberação) acerta-se na edição, que abre logo a seguir. */
+/* Criar: o nome e o curso. O resto (prazo, padrão e as regras de liberação)
+   acerta-se na edição, que abre logo a seguir. */
 function novaTurma(cursoId){
   abrirDrawer({
     titulo: "Nova turma",
@@ -218,15 +218,19 @@ function renderAdminTurma(id){
             : "É a turma de quem recebe este curso sem se escolher uma turma. Marcar esta desmarca a padrão de agora."}</div></div>
         <div class="toggle ${t.padrao ? "on travado" : ""}" id="turma-padrao" role="switch" aria-checked="${!!t.padrao}" aria-label="Turma padrão" tabindex="0" ${t.padrao ? 'aria-disabled="true"' : ""}><div class="knob"></div></div>
       </div>
-      <div class="turma-rodape">
-        ${t.padrao ? "" : `<button class="btn btn-perigo-suave" type="button" id="turma-apagar">Excluir</button>`}
-        <span class="turma-rodape-fim">
-          <button class="btn btn-secondary" type="button" id="turma-cancelar">Cancelar</button>
-          <button class="btn btn-primary" type="button" id="turma-guardar">Salvar</button>
-        </span>
-      </div>
+    </div>
+
+    <div id="turma-regras-zona" class="turma-regras-zona"><div class="card painel turma-regras"><div class="empty-note">A ler as regras de liberação…</div></div></div>
+
+    <div class="turma-rodape turma-form turma-rodape-solto">
+      ${t.padrao ? "" : `<button class="btn btn-perigo-suave" type="button" id="turma-apagar">Excluir</button>`}
+      <span class="turma-rodape-fim">
+        <button class="btn btn-secondary" type="button" id="turma-cancelar">Cancelar</button>
+        <button class="btn btn-primary" type="button" id="turma-guardar">Salvar</button>
+      </span>
     </div>
   `;
+  abrirRegrasDaTurma(t, c);
 
   const voltar = () => irPara("admin-turmas");
   document.getElementById("btn-voltar-turmas").addEventListener("click", voltar);
@@ -251,15 +255,21 @@ async function guardarTurma(t){
     mostrarToast("O prazo é um número de dias, a partir de 1. Vazio é sem prazo."); return;
   }
   const padrao = document.getElementById("turma-padrao").classList.contains("on");
+  /* As regras conferem-se antes de se guardar o que quer que seja. Se não
+     chegaram a ler-se (falha de rede), não se mexe nelas. */
+  const regras = regrasParaGuardar(t);
+  if(regras === false) return;
   const botao = document.getElementById("turma-guardar");
   botao.disabled = true;
   try {
     if(modoDemonstracao()){
       if(padrao) DB.turmas.forEach(x => { if(x.cursoId === t.cursoId) x.padrao = false; });
       Object.assign(t, { nome, prazoDias, padrao });
+      if(regras){ DB.regras = DB.regras || {}; DB.regras[t.id] = regras; }
       guardarDB();
     } else {
       await API.guardarTurma({ id:t.id, nome, prazoDias, padrao });
+      if(regras) await API.guardarRegrasDaTurma(t.id, regras);
       await API.recarregarTurmas();
     }
     mostrarToast("Turma guardada");
@@ -282,13 +292,222 @@ function apagarTurma(t){
     textoConfirmar: "Excluir",
     aoConfirmar: async () => {
       try {
-        if(modoDemonstracao()){ DB.turmas = DB.turmas.filter(x => x.id !== t.id); guardarDB(); }
+        if(modoDemonstracao()){ DB.turmas = DB.turmas.filter(x => x.id !== t.id); if(DB.regras) delete DB.regras[t.id]; guardarDB(); }
         else { await API.apagarTurma(t.id); await API.recarregarTurmas(); }
         mostrarToast("Turma excluída");
         irPara("admin-turmas");
       } catch(e){ mostrarToast(e.message || "Não foi possível excluir a turma."); }
     }
   });
+}
+
+/* ============================================================
+   Regras de liberação (na edição da turma)
+
+   Por módulo e por aula, quando o conteúdo abre para quem está nesta turma.
+   Sem regra, o acesso é livre. A regra de uma aula vale mais do que a do
+   módulo dela: é assim que uma aula de boas-vindas fica livre num módulo
+   que só abre daqui a um mês. Quem aplica as regras é a base (o aluno não
+   chega a receber o que está oculto ou bloqueado); aqui só se escrevem.
+   ============================================================ */
+const REGRAS_DE_LIBERACAO = [
+  { valor:"livre",     rotulo:"Acesso livre" },
+  { valor:"data",      rotulo:"Data programada" },
+  { valor:"dias",      rotulo:"Dias após a matrícula" },
+  { valor:"oculto",    rotulo:"Oculto" },
+  { valor:"bloqueado", rotulo:"Bloqueado" },
+  { valor:"curso",     rotulo:"Curso concluído" },
+  { valor:"modulo",    rotulo:"Módulo concluído" },
+  { valor:"aula",      rotulo:"Aula concluída" }
+];
+
+/* O que se está a editar: uma cópia de trabalho, que só vai para a base (ou
+   para a memória, na demonstração) ao Salvar. */
+let regrasEmEdicao = null;
+
+function abrirRegrasDaTurma(t, c){
+  regrasEmEdicao = { turma:t.id, curso:c.id, lista:null };
+  const chegaram = lista => {
+    if(!regrasEmEdicao || regrasEmEdicao.turma !== t.id) return;
+    const modulos = new Set(c.modulos.map(m => m.id));
+    const aulas = new Set(c.modulos.flatMap(m => m.aulas.map(a => a.id)));
+    /* Uma regra de um módulo ou de uma aula que já não existe não se mostra. */
+    regrasEmEdicao.lista = lista.filter(r => (r.alvoTipo === "modulo" ? modulos : aulas).has(r.alvoId)).map(r => Object.assign({}, r));
+    pintarRegrasDaTurma();
+  };
+  if(modoDemonstracao()){ chegaram(((DB.regras || {})[t.id]) || []); return; }
+  API.regrasDaTurma(t.id).then(chegaram).catch(() => {
+    const zona = document.getElementById("turma-regras-zona");
+    if(zona && regrasEmEdicao && regrasEmEdicao.turma === t.id)
+      zona.innerHTML = `<div class="card painel turma-regras"><div class="empty-note">Não foi possível ler as regras de liberação. Recarregue a página para as editar; o resto da turma pode guardar-se.</div></div>`;
+  });
+}
+
+function regraEmEdicaoDe(tipo, id){
+  return ((regrasEmEdicao && regrasEmEdicao.lista) || []).find(r => r.alvoTipo === tipo && r.alvoId === id);
+}
+
+/* Os campos que cada regra pede, ao lado do select. */
+function camposDaRegraHTML(r, tipo, id){
+  const c = cursoPorId(regrasEmEdicao.curso);
+  const atributo = v => textoSeguro(v === null || v === undefined ? "" : v).replace(/"/g, "&quot;");
+  const moduloDaAula = tipo === "aula" ? c.modulos.find(m => m.aulas.some(a => a.id === id)) : null;
+  if(!r) return "";
+  if(r.regra === "data") return `
+    <label class="regra-campo"><span>Abre em</span><input type="date" data-campo="abreEm" value="${atributo(r.abreEm)}"></label>
+    <label class="regra-campo"><span>Fecha em (opcional)</span><input type="date" data-campo="fechaEm" value="${atributo(r.fechaEm)}"></label>`;
+  if(r.regra === "dias") return `
+    <label class="regra-campo"><span>A contar da matrícula</span><span class="campo-com-sufixo"><input type="number" min="0" max="36500" inputmode="numeric" data-campo="dias" value="${atributo(r.dias)}" placeholder="0"><span>dias</span></span></label>`;
+  if(r.regra === "curso") return `
+    <label class="regra-campo largo"><span>Curso que tem de estar concluído</span><select data-campo="cursoConcluido">
+      <option value="">Escolha o curso</option>
+      ${DB.cursos.filter(x => x.id !== c.id).map(x => `<option value="${x.id}" ${x.id === r.cursoConcluido ? "selected" : ""}>${textoSeguro(x.titulo)}</option>`).join("")}
+    </select></label>`;
+  if(r.regra === "modulo") return `
+    <label class="regra-campo largo"><span>Módulo que tem de estar concluído</span><select data-campo="moduloConcluido">
+      <option value="">Escolha o módulo</option>
+      ${c.modulos.filter(m => m.id !== id && m !== moduloDaAula).map(m => `<option value="${m.id}" ${m.id === r.moduloConcluido ? "selected" : ""}>${textoSeguro(m.titulo)}</option>`).join("")}
+    </select></label>`;
+  if(r.regra === "aula") return `
+    <label class="regra-campo largo"><span>Aula que tem de estar concluída</span><select data-campo="aulaConcluida">
+      <option value="">Escolha a aula</option>
+      ${c.modulos.filter(m => m.id !== id).map(m => `<optgroup label="${atributo(m.titulo)}">${m.aulas.filter(a => a.id !== id).map(a =>
+        `<option value="${a.id}" ${a.id === r.aulaConcluida ? "selected" : ""}>${textoSeguro(a.titulo)}</option>`).join("")}</optgroup>`).join("")}
+    </select></label>`;
+  return "";
+}
+
+function linhaDaRegraHTML(tipo, id, numero, titulo, sub){
+  const r = regraEmEdicaoDe(tipo, id);
+  const valor = r ? r.regra : "livre";
+  const nome = (tipo === "modulo" ? "Regra do módulo " : "Regra da aula ") + titulo;
+  return `<div class="regra-linha" data-regra-tipo="${tipo}" data-regra-alvo="${id}">
+    <div class="regra-alvo">
+      ${numero ? `<span class="regra-num">${numero}</span>` : ""}
+      <span class="regra-nome"><strong>${textoSeguro(titulo)}</strong>${sub ? `<small>${textoSeguro(sub)}</small>` : ""}</span>
+    </div>
+    <div class="regra-campos">
+      <label class="regra-campo"><span>Regra</span><select data-campo="regra" aria-label="${textoSeguro(nome).replace(/"/g, "&quot;")}">
+        ${REGRAS_DE_LIBERACAO.map(o => `<option value="${o.valor}" ${o.valor === valor ? "selected" : ""}>${o.rotulo}</option>`).join("")}
+      </select></label>
+      ${camposDaRegraHTML(r, tipo, id)}
+    </div>
+    ${tipo === "aula" ? `<button class="btn-icone perigo" type="button" data-tirar-regra="${id}" aria-label="Tirar a regra desta aula" title="Tirar a regra desta aula"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>` : ""}
+  </div>`;
+}
+
+function pintarRegrasDaTurma(){
+  const zona = document.getElementById("turma-regras-zona");
+  if(!zona || !regrasEmEdicao || !regrasEmEdicao.lista) return;
+  const c = cursoPorId(regrasEmEdicao.curso);
+  const comRegra = regrasEmEdicao.lista.filter(r => r.alvoTipo === "aula");
+  const semRegra = c.modulos.map(m => ({ m, aulas:m.aulas.filter(a => !regraEmEdicaoDe("aula", a.id)) })).filter(x => x.aulas.length);
+  const posicao = id => { let n = 0; for(const m of c.modulos) for(const a of m.aulas){ if(a.id === id) return n; n++; } return n; };
+  const linhasDeAulas = comRegra.slice().sort((x, y) => posicao(x.alvoId) - posicao(y.alvoId)).map(r => {
+    const m = c.modulos.find(k => k.aulas.some(a => a.id === r.alvoId));
+    const a = m.aulas.find(k => k.id === r.alvoId);
+    return linhaDaRegraHTML("aula", a.id, "", a.titulo, m.titulo);
+  }).join("");
+
+  zona.innerHTML = `
+    <div class="card painel turma-regras" id="regras-modulos">
+      <h3>Regras de liberação de módulos</h3>
+      <p class="hint">Quando cada módulo abre para quem está nesta turma. «Oculto» não aparece ao aluno; «Bloqueado» aparece com cadeado e não se abre. Os dias contam do início da matrícula.</p>
+      ${c.modulos.length
+        ? `<div class="regras-lista">${c.modulos.map((m, i) => linhaDaRegraHTML("modulo", m.id, String(i + 1).padStart(2, "0"), m.titulo,
+            m.aulas.length === 1 ? "1 aula" : m.aulas.length + " aulas")).join("")}</div>`
+        : `<div class="empty-note">Este curso ainda não tem módulos. Crie-os em Conteúdos e volte aqui para os programar.</div>`}
+    </div>
+    <div class="card painel turma-regras" id="regras-aulas">
+      <h3>Regras de liberação de aulas</h3>
+      <p class="hint">Programe aulas específicas quando as regras dos módulos não servirem. Uma aula com regra própria não segue a do módulo dela.</p>
+      ${semRegra.length ? `<div class="regra-adicionar">
+        <select id="regra-aula-nova" aria-label="Aula a programar">
+          ${semRegra.map(x => `<optgroup label="${textoSeguro(x.m.titulo).replace(/"/g, "&quot;")}">${x.aulas.map(a => `<option value="${a.id}">${textoSeguro(a.titulo)}</option>`).join("")}</optgroup>`).join("")}
+        </select>
+        <button class="btn btn-secondary" type="button" id="regra-aula-adicionar">Adicionar</button>
+      </div>` : (c.modulos.some(m => m.aulas.length) ? "" : `<div class="empty-note">Este curso ainda não tem aulas.</div>`)}
+      ${linhasDeAulas ? `<div class="regras-lista">${linhasDeAulas}</div>` : ""}
+    </div>`;
+
+  /* Mudar um campo muda a cópia de trabalho; mudar a regra redesenha a linha,
+     porque os campos ao lado são outros. */
+  zona.querySelectorAll(".regra-linha").forEach(linha => {
+    const tipo = linha.getAttribute("data-regra-tipo"), id = linha.getAttribute("data-regra-alvo");
+    linha.querySelectorAll("[data-campo]").forEach(campo => {
+      const nomeDoCampo = campo.getAttribute("data-campo");
+      const mudar = () => {
+        let r = regraEmEdicaoDe(tipo, id);
+        if(nomeDoCampo === "regra"){
+          if(campo.value === "livre" && tipo === "modulo") regrasEmEdicao.lista = regrasEmEdicao.lista.filter(x => x !== r);
+          else if(r) r.regra = campo.value;
+          else regrasEmEdicao.lista.push({ alvoTipo:tipo, alvoId:id, regra:campo.value });
+          pintarRegrasDaTurma();
+          const outro = document.querySelector(`.regra-linha[data-regra-tipo="${tipo}"][data-regra-alvo="${id}"] [data-campo="regra"]`);
+          if(outro) outro.focus();
+          return;
+        }
+        if(r) r[nomeDoCampo] = campo.value;
+      };
+      campo.addEventListener("change", mudar);
+      if(campo.tagName === "INPUT") campo.addEventListener("input", mudar);
+    });
+  });
+  zona.querySelectorAll("[data-tirar-regra]").forEach(b => b.addEventListener("click", () => {
+    const id = b.getAttribute("data-tirar-regra");
+    regrasEmEdicao.lista = regrasEmEdicao.lista.filter(r => !(r.alvoTipo === "aula" && r.alvoId === id));
+    pintarRegrasDaTurma();
+  }));
+  const adicionar = document.getElementById("regra-aula-adicionar");
+  if(adicionar) adicionar.addEventListener("click", () => {
+    const id = document.getElementById("regra-aula-nova").value;
+    if(!id) return;
+    regrasEmEdicao.lista.push({ alvoTipo:"aula", alvoId:id, regra:"livre" });
+    pintarRegrasDaTurma();
+    const novo = document.querySelector(`.regra-linha[data-regra-tipo="aula"][data-regra-alvo="${id}"] [data-campo="regra"]`);
+    if(novo) novo.focus();
+  });
+}
+
+/* As regras, conferidas e prontas a guardar. Devolve null se não chegaram a
+   ler-se (não se mexe nelas) e false se alguma está por acabar (já avisou). */
+function regrasParaGuardar(t){
+  if(!regrasEmEdicao || regrasEmEdicao.turma !== t.id || !regrasEmEdicao.lista) return null;
+  const c = cursoPorId(t.cursoId);
+  const nomeDe = r => {
+    if(r.alvoTipo === "modulo") return "do módulo «" + textoSeguro((c.modulos.find(m => m.id === r.alvoId) || {}).titulo) + "»";
+    return "da aula «" + textoSeguro((c.modulos.flatMap(m => m.aulas).find(a => a.id === r.alvoId) || {}).titulo) + "»";
+  };
+  const falha = (r, msg) => {
+    mostrarToast(`Regra ${nomeDe(r)}: ${msg}`);
+    const campo = document.querySelector(`.regra-linha[data-regra-tipo="${r.alvoTipo}"][data-regra-alvo="${r.alvoId}"] [data-campo]:not([data-campo="regra"])`);
+    if(campo) campo.focus();
+    return false;
+  };
+  const limpas = [];
+  for(const r of regrasEmEdicao.lista){
+    const x = { alvoTipo:r.alvoTipo, alvoId:r.alvoId, regra:r.regra };
+    if(r.regra === "data"){
+      if(!r.abreEm) return falha(r, "falta a data em que abre.");
+      if(r.fechaEm && r.fechaEm < r.abreEm) return falha(r, "a data de fecho é anterior à de abertura.");
+      x.abreEm = r.abreEm; x.fechaEm = r.fechaEm || "";
+    } else if(r.regra === "dias"){
+      const dias = String(r.dias === undefined || r.dias === null ? "" : r.dias).trim() === "" ? NaN : Number(r.dias);
+      if(!Number.isInteger(dias) || dias < 0 || dias > 36500) return falha(r, "os dias são um número inteiro, a partir de 0.");
+      x.dias = dias;
+    } else if(r.regra === "curso"){
+      if(!r.cursoConcluido || !DB.cursos.some(k => k.id === r.cursoConcluido)) return falha(r, "escolha o curso que tem de estar concluído.");
+      x.cursoConcluido = r.cursoConcluido;
+    } else if(r.regra === "modulo"){
+      if(!r.moduloConcluido || !c.modulos.some(m => m.id === r.moduloConcluido)) return falha(r, "escolha o módulo que tem de estar concluído.");
+      x.moduloConcluido = r.moduloConcluido;
+    } else if(r.regra === "aula"){
+      if(!r.aulaConcluida || !c.modulos.some(m => m.aulas.some(a => a.id === r.aulaConcluida))) return falha(r, "escolha a aula que tem de estar concluída.");
+      x.aulaConcluida = r.aulaConcluida;
+    }
+    limpas.push(x);
+  }
+  return limpas;
 }
 
 /* ============================================================

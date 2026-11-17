@@ -576,6 +576,18 @@ button.chip{ font:inherit; font-size:14px; }
 .aula-info{ flex:1; min-width:0; }
 .aula-info .titulo{ font-size:15px; font-weight:500; color:var(--ink); }
 .aula-row[data-status="concluida"] .aula-info .titulo{ color:var(--muted); }
+/* Bloqueada pelas regras da turma: cadeado, a razão por baixo, e não se abre. */
+.aula-row.bloqueada{ cursor:default; }
+.aula-row.bloqueada:hover{ background:transparent; }
+.aula-row.bloqueada .aula-status{ color:var(--muted); background:var(--sunken); border-color:transparent; }
+.aula-row.bloqueada .aula-status .icon{ width:14px; height:14px; }
+.aula-row.bloqueada .aula-info{ display:grid; gap:2px; }
+.aula-row.bloqueada .aula-info .titulo{ color:var(--muted); }
+.aula-bloqueio{ font-size:13px; color:var(--muted); }
+.aula-bloqueada{ display:grid; justify-items:center; gap:6px; text-align:center; padding:48px 24px; }
+.aula-bloqueada h1{ margin:8px 0 0; font-size:24px; }
+.aula-bloqueada p{ margin:10px 0 0; color:var(--ink-2); max-width:52ch; }
+.aula-bloqueada-icone{ width:52px; height:52px; border-radius:99px; display:grid; place-items:center; background:var(--sunken); color:var(--muted); }
 .aula-duracao{ font-size:13px; color:var(--muted); flex-shrink:0; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .aula-arrow{ color:var(--muted); flex-shrink:0; transition:transform .2s var(--ease), color .2s; }
 .aula-row:hover .aula-arrow{ color:var(--accent); transform:translateX(2px); }
@@ -613,6 +625,9 @@ button.chip{ font:inherit; font-size:14px; }
 .mini-status .icon{ width:12px; height:12px; }
 .mini-aula[data-status="concluida"] .mini-status{ background:var(--green); border-color:transparent; color:#fff; }
 .mini-aula[data-status="progresso"] .mini-status{ border-color:var(--accent); color:var(--accent); }
+.mini-aula[data-status="bloqueada"]{ cursor:default; }
+.mini-aula[data-status="bloqueada"] .mini-status{ color:var(--muted); background:var(--sunken); border-color:transparent; }
+.mini-aula[data-status="bloqueada"] .mini-titulo{ color:var(--muted); }
 .mini-titulo{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink-2); }
 .mini-dur{ font-size:12.5px; color:var(--muted); flex-shrink:0; font-variant-numeric:tabular-nums; }
 
@@ -944,13 +959,47 @@ button.chip{ font:inherit; font-size:14px; }
   .turmas-acoes{ width:100%; }
   .turmas-acoes .search-pill{ flex:1; min-width:0; }
 }
-.turma-form{ max-width:640px; }
+.turma-form{ max-width:860px; }
 .campo-com-sufixo{ display:flex; align-items:center; gap:10px; }
 .campo-com-sufixo input{ max-width:180px; }
 .campo-com-sufixo span{ font-size:14.5px; color:var(--muted); }
 .toggle.travado{ opacity:.6; cursor:default; }
 .turma-rodape{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
 .turma-rodape-fim{ display:flex; gap:10px; margin-left:auto; }
+/* Regras de liberação, na edição da turma: uma linha por módulo (ou por
+   aula com regra própria), com o select da regra e os campos que ela pede. */
+.turma-regras-zona{ display:grid; gap:16px; margin-top:16px; max-width:860px; }
+.turma-regras h3{ margin:0 0 4px; font-size:17px; }
+.turma-regras > .hint{ margin:0 0 14px; max-width:64ch; }
+.regras-lista{ border-top:1px solid var(--line); }
+.regra-linha{ display:flex; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--line); }
+.regra-linha:last-child{ border-bottom:none; padding-bottom:2px; }
+.regra-alvo{ display:flex; align-items:center; gap:12px; flex:1 1 200px; min-width:0; padding-top:22px; }
+.regra-num{ flex:none; font-size:13px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums; }
+.regra-nome{ display:grid; min-width:0; }
+.regra-nome strong{ font-weight:500; font-size:15px; overflow-wrap:anywhere; }
+.regra-nome small{ font-size:12.5px; color:var(--muted); }
+.regra-campos{ display:flex; flex-wrap:wrap; gap:10px 12px; flex:3 1 420px; min-width:0; }
+.regra-campo{ display:grid; gap:5px; flex:1 1 150px; max-width:200px; min-width:0; align-content:start; }
+.regra-campo.largo{ flex:2 1 240px; max-width:none; }
+.regra-campo > span:first-child{ font-size:12.5px; font-weight:500; color:var(--muted); }
+.regra-campo select, .regra-campo input, .regra-adicionar select{ width:100%; min-height:42px; background:var(--surface); border:1px solid var(--line-strong); color:var(--ink); padding:0 12px; border-radius:var(--r-field); font-size:14.5px; }
+.regra-campo select, .regra-adicionar select{ appearance:none; -webkit-appearance:none; padding-right:36px; text-overflow:ellipsis; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%236f6962' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+.regra-campo select:focus, .regra-campo input:focus, .regra-adicionar select:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+.regra-campo .campo-com-sufixo input{ max-width:110px; }
+.regra-linha > .btn-icone{ flex:none; margin-top:22px; }
+.regra-adicionar{ display:flex; gap:10px; margin-bottom:14px; }
+.regra-adicionar select{ flex:1 1 auto; min-width:0; }
+.regra-adicionar .btn{ flex:none; }
+@media (max-width:700px){
+  .regra-linha{ flex-wrap:wrap; gap:8px 12px; }
+  .regra-alvo{ flex:1 1 calc(100% - 50px); padding-top:0; }
+  .regra-campos{ flex:1 1 100%; order:3; }
+  .regra-campo, .regra-campo.largo{ flex:1 1 100%; max-width:none; }
+  .regra-linha > .btn-icone{ margin-top:-6px; }
+  .regra-adicionar{ flex-wrap:wrap; }
+  .regra-adicionar .btn{ flex:1 1 100%; }
+}
 .paginacao{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:22px 0 4px; }
 /* Quem tem acesso, no editor do curso. */
 .curso-acesso{ margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }

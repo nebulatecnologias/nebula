@@ -181,7 +181,7 @@ const API = {
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
-      ofertas, planos, salas, comunidades
+      ofertas, planos, salas, comunidades, porAbrir
     ] = await Promise.all([
       lista(c.from("categorias").select("*").order("ordem")),
       lista(c.from("cursos").select(`
@@ -209,7 +209,10 @@ const API = {
       lista(c.from("salas").select("evento_id, link")),
       /* Os grupos: a base só devolve os das ofertas desta pessoa, e só a
          eles o link. */
-      lista(c.from("comunidades").select("*").is("removido_em", null).order("ordem"))
+      lista(c.from("comunidades").select("*").is("removido_em", null).order("ordem")),
+      /* As aulas que as regras da turma ainda não abriram a esta pessoa: só o
+         título e a razão. As ocultas nem vêm. Um erro aqui não trava a entrada. */
+      lista(c.rpc("aulas_por_abrir")).catch(() => [])
     ]);
 
     /* Quem decide a que cursos esta pessoa tem acesso é o servidor.
@@ -229,7 +232,7 @@ const API = {
     DB.preVenda = preVenda || [];
 
     DB.categorias  = Object.fromEntries(categorias.map(r => [r.id, { nome:r.nome, cor:r.cor }]));
-    DB.cursos      = cursos.map(deCurso);
+    DB.cursos      = comAulasPorAbrir(cursos.map(deCurso), porAbrir);
     DB.espacos     = espacos.map(deEspaco);
     DB.comunidades = comunidades.map(deComunidade);
     DB.posts       = mensagens.map(deMensagem);
@@ -276,6 +279,35 @@ const API = {
       DB.convites = [];
       DB.certificadosEmitidos = [];
     }
+  },
+
+  /* Relê só os cursos e as aulas: concluir uma aula pode abrir outras, e é a
+     base que diz quais. */
+  async recarregarCursos(){
+    const c = this.cliente;
+    const [cursos, porAbrir] = await Promise.all([
+      lista(c.from("cursos").select(`
+        *, modulos ( *, aulas ( *, aula_ficheiros (*), aula_quiz (*) ) )
+      `).is("removido_em", null).order("ordem")),
+      lista(c.rpc("aulas_por_abrir")).catch(() => [])
+    ]);
+    DB.cursos = comAulasPorAbrir(cursos.map(deCurso), porAbrir);
+  },
+
+  /* As regras de liberação de uma turma (17/11/2026): a equipa lê-as da
+     tabela e guarda-as todas de uma vez, pela função da base, que confere
+     cada alvo e responde em português. */
+  async regrasDaTurma(turmaId){
+    const linhas = await lista(this.cliente.from("regras_de_liberacao").select("*").eq("turma_id", turmaId));
+    return linhas.map(r => ({
+      alvoTipo:r.alvo_tipo, alvoId:r.alvo_id, regra:r.regra, abreEm:r.abre_em || "", fechaEm:r.fecha_em || "",
+      dias:r.dias === null || r.dias === undefined ? "" : r.dias,
+      cursoConcluido:r.curso_concluido || "", moduloConcluido:r.modulo_concluido || "", aulaConcluida:r.aula_concluida || ""
+    }));
+  },
+  async guardarRegrasDaTurma(turmaId, regras){
+    const { error } = await this.cliente.rpc("turma_regras_guardar", { p_turma:turmaId, p_regras:regras });
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
   },
 
   /* Relê só os convites: o estado deles muda quando a pessoa entra,
@@ -679,6 +711,23 @@ function deCurso(r){
         aulas: (m.aulas||[]).filter(a => !a.removido_em).sort(porOrdem).map(deAula)
       }))
   };
+}
+
+/* Junta aos cursos as aulas bloqueadas pelas regras da turma: entram no seu
+   módulo, pela ordem, só com o título e a razão (sem vídeo nem ficheiros). */
+function comAulasPorAbrir(cursos, porAbrir){
+  (Array.isArray(porAbrir) ? porAbrir : []).forEach(x => {
+    const curso = cursos.find(c => c.id === x.cursoId);
+    const modulo = curso && curso.modulos.find(m => m.id === x.moduloId);
+    if(!modulo || modulo.aulas.some(a => a.id === x.id)) return;
+    modulo.aulas.push({
+      id:x.id, titulo:x.titulo, duracao:x.duracao || "00:00", descricao:"", conteudo:"", embed:"", capa:"",
+      ordem:x.ordem, ficheiros:[], quiz:[],
+      bloqueio:{ regra:x.regra, abreEm:x.abreEm || null, fechouEm:x.fechouEm || null, dias:x.dias, nome:x.nome || "" }
+    });
+    modulo.aulas.sort(porOrdem);
+  });
+  return cursos;
 }
 
 function deAula(a){

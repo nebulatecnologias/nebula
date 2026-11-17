@@ -69,8 +69,20 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   `expirado`, `desativado`) e início. Abre o curso quem tem a matrícula ativa
   e dentro do prazo. Quem escreve acessos à moda antiga (a venda, o convite)
   não fala em estado: o gatilho `matricula_coerente` mantém-no certo. Faltam:
-  regras de liberação, assinaturas, ofertas e vendas no modelo novo, convites
-  por link, filtros dos membros, público de eventos e comunidades.
+  assinaturas, ofertas e vendas no modelo novo, convites por link, filtros
+  dos membros, público de eventos e comunidades.
+- **Regras de liberação (passo 2 da mesma especificação):** cada turma diz,
+  por módulo e por aula, quando o conteúdo abre (`academia.regras_de_liberacao`:
+  livre, data, dias após a matrícula, oculto, bloqueado, curso / módulo / aula
+  concluída). A regra da aula vale mais do que a do módulo. **Quem aplica é a
+  base, não o ecrã:** uma aula oculta ou bloqueada não se lê nem se conclui
+  (`aula_liberada` nas regras de leitura e em `tem_acesso_aula`); do que está
+  bloqueado o aluno recebe só o título e a razão (`academia.aulas_por_abrir()`,
+  que a `API` junta aos cursos como `aula.bloqueio`). A equipa vê tudo.
+  Escrevem-se na edição da turma e guardam-se todas de uma vez
+  (`academia.turma_regras_guardar`). Na demonstração, a mesma conta faz-se em
+  `cursoComLiberacao()` (js/nucleo.js). «Pontuação mínima» ficou de fora: os
+  pontos do Ranking ainda se calculam no browser.
 - `academy.kingdomcompny.com` está **reservado** para o site de vendas futuro.
   A área de membros é `membros.`, nunca `academy.`.
 - HTML/CSS/JS puro, sem compilação. O Vercel serve os ficheiros como estão.

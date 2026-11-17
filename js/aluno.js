@@ -406,7 +406,10 @@ function renderCurso(cursoId){
   const cat = categoriaDe(curso.categoria);
   const total = contarAulas(curso);
   const duracao = duracaoDoCurso(curso);
-  const loc = localizarAula(curso.id, estado.ultimaAulaPorCurso[curso.id]) || primeiraAulaDoCurso(curso);
+  /* A última aula vista pode estar agora bloqueada (uma data que fechou):
+     continua-se pela primeira que se pode abrir. */
+  const ultima = localizarAula(curso.id, estado.ultimaAulaPorCurso[curso.id]);
+  const loc = (ultima && !ultima.aula.bloqueio) ? ultima : primeiraAulaDoCurso(curso);
   const assinatura = DB.config.certificado.assinaturaNome;
   /* Quem comprou em pré-venda entra aqui antes de haver aulas: em vez de um
      curso vazio, diz-se quando abrem (decisão do Shelton, 27/09/2026). O
@@ -461,6 +464,12 @@ function renderCurso(cursoId){
     const el = document.createElement("div");
     el.className = "card modulo" + (abrir ? " open" : "");
     const aulasHtml = modulo.aulas.map(aula => {
+      /* Bloqueada pelas regras da turma: aparece com cadeado e a razão, e não se abre. */
+      if(aula.bloqueio) return `<div class="aula-row bloqueada" data-status="bloqueada" data-aula="${aula.id}" aria-disabled="true">
+        <span class="aula-status">${ICONS.cadeado}</span>
+        <span class="aula-info"><span class="titulo">${aula.titulo}</span><span class="aula-bloqueio">${textoDoBloqueio(aula.bloqueio)}</span></span>
+        ${duracaoNaListaHTML(aula)}
+      </div>`;
       const st = estadoDaAula(curso.id, aula.id);
       const icon = st==="concluida" ? iconeCheck() : (st==="progresso" ? iconePlay() : "");
       return `<div class="aula-row" data-status="${st}" data-aula="${aula.id}">
@@ -483,7 +492,7 @@ function renderCurso(cursoId){
     function ajustar(){ body.style.maxHeight = el.classList.contains("open") ? body.scrollHeight+"px" : "0px"; }
     head.addEventListener("click", () => { el.classList.toggle("open"); ajustar(); });
     el.querySelectorAll(".aula-row").forEach(row => {
-      row.addEventListener("click", () => irPara("aula", curso.id, row.getAttribute("data-aula")));
+      row.addEventListener("click", () => abrirAulaOuAvisar(curso.id, modulo.aulas.find(a => a.id === row.getAttribute("data-aula"))));
     });
     container.appendChild(el);
     if(abrir) requestAnimationFrame(ajustar);
@@ -498,6 +507,19 @@ function renderAula(cursoId, aulaId){
   const loc = localizarAula(cursoId, aulaId) || (curso0 ? primeiraAulaDoCurso(curso0) : null);
   if(!loc){ document.getElementById("content-aula").innerHTML = `<div class="empty-note">${t("Esta aula já não está disponível.")}</div>`; return; }
   const { curso, modulo, aula } = loc;
+  /* Uma aula bloqueada pelas regras da turma não se abre: diz-se porquê. */
+  if(aula.bloqueio){
+    document.getElementById("content-aula").innerHTML = `
+      <div class="back-link" id="btn-voltar-curso"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>${t("Voltar ao curso")}</div>
+      <div class="card aula-bloqueada" role="status">
+        <span class="aula-bloqueada-icone" aria-hidden="true">${ICONS.cadeado}</span>
+        <h1>${aula.titulo}</h1>
+        <div class="aula-breadcrumb">${curso.titulo} · ${modulo.titulo}</div>
+        <p>${t("Esta aula está bloqueada.")} ${textoDoBloqueio(aula.bloqueio)}.</p>
+      </div>`;
+    document.getElementById("btn-voltar-curso").addEventListener("click", () => irPara("curso", curso.id));
+    return;
+  }
   estado.ultimaAulaPorCurso[curso.id] = aula.id;
   estado.ultimoCurso = curso.id;
 
@@ -567,8 +589,8 @@ function renderAula(cursoId, aulaId){
   });
 
   document.getElementById("btn-voltar-curso").addEventListener("click", () => irPara("curso", curso.id));
-  if(anterior) document.getElementById("pager-anterior").addEventListener("click", () => irPara("aula", curso.id, anterior.id));
-  if(proxima) document.getElementById("pager-proxima").addEventListener("click", () => irPara("aula", curso.id, proxima.id));
+  if(anterior) document.getElementById("pager-anterior").addEventListener("click", () => abrirAulaOuAvisar(curso.id, anterior));
+  if(proxima) document.getElementById("pager-proxima").addEventListener("click", () => abrirAulaOuAvisar(curso.id, proxima));
 
   document.getElementById("btn-concluir").addEventListener("click", () => {
     const antes = badgesDesbloqueados();
@@ -576,6 +598,7 @@ function renderAula(cursoId, aulaId){
     const concluiu = estado.progresso[aula.id];
     /* O certificado lê-se depois de a aula ficar gravada: é a base que o grava. */
     salvarProgresso(aula.id, concluiu)
+      .then(() => aulasQueDependemDeConcluir(curso.id, aula.id))
       .then(() => concluiu ? atualizarCertificados() : [])
       .then(novos => {
         if(!novos.length) return;
@@ -596,13 +619,13 @@ function renderAula(cursoId, aulaId){
 
   const lista = document.getElementById("sidebar-lessons-lista");
   lista.innerHTML = modulo.aulas.map(a => {
-    const st = estadoDaAula(curso.id, a.id);
-    const icon = st==="concluida" ? iconeCheck() : "";
-    return `<div class="mini-aula ${a.id===aula.id?"active":""}" data-status="${st}" data-aula="${a.id}">
+    const st = a.bloqueio ? "bloqueada" : estadoDaAula(curso.id, a.id);
+    const icon = a.bloqueio ? ICONS.cadeado : (st==="concluida" ? iconeCheck() : "");
+    return `<div class="mini-aula ${a.id===aula.id?"active":""}" data-status="${st}" data-aula="${a.id}"${a.bloqueio ? ` title="${textoDoBloqueio(a.bloqueio).replace(/"/g, "&quot;")}"` : ""}>
       <span class="mini-status">${icon}</span><span class="mini-titulo">${a.titulo}</span>${duracaoNaListaHTML(a, "mini-dur")}
     </div>`;
   }).join("");
-  lista.querySelectorAll(".mini-aula").forEach(el => el.addEventListener("click", () => irPara("aula", curso.id, el.getAttribute("data-aula"))));
+  lista.querySelectorAll(".mini-aula").forEach(el => el.addEventListener("click", () => abrirAulaOuAvisar(curso.id, modulo.aulas.find(a => a.id === el.getAttribute("data-aula")))));
 
   ligarMateriais(aula);
   ligarQuiz(aula);
@@ -632,6 +655,19 @@ function renderAula(cursoId, aulaId){
   }
 
   atualizarSidebarGlobal();
+}
+
+/* Concluir (ou desmarcar) uma aula pode abrir ou fechar outras: as que
+   dependem de uma aula, de um módulo ou de um curso concluído. Na
+   demonstração a conta refaz-se sozinha a cada desenho; com servidor é a
+   base que decide, por isso relê-se o conteúdo. Só quando há aulas por abrir
+   à espera disso: sem regras, não custa nada a ninguém. */
+async function aulasQueDependemDeConcluir(cursoId, aulaId){
+  if(modoDemonstracao()) return;
+  const haEspera = DB.cursos.some(c => c.modulos.some(m => m.aulas.some(a => a.bloqueio && ["curso", "modulo", "aula"].includes(a.bloqueio.regra))));
+  if(!haEspera) return;
+  try { await API.recarregarCursos(); } catch(e){ return; }
+  if(estado.viewAtual === "aula" && estado.ultimaAulaPorCurso[cursoId] === aulaId) renderAula(cursoId, aulaId);
 }
 
 /* ---------------- Materiais e quiz da aula ---------------- */
