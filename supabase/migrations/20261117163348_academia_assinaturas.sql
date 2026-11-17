@@ -1,5 +1,8 @@
--- AINDA POR APLICAR (17/11/2026): o Supabase pediu confirmação ao Shelton e o
--- pedido expirou. Já provada em duas transacções desfeitas, como administração
+-- Aplicada a 17/11/2026 (versão 20261117163348), pelo Shelton, no editor de SQL
+-- (o pedido de confirmação do Supabase expirava antes de ele o ver). Conferida
+-- depois: o texto registado e as 13 funções são os deste ficheiro, e as
+-- contagens ficaram iguais (23 acessos abertos de 24, 9 turmas).
+-- Provada antes em duas transacções desfeitas, como administração
 -- da Kingdom e com duas contas inventadas (ensaio-*@exemplo.invalid), em 43
 -- verificações: cada membro real em cada curso abre o mesmo antes e depois
 -- (238 pares, 40 abertos, zero diferenças); a assinatura ativa abre os cursos
@@ -10,7 +13,6 @@
 -- passando-os para outro; uma turma que um nível usa não se apaga; um aluno
 -- não cria níveis nem dá a si próprio acesso ilimitado; outra escola não vê
 -- nada disto; o relógio marca o que passou da data e não mexe em mais nada.
--- Quando se aplicar, este ficheiro passa a ter a versão que a base lhe der.
 --
 -- Assinaturas (passo 3 da especificação «Convites, Assinaturas e Turmas»,
 -- Shelton, 17/11/2026).
