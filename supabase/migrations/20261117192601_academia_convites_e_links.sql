@@ -1,3 +1,19 @@
+-- Aplicada a 17/11/2026 (versão 20261117192601), pelo Shelton, no editor de SQL
+-- (o pedido de confirmação do Supabase expira antes de ele o ver). Conferida
+-- depois: as 5 funções são as deste ficheiro, as 5 colunas novas existem, só
+-- a equipa lê e escreve os links (sem apagar), quem não tem sessão lê a
+-- página mas não inscreve, e as contagens ficaram iguais (24 acessos, 39
+-- convites, 35 membros, 11 perfis).
+-- Provada antes numa transacção desfeita, como administração da Kingdom e com
+-- contas inventadas (ensaio-*@exemplo.invalid), em 29 verificações: um
+-- convite à mão dá o mesmo antes e depois; o link limpa o que a modalidade
+-- não pede e nunca muda de código; o limite fecha à terceira inscrição e
+-- revogar liberta a vaga; quem entra fica na turma do link pelo prazo dela,
+-- com o trial da assinatura, ou com acesso ilimitado; o telefone só entra num
+-- perfil que não o tenha; quem a escola suspendeu não reabre; o plano cheio
+-- de outra escola trava a inscrição. O ensaio apanhou um defeito, corrigido
+-- antes de aplicar: a equipa conseguia apagar um link.
+--
 -- Convites no modelo das turmas e das assinaturas, e links de inscrição
 -- (passo 5 da especificação «Convites, Assinaturas e Turmas», Shelton,
 -- 17/11/2026).
