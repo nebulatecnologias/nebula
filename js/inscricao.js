@@ -3,8 +3,10 @@
    especificação «Convites, Assinaturas e Turmas»).
 
    `…/?inscricao=<código>` abre esta página, sem a navegação da área de
-   membros: a imagem de fundo a ecrã inteiro e um cartão com o título, a
-   descrição e o formulário (nome, email e WhatsApp). Quem se inscreve recebe
+   membros e com a identidade da organização (logótipo, nome, cor e tema): o
+   fundo a ecrã inteiro (a cor dela, ou a imagem do link, com uma versão para
+   o computador e outra para o telemóvel) e um cartão ao centro com o título,
+   a descrição e o formulário (nome, email e WhatsApp). Quem se inscreve recebe
    por email o link para entrar: é ao abri-lo que a conta nasce e que o que o
    link dá vira acesso. Assim só recebe acesso quem é mesmo dono do email.
 
@@ -48,7 +50,7 @@ async function abrirPaginaDeInscricao(codigo){
   try {
     if(modoDemonstracao()){
       const l = (DB.linksDeInscricao || []).find(x => x.codigo === codigo);
-      link = l ? { codigo:l.codigo, titulo:l.titulo, descricao:l.descricao, fundo:l.fundo,
+      link = l ? { codigo:l.codigo, titulo:l.titulo, descricao:l.descricao, fundo:l.fundo, fundoMovel:l.fundoMovel,
                    telefoneObrigatorio:!!l.telefoneObrigatorio, estado:estadoDoLink(l) } : null;
     } else {
       link = await API.lerLinkPublico(codigo);
@@ -79,9 +81,15 @@ function desenharPaginaDeInscricao(){
     document.body.appendChild(ecra);
   }
   const l = estadoDaInscricao.link;
-  const fundo = l && l.fundo && /^https:\/\//.test(l.fundo) ? l.fundo : "";
-  ecra.style.backgroundImage = fundo ? `url("${fundo.replace(/"/g, "%22")}")` : "";
+  /* Duas imagens: a do computador e a do telemóvel. Cada ecrã usa a sua (é
+     o CSS que escolhe); na falta de uma, serve a outra. Sem nenhuma, o fundo
+     é a cor da organização. */
+  const imagem = u => u && /^(https:\/\/|data:image\/)/.test(u) ? `url("${String(u).replace(/"/g, "%22")}")` : "";
+  const fundo = imagem(l && l.fundo), fundoMovel = imagem(l && l.fundoMovel);
+  ecra.style.setProperty("--fundo", fundo || fundoMovel || "none");
+  ecra.style.setProperty("--fundo-movel", fundoMovel || fundo || "none");
   ecra.classList.toggle("com-fundo", !!fundo);
+  ecra.classList.toggle("com-fundo-movel", !!fundoMovel);
 
   const fechado = !l ? t("Este convite não existe, ou já não está disponível.")
     : l.estado === "esgotado" ? t("As inscrições para este convite esgotaram.")

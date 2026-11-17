@@ -224,8 +224,10 @@ function editarLink(id){
       { nome:"nivelId", rotulo:"Assinatura incluída", tipo:"select",
         opcoes: niveis.length ? niveis : [{ valor:"", rotulo:"Ainda não há assinaturas" }],
         dica:"Fica ativa pelo trial da assinatura; sem trial, pela extensão dela; sem nenhum dos dois, sem prazo." },
-      { nome:"fundo", rotulo:"Imagem de fundo", tipo:"imagem", pasta:"convites",
-        dica:"Enche o ecrã atrás do cartão. Evite imagens com texto. Tamanho recomendado: 1920 × 1080 px." }
+      { nome:"fundo", rotulo:"Imagem de fundo no computador", tipo:"imagem", pasta:"convites",
+        dica:"Enche o ecrã atrás do cartão, ao largo. Evite imagens com texto. Tamanho recomendado: 1920 × 1080 px. Sem imagem, o fundo é a cor da escola." },
+      { nome:"fundoMovel", rotulo:"Imagem de fundo no telemóvel", tipo:"imagem", pasta:"convites",
+        dica:"Ao alto, para ecrãs estreitos. Tamanho recomendado: 1080 × 1920 px. Sem ela, o telemóvel usa a do computador." }
     ],
     valores: l ? Object.assign({}, l, { limite: l.limite || "", nivelId: l.nivelId || (niveis[0] || {}).valor || "" })
                : { modalidade:"cursos", cursos:[], nivelId:(niveis[0] || {}).valor || "", telefoneObrigatorio:false, limite:"" },
@@ -242,7 +244,7 @@ function editarLink(id){
         cursos: v.modalidade === "cursos" ? v.cursos : [],
         turmas: v.modalidade === "cursos" ? turmasParaGuardar(v.cursos, turmasEscolhidas) : {},
         nivelId: v.modalidade === "assinatura" ? v.nivelId : null,
-        fundo: v.fundo || ""
+        fundo: v.fundo || "", fundoMovel: v.fundoMovel || ""
       });
       /* A gaveta fica aberta até a base responder. */
       return false;

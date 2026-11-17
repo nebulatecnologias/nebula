@@ -96,7 +96,11 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   perguntas) e chama `public.inscricao_registar`. **Cada inscrição é um
   convite com origem `link`**: segue por email, e é ao abri-lo que a conta
   nasce e que `aceitar_convite()` dá o acesso; assim só o recebe quem é dono
-  do email. O limite conta as inscrições vivas (aceites, ou dentro dos 7 dias
+  do email. A página veste a identidade da organização (logótipo, nome, cor
+  e tema, pelos mesmos tokens do resto da app: nada de cores fixas), com o
+  cartão ao centro em qualquer ecrã; a imagem de fundo tem duas versões,
+  `fundo` (computador) e `fundo_movel` (telemóvel), e cada ecrã usa a sua.
+  O limite conta as inscrições vivas (aceites, ou dentro dos 7 dias
   do email); um link arquiva-se, não se apaga; quem a escola suspendeu não
   reabre por um link; a página nunca diz se um email já tem conta. O telefone
   fica em `academia.perfis.telefone`, só se o perfil ainda não tiver um.
