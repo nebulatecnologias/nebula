@@ -20,9 +20,9 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   const padrao = await adm.innerText('[data-turma="t-kt"]');
   contem(padrao, 'Turma A', 'O cartão diz o nome da turma');
   contem(padrao, 'Kingdom Tracktion', 'e o curso');
-  contem(padrao, '3 membros', 'quantos membros têm a matrícula ativa nela');
+  contem(padrao, '3 Membros', 'quantos membros têm a matrícula ativa nela');
+  contem(padrao, 'Comentário', 'e os comentários deles');
   contem(padrao, 'Padrão', 'e se é a turma padrão do curso');
-  contem(padrao, 'Acesso sem prazo', 'e o prazo de acesso');
   contem(await adm.innerText('[data-turma="t-kt-90"]'), 'Acesso 90 dias', 'Uma turma com prazo di-lo');
 
   await adm.fill('#turmas-busca', '90 dias');

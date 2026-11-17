@@ -66,19 +66,23 @@ function renderAdminTurmas(){
   const pagina = Math.min(Math.max(1, estado.paginaTurmas || 1), paginas);
   const visiveis = lista.slice((pagina - 1) * TURMAS_POR_PAGINA, pagina * TURMAS_POR_PAGINA);
 
+  /* Em lista, uma linha por turma (referência do Shelton, 17/11/2026): a capa
+     do curso, o nome da turma e o curso, os membros, os comentários e o
+     progresso médio. A pesquisa fica ao lado do botão. */
+  const escola = (DB.aparencia && DB.aparencia.nomeEscola) || "";
   document.getElementById("content-admin").innerHTML = `
-    ${cabecalhoAdmin({
-      titulo: "Turmas",
-      descricao: "Uma turma é uma edição de um curso, com o seu prazo de acesso. Quem tem o curso tem-no numa turma; cada curso tem uma turma padrão.",
-      acaoRotulo: DB.cursos.length ? "Nova turma" : "",
-      acaoId: "btn-nova-turma"
-    })}
-    <div class="filter-bar">
-      <div class="search-pill"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="turmas-busca" placeholder="Pesquisar turma" aria-label="Pesquisar turma" value="${textoSeguro(estado.buscaTurmas || "").replace(/"/g, "&quot;")}"></div>
+    <div class="turmas-cabeca">
+      <div class="page-head">
+        ${escola ? `<span class="turmas-escola">${textoSeguro(escola)}</span>` : ""}
+        <h1>Turmas</h1>
+      </div>
+      <div class="turmas-acoes">
+        <div class="search-pill"><input type="search" id="turmas-busca" placeholder="Pesquisar turma" aria-label="Pesquisar turma" value="${textoSeguro(estado.buscaTurmas || "").replace(/"/g, "&quot;")}"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+        ${DB.cursos.length ? `<button class="btn btn-primary" type="button" id="btn-nova-turma">Nova turma</button>` : ""}
+      </div>
     </div>
     ${visiveis.length ? `
-      <div class="contagem-grelha">${lista.length} de ${todas.length} turma${todas.length === 1 ? "" : "s"}</div>
-      <div class="course-grid" id="turmas-grelha">${visiveis.map(cartaoDaTurma).join("")}</div>
+      <div class="turmas-lista" id="turmas-grelha">${visiveis.map(linhaDaTurma).join("")}</div>
       ${paginas > 1 ? `<nav class="paginacao" aria-label="Páginas de turmas">
           <button class="btn btn-secondary btn-sm" type="button" data-pagina="${pagina - 1}" ${pagina === 1 ? "disabled" : ""}>Anterior</button>
           ${Array.from({ length:paginas }, (_, i) => `<button class="btn btn-sm ${i + 1 === pagina ? "btn-primary" : "btn-secondary"}" type="button" data-pagina="${i + 1}" ${i + 1 === pagina ? 'aria-current="page"' : ""}>${i + 1}</button>`).join("")}
@@ -108,24 +112,23 @@ function renderAdminTurmas(){
   });
 }
 
-function cartaoDaTurma(t){
+function linhaDaTurma(t){
   const c = cursoPorId(t.cursoId);
   const n = numerosDaTurma(t);
-  return `<div class="card course-card admin turma-card" data-turma="${t.id}" role="link" tabindex="0" aria-label="${textoSeguro(t.nome)}, ${textoSeguro(c.titulo)}">
-    <div class="course-cover ${c.capa ? "com-capa" : ""}" style="--field:${campoDoCurso(c.id)};${c.capa ? `background-image:url(${c.capa})` : ""}">
-      ${c.capa ? "" : `<span class="cover-sigla" aria-hidden="true">${textoSeguro(c.sigla || iniciais(c.titulo || "?"))}</span>`}
-      ${t.padrao ? `<span class="cover-badge">Padrão</span>` : ""}
+  /* A padrão só se assinala onde há escolha: num curso com mais de uma turma. */
+  const variasNoCurso = turmasDoCurso(t.cursoId).length > 1;
+  const detalhe = [textoSeguro(c.titulo), t.prazoDias ? "Acesso " + prazoDaTurmaEmTexto(t) : ""].filter(Boolean).join(" · ");
+  return `<div class="card turma-linha" data-turma="${t.id}" role="link" tabindex="0" aria-label="${textoSeguro(t.nome)}, ${textoSeguro(c.titulo)}">
+    <div class="turma-capa ${c.capa ? "com-capa" : ""}" style="--field:${campoDoCurso(c.id)};${c.capa ? `background-image:url(${c.capa})` : ""}" aria-hidden="true">${c.capa ? "" : textoSeguro(c.sigla || iniciais(c.titulo || "?"))}</div>
+    <div class="turma-quem">
+      <h3>${textoSeguro(t.nome)}${variasNoCurso && t.padrao ? ` <span class="pill pill-ativo">Padrão</span>` : ""}</h3>
+      <p>${detalhe}</p>
     </div>
-    <div class="course-body">
-      <h3>${textoSeguro(t.nome)}</h3>
-      <p class="course-desc">${textoSeguro(c.titulo)}</p>
-      <div class="turma-numeros">
-        <span><strong>${n.membros}</strong> ${n.membros === 1 ? "membro" : "membros"}</span>
-        <span><strong>${n.comentarios}</strong> ${n.comentarios === 1 ? "comentário" : "comentários"}</span>
-        <span>Acesso ${prazoDaTurmaEmTexto(t)}</span>
-      </div>
-      <div class="course-progress-row"><span class="course-legenda">Progresso médio</span><span class="pct">${n.progresso}%</span></div>
+    <div class="turma-dado">${ICONS.people}<span>${n.membros} ${n.membros === 1 ? "Membro" : "Membros"}</span></div>
+    <div class="turma-dado">${ICONS.chat}<span>${n.comentarios} ${n.comentarios === 1 ? "Comentário" : "Comentários"}</span></div>
+    <div class="turma-progresso" title="Progresso médio dos membros">
       <div class="progress-track thin"><div class="progress-fill mini" style="width:${n.progresso}%"></div></div>
+      <span class="pct">${n.progresso}%</span>
     </div>
   </div>`;
 }
