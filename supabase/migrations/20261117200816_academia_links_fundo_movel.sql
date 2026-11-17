@@ -1,3 +1,10 @@
+-- Aplicada a 17/11/2026 (versão 20261117200816), pelo Shelton, no editor de
+-- SQL. Conferida depois: a coluna existe, a função é a deste ficheiro (o
+-- editor guardou-a com quebras de linha CRLF; sem elas, o texto é igual),
+-- quem não tem sessão continua a lê-la, e o link real que já existia lê bem.
+-- Provada antes numa transacção desfeita: lê as duas imagens, recusa um
+-- endereço sem https, e os links que existiam ficam como estavam.
+--
 -- A imagem de fundo de um link de inscrição passa a ter duas versões: a do
 -- computador (fundo, que já existia) e a do telemóvel (fundo_movel). Pedido
 -- do Shelton a 17/11/2026: «a imagem de fundo deve ter espaço para mobile e
