@@ -21,7 +21,7 @@ function turmaPorId(id){ return (DB.turmas || []).find(t => t.id === id); }
    no momento ganha aqui a sua «Turma A», como a base faz a sério. */
 function turmasDoCurso(cursoId){
   DB.turmas = DB.turmas || [];
-  if(modoDemonstracao() && cursoPorId(cursoId) && !DB.turmas.some(t => t.cursoId === cursoId))
+  if(modoDemonstracao() && DB.cursos.some(c => c.id === cursoId) && !DB.turmas.some(t => t.cursoId === cursoId))
     DB.turmas.push({ id:"t-" + cursoId, nome:"Turma A", cursoId, prazoDias:null, padrao:true });
   return DB.turmas.filter(t => t.cursoId === cursoId).sort((x, y) => (y.padrao ? 1 : 0) - (x.padrao ? 1 : 0));
 }
@@ -45,7 +45,10 @@ function expiraPelaTurma(t){
    contam-se pelas matrículas em memória. */
 function numerosDaTurma(t){
   if(!modoDemonstracao()) return { membros:t.membros || 0, comentarios:t.comentarios || 0, progresso:t.progresso || 0 };
-  const dentro = (DB.membros || []).filter(m => membroDemo(m.id).acessos.some(a => a.turma === t.id && a.ativo));
+  /* Está na turma quem tem a matrícula ativa nela, e quem abre o curso por
+     uma assinatura que o entrega nesta turma. */
+  const dentro = (DB.membros || []).filter(m => { const x = membroDemo(m.id);
+    return viasDeAcesso(x.acessos, x.assinaturas).some(v => v.curso === t.cursoId && v.turma === t.id); });
   const ids = new Set(dentro.map(m => m.id));
   return {
     membros: dentro.length,
@@ -284,6 +287,11 @@ function apagarTurma(t){
   const n = numerosDaTurma(t).membros;
   if(n){
     mostrarToast(`Esta turma tem ${n === 1 ? "1 membro" : n + " membros"} com a matrícula ativa. Passe-os para outra turma antes de a apagar.`);
+    return;
+  }
+  const usa = (DB.niveis || []).find(k => (k.turmas || []).some(x => x.turmaId === t.id));
+  if(usa){
+    mostrarToast(`A assinatura «${textoSeguro(usa.nome)}» entrega o curso nesta turma. Escolha lá outra turma antes de apagar esta.`);
     return;
   }
   confirmarAcao({

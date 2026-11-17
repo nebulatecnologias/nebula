@@ -144,7 +144,7 @@ function renderAdminConfig(){
         { view:"admin-ranking", icon:ICONS.flag, titulo:"XP e emblemas", sub:"Pontos por aula, XP por nível e regras das conquistas." },
         { view:"admin-certificados", icon:ICONS.cert, titulo:"Certificados", sub:"Percentagem de emissão, títulos e assinatura." },
         { view:"admin-integracoes", icon:ICONS.plug, titulo:"Integrações", sub:"Player de vídeo e canal de apoio." },
-        { view:"admin-assinaturas", icon:ICONS.card, titulo:"Planos", sub:"Preços e cursos que cada plano desbloqueia." }
+        { view:"admin-assinaturas", icon:ICONS.card, titulo:"Assinaturas", sub:"Os cursos que cada assinatura abre, e em que turma." }
       ].map(x => `
         <div class="atalho" data-ir="${x.view}">
           <div class="stat-icon">${x.icon}</div>

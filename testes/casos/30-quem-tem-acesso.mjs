@@ -26,7 +26,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   contem(t, 'Kingdom Tracktion', 'O painel é do curso');
   contem(t, 'Só quem recebeu acesso', 'Diz a regra de acesso');
   contem(t, 'Marta Lopes', 'e quem tem acesso');
-  contem(t, 'Plano Kingdom All Access', 'com a origem de cada acesso');
+  contem(t, 'Compra', 'com a origem de cada acesso');
   contem(t, 'Sem prazo', 'e o prazo');
   contem(t, 'Na Vitrine', 'As ofertas que o vendem dizem se estão na Vitrine');
   contem(t, 'Joana Macie', 'Os convites por aceitar que o incluem aparecem');

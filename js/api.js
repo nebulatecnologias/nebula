@@ -181,7 +181,7 @@ const API = {
       categorias, cursos, espacos, mensagens, reacoes, eventos, banners,
       conquistas, config, avaliacoes, notificacoes, lidas,
       progresso, presencas, onboarding, perfil, certificados,
-      ofertas, planos, salas, comunidades, porAbrir
+      ofertas, salas, comunidades, porAbrir, minhasAssinaturas
     ] = await Promise.all([
       lista(c.from("categorias").select("*").order("ordem")),
       lista(c.from("cursos").select(`
@@ -203,7 +203,6 @@ const API = {
       um(c.from("perfis").select("*").eq("utilizador_id", eu)),
       lista(c.from("certificados").select("*").eq("utilizador_id", eu)),
       lista(this.pub().from("ofertas").select("id, nome, preco, moeda, cobranca, link_vendas, estado, atalho").is("removido_em", null)),
-      lista(c.from("planos").select("*, plano_cursos ( curso_id, ordem )").is("removido_em", null).order("ordem")),
       /* Só voltam as salas em que esta pessoa pode entrar: num evento pago,
          o link é o que se compra, e o servidor não o dá a quem não pagou. */
       lista(c.from("salas").select("evento_id, link")),
@@ -212,7 +211,9 @@ const API = {
       lista(c.from("comunidades").select("*").is("removido_em", null).order("ordem")),
       /* As aulas que as regras da turma ainda não abriram a esta pessoa: só o
          título e a razão. As ocultas nem vêm. Um erro aqui não trava a entrada. */
-      lista(c.rpc("aulas_por_abrir")).catch(() => [])
+      lista(c.rpc("aulas_por_abrir")).catch(() => []),
+      /* A assinatura de quem entra, para as Definições (só os nomes das ativas). */
+      c.rpc("minhas_assinaturas").then(r => r.data || {}, () => ({}))
     ]);
 
     /* Quem decide a que cursos esta pessoa tem acesso é o servidor.
@@ -243,7 +244,8 @@ const API = {
     DB.conquistas  = conquistas.map(deConquista);
     DB.avaliacoes  = avaliacoes.map(deAvaliacao);
     DB.ofertas     = ofertas.map(deOferta);
-    DB.planos      = planos.map(dePlano);
+    DB.minhasAssinaturas = minhasAssinaturas || {};
+    DB.niveis = []; DB.assinaturas = []; DB.ilimitados = [];
     DB.turmas      = [];
     DB.certificados = certificados.map(deCertificado);
 
@@ -265,6 +267,7 @@ const API = {
         lista(c.rpc("turmas_da_escola"))
       ]);
       DB.turmas   = turmas;
+      await this.recarregarAssinaturas();
       DB.membros  = membros.map(deMembro);
       DB.convites = convites.map(deConvite);
       DB.certificadosEmitidos = emitidos.map(deCertificado);
@@ -292,6 +295,33 @@ const API = {
       lista(c.rpc("aulas_por_abrir")).catch(() => [])
     ]);
     DB.cursos = comAulasPorAbrir(cursos.map(deCurso), porAbrir);
+  },
+
+  /* As assinaturas (17/11/2026, passo 3): os níveis com os cursos que levam,
+     as assinaturas dos membros e quem tem acesso ilimitado. A equipa lê as
+     tabelas; escreve pelas funções da base, que respondem em português. Se a
+     leitura falhar, o painel abre na mesma, sem assinaturas. */
+  async recarregarAssinaturas(){
+    const c = this.cliente;
+    const [niveis, assinaturas, ilimitados] = await Promise.all([
+      lista(c.from("niveis").select("*, nivel_turmas ( curso_id, turma_id )").is("removido_em", null).order("criado_em", { ascending:false })).catch(() => []),
+      lista(c.from("assinaturas").select("utilizador_id, nivel_id, estado, expira_em, iniciado_em")).catch(() => []),
+      lista(c.from("acessos_ilimitados").select("utilizador_id")).catch(() => [])
+    ]);
+    DB.niveis = niveis.map(n => ({ id:n.id, nome:n.nome, trialDias:n.trial_dias, extensaoDias:n.extensao_dias, criadoEm:n.criado_em,
+      turmas:(n.nivel_turmas || []).map(x => ({ cursoId:x.curso_id, turmaId:x.turma_id })) }));
+    DB.assinaturas = assinaturas.map(x => ({ utilizador:x.utilizador_id, nivel:x.nivel_id, estado:x.estado, expira:x.expira_em, desde:x.iniciado_em }));
+    DB.ilimitados = ilimitados.map(x => x.utilizador_id);
+  },
+  async guardarNivel(n){
+    const { data, error } = await this.cliente.rpc("nivel_guardar", { p_id:n.id || null, p_nome:n.nome,
+      p_trial:n.trialDias || null, p_extensao:n.extensaoDias || null, p_turmas:n.turmas || [] });
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
+    return data;
+  },
+  async apagarNivel(id, moverPara){
+    const { error } = await this.cliente.rpc("nivel_apagar", { p_id:id, p_mover_para:moverPara || null });
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
   },
 
   /* As regras de liberação de uma turma (17/11/2026): a equipa lê-as da
@@ -608,30 +638,6 @@ const API = {
     if(error) throw new Error(traduzirErroDados(error));
   },
 
-  /* O plano é o registo e a lista de cursos que vão dentro dele. A lista é
-     substituída por inteiro — é o que o editor mostra — e a ordem em que ficam
-     é a ordem por que o aluno os vê. */
-  async guardarPlano(plano){
-    const linha = MAPAS.plano.para(plano);
-    if(!linha.id) delete linha.id;          /* plano novo: o id nasce na base */
-    const { data, error } = await this.cliente
-      .from("planos").upsert(linha).select("id").maybeSingle();
-    if(error) throw new Error(traduzirErroDados(error));
-
-    const id = data?.id || plano.id;
-    const { error: erroApagar } = await this.cliente
-      .from("plano_cursos").delete().eq("plano_id", id);
-    if(erroApagar) throw new Error(traduzirErroDados(erroApagar));
-
-    const cursos = plano.cursos || [];
-    if(cursos.length){
-      const { error: erroPor } = await this.cliente.from("plano_cursos")
-        .insert(cursos.map((cursoId, i) => ({ plano_id:id, curso_id:cursoId, ordem:i + 1 })));
-      if(erroPor) throw new Error(traduzirErroDados(erroPor));
-    }
-    return id;
-  },
-
   /* Um gosto é uma linha que existe ou não existe. */
   async reagir(mensagemId, gostou){
     const eu = this.utilizador.id;
@@ -830,20 +836,6 @@ function deVitrine(r){
   };
 }
 
-/* Um plano é um nome e os cursos que vão dentro dele. O preço não está aqui:
-   está na oferta que o vende, no Payflow. Guardar o preço nos dois sítios era
-   garantir que um dia diziam valores diferentes. */
-function dePlano(r){
-  return {
-    id: r.id, nome: r.nome, descricao: r.descricao || "",
-    ofertaId: r.oferta_id != null ? String(r.oferta_id) : null,
-    cursos: (r.plano_cursos || [])
-              .slice().sort((a,b) => (a.ordem||0) - (b.ordem||0))
-              .map(pc => pc.curso_id),
-    ordem: r.ordem || 0
-  };
-}
-
 /* Um certificado gravado: o nome e o título ficam como estavam no dia. */
 function deCertificado(r){
   return { id:r.id, utilizadorId:r.utilizador_id, cursoId:r.curso_id, codigo:r.codigo,
@@ -854,12 +846,10 @@ function deCertificado(r){
    que o resto da app sempre leu: aluno ou administrador (a equipa toda). */
 function deMembro(u){
   const funcao = u.perfil === "admin" || u.perfil === "colaborador" ? u.perfil : "aluno";
-  const planos = Array.isArray(u.planos) ? u.planos : [];
   return { id:u.id, nome:u.nome, email:u.email,
            papel: funcao === "aluno" ? "aluno" : "administrador", funcao, dono: u.dono === true,
            acesso: u.estado === "Ativo" ? "ativo" : "bloqueado",
            membroDesde:(u.criado_em||"").slice(0,10), leadId:u.lead_id,
-           planos, planoId: planos[0] || null,
            cursosAbertos: u.cursos == null ? null : Number(u.cursos),
            ultimoAcesso: u.ultimo_acesso ? tempoRelativo(u.ultimo_acesso) : (u.ultimo_acesso === null ? "nunca" : "—"),
            curso:"—", categoria:"negocios", origem:"—",
@@ -1023,11 +1013,6 @@ const MAPAS = {
                   recorrencia:o.recorrencia||null, link:linkExterno(o.link)||null, produtos:o.produtos||[],
                   na_vitrine:!!o.naVitrine, destaque:!!o.destaque, em_breve:!!o.emBreve,
                   abre_em:o.emBreve && o.abreEm ? o.abreEm : null, ativa:o.ativa!==false, ordem:o.ordem||0 }) },
-  /* Repara na ausência: oferta_id não vai aqui. Quem liga um plano a uma oferta
-     é o Payflow, e uma escrita daqui apagava essa ligação sem ninguém dar por
-     ela — o upsert só toca nas colunas que lhe damos. */
-  plano:    { tabela:"planos", suave:true,
-              para: p => ({ id:p.id, nome:p.nome, descricao:p.descricao||null, ordem:p.ordem||0 }) },
   onboarding:{ tabela:"onboarding", para: o => ({ utilizador_id:API.utilizador.id, objetivos:o.objetivos||[], ritmo:o.ritmo, momento:o.momento, saltado:!!o.saltado }) },
   perfil:   { tabela:"perfis", para: p => ({ utilizador_id:API.utilizador.id, foto_url:p.fotoUrl||null, tema:p.tema||null, streak_dias:p.streakDias||0, notificacoes:p.notificacoes||{}, idioma:p.idioma||null }) }
 };
@@ -1112,14 +1097,6 @@ async function salvar(entidade, registo){
 function remover(entidade, id){
   if(modoDemonstracao()){ guardarDB(); return Promise.resolve(); }
   return API.apagar(entidade, id).catch(erro => avisarQueNaoGuardou(erro));
-}
-
-/* O plano guarda-se inteiro: o nome e os cursos que leva dentro. Devolve o id
-   porque um plano novo só o recebe aqui. */
-async function salvarPlano(plano){
-  if(modoDemonstracao()){ guardarDB(); return plano.id; }
-  try { return await API.guardarPlano(plano); }
-  catch(erro){ avisarQueNaoGuardou(erro); return plano.id; }
 }
 
 /* Reordenar mexe em várias linhas de uma vez. */

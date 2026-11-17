@@ -250,24 +250,27 @@ const PRE_VENDA_PADRAO = [{ cursoId:"lp", abreEm:diaDaqui(45) }];
 const TURMAS_PADRAO = CURSOS_PADRAO.map(c => ({ id:"t-" + c.id, nome:"Turma A", cursoId:c.id, prazoDias:null, padrao:true }))
   .concat([{ id:"t-kt-90", nome:"Turma 90 dias", cursoId:"kt", prazoDias:90, padrao:false }]);
 
-/* Um plano é só um nome e os cursos que leva dentro. O preço não está aqui:
-   está na oferta que o vende, no Payflow. Enquanto estiveram nos dois sítios,
-   os dois números discordavam. */
-const PLANOS_PADRAO = [
-  { id:"all-access", nome:"Kingdom All Access", descricao:"Tudo o que há na academia.", ofertaId:null, cursos:["kt","mi","he","lp"], ordem:1 },
-  { id:"essencial",  nome:"Essencial",          descricao:"Os dois cursos de base.",    ofertaId:null, cursos:["mi","he"],      ordem:2 }
+/* Um nível de assinatura leva vários cursos, cada um numa turma. Quem o
+   assina abre-os todos enquanto a assinatura estiver ativa; o preço é da
+   oferta que o vende. O Kingdom Tracktion vende-se à parte: quem o tem,
+   tem-no por matrícula própria. */
+const NIVEIS_PADRAO = [
+  { id:"all-access", nome:"Kingdom All Access", trialDias:null, extensaoDias:30, criadoEm:"2026-01-05",
+    turmas:[{ cursoId:"mi", turmaId:"t-mi" }, { cursoId:"he", turmaId:"t-he" }, { cursoId:"lp", turmaId:"t-lp" }] },
+  { id:"essencial",  nome:"Essencial",          trialDias:15,   extensaoDias:null, criadoEm:"2026-02-01",
+    turmas:[{ cursoId:"mi", turmaId:"t-mi" }, { cursoId:"he", turmaId:"t-he" }] }
 ];
 
 const MEMBROS_PADRAO = [
-  { id:"m1", nome:"Marta Lopes",        email:"marta.lopes@exemplo.co.mz",  telefone:"+258 84 000 0001", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-01-12", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Instagram",      ultimoAcesso:"há 2 dias",  engajamento:"quente", progresso:82,  estagio:"ativo",     responsavel:"Maria M." },
-  { id:"m2", nome:"Paulo Mabunda",      email:"paulo.mabunda@exemplo.co.mz", telefone:"+258 84 000 0002", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-03", curso:"IA Aplicada aos Negócios", categoria:"ia",            origem:"Instagram",      ultimoAcesso:"há 5 dias",  engajamento:"morno",  progresso:45,  estagio:"ativo",     responsavel:"Shelton D." },
-  { id:"m3", nome:"Leonor Matsinhe", email:"leonor.matsinhe@exemplo.co.mz", telefone:"+258 84 000 0003", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-01-20", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Indicação",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
-  { id:"m4", nome:"Renato Cossa",      email:"renato.cossa@exemplo.co.mz",    telefone:"+258 84 000 0004", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-03-14", curso:"Vendas de Alto Impacto",  categoria:"marketing",      origem:"Instagram",      ultimoAcesso:"há 12 dias", engajamento:"frio",   progresso:8,   estagio:"risco",     responsavel:"Shelton D." },
-  { id:"m5", nome:"Helena Nhantumbo",        email:"helena.nhantumbo@exemplo.co.mz", telefone:"+258 84 000 0005", papel:"aluno", planoId:"all-access", acesso:"ativo",     membroDesde:"2026-02-28", curso:"Propósito em Movimento",  categoria:"espiritualidade", origem:"Facebook",      ultimoAcesso:"há 1 dia",   engajamento:"morno",  progresso:60,  estagio:"ativo",     responsavel:"Maria M." },
-  { id:"m6", nome:"Clara Muianga",   email:"clara.muianga@exemplo.co.mz",    telefone:"+258 84 000 0006", papel:"aluno", planoId:"essencial",  acesso:"ativo",     membroDesde:"2026-04-02", curso:"Hábitos de Elite",        categoria:"pessoal",        origem:"Perfil pessoal", ultimoAcesso:"há 3 dias",  engajamento:"morno",  progresso:30,  estagio:"ativo",     responsavel:"Shelton D." },
-  { id:"m7", nome:"Mário Tembe",     email:"mario.tembe@exemplo.co.mz",    telefone:"+258 84 000 0007", papel:"aluno", planoId:"essencial",  acesso:"bloqueado", membroDesde:"2026-01-08", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Indicação",      ultimoAcesso:"há 20 dias", engajamento:"frio",   progresso:15,  estagio:"inativo",   responsavel:"Maria M." },
-  { id:"m8", nome:"Ana Machava",        email:"ana.machava@exemplo.co.mz",      telefone:"+258 84 000 0008", papel:"aluno", planoId:"vitalicio",  acesso:"ativo",     membroDesde:"2026-02-10", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Instagram",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." },
-  { id:"m9", nome:"Shelton Douglas",     email:"admin@kingdomacademy.com", telefone:"+258 84 000 0000", papel:"administrador", planoId:"vitalicio", acesso:"ativo", membroDesde:"2026-01-01", curso:"—", categoria:"negocios", origem:"Equipa", ultimoAcesso:"hoje", engajamento:"quente", progresso:0, estagio:"ativo", responsavel:"—" }
+  { id:"m1", nome:"Marta Lopes",        email:"marta.lopes@exemplo.co.mz",  telefone:"+258 84 000 0001", papel:"aluno", nivelId:"all-access", matriculas:["kt"], acesso:"ativo",     membroDesde:"2026-01-12", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Instagram",      ultimoAcesso:"há 2 dias",  engajamento:"quente", progresso:82,  estagio:"ativo",     responsavel:"Maria M." },
+  { id:"m2", nome:"Paulo Mabunda",      email:"paulo.mabunda@exemplo.co.mz", telefone:"+258 84 000 0002", papel:"aluno", nivelId:"all-access", matriculas:["kt"], acesso:"ativo",     membroDesde:"2026-02-03", curso:"IA Aplicada aos Negócios", categoria:"ia",            origem:"Instagram",      ultimoAcesso:"há 5 dias",  engajamento:"morno",  progresso:45,  estagio:"ativo",     responsavel:"Shelton D." },
+  { id:"m3", nome:"Leonor Matsinhe", email:"leonor.matsinhe@exemplo.co.mz", telefone:"+258 84 000 0003", papel:"aluno", ilimitado:true,  acesso:"ativo",     membroDesde:"2026-01-20", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Indicação",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Maria M." },
+  { id:"m4", nome:"Renato Cossa",      email:"renato.cossa@exemplo.co.mz",    telefone:"+258 84 000 0004", papel:"aluno", nivelId:"essencial",  acesso:"ativo",     membroDesde:"2026-03-14", curso:"Vendas de Alto Impacto",  categoria:"marketing",      origem:"Instagram",      ultimoAcesso:"há 12 dias", engajamento:"frio",   progresso:8,   estagio:"risco",     responsavel:"Shelton D." },
+  { id:"m5", nome:"Helena Nhantumbo",        email:"helena.nhantumbo@exemplo.co.mz", telefone:"+258 84 000 0005", papel:"aluno", nivelId:"all-access", matriculas:["kt"], acesso:"ativo",     membroDesde:"2026-02-28", curso:"Propósito em Movimento",  categoria:"espiritualidade", origem:"Facebook",      ultimoAcesso:"há 1 dia",   engajamento:"morno",  progresso:60,  estagio:"ativo",     responsavel:"Maria M." },
+  { id:"m6", nome:"Clara Muianga",   email:"clara.muianga@exemplo.co.mz",    telefone:"+258 84 000 0006", papel:"aluno", nivelId:"essencial",  acesso:"ativo",     membroDesde:"2026-04-02", curso:"Hábitos de Elite",        categoria:"pessoal",        origem:"Perfil pessoal", ultimoAcesso:"há 3 dias",  engajamento:"morno",  progresso:30,  estagio:"ativo",     responsavel:"Shelton D." },
+  { id:"m7", nome:"Mário Tembe",     email:"mario.tembe@exemplo.co.mz",    telefone:"+258 84 000 0007", papel:"aluno", nivelId:"essencial",  acesso:"bloqueado", membroDesde:"2026-01-08", curso:"Kingdom Tracktion",       categoria:"negocios",       origem:"Indicação",      ultimoAcesso:"há 20 dias", engajamento:"frio",   progresso:15,  estagio:"inativo",   responsavel:"Maria M." },
+  { id:"m8", nome:"Ana Machava",        email:"ana.machava@exemplo.co.mz",      telefone:"+258 84 000 0008", papel:"aluno", ilimitado:true,  acesso:"ativo",     membroDesde:"2026-02-10", curso:"Mentalidade Inquebrável", categoria:"mentalidade",    origem:"Instagram",      ultimoAcesso:"hoje",       engajamento:"quente", progresso:100, estagio:"concluido", responsavel:"Shelton D." },
+  { id:"m9", nome:"Shelton Douglas",     email:"admin@kingdomacademy.com", telefone:"+258 84 000 0000", papel:"administrador", ilimitado:true, acesso:"ativo", membroDesde:"2026-01-01", curso:"—", categoria:"negocios", origem:"Equipa", ultimoAcesso:"hoje", engajamento:"quente", progresso:0, estagio:"ativo", responsavel:"—" }
 ];
 
 /* Certificados já gravados, para a aba «Emitidos» do painel na demonstração.
@@ -466,7 +469,7 @@ function dbPadrao(){
     eventos: EVENTOS_PADRAO,
     banners: BANNERS_PADRAO,
     membros: MEMBROS_PADRAO,
-    planos: PLANOS_PADRAO,
+    niveis: NIVEIS_PADRAO,
     ofertas: OFERTAS_PADRAO,
     ofertasDaEscola: OFERTAS_DA_ESCOLA_PADRAO,
     vitrine: VITRINE_PADRAO,

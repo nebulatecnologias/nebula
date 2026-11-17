@@ -69,8 +69,22 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   `expirado`, `desativado`) e início. Abre o curso quem tem a matrícula ativa
   e dentro do prazo. Quem escreve acessos à moda antiga (a venda, o convite)
   não fala em estado: o gatilho `matricula_coerente` mantém-no certo. Faltam:
-  assinaturas, ofertas e vendas no modelo novo, convites por link, filtros
-  dos membros, público de eventos e comunidades.
+  ofertas e vendas no modelo novo, convites por link, filtros dos membros,
+  público de eventos e comunidades.
+- **Assinaturas (passo 3 da mesma especificação), no lugar dos Planos:** um
+  nível (`academia.niveis`) leva vários cursos, cada um numa turma
+  (`nivel_turmas`); a assinatura de um membro (`academia.assinaturas`) liga-o
+  a um nível, com um estado e uma data só. É uma ligação viva: pôr ou tirar um
+  curso do nível abre-o ou fecha-o a quem a tem. O acesso ilimitado
+  (`academia.acessos_ilimitados`) abre tudo o que está publicado. Quando há
+  mais de uma via, vale a matrícula própria; entre assinaturas, a que começou
+  primeiro (`turma_efetiva`; no browser, `viasDeAcesso()`). Escreve-se pelas
+  funções (`nivel_guardar`, `nivel_apagar`, `assinatura_definir`,
+  `membro_ilimitado`); um nível com membros ativos ou pendentes só se exclui
+  passando-os para outro. Um relógio diário (`academia-expirar-acessos`)
+  marca como expirado o que passou da data. As tabelas e funções dos Planos
+  (`academia.planos`, `membro_dar_plano`…) ficaram na base, sem uso, até à
+  limpeza do último passo: não as use.
 - **Regras de liberação (passo 2 da mesma especificação):** cada turma diz,
   por módulo e por aula, quando o conteúdo abre (`academia.regras_de_liberacao`:
   livre, data, dias após a matrícula, oculto, bloqueado, curso / módulo / aula

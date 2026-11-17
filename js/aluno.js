@@ -1130,7 +1130,7 @@ function renderDefinicoes(){
       </div>
       <div class="card settings-card">
         <h3>${t("Resumo da conta")}</h3>
-        <div class="account-row"><span>${t("Plano")}</span><span>${(planoPorId((membroAtual()||{}).planoId)||{}).nome || t("Sem plano")}</span></div>
+        <div class="account-row"><span>${t("Assinatura")}</span><span>${minhaAssinaturaEmTexto()}</span></div>
         <div class="account-row"><span>${t("Membro desde")}</span><span>${(membroAtual()||{}).membroDesde ? dataCurta((membroAtual()||{}).membroDesde) + " " + String((membroAtual()||{}).membroDesde).slice(0,4) : "—"}</span></div>
         <div class="account-row"><span>${t("Cursos ativos")}</span><span>${cursosVisiveis().length}</span></div>
         <div class="account-row"><span>${t("Nível atual")}</span><span>${t("Nível {n}", { n:calcularNivel() })}</span></div>
