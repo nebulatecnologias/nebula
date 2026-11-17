@@ -289,6 +289,10 @@ async function guardarNivel(n){
    (decisão 5 do plano). Sem ninguém, é só confirmar. */
 function apagarNivel(n){
   if(!n) return;
+  /* Uma assinatura que uma oferta vende não se exclui: quem a comprasse
+     ficava sem nada. A base recusa o mesmo. */
+  const vendida = (DB.ofertasDaEscola || []).find(o => o.nivelId === n.id);
+  if(vendida){ mostrarToast(`A oferta «${vendida.nome}» vende esta assinatura. Mude a oferta antes de excluir a assinatura.`); return; }
   const x = numerosDoNivel(n);
   const dentro = x.ativos + x.pendentes;
   const fazer = async moverPara => {

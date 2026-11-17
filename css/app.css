@@ -966,6 +966,17 @@ button.chip{ font:inherit; font-size:14px; }
 .toggle.travado{ opacity:.6; cursor:default; }
 .turma-rodape{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
 .turma-rodape-fim{ display:flex; gap:10px; margin-left:auto; }
+/* Ofertas: por baixo dos cursos escolhidos, a turma em que cada um se
+   entrega e o prazo que dela vem. */
+.oferta-turmas{ margin:-6px 0 18px; }
+.oferta-turmas .oferta-turmas-rotulo{ display:block; font-size:13.5px; font-weight:500; color:var(--ink-2); margin-bottom:2px; }
+.oferta-turma{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; align-items:center; gap:12px; min-height:52px; padding:6px 0; border-bottom:1px solid var(--line); }
+.oferta-turma-curso{ font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.oferta-turma .select-wrap select{ width:100%; }
+.oferta-turma-prazo{ font-size:12.5px; color:var(--muted); white-space:nowrap; }
+@media (max-width:560px){
+  .oferta-turma{ grid-template-columns:1fr; gap:6px; padding:10px 0; }
+}
 /* Assinaturas: a edição de um nível (os prazos lado a lado, e os cursos com
    a turma de cada um) e o que delas se vê na ficha e na lista dos membros. */
 .nivel-titulo{ margin:0 0 14px; font-size:17px; }

@@ -54,8 +54,9 @@ function acessoDoCursoDemo(cursoId){
                                                      + assinantes.filter(p => p.turma === t.id).length })),
     convites:(DB.convites || []).filter(v => (v.estado === "enviado" || v.estado === "aberto") && (v.cursos || []).includes(cursoId))
       .map(v => ({ id:v.id, email:v.email, nome:v.nome, origem:v.origem, expiraEm:v.expiraEm, acessoDias:v.acessoDias || null, criadoEm:v.criadoEm })),
-    ofertas:(DB.ofertasDaEscola || []).filter(o => (o.cursos || []).includes(cursoId))
-      .map(o => ({ id:o.id, nome:o.nome, ativa:o.ativa !== false, naVitrine:!!o.naVitrine, dias:o.diasDeAcesso || null,
+    ofertas:(DB.ofertasDaEscola || []).filter(o => cursosDaOferta(o).some(c => c.id === cursoId))
+      .map(o => ({ id:o.id, nome:o.nome, ativa:o.ativa !== false, naVitrine:!!o.naVitrine,
+                   turma:(o.turmas || {})[cursoId] || null, assinatura:(nivelPorId(o.nivelId) || {}).nome || null,
                    preco:o.preco, moeda:o.moeda, produtos:(o.produtos || []).length, temLink:!!o.link }))
   };
 }
@@ -359,13 +360,23 @@ function linhaDaPessoaFechada(p){
     </div>`;
 }
 
+/* O que a oferta dá neste curso: a assinatura que entrega, ou a turma em que
+   matricula (com o prazo dela). O prazo já não é da oferta. */
+function oQueAOfertaDaAoCurso(o){
+  if(o.assinatura) return "Assinatura " + textoSeguro(o.assinatura);
+  const turmas = ((acessoAberto || {}).dados || {}).turmas || [];
+  const t = turmas.find(x => x.id === o.turma) || turmas.find(x => x.padrao) || turmas[0];
+  if(!t) return "";
+  return `${turmas.length > 1 ? textoSeguro(t.nome) + " · " : ""}Acesso ${prazoDaTurmaEmTexto(t)}`;
+}
+
 function linhaDaOfertaDoCurso(o){
   const falta = !o.ativa ? "Desligada" : !o.produtos ? "Sem produto ligado: uma compra não abre o curso sozinha" : "";
   return `
     <div class="acesso-linha">
       <div class="acesso-info">
         <div class="nome">${textoSeguro(o.nome)}</div>
-        <div class="sub-celula">${[formatarPreco(Number(o.preco) || 0, o.moeda), "Acesso " + prazoDaOfertaEmTexto(o.dias), falta].filter(Boolean).join(" · ")}</div>
+        <div class="sub-celula">${[formatarPreco(Number(o.preco) || 0, o.moeda), oQueAOfertaDaAoCurso(o), falta].filter(Boolean).join(" · ")}</div>
       </div>
       <span class="pill ${o.ativa && o.naVitrine ? "pill-ativo" : "pill-inativo"}">${o.ativa && o.naVitrine ? "Na Vitrine" : "Fora da Vitrine"}</span>
     </div>`;

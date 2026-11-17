@@ -55,13 +55,27 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   Kingdom Academy. O endereço e o remetente estão na base
   (`nucleo.definicoes_plataforma` › `enderecos`).
 - **As ofertas são de cada escola (Shelton, 15/11/2026):** montam-se no painel,
-  em Ofertas (`academia.ofertas`): os cursos que abre, o prazo do acesso, o
-  preço, o link de pagamento e os IDs de produto do checkout. A Vitrine do
-  aluno lê daí. O One Members não cobra: o link leva a um checkout de fora (o
-  Payflow ou outro) e a venda volta pelo webhook das Integrações
-  (`academia-vendas` › `public.escola_aplicar_venda`), que abre os cursos da
-  oferta que tem esse produto. `public.ofertas` é do Payflow: só os eventos
-  pagos e as comunidades ainda a leem.
+  em Ofertas (`academia.ofertas`): o que entrega, o preço, o link de pagamento
+  e os IDs de produto do checkout. A Vitrine do aluno lê daí. O One Members
+  não cobra: o link leva a um checkout de fora (o Payflow ou outro) e a venda
+  volta pelo webhook das Integrações (`academia-vendas` ›
+  `public.escola_aplicar_venda`), que entrega o que a oferta desse produto
+  leva. `public.ofertas` é do Payflow: só os eventos pagos e as comunidades
+  ainda a leem.
+- **Tudo o que é do Payflow é por Integração, API ou Webhooks (regra do
+  Shelton, 17/11/2026).** Código novo não lê tabelas do Payflow nem escreve
+  nelas; as leituras diretas que restam saem no último passo da especificação.
+- **Ofertas e vendas (passo 4 da especificação das turmas):** uma oferta
+  entrega cursos, cada um numa turma (`ofertas.turmas`: curso → turma; sem
+  turma, a padrão), ou uma assinatura (`ofertas.nivel_id`). **A oferta já não
+  tem prazo:** é o da turma, ou a extensão do nível; `dias_de_acesso` ficou na
+  base sem uso, e o painel escreve-o sempre nulo. Comprar outra vez soma os
+  dias ao que a pessoa já tem (nunca encurta, nunca põe prazo a quem não o
+  tinha). O reembolso total fecha. Com cobrança que se repete, a escola marca
+  também `subscription.updated` e `subscription.canceled` na integração: sem
+  pagamento (`unpaid`) a assinatura fica pendente, paga de novo reabre,
+  cancelada acaba no fim do período pago. Quem compra sem ter conta recebe o
+  convite, que leva as mesmas turmas e níveis (`convites.turmas`, `niveis`).
 - **Turmas e matrículas (especificação do Shelton, 17/11/2026, em passos):**
   uma turma (`academia.turmas`) é uma edição de um curso, com prazo de acesso;
   todo o curso tem a sua turma padrão («Turma A»). A matrícula é a linha de
@@ -69,8 +83,7 @@ em obras, com um curso de uma aula, meses antes da migração planeada.
   `expirado`, `desativado`) e início. Abre o curso quem tem a matrícula ativa
   e dentro do prazo. Quem escreve acessos à moda antiga (a venda, o convite)
   não fala em estado: o gatilho `matricula_coerente` mantém-no certo. Faltam:
-  ofertas e vendas no modelo novo, convites por link, filtros dos membros,
-  público de eventos e comunidades.
+  convites por link, filtros dos membros, público de eventos e comunidades.
 - **Assinaturas (passo 3 da mesma especificação), no lugar dos Planos:** um
   nível (`academia.niveis`) leva vários cursos, cada um numa turma
   (`nivel_turmas`); a assinatura de um membro (`academia.assinaturas`) liga-o

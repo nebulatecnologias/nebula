@@ -2,11 +2,14 @@
    Administração › Ofertas
    O que a escola vende, montado aqui (pedido do Shelton, 15/11/2026).
 
-   Uma oferta diz quatro coisas: que cursos abre, por quanto tempo, quanto
-   custa e onde se paga. O pagamento é de fora: o link leva ao checkout (no
-   Payflow ou noutro), e o checkout avisa a escola de cada venda pelo webhook
-   das Integrações. É pelos IDs de produto que a venda encontra a oferta, e
-   é a oferta que abre os cursos.
+   Uma oferta diz três coisas: o que entrega, quanto custa e onde se paga.
+   Entrega CURSOS, cada um numa turma (o prazo é o da turma), ou UMA
+   ASSINATURA (o prazo é a extensão do nível): desde 17/11/2026 a oferta já
+   não tem duração própria. O pagamento é de fora: o link leva ao checkout
+   (no Payflow ou noutro), e o checkout avisa a escola de cada venda pelo
+   webhook das Integrações. É pelos IDs de produto que a venda encontra a
+   oferta, e é a oferta que diz o que a pessoa recebe. Do checkout não se lê
+   mais nada: tudo o que é dele chega pela integração.
 
    A Vitrine do aluno lê daqui (academia.vitrine_do_aluno). Antes o catálogo
    era o do Payflow e só a escola de origem o tinha; agora é de cada escola.
@@ -29,6 +32,8 @@ const COBRANCAS_DA_OFERTA = [
   { valor:"mes", rotulo:"Todos os meses" },
   { valor:"ano", rotulo:"Todos os anos" }
 ];
+/* Os prazos já não são da oferta. A lista fica para o convite à mão, até ele
+   passar a levar a turma (passo 5 da especificação). */
 const PRAZOS_DA_OFERTA = [
   { valor:"",    rotulo:"Sem prazo" },
   { valor:"7",   rotulo:"7 dias" },
@@ -45,9 +50,27 @@ function prazoDaOfertaEmTexto(dias){
   return p ? p.rotulo : `${dias} dias`;
 }
 
-/* Os cursos de uma oferta que ainda existem, pela ordem em que foram postos. */
+/* Os cursos que uma oferta abre e ainda existem: os dela, pela ordem em que
+   foram postos, ou os que a assinatura que ela entrega leva. */
 function cursosDaOferta(o){
-  return (o.cursos || []).map(cursoPorId).filter(Boolean);
+  const ids = o.nivelId ? cursosDoNivel(nivelPorId(o.nivelId)).map(x => x.cursoId) : (o.cursos || []);
+  return ids.map(cursoPorId).filter(Boolean);
+}
+/* A turma em que a oferta entrega um curso: a escolhida, ou a padrão dele. */
+function turmaDaOferta(o, cursoId){
+  const t = turmaPorId((o.turmas || {})[cursoId]);
+  return t && t.cursoId === cursoId ? t : turmaPadraoDe(cursoId);
+}
+/* Por quanto tempo a oferta abre o que entrega: já não é dela, é da turma de
+   cada curso ou da extensão da assinatura. */
+function prazoDaEntregaEmTexto(o){
+  if(o.nivelId){
+    const n = nivelPorId(o.nivelId);
+    return n && n.extensaoDias ? `${prazoEmDias(n.extensaoDias)} por compra` : "sem prazo";
+  }
+  const prazos = [...new Set(cursosDaOferta(o).map(c => (turmaDaOferta(o, c.id) || {}).prazoDias || 0))];
+  if(prazos.length > 1) return "o prazo de cada turma";
+  return prazoDaTurmaEmTexto({ prazoDias:prazos[0] || null });
 }
 
 /* Porque é que esta oferta não chega ao aluno, mesmo estando marcada. As
@@ -56,7 +79,7 @@ function cursosDaOferta(o){
 function motivoDeNaoAparecer(o){
   if(o.ativa === false) return "a oferta está desligada";
   const cursos = cursosDaOferta(o);
-  if(!cursos.length) return "não tem nenhum curso escolhido";
+  if(!cursos.length) return o.nivelId ? "a assinatura que entrega não leva nenhum curso" : "não tem nenhum curso escolhido";
   const publicados = cursos.filter(c => c.publicado !== false);
   if(!publicados.length) return cursos.length === 1 ? "o curso dela ainda é rascunho" : "os cursos dela ainda são rascunho";
   if(!o.link && !o.emBreve) return "falta o link de pagamento";
@@ -94,7 +117,7 @@ function desenharOfertas(){
   document.getElementById("content-admin").innerHTML = `
     ${cabecalhoAdmin({
       titulo: "Ofertas",
-      descricao: "O que a escola vende. Cada oferta diz que cursos abre, por quanto tempo, a que preço e onde se paga. "
+      descricao: "O que a escola vende. Cada oferta diz o que entrega (cursos numa turma, ou uma assinatura), a que preço e onde se paga. "
                + "As que estão ligadas à Vitrine aparecem à venda aos alunos que ainda não têm esses cursos.",
       acaoRotulo: admin ? "Nova oferta" : "",
       acaoId: "btn-nova-oferta"
@@ -117,10 +140,10 @@ function desenharOfertas(){
       </div>
       <div class="table-wrap" tabindex="0">
         <table class="admin-table">
-          <thead><tr><th>Oferta</th><th>O que abre</th><th>Preço</th><th>Pagamento</th><th>Na Vitrine</th><th></th></tr></thead>
+          <thead><tr><th>Oferta</th><th>O que entrega</th><th>Preço</th><th>Pagamento</th><th>Na Vitrine</th><th></th></tr></thead>
           <tbody>
             ${lista.length ? lista.map(o => linhaDaOferta(o, admin)).join("")
-              : `<tr><td colspan="6"><div class="empty-note">Ainda não há ofertas. Crie a primeira: escolha os cursos, o preço e o link onde se paga.</div></td></tr>`}
+              : `<tr><td colspan="6"><div class="empty-note">Ainda não há ofertas. Crie a primeira: escolha o que entrega, o preço e o link onde se paga.</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -157,9 +180,17 @@ function linhaDaOferta(o, admin){
   const aulas = cursos.reduce((s, c) => s + contarAulas(c), 0);
   const produtos = o.produtos || [];
 
-  const oQueAbre = cursos.length
-    ? `<div>${cursos.slice(0, 2).map(c => textoSeguro(c.titulo)).join(", ")}${cursos.length > 2 ? ` e mais ${cursos.length - 2}` : ""}</div>
-       <div class="sub-celula">Acesso ${prazoDaOfertaEmTexto(o.diasDeAcesso)} · ${aulas} aula${aulas === 1 ? "" : "s"}</div>`
+  const nivel = o.nivelId ? nivelPorId(o.nivelId) : null;
+  const nomes = `${cursos.slice(0, 2).map(c => textoSeguro(c.titulo)).join(", ")}${cursos.length > 2 ? ` e mais ${cursos.length - 2}` : ""}`;
+  /* Num curso com várias turmas diz-se em qual a oferta entrega. */
+  const turma = !nivel && cursos.length === 1 && turmasDoCurso(cursos[0].id).length > 1
+    ? textoSeguro((turmaDaOferta(o, cursos[0].id) || {}).nome || "") + " · " : "";
+  const oQueAbre = o.nivelId
+    ? `<div>Assinatura ${textoSeguro(nivel ? nivel.nome : "que já não existe")}</div>
+       <div class="sub-celula">${cursos.length ? nomes + " · " : ""}Acesso ${prazoDaEntregaEmTexto(o)}</div>`
+    : cursos.length
+    ? `<div>${nomes}</div>
+       <div class="sub-celula">${turma}Acesso ${prazoDaEntregaEmTexto(o)} · ${aulas} aula${aulas === 1 ? "" : "s"}</div>`
     : `<span class="erro">Nenhum curso escolhido</span>`;
 
   let onde = "";
@@ -202,21 +233,25 @@ function editarOferta(id){
              cor:(DB.categorias[c.categoria] || {}).cor || "",
              etiqueta: c.publicado === false ? "Rascunho" : `${aulas} aula${aulas === 1 ? "" : "s"}` };
   });
-  const prazos = PRAZOS_DA_OFERTA.slice();
-  if(o && o.diasDeAcesso && !prazos.some(p => p.valor === String(o.diasDeAcesso)))
-    prazos.push({ valor:String(o.diasDeAcesso), rotulo:`${o.diasDeAcesso} dias` });
+  const niveis = (DB.niveis || []).map(n => ({ valor:n.id, rotulo:n.nome }));
+  /* A turma de cada curso escolhido, enquanto a gaveta está aberta. */
+  const turmasEscolhidas = Object.assign({}, (o && o.turmas) || {});
 
   abrirDrawer({
     titulo: o ? "Editar oferta" : "Nova oferta",
-    subtitulo: "Quem compra recebe os cursos escolhidos, pelo prazo escolhido.",
+    subtitulo: "Quem compra recebe os cursos escolhidos, cada um na sua turma, ou uma assinatura.",
     campos: [
       { nome:"nome", rotulo:"Nome da oferta", tipo:"texto", obrigatorio:true, placeholder:"ex: Programa de Liderança · Acesso de 1 ano" },
       { nome:"chamada", rotulo:"Frase de venda", tipo:"textarea", placeholder:"Uma linha a dizer o que a pessoa leva.",
         dica:"Aparece no cartão da Vitrine. Sem ela, usa-se o subtítulo do curso." },
+      { nome:"entrega", rotulo:"O que esta oferta entrega", tipo:"select",
+        opcoes:[{ valor:"cursos", rotulo:"Cursos, cada um numa turma" }, { valor:"assinatura", rotulo:"Uma assinatura" }],
+        dica:"Cursos: a pessoa fica matriculada em cada um, pelo prazo da turma. Assinatura: fica com ela ativa, e abre o que a assinatura levar." },
       { nome:"cursos", rotulo:"Cursos que esta oferta abre", tipo:"checklist", cartoes:true, opcoes:cursos,
         dica:"Com mais de um curso, a Vitrine mostra-a como um plano." },
-      { nome:"diasDeAcesso", rotulo:"Duração do acesso", tipo:"select", opcoes:prazos,
-        dica:"Conta do dia em que a pessoa entra. Uma compra nova nunca encurta um acesso que já ia mais longe." },
+      { nome:"nivelId", rotulo:"Assinatura que esta oferta entrega", tipo:"select",
+        opcoes: niveis.length ? niveis : [{ valor:"", rotulo:"Ainda não há assinaturas" }],
+        dica:"Criam-se em Assinaturas. Cada compra ou renovação soma os dias da extensão dela." },
       { nome:"preco", rotulo:"Preço", tipo:"numero", meia:true, placeholder:"0" },
       { nome:"moeda", rotulo:"Moeda", tipo:"select", meia:true, opcoes:MOEDAS_DA_OFERTA },
       { nome:"recorrencia", rotulo:"Cobrança", tipo:"select", opcoes:COBRANCAS_DA_OFERTA,
@@ -224,17 +259,18 @@ function editarOferta(id){
       { nome:"link", rotulo:"Link de pagamento", tipo:"url", placeholder:"https://…",
         dica:"Para onde vai quem carrega em comprar: a página do checkout desta oferta." },
       { nome:"produtos", rotulo:"IDs de produto do checkout", tipo:"textarea", placeholder:"prod_01J…",
-        dica:"Um por linha. Quando chega a venda de um destes produtos, a pessoa recebe os cursos desta oferta. No Payflow estão em Integrações › IDs dos produtos." },
+        dica:"Um por linha. Quando chega a venda de um destes produtos, a pessoa recebe o que esta oferta entrega. No Payflow estão em Integrações › IDs dos produtos." },
       { nome:"naVitrine", rotulo:"Mostrar na Vitrine", tipo:"toggle",
         dica:"Os alunos que ainda não têm estes cursos vêem-na à venda." },
       { nome:"emBreve", rotulo:"Pré-venda", tipo:"toggle",
         dica:"Vende-se antes de haver aulas. Quem compra entra logo e vê quando as aulas abrem." },
       { nome:"abreEm", rotulo:"As aulas abrem a", tipo:"data", dica:"Só conta com a pré-venda ligada." },
       { nome:"ativa", rotulo:"Oferta ativa", tipo:"toggle", padrao:true,
-        dica:"Desligada, sai da Vitrine e as compras novas deixam de abrir os cursos." }
+        dica:"Desligada, sai da Vitrine e as compras novas deixam de entregar o que ela leva." }
     ],
-    valores: o ? Object.assign({}, o, { diasDeAcesso: o.diasDeAcesso ? String(o.diasDeAcesso) : "", produtos:(o.produtos || []).join("\n") })
-               : { moeda:"MZN", recorrencia:"", diasDeAcesso:"", ativa:true, naVitrine:false, emBreve:false, cursos:[] },
+    valores: o ? Object.assign({}, o, { entrega: o.nivelId ? "assinatura" : "cursos", nivelId: o.nivelId || (niveis[0] || {}).valor || "",
+                                        produtos:(o.produtos || []).join("\n") })
+               : { moeda:"MZN", recorrencia:"", entrega:"cursos", nivelId:(niveis[0] || {}).valor || "", ativa:true, naVitrine:false, emBreve:false, cursos:[] },
     aoGuardar: v => {
       const produtos = [...new Set(String(v.produtos || "").split(/[\s,;]+/).map(p => p.trim()).filter(Boolean))];
       const mau = produtos.find(p => !/^[A-Za-z0-9_.:-]{3,80}$/.test(p));
@@ -247,10 +283,18 @@ function editarOferta(id){
       const link = linkExterno(v.link);
       if(link && !/^https:\/\//i.test(link)){ mostrarToast("O link de pagamento tem de começar por https://"); return false; }
       if(v.preco !== null && v.preco < 0){ mostrarToast("O preço não pode ser negativo."); return false; }
+      const assinatura = v.entrega === "assinatura";
+      if(assinatura && !nivelPorId(v.nivelId)){ mostrarToast("Escolha a assinatura que esta oferta entrega. Criam-se em Assinaturas."); return false; }
+      /* A turma de cada curso escolhido; a padrão não precisa de se guardar. */
+      const turmas = {};
+      if(!assinatura) v.cursos.forEach(c => {
+        const t = turmaPorId(turmasEscolhidas[c]);
+        if(t && t.cursoId === c && !t.padrao) turmas[c] = t.id;
+      });
 
       const registo = Object.assign({}, o || { ordem: DB.ofertasDaEscola.reduce((m, x) => Math.max(m, x.ordem || 0), 0) + 1, destaque:false }, {
-        nome: v.nome, chamada: v.chamada, cursos: v.cursos,
-        diasDeAcesso: v.diasDeAcesso ? Number(v.diasDeAcesso) : null,
+        nome: v.nome, chamada: v.chamada, cursos: assinatura ? [] : v.cursos, turmas,
+        nivelId: assinatura ? v.nivelId : null, diasDeAcesso: null,
         preco: v.preco || 0, moeda: v.moeda || "MZN", recorrencia: v.recorrencia || "",
         link, produtos, naVitrine: v.naVitrine, emBreve: v.emBreve,
         abreEm: v.emBreve && v.abreEm ? v.abreEm : null, ativa: v.ativa
@@ -261,6 +305,52 @@ function editarOferta(id){
       return false;
     }
   });
+  ligarEntregaDaOferta(turmasEscolhidas);
+}
+
+/* O formulário mostra só o que a entrega escolhida pede: os cursos (e, por
+   baixo, a turma de cada um, com o prazo que dela vem) ou a assinatura. */
+function ligarEntregaDaOferta(turmasEscolhidas){
+  const entrega = document.getElementById("valor-entrega");
+  const lista = document.getElementById("valor-cursos");
+  const nivel = document.getElementById("valor-nivelId");
+  if(!entrega || !lista || !nivel) return;
+  const campoDosCursos = lista.closest(".field"), campoDoNivel = nivel.closest(".field");
+  const zona = document.createElement("div");
+  zona.className = "oferta-turmas";
+  zona.id = "oferta-turmas";
+  campoDosCursos.insertAdjacentElement("afterend", zona);
+
+  const pintar = () => {
+    const assinatura = entrega.value === "assinatura";
+    campoDosCursos.classList.toggle("hidden", assinatura);
+    zona.classList.toggle("hidden", assinatura);
+    campoDoNivel.classList.toggle("hidden", !assinatura);
+    const escolhidos = [...lista.querySelectorAll("input:checked")].map(i => i.value);
+    zona.innerHTML = escolhidos.length ? `
+      <span class="oferta-turmas-rotulo">Turma em que cada curso se entrega</span>
+      ${escolhidos.map(id => {
+        const c = cursoPorId(id); if(!c) return "";
+        const turmas = turmasDoCurso(id);
+        const atual = turmaDaOferta({ turmas:turmasEscolhidas }, id) || {};
+        return `<div class="oferta-turma" data-oferta-turma-linha="${id}">
+          <span class="oferta-turma-curso">${textoSeguro(c.titulo)}</span>
+          ${turmas.length > 1
+            ? `<div class="select-wrap"><select data-oferta-turma="${id}" aria-label="Turma de ${textoSeguro(c.titulo).replace(/"/g, "&quot;")}">
+                 ${turmas.map(t => `<option value="${t.id}" ${t.id === atual.id ? "selected" : ""}>${textoSeguro(t.nome)}</option>`).join("")}</select></div>`
+            : `<span class="sub-celula">${textoSeguro(atual.nome || "Turma A")}</span>`}
+          <span class="oferta-turma-prazo">Acesso ${prazoDaTurmaEmTexto(atual)}</span>
+        </div>`;
+      }).join("")}
+      <p class="hint">O prazo do acesso é o da turma, e conta do dia em que a pessoa entra. Comprar outra vez soma os dias ao que já tem. Muda-se em Turmas.</p>` : "";
+    zona.querySelectorAll("[data-oferta-turma]").forEach(sel => sel.addEventListener("change", () => {
+      turmasEscolhidas[sel.getAttribute("data-oferta-turma")] = sel.value;
+      pintar();
+    }));
+  };
+  entrega.addEventListener("change", pintar);
+  lista.addEventListener("change", pintar);
+  pintar();
 }
 
 async function guardarOferta(registo, nova){
@@ -313,7 +403,7 @@ function apagarOferta(id){
   if(!o) return;
   confirmarAcao({
     titulo: "Apagar oferta",
-    mensagem: `«${textoSeguro(o.nome)}» sai da Vitrine e as compras novas deixam de abrir os cursos dela. Quem já comprou fica com o acesso que tem.`,
+    mensagem: `«${textoSeguro(o.nome)}» sai da Vitrine e as compras novas deixam de entregar o que ela leva. Quem já comprou fica com o acesso que tem.`,
     aoConfirmar: async () => {
       DB.ofertasDaEscola = DB.ofertasDaEscola.filter(x => x.id !== id);
       await remover("ofertaDaEscola", id);
@@ -359,7 +449,8 @@ function refletirNaVitrineDemo(){
     montra.push({
       ofertaId:o.id, nome:o.nome, preco:Number(o.preco) || 0, moeda:o.moeda || "MZN",
       mensal:o.recorrencia === "mes", anual:o.recorrencia === "ano",
-      entrega: cursos.length > 1 ? "Plano" : "Academia", destaque:!!o.destaque, chamada:o.chamada || "",
+      entrega: cursos.length > 1 ? "Plano" : "Academia", assinatura:(nivelPorId(o.nivelId) || {}).nome || "",
+      destaque:!!o.destaque, chamada:o.chamada || "",
       ordem:o.ordem || 0,
       aulas: mesmos ? antigo.aulas : cursos.reduce((s, c) => s + c.aulas, 0),
       segundos: mesmos ? antigo.segundos : cursos.reduce((s, c) => s + c.segundos, 0),

@@ -1,6 +1,6 @@
 import { entrarDemo, ADMIN } from '../util.mjs';
 
-export const nome = 'Ofertas: a escola monta o que vende (cursos, prazo, preço, link, produtos) e a Vitrine do aluno sai daí';
+export const nome = 'Ofertas: a escola monta o que vende (cursos, preço, link, produtos) e a Vitrine do aluno sai daí';
 
 /* Pedido do Shelton a 15/11/2026: «as ofertas devem ser montadas a partir do
    próprio painel e apenas conectar com um checkout e webhooks com o Payflow»;
@@ -8,8 +8,8 @@ export const nome = 'Ofertas: a escola monta o que vende (cursos, prazo, preço,
    Em demonstração, em memória (ofertas inventadas de js/dados.js). A sério, a
    tabela academia.ofertas com as suas regras, a vitrine_do_aluno e a
    escola_aplicar_venda, provadas numa transacção desfeita (migração
-   academia_ofertas): a venda de um produto abre os cursos da oferta, pelo
-   prazo dela, e outra escola não vê nada disto. */
+   academia_ofertas): a venda de um produto abre os cursos da oferta, e outra
+   escola não vê nada disto. */
 export default async function ({ navegador, base, igual, verdade, falso, contem, naoContem }){
   const adm = await entrarDemo(navegador, base, ADMIN);
   await adm.evaluate(() => irPara('admin-ofertas'));
@@ -23,7 +23,7 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   igual(await linhas(), 4, 'A lista mostra as ofertas da escola');
   const hab = await adm.innerText('tr[data-oferta-linha="of2"]');
   contem(hab, 'Hábitos de Elite', 'Cada oferta diz o que abre');
-  contem(hab, 'Acesso 1 ano', 'por quanto tempo');
+  contem(hab, 'Acesso sem prazo', 'por quanto tempo, que é o prazo da turma');
   contem(hab, 'MZ 1 200,00', 'a que preço');
   contem(hab, 'payflow.kingdomcompny.com', 'onde se paga');
   contem(hab, '1 produto ligado', 'e quantos produtos do checkout a entregam');
@@ -33,12 +33,14 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   const toast = async () => (await adm.locator('.toast').allInnerTexts()).join(' | ');
   const guardar = async () => { await adm.click('#drawer-guardar'); await adm.waitForTimeout(400); };
 
-  /* Criar uma oferta: cursos em cartões, prazo, preço, link e produtos. */
+  /* Criar uma oferta: cursos em cartões, preço, link e produtos. O prazo já
+     não é da oferta: é o da turma de cada curso (teste 34). */
   await adm.click('#btn-nova-oferta');
   await adm.waitForTimeout(300);
-  await adm.fill('#valor-nome', 'Vendas de Alto Impacto · 30 dias');
+  await adm.fill('#valor-nome', 'Vendas de Alto Impacto · Turma A');
   await adm.click('#valor-cursos label:has(input[value="vv"])');
-  await adm.selectOption('#valor-diasDeAcesso', '30');
+  igual(await adm.locator('#valor-diasDeAcesso').count(), 0, 'A oferta já não tem duração própria');
+  contem(await adm.innerText('#oferta-turmas'), 'Acesso sem prazo', 'Por baixo dos cursos, diz a turma de cada um e o prazo dela');
   await adm.fill('#valor-preco', '900');
   await adm.fill('#valor-link', 'http://exemplo.invalid/pagar');
   await adm.fill('#valor-produtos', 'prod_NOVO_1\nprod_NOVO_1 prod_NOVO_2');
@@ -58,11 +60,11 @@ export default async function ({ navegador, base, igual, verdade, falso, contem,
   falso(await adm.isVisible('#drawer-overlay'), 'Com tudo certo, a oferta guarda-se');
   igual(await linhas(), 5, 'e entra na lista');
 
-  const nova = await adm.evaluate(() => DB.ofertasDaEscola.find(o => o.nome === 'Vendas de Alto Impacto · 30 dias'));
+  const nova = await adm.evaluate(() => DB.ofertasDaEscola.find(o => o.nome === 'Vendas de Alto Impacto · Turma A'));
   igual(nova.produtos.join(','), 'prod_NOVO_1,prod_NOVO_2', 'Os produtos repetidos ficam uma vez só');
-  igual(`${nova.diasDeAcesso}/${nova.cursos.join(',')}/${nova.link}`, '30/vv/https://exemplo.invalid/pagar', 'com o prazo, os cursos e o link (já com https)');
+  igual(`${nova.diasDeAcesso}/${nova.cursos.join(',')}/${nova.link}`, 'null/vv/https://exemplo.invalid/pagar', 'com os cursos e o link (já com https), e sem prazo próprio');
   const linhaNova = await adm.innerText(`tr[data-oferta-linha="${nova.id}"]`);
-  contem(linhaNova, 'Acesso 30 dias', 'A linha diz o prazo');
+  contem(linhaNova, 'Acesso sem prazo', 'A linha diz o prazo, que vem da turma');
   contem(linhaNova, 'MZ 900,00', 'e o preço, escrito como o dinheiro se escreve');
   contem(linhaNova, '2 produtos ligados', 'e os produtos');
 

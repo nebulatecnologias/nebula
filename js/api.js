@@ -807,6 +807,7 @@ function deOferta(r){
 function deOfertaDaEscola(r){
   return {
     id: r.id, nome: r.nome, chamada: r.chamada || "", cursos: r.cursos || [],
+    turmas: r.turmas || {}, nivelId: r.nivel_id || null,
     diasDeAcesso: r.dias_de_acesso || null, preco: Number(r.preco) || 0, moeda: r.moeda || "MZN",
     recorrencia: r.recorrencia || "", link: r.link || "", produtos: r.produtos || [],
     naVitrine: !!r.na_vitrine, destaque: !!r.destaque, emBreve: !!r.em_breve, abreEm: r.abre_em || null,
@@ -822,7 +823,7 @@ function deVitrine(r){
     ofertaId: String(r.ofertaId), nome: r.nome,
     preco: Number(r.preco) || 0, moeda: r.moeda || "MZN",
     mensal: r.cobranca === "Recorrente mensal", anual: r.cobranca === "Recorrente anual",
-    entrega: r.entrega, destaque: !!r.destaque, chamada: r.chamada || "",
+    entrega: r.entrega, assinatura: r.assinatura || "", destaque: !!r.destaque, chamada: r.chamada || "",
     ordem: r.ordem || 0, aulas: Number(r.aulas) || 0, segundos: Number(r.segundos) || 0,
     emBreve: !!r.emBreve, abreEm: r.abreEm || null,
     checkout: !!destino, destino,
@@ -1009,7 +1010,8 @@ const MAPAS = {
   convite:  { tabela:"convites", para: c => ({ id:c.id, email:c.email, nome:c.nome, oferta_id:c.ofertaId||null, cursos:c.cursos||[] }) },
   ofertaDaEscola: { tabela:"ofertas", suave:true,
     para: o => ({ id:o.id, nome:o.nome, chamada:o.chamada||null, cursos:o.cursos||[],
-                  dias_de_acesso:o.diasDeAcesso||null, preco:Number(o.preco)||0, moeda:o.moeda||"MZN",
+                  turmas:o.turmas||{}, nivel_id:o.nivelId||null,
+                  dias_de_acesso:null, preco:Number(o.preco)||0, moeda:o.moeda||"MZN",
                   recorrencia:o.recorrencia||null, link:linkExterno(o.link)||null, produtos:o.produtos||[],
                   na_vitrine:!!o.naVitrine, destaque:!!o.destaque, em_breve:!!o.emBreve,
                   abre_em:o.emBreve && o.abreEm ? o.abreEm : null, ativa:o.ativa!==false, ordem:o.ordem||0 }) },
