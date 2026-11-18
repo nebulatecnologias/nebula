@@ -385,7 +385,12 @@ const API = {
   async oQueOConviteDa(id, { turmas, niveis, ilimitado, acessoDias }){
     const { error } = await this.cliente.from("convites")
       .update({ turmas: turmas || {}, niveis: niveis || [], ilimitado: !!ilimitado, acesso_dias: acessoDias || null }).eq("id", id);
-    if(error) throw new Error(traduzirErroAuth(error));
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
+  },
+
+  /* A lista de membros, relida da base depois de uma alteração. */
+  async recarregarMembros(){
+    DB.membros = (await lista(this.cliente.rpc("membros_da_organizacao"))).map(deMembro);
   },
 
   /* Os links de inscrição (17/11/2026): convites abertos, que a escola
@@ -402,12 +407,12 @@ const API = {
     const pedido = id ? this.cliente.from("links_de_inscricao").update(linha).eq("id", id)
                       : this.cliente.from("links_de_inscricao").insert(linha);
     const { error } = await pedido;
-    if(error) throw new Error(traduzirErroAuth(error));
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
   },
   async arquivarLink(id, arquivar){
     const { error } = await this.cliente.from("links_de_inscricao")
       .update({ arquivado_em: arquivar ? new Date().toISOString() : null }).eq("id", id);
-    if(error) throw new Error(traduzirErroAuth(error));
+    if(error) throw new Error(error.code === "P0001" && error.message ? error.message : traduzirErroDados(error));
   },
   /* A página pública: o que o link mostra, e inscrever-se. Sem sessão. A
      inscrição passa pela função do servidor, que confere o captcha. */
